@@ -1,4 +1,4 @@
-const STATS_API_BASE = "/api/stats";
+﻿const STATS_API_BASE = "/api/stats";
 const AUTH_API_BASE = "/auth";
 const TOKEN_KEY = "admin_access_token";
 const EMAIL_KEY = "admin_email";
@@ -48,14 +48,19 @@ async function requestJson(url, options = {}) {
 }
 
 export async function loginAdmin(email, password) {
-  const payload = await requestJson(`${AUTH_API_BASE}/login`, {
+  const payload = await requestJson(`${AUTH_API_BASE}/admin/login`, {
     method: "POST",
     body: JSON.stringify({ email, password }),
   });
 
   const token = payload?.access_token || "";
+  const role = payload?.user?.role || "";
   if (!token) {
     throw new Error("Login response missing token");
+  }
+  if (role !== "ADMIN") {
+    clearSession();
+    throw new Error("Chỉ admin mới được đăng nhập dashboard");
   }
 
   localStorage.setItem(TOKEN_KEY, token);
@@ -70,8 +75,13 @@ export async function registerAdmin(email, password) {
   });
 
   const token = payload?.access_token || "";
+  const role = payload?.user?.role || "";
   if (!token) {
     throw new Error("Register response missing token");
+  }
+  if (role !== "ADMIN") {
+    clearSession();
+    throw new Error("Chỉ tài khoản admin mới dùng được dashboard");
   }
 
   localStorage.setItem(TOKEN_KEY, token);
@@ -123,3 +133,4 @@ export async function fetchLogs(page = 1, limit = 20) {
     return { data: [], total: 0, page: 1, totalPages: 1 };
   }
 }
+

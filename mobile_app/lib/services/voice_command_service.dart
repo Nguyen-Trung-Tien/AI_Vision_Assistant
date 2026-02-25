@@ -1,20 +1,21 @@
-import 'package:flutter/foundation.dart';
+﻿import 'package:flutter/foundation.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:mobile_app/services/accessibility_manager.dart';
 
 class VoiceCommandService {
   final SpeechToText _speechToText = SpeechToText();
   final AccessibilityManager _accessibilityManager = AccessibilityManager();
-  bool _isListening = false;
 
-  // Callback when a command is recognized.
+  bool _isListening = false;
+  bool _isInitialized = false;
+
   final Function(String command) onCommandRecognized;
 
   VoiceCommandService({required this.onCommandRecognized});
 
   Future<void> init() async {
     try {
-      await _speechToText.initialize(
+      _isInitialized = await _speechToText.initialize(
         onStatus: (status) {
           debugPrint('Speech status: $status');
           if (status == 'done' || status == 'notListening') {
@@ -27,15 +28,23 @@ class VoiceCommandService {
           _accessibilityManager.speak('Lỗi nhận diện giọng nói.');
         },
       );
+
+      if (!_isInitialized) {
+        _accessibilityManager.speak('Không thể khởi tạo nhận diện giọng nói.');
+      }
     } catch (e) {
-      debugPrint("Speech init error: $e");
+      _isInitialized = false;
+      debugPrint('Speech init error: $e');
     }
   }
 
   Future<void> startListening() async {
-    if (!_speechToText.isAvailable) {
-      _accessibilityManager.speak('Thiết bị không hỗ trợ nhận diện giọng nói.');
-      return;
+    if (!_isInitialized || !_speechToText.isAvailable) {
+      await init();
+      if (!_isInitialized || !_speechToText.isAvailable) {
+        _accessibilityManager.speak('Thiết bị không hỗ trợ nhận diện giọng nói.');
+        return;
+      }
     }
 
     if (_isListening) {
@@ -47,21 +56,26 @@ class VoiceCommandService {
     _accessibilityManager.triggerSuccessVibration();
     _accessibilityManager.speak('Tôi đang nghe...');
 
-    // Give TTS a moment to finish before listening
-    await Future.delayed(const Duration(milliseconds: 1000));
+    await Future.delayed(const Duration(milliseconds: 800));
 
     await _speechToText.listen(
-      onResult: (result) {
-        if (result.finalResult) {
-          String recognizedWords = result.recognizedWords.toLowerCase();
-          _isListening = false;
-          debugPrint('Command recognized: $recognizedWords');
-          onCommandRecognized(recognizedWords);
-        }
-      },
       localeId: 'vi_VN',
       cancelOnError: true,
       listenMode: ListenMode.deviceDefault,
+      listenFor: const Duration(seconds: 8),
+      pauseFor: const Duration(seconds: 2),
+      partialResults: true,
+      onResult: (result) {
+        final recognizedWords = result.recognizedWords.trim();
+        if (recognizedWords.isEmpty) return;
+
+        if (result.finalResult || result.confidence >= 0.6) {
+          _isListening = false;
+          final command = recognizedWords.toLowerCase();
+          debugPrint('Command recognized: $command');
+          onCommandRecognized(command);
+        }
+      },
     );
   }
 
@@ -70,3 +84,4 @@ class VoiceCommandService {
     _isListening = false;
   }
 }
+

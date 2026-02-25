@@ -1,21 +1,22 @@
 ﻿import 'dart:async';
+import 'dart:typed_data';
+
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:mobile_app/screens/history_screen.dart';
+import 'package:mobile_app/screens/settings_screen.dart';
 import 'package:mobile_app/services/accessibility_manager.dart';
 import 'package:mobile_app/services/edge_ai_service.dart';
-import 'package:mobile_app/services/websocket_service.dart';
-import 'package:mobile_app/services/tflite_service.dart';
-import 'package:mobile_app/services/ml_kit_service.dart';
-import 'package:mobile_app/services/voice_command_service.dart';
-import 'package:mobile_app/services/navigation_service.dart';
-import 'package:mobile_app/services/sos_service.dart';
-import 'package:mobile_app/services/power_button_service.dart';
-import 'package:mobile_app/services/volume_button_service.dart';
-import 'package:mobile_app/services/settings_service.dart';
 import 'package:mobile_app/services/light_sensor_service.dart';
-import 'package:mobile_app/screens/settings_screen.dart';
-import 'package:mobile_app/screens/history_screen.dart';
-import 'dart:typed_data';
+import 'package:mobile_app/services/ml_kit_service.dart';
+import 'package:mobile_app/services/navigation_service.dart';
+import 'package:mobile_app/services/power_button_service.dart';
+import 'package:mobile_app/services/settings_service.dart';
+import 'package:mobile_app/services/sos_service.dart';
+import 'package:mobile_app/services/tflite_service.dart';
+import 'package:mobile_app/services/voice_command_service.dart';
+import 'package:mobile_app/services/volume_button_service.dart';
+import 'package:mobile_app/services/websocket_service.dart';
 
 class MainScreen extends StatefulWidget {
   final List<CameraDescription>? cameras;
@@ -91,7 +92,6 @@ class _MainScreenState extends State<MainScreen> {
     };
     _aiService.start();
 
-    // Load TFLite model for offline fallback
     _tfliteService.loadModel();
 
     _voiceCommandService = VoiceCommandService(
@@ -101,7 +101,6 @@ class _MainScreenState extends State<MainScreen> {
 
     _initSosDetection();
 
-    // Jump to saved default mode
     final defaultMode = _settings.defaultModeIndex;
     if (defaultMode > 0 && defaultMode < _modes.length) {
       _currentModeIndex = defaultMode;
@@ -127,10 +126,9 @@ class _MainScreenState extends State<MainScreen> {
         if (!mounted) return;
         setState(() => _isNightMode = isLowLight);
 
-        final settings = SettingsService();
-        if (isLowLight && settings.autoFlashEnabled && !_isFlashOn) {
+        if (isLowLight && _settings.autoFlashEnabled && !_isFlashOn) {
           _toggleFlash(forceOn: true);
-        } else if (!isLowLight && _isFlashOn && settings.autoFlashEnabled) {
+        } else if (!isLowLight && _isFlashOn && _settings.autoFlashEnabled) {
           _toggleFlash(forceOn: false);
         }
       };
@@ -164,41 +162,135 @@ class _MainScreenState extends State<MainScreen> {
     super.dispose();
   }
 
-  // Voice Commands
-  void _onCommandRecognized(String command) {
-    final cmd = command.toLowerCase();
+  String _mapVietnameseRune(int rune) {
+    switch (rune) {
+      case 224:
+      case 225:
+      case 7841:
+      case 7843:
+      case 227:
+      case 226:
+      case 7847:
+      case 7845:
+      case 7853:
+      case 7849:
+      case 7851:
+      case 259:
+      case 7857:
+      case 7855:
+      case 7863:
+      case 7859:
+      case 7861:
+        return 'a';
+      case 232:
+      case 233:
+      case 7865:
+      case 7867:
+      case 7869:
+      case 234:
+      case 7873:
+      case 7871:
+      case 7879:
+      case 7875:
+      case 7877:
+        return 'e';
+      case 236:
+      case 237:
+      case 7883:
+      case 7881:
+      case 297:
+        return 'i';
+      case 242:
+      case 243:
+      case 7885:
+      case 7887:
+      case 245:
+      case 244:
+      case 7891:
+      case 7889:
+      case 7897:
+      case 7893:
+      case 7895:
+      case 417:
+      case 7901:
+      case 7899:
+      case 7907:
+      case 7903:
+      case 7905:
+        return 'o';
+      case 249:
+      case 250:
+      case 7909:
+      case 7911:
+      case 361:
+      case 432:
+      case 7915:
+      case 7913:
+      case 7921:
+      case 7917:
+      case 7919:
+        return 'u';
+      case 7923:
+      case 253:
+      case 7925:
+      case 7927:
+      case 7929:
+        return 'y';
+      case 273:
+        return 'd';
+      default:
+        return String.fromCharCode(rune);
+    }
+  }
 
-    // SOS - highest priority
-    if (cmd.contains('khẩn cấp') ||
-        cmd.contains('cứu tôi') ||
-        cmd.contains('cứu với') ||
-        cmd.contains('giúp tôi')) {
+  String _normalizeCommand(String input) {
+    final buffer = StringBuffer();
+    for (final rune in input.toLowerCase().runes) {
+      buffer.write(_mapVietnameseRune(rune));
+    }
+
+    var s = buffer.toString();
+    s = s.replaceAll(RegExp(r'[^a-z0-9\s]'), ' ');
+    s = s.replaceAll(RegExp(r'\s+'), ' ').trim();
+    return s;
+  }
+
+  bool _containsAny(String text, List<String> keywords) {
+    for (final kw in keywords) {
+      if (text.contains(kw)) return true;
+    }
+    return false;
+  }
+
+  void _onCommandRecognized(String command) {
+    final cmd = _normalizeCommand(command);
+
+    if (_containsAny(cmd, ['khan cap', 'cuu toi', 'cuu voi', 'giup toi'])) {
       _sosService.triggerEmergency();
       return;
     }
 
-    // Navigation commands
-    if (cmd.contains('cài đặt')) {
+    if (_containsAny(cmd, ['cai dat'])) {
       _openSettings();
-    } else if (cmd.contains('lịch sử')) {
+    } else if (_containsAny(cmd, ['lich su'])) {
       _openHistory();
-    } else if (cmd.contains('đèn') || cmd.contains('flash')) {
+    } else if (_containsAny(cmd, ['den', 'flash'])) {
       _toggleFlash();
-    } else if (cmd.contains('trợ giúp') || cmd.contains('giúp đỡ')) {
+    } else if (_containsAny(cmd, ['tro giup', 'giup do'])) {
       _speakHelp();
-    } else if (cmd.contains('đọc') && cmd.contains('văn bản')) {
+    } else if (_containsAny(cmd, ['doc van ban', 'doc chu'])) {
       _goToMode(1);
-    } else if (cmd.contains('nhanh') || cmd.contains('offline')) {
+    } else if (_containsAny(cmd, ['nhanh', 'offline'])) {
       _goToMode(2);
-    } else if (cmd.contains('mô tả') || cmd.contains('không gian')) {
+    } else if (_containsAny(cmd, ['mo ta', 'khong gian'])) {
       _goToMode(3);
-    } else if (cmd.contains('định hướng') || cmd.contains('định vị')) {
+    } else if (_containsAny(cmd, ['dinh huong', 'dinh vi'])) {
       _goToMode(4);
-    } else if (cmd.contains('tổng hợp') || cmd.contains('tiền')) {
+    } else if (_containsAny(cmd, ['tong hop', 'tien'])) {
       _goToMode(0);
     } else {
       _accessibilityManager.speak(
-        'Không hiểu lệnh. Nói "trợ giúp" để nghe danh sách lệnh.',
+        'Không hiểu lệnh. Nói trợ giúp để nghe danh sách lệnh.',
       );
     }
   }
@@ -213,13 +305,10 @@ class _MainScreenState extends State<MainScreen> {
 
   void _speakHelp() {
     _accessibilityManager.speak(
-      'Các lệnh có sẵn: '
-      'đọc văn bản, đọc chữ nhanh, mô tả không gian, định hướng, tổng hợp, '
-      'cài đặt, lịch sử, đèn, khẩn cấp, trợ giúp.',
+      'Các lệnh có sẵn: đọc văn bản, đọc chữ nhanh, mô tả không gian, định hướng, tổng hợp, cài đặt, lịch sử, đèn, khẩn cấp, trợ giúp.',
     );
   }
 
-  // Flash Toggle
   Future<void> _toggleFlash({bool? forceOn}) async {
     if (_cameraController == null || !_cameraController!.value.isInitialized) {
       _accessibilityManager.speak('Camera chưa sẵn sàng.');
@@ -238,21 +327,19 @@ class _MainScreenState extends State<MainScreen> {
         newState ? 'Đã bật đèn flash' : 'Đã tắt đèn flash',
       );
       _accessibilityManager.triggerSuccessVibration();
-      SettingsService().setFlashOn(newState);
-    } catch (e) {
+      _settings.setFlashOn(newState);
+    } catch (_) {
       _accessibilityManager.speak('Không thể điều khiển đèn flash.');
       _accessibilityManager.triggerErrorVibration();
     }
   }
 
-  // Screen Navigation
   void _openSettings() {
     _accessibilityManager.speak('Mở cài đặt');
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const SettingsScreen()),
     ).then((_) {
-      // Refresh TTS speed after returning from settings
       _accessibilityManager.refreshTtsSpeed();
     });
   }
@@ -265,7 +352,6 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
-  // Gestures
   void _onPageChanged(int index) {
     setState(() => _currentModeIndex = index);
     _accessibilityManager.triggerSuccessVibration();
@@ -290,11 +376,9 @@ class _MainScreenState extends State<MainScreen> {
         }
         break;
       case 1:
-        // Mode 1: Online OCR - gui frame len server
         _aiService.requestOnlineOCR();
         break;
       case 2:
-        // Mode 2: Offline - xu ly tren thiet bi bang ML Kit
         _scanWithMLKit();
         break;
       case 3:
@@ -324,7 +408,7 @@ class _MainScreenState extends State<MainScreen> {
       final file = await _cameraController!.takePicture();
       await _mlKitService.processImageFile(file.path);
     } catch (e) {
-      debugPrint('Loi khi quet ML Kit: $e');
+      debugPrint('Lỗi khi quét ML Kit: $e');
     } finally {
       if (mounted) {
         setState(() => _isScanningMLKit = false);
@@ -332,7 +416,6 @@ class _MainScreenState extends State<MainScreen> {
     }
   }
 
-  // TFLite Offline Detection
   Future<void> _detectMoneyOffline() async {
     if (_cameraController == null || !_cameraController!.value.isInitialized) {
       return;
@@ -367,19 +450,16 @@ class _MainScreenState extends State<MainScreen> {
     }
   }
 
-  // Build
   @override
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.black,
       body: Stack(
         children: [
-          // Camera Background
           if (_cameraController != null &&
               _cameraController!.value.isInitialized)
             Positioned.fill(child: CameraPreview(_cameraController!)),
 
-          // Gesture overlay (PageView)
           Positioned.fill(
             child: GestureDetector(
               onDoubleTap: _handleDoubleTap,
@@ -437,7 +517,6 @@ class _MainScreenState extends State<MainScreen> {
             ),
           ),
 
-          // Connection Status Indicator (top-left)
           Positioned(
             top: 50,
             left: 16,
@@ -476,16 +555,12 @@ class _MainScreenState extends State<MainScreen> {
             ),
           ),
 
-          // Flash indicator (top-right)
           if (_isFlashOn || _isNightMode)
             Positioned(
               top: 50,
               right: 16,
               child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
+                padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
                 decoration: BoxDecoration(
                   color: Colors.amber.withOpacity(0.8),
                   borderRadius: BorderRadius.circular(12),
@@ -512,7 +587,6 @@ class _MainScreenState extends State<MainScreen> {
               ),
             ),
 
-          // Loading indicator overlay
           if (_isProcessing || _isScanningMLKit)
             Positioned.fill(
               child: Container(
@@ -551,25 +625,47 @@ class _MainScreenState extends State<MainScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: const [
-                _HintChip(
-                  icon: Icons.touch_app,
-                  label: 'Nhấn đúp',
-                ),
+                _HintChip(icon: Icons.touch_app, label: 'Nhấn đúp'),
                 SizedBox(width: 8),
-                _HintChip(
-                  icon: Icons.mic,
-                  label: 'Giữ để nói',
-                ),
+                _HintChip(icon: Icons.mic, label: 'Giữ để nói'),
                 SizedBox(width: 8),
-                _HintChip(
-                  icon: Icons.swipe,
-                  label: 'Vuốt để đổi chế độ',
-                ),
+                _HintChip(icon: Icons.swipe, label: 'Vuốt để đổi chế độ'),
               ],
             ),
           ),
 
-          // Pagination Indicators
+          Positioned(
+            bottom: 130,
+            right: 16,
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: _openSettings,
+                borderRadius: BorderRadius.circular(28),
+                child: Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withOpacity(0.55),
+                    shape: BoxShape.circle,
+                    border: Border.all(color: Colors.white.withOpacity(0.18)),
+                    boxShadow: [
+                      BoxShadow(
+                        color: const Color(0xFF6C63FF).withOpacity(0.28),
+                        blurRadius: 12,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.settings,
+                    color: Color(0xFF00D4FF),
+                    size: 24,
+                  ),
+                ),
+              ),
+            ),
+          ),
+
           Positioned(
             bottom: 40,
             left: 0,
@@ -653,3 +749,4 @@ class _HintChip extends StatelessWidget {
     );
   }
 }
+

@@ -1,4 +1,4 @@
-import 'package:camera/camera.dart';
+﻿import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_app/screens/main_screen.dart';
 import 'package:mobile_app/services/accessibility_manager.dart';
@@ -25,6 +25,8 @@ class _LoginScreenState extends State<LoginScreen> {
 
   bool _isSubmitting = false;
   bool _isRegisterMode = false;
+  bool _showPassword = false;
+  bool _showConfirmPassword = false;
 
   @override
   void initState() {
@@ -53,6 +55,7 @@ class _LoginScreenState extends State<LoginScreen> {
       if (_isRegisterMode && password != _confirmPasswordController.text) {
         throw Exception('Mật khẩu xác nhận không khớp');
       }
+
       final result = _isRegisterMode
           ? await _authService.register(email: email, password: password)
           : await _authService.login(email: email, password: password);
@@ -128,9 +131,20 @@ class _LoginScreenState extends State<LoginScreen> {
                   const SizedBox(height: 14),
                   TextFormField(
                     controller: _passwordController,
-                    obscureText: true,
+                    obscureText: !_showPassword,
                     style: const TextStyle(color: Colors.white),
-                    decoration: _inputDecoration('Mật khẩu'),
+                    decoration: _inputDecoration(
+                      'Mật khẩu',
+                      suffixIcon: IconButton(
+                        onPressed: () {
+                          setState(() => _showPassword = !_showPassword);
+                        },
+                        icon: Icon(
+                          _showPassword ? Icons.visibility_off : Icons.visibility,
+                          color: Colors.white70,
+                        ),
+                      ),
+                    ),
                     validator: (value) {
                       final v = value ?? '';
                       if (v.length < 6) return 'Mật khẩu tối thiểu 6 ký tự';
@@ -141,9 +155,22 @@ class _LoginScreenState extends State<LoginScreen> {
                     const SizedBox(height: 14),
                     TextFormField(
                       controller: _confirmPasswordController,
-                      obscureText: true,
+                      obscureText: !_showConfirmPassword,
                       style: const TextStyle(color: Colors.white),
-                      decoration: _inputDecoration('Xác nhận mật khẩu'),
+                      decoration: _inputDecoration(
+                        'Xác nhận mật khẩu',
+                        suffixIcon: IconButton(
+                          onPressed: () {
+                            setState(() {
+                              _showConfirmPassword = !_showConfirmPassword;
+                            });
+                          },
+                          icon: Icon(
+                            _showConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                            color: Colors.white70,
+                          ),
+                        ),
+                      ),
                       validator: (value) {
                         if (_isRegisterMode && (value ?? '').isEmpty) {
                           return 'Nhập lại mật khẩu';
@@ -178,6 +205,8 @@ class _LoginScreenState extends State<LoginScreen> {
                         : () {
                             setState(() {
                               _isRegisterMode = !_isRegisterMode;
+                              _showPassword = false;
+                              _showConfirmPassword = false;
                               _confirmPasswordController.clear();
                             });
                           },
@@ -196,10 +225,11 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 
-  InputDecoration _inputDecoration(String label) {
+  InputDecoration _inputDecoration(String label, {Widget? suffixIcon}) {
     return InputDecoration(
       labelText: label,
       labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+      suffixIcon: suffixIcon,
       filled: true,
       fillColor: Colors.white.withOpacity(0.08),
       border: OutlineInputBorder(
@@ -209,3 +239,5 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
+
+
