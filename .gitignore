@@ -1,0 +1,111 @@
+# ---- OS / Editor ----
+.DS_Store
+Thumbs.db
+Desktop.ini
+*.swp
+*.swo
+*~
+.vscode/
+.idea/
+
+# ---- Environment / Secrets ----
+.env
+.env.*
+!.env.example
+
+# ---- Logs / Temp ----
+*.log
+logs/
+*.tmp
+*.temp
+
+# ---- Python ----
+__pycache__/
+*.py[cod]
+*.pyd
+*.pyo
+*.egg-info/
+.eggs/
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+.coverage
+coverage.xml
+.venv/
+venv/
+env/
+
+# ---- Node / JS / TS (admin-dashboard, backend-gateway) ----
+**/node_modules/
+**/dist/
+**/build/
+**/.next/
+**/.nuxt/
+**/.cache/
+**/.turbo/
+**/.eslintcache
+**/coverage/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ---- NestJS / TypeScript ----
+**/*.tsbuildinfo
+
+# ---- Flutter / Dart (mobile_app) ----
+**/.dart_tool/
+**/.flutter-plugins
+**/.flutter-plugins-dependencies
+**/.packages
+**/.pub-cache/
+**/.pub/
+**/build/
+**/ios/Flutter/Flutter.framework
+**/ios/Flutter/App.framework
+**/ios/Flutter/Flutter.podspec
+**/ios/Flutter/Generated.xcconfig
+**/ios/Flutter/ephemeral/
+**/ios/Pods/
+**/macos/Flutter/ephemeral/
+**/windows/flutter/ephemeral/
+**/linux/flutter/ephemeral/
+**/android/.gradle/
+**/android/local.properties
+
+# ---- Native / Xcode ----
+*.pbxuser
+*.mode1v3
+*.mode2v3
+*.perspectivev3
+xcuserdata/
+*.xcuserstate
+DerivedData/
+*.hmap
+*.ipa
+
+# ---- AI Worker artifacts (models, datasets, runs, debug) ----
+ai-worker/venv/
+ai-worker/runs/
+ai-worker/dataset/
+ai-worker/debug_frames/
+ai-worker/*.pt
+ai-worker/*.onnx
+ai-worker/*.engine
+ai-worker/*.weights
+ai-worker/*.bin
+ai-worker/check_*.txt
+ai-worker/debug_*.txt
+ai-worker/*.log
+
+# ---- Misc generated ----
+*.sqlite
+*.db
+
+# ---- Ignore datasheet / extracted frames images ----
+ai-worker/frames/
+**/datasheet/
+**/*datasheet*.jpg
+**/*datasheet*.jpeg
+**/*datasheet*.png
+**/*datasheet*.webp

@@ -1,0 +1,98 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap");
+@import "tailwindcss";
+
+@theme {
+  --color-bg-primary: #0a0a1a;
+  --color-bg-card: #16163a;
+  --color-bg-card-hover: #1e1e4a;
+  --color-accent-purple: #6c63ff;
+  --color-accent-cyan: #00d4ff;
+  --color-accent-pink: #ff6b9d;
+  --color-accent-green: #00e676;
+  --color-accent-orange: #ff9800;
+  --color-accent-red: #ff5252;
+  --font-family-inter: "Inter", sans-serif;
+}
+
+body {
+  font-family: var(--font-family-inter);
+  background: var(--color-bg-primary);
+}
+
+/* Custom recharts tooltip */
+.custom-tooltip {
+  background: #111128 !important;
+  border: 1px solid rgba(108, 99, 255, 0.2) !important;
+  border-radius: 10px;
+  padding: 12px 16px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.4);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+}
+::-webkit-scrollbar-track {
+  background: var(--color-bg-primary);
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(108, 99, 255, 0.4);
+  border-radius: 3px;
+}
+
+/* Spin animation for loading */
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+.animate-spin-slow {
+  animation: spin 0.8s linear infinite;
+}
+
+/* Enhanced loading effects */
+.loader-ring {
+  width: 18px;
+  height: 18px;
+  border-radius: 9999px;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-top-color: var(--color-accent-cyan);
+  animation: spin 0.9s linear infinite;
+}
+
+@keyframes shimmer {
+  0% {
+    background-position: -300px 0;
+  }
+  100% {
+    background-position: 300px 0;
+  }
+}
+
+.loading-shimmer {
+  background: linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.04) 25%,
+    rgba(255, 255, 255, 0.12) 50%,
+    rgba(255, 255, 255, 0.04) 75%
+  );
+  background-size: 600px 100%;
+  animation: shimmer 1.4s infinite linear;
+}
+
+@keyframes dots {
+  0% {
+    width: 0;
+  }
+  100% {
+    width: 18px;
+  }
+}
+
+.loading-dots::after {
+  content: "...";
+  display: inline-block;
+  overflow: hidden;
+  vertical-align: bottom;
+  animation: dots 0.9s steps(3, end) infinite;
+}
