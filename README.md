@@ -165,7 +165,49 @@ REDIS_URL=redis://127.0.0.1:6379
 
 ---
 
-## 🛠 Troubleshooting (Các lỗi thường gặp)
+## � Chi tiết chức năng hệ thống
+
+Hệ thống hoạt động như một "đôi mắt thứ hai" cho người dùng:
+
+1. **Quét cảnh đường phố (Scene Recognition):** Nhận diện ô tô, xe máy, đèn giao thông, người đi bộ... và cảnh báo vật cản trực tiếp bằng giọng nói.
+2. **Đọc văn bản (OCR) & Báo tỷ giá:** Đọc chữ trên bảng hiệu, nhãn chai lọ. Đặc biệt hỗ trợ nhận diện và đọc to nhanh chóng mệnh giá tiền tệ Việt Nam.
+3. **Phát hiện nguy hiểm âm thanh (Danger Alert):** Phân tích âm thanh tiếng còi xe, chó sủa, đồ vỡ, còi báo cháy để rung tay và phát chuông cho người dùng.
+4. **Hệ thống TTS (Text-to-Speech) độ trễ thấp:** Mọi cảnh báo được AI chuyển thành Giọng nói tiếng Việt tự nhiên và gửi về Mobile chưa đến `200ms`.
+5. **Dashboard quản trị:** Lưu lịch sử phát hiện, thống kê biểu đồ người dùng và các loại nguy hiểm theo thời gian thực (Dành cho Admin).
+
+---
+
+## 🔬 Hướng dẫn: Dữ liệu Train & Cách Train AI
+
+Dự án sử dụng kiến trúc **Ultralytics YOLO** (phiên bản `yolo11n.pt` base model) để nhận diện thời gian thực.
+
+### 📂 1. Lấy dữ liệu Train có sẵn (Google Drive)
+
+Thay vì tự cắm máy tải, xử lý và gán nhãn hàng trăm video đường phố, bạn có thể tải thẳng thư mục dataset chuẩn của tôi trên Google Drive:
+
+> 🔗 **[Link Google Drive - Dataset AI Vision Assistant]((Thêm link Drive của anh vào đây))**
+
+_Cách dùng:_ Tải về và giải nén, copy thư mục `dataset/` (chứa 2 folder `images` và `labels` cùng file `data.yaml`) vào bên trong thư mục `ai-worker/`.
+
+### 🧠 2. Cách Train Model mớt (Fine-tuning)
+
+Nếu bạn có Card Đồ Hoạ (GPU) NVIDIA, bạn có thể tự train lại AI để tăng độ chính xác:
+
+1. Mở terminal, vào thư mục Worker và bật môi trường:
+   ```bash
+   cd ai-worker
+   .\.venv\Scripts\activate
+   ```
+2. Chạy lệnh Train YOLO (Tự động nhận diện file `data.yaml` bạn vừa tải về):
+   ```bash
+   yolo task=detect mode=train model=yolo11n.pt data=dataset/data.yaml epochs=20 imgsz=640 batch=16 name=vision_assistant_model
+   ```
+3. Sau khi train xong (khoảng 1-3 tiếng tuỳ máy), mô hình xịn nhất sẽ được lưu tại địa chỉ: `ai-worker/runs/detect/vision_assistant_model/weights/best.pt`.
+4. Mở file `ai-worker/services/model_manager.py` và sửa đường dẫn nạp model thành file `best.pt` vừa tạo để sử dụng.
+
+---
+
+## �🛠 Troubleshooting (Các lỗi thường gặp)
 
 | Hiện tượng                           | Cách khắc phục                                                                                               |
 | :----------------------------------- | :----------------------------------------------------------------------------------------------------------- |
@@ -176,6 +218,19 @@ REDIS_URL=redis://127.0.0.1:6379
 
 ---
 
-## 📜 Giấy phép & Đóng góp
+## 👨‍💻 Tác giả & Liên hệ
 
-Dự án được phát triển dưới dạng mã nguồn mở cho mục đích giáo dục và hỗ trợ cộng đồng. Các tính năng và tài liệu sẽ liên tục được cập nhật. Mọi đóng góp (Pull Request, Issues) đều được hoan nghênh.
+Dự án được xây dựng và phát triển bởi:
+
+- **Nguyễn Trung Tiến**
+- **Email sinh viên:** 2251120447@ut.edu.vn
+- **Email cá nhân:** trungtiennguyen910@gmail.com
+- **GitHub:** [@Nguyen-Trung-Tien](https://github.com/Nguyen-Trung-Tien)
+
+Mọi đóng góp (Pull Request, Issues) hoặc thắc mắc liên quan đến dự án đều được đón nhận nhiệt tình.
+
+---
+
+## 📜 Giấy phép
+
+Dự án được phát triển dưới dạng mã nguồn mở cho mục đích giáo dục và hỗ trợ cộng đồng. Các tính năng và tài liệu sẽ liên tục được cập nhật.
