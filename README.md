@@ -185,7 +185,7 @@ Dự án sử dụng kiến trúc **Ultralytics YOLO** (phiên bản `yolo11n.pt
 
 Thay vì tự cắm máy tải, xử lý và gán nhãn hàng trăm video đường phố, bạn có thể tải thẳng thư mục dataset chuẩn của tôi trên Google Drive:
 
-> 🔗 **[Link Google Drive - Dataset AI Vision Assistant]((Thêm link Drive của anh vào đây))**
+> 🔗 **[Link Google Drive - Dataset AI Vision Assistant](https://drive.google.com/drive/folders/1IIAZGycHPYxsSxg4HAufr089NBHxtTFc?usp=sharing)**
 
 _Cách dùng:_ Tải về và giải nén, copy thư mục `dataset/` (chứa 2 folder `images` và `labels` cùng file `data.yaml`) vào bên trong thư mục `ai-worker/`.
 
