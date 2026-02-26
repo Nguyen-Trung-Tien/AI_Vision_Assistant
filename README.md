@@ -175,7 +175,7 @@ REDIS_URL=redis://127.0.0.1:6379
 
 ---
 
-## � Chi tiết chức năng hệ thống
+## Chi tiết chức năng hệ thống
 
 Hệ thống hoạt động như một "đôi mắt thứ hai" cho người dùng:
 
@@ -217,7 +217,7 @@ Nếu bạn có Card Đồ Hoạ (GPU) NVIDIA, bạn có thể tự train lại 
 
 ---
 
-## �🛠 Troubleshooting (Các lỗi thường gặp)
+## 🛠 Troubleshooting (Các lỗi thường gặp)
 
 | Hiện tượng                           | Cách khắc phục                                                                                               |
 | :----------------------------------- | :----------------------------------------------------------------------------------------------------------- |
