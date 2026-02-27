@@ -55,17 +55,20 @@ class EdgeAIService {
       final now = DateTime.now();
       final timeSinceLastSpeak = now.difference(_lastSpokenTime).inSeconds;
 
-      if (text != _lastSpokenText) {
+      if (text.isNotEmpty && text != _lastSpokenText) {
         if (isStable || timeSinceLastSpeak >= 1.5) {
           _accessibilityManager.speak(text);
           _lastSpokenText = text;
           _lastSpokenTime = now;
 
           // Save to history
-          final historyType = taskType == 'CAPTION'
+          final historyType =
+              taskType == 'CAPTION'
               ? 'caption'
               : taskType == 'OCR'
               ? 'money'
+              : taskType == 'TEXT_OCR'
+              ? 'text'
               : 'detection';
           _historyService.addEntry(historyType, text);
         }
@@ -113,7 +116,7 @@ class EdgeAIService {
     _accessibilityManager.triggerSuccessVibration();
     _accessibilityManager.speak('Đang gửi lên server để đọc...');
     _setProcessing(true);
-    _sendFrameFromCamera(isDanger: false, distance: 2.0, taskType: 'OCR');
+    _sendFrameFromCamera(isDanger: false, distance: 2.0, taskType: 'TEXT_OCR');
   }
 
   Future<void> _sendFrameFromCamera({

@@ -36,6 +36,7 @@ from .scene_captioner import (
     get_spatial_position,
     process_captioning,
 )
+from .text_ocr import process_text_ocr
 from .stabilizer import Stabilizer
 
 
@@ -63,6 +64,10 @@ class AIService:
     @classmethod
     def process_captioning(cls, image_base64: str, client_id: str = "default", lang: str = "vi") -> dict:
         return process_captioning(image_base64, client_id, lang=lang)
+
+    @classmethod
+    def process_text_ocr(cls, image_base64: str, client_id: str = "default", lang: str = "vi") -> dict:
+        return process_text_ocr(image_base64, client_id, lang=lang)
 
     # --- Internal methods re-exported for test backward compat ---
 

@@ -40,6 +40,8 @@ def on_message(channel, method, properties, body):
         ai_result = {}
         if task_type == "OCR":
             ai_result = AIService.process_ocr(frame_data, client_id=client_id, lang=lang)
+        elif task_type == "TEXT_OCR":
+            ai_result = AIService.process_text_ocr(frame_data, client_id=client_id, lang=lang)
         elif task_type == "CAPTION":
             ai_result = AIService.process_captioning(frame_data, client_id=client_id, lang=lang)
             # Add danger detection for scene captioning
