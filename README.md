@@ -181,9 +181,8 @@ Hệ thống hoạt động như một "đôi mắt thứ hai" cho người dùn
 
 1. **Quét cảnh đường phố (Scene Recognition):** Nhận diện ô tô, xe máy, đèn giao thông, người đi bộ... và cảnh báo vật cản trực tiếp bằng giọng nói.
 2. **Đọc văn bản (OCR) & Báo tỷ giá:** Đọc chữ trên bảng hiệu, nhãn chai lọ. Đặc biệt hỗ trợ nhận diện và đọc to nhanh chóng mệnh giá tiền tệ Việt Nam.
-3. **Phát hiện nguy hiểm âm thanh (Danger Alert):** Phân tích âm thanh tiếng còi xe, chó sủa, đồ vỡ, còi báo cháy để rung tay và phát chuông cho người dùng.
-4. **Hệ thống TTS (Text-to-Speech) độ trễ thấp:** Mọi cảnh báo được AI chuyển thành Giọng nói tiếng Việt tự nhiên và gửi về Mobile chưa đến `200ms`.
-5. **Dashboard quản trị:** Lưu lịch sử phát hiện, thống kê biểu đồ người dùng và các loại nguy hiểm theo thời gian thực (Dành cho Admin).
+3. **Hệ thống TTS (Text-to-Speech) độ trễ thấp:** Mọi cảnh báo được AI chuyển thành Giọng nói tiếng Việt tự nhiên và gửi về Mobile chưa đến `200ms`.
+4. **Dashboard quản trị:** Lưu lịch sử phát hiện, thống kê biểu đồ người dùng và các loại nguy hiểm theo thời gian thực (Dành cho Admin).
 
 ---
 
