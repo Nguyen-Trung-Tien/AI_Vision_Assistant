@@ -55,7 +55,7 @@ class TTSCacheService:
     def _make_cache_key(cls, text: str) -> str:
         """Tạo cache key từ nội dung text."""
         text_hash = hashlib.md5(text.encode("utf-8")).hexdigest()
-        return f"tts_audio:{text_hash}:vi-VN"
+        return f"tts_audio_{text_hash}_vi-VN"
 
     @classmethod
     def _generate_audio_url(cls, text: str, cache_key: str) -> str:
