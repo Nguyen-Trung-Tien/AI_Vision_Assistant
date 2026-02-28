@@ -1,5 +1,6 @@
 import 'package:flutter/foundation.dart';
-import 'package:flutter/services.dart';
+import 'package:tflite_flutter/tflite_flutter.dart';
+import 'package:image/image.dart' as img;
 
 /// Service nhận diện tiền offline bằng TFLite.
 /// Cần file model .tflite trong assets.
@@ -11,11 +12,9 @@ class TfliteService {
   bool _isModelLoaded = false;
   bool get isModelLoaded => _isModelLoaded;
 
-  // Model sẽ là list of bytes
-  Uint8List? _modelBytes;
+  Interpreter? _interpreter;
 
-  /// Danh sách nhãn mệnh giá output của model (sẽ dùng khi tích hợp interpreter)
-  // ignore: unused_field
+  /// Danh sách nhãn mệnh giá output của model
   static const List<String> _labels = [
     'tien_1k',
     'tien_2k',
@@ -46,16 +45,14 @@ class TfliteService {
     if (_isModelLoaded) return true;
 
     try {
-      _modelBytes = (await rootBundle.load(
+      _interpreter = await Interpreter.fromAsset(
         'assets/models/money_detector.tflite',
-      )).buffer.asUint8List();
-      _isModelLoaded = true;
-      debugPrint(
-        '[TFLite] Model loaded successfully (${_modelBytes!.length} bytes)',
       );
+      _isModelLoaded = true;
+      debugPrint('[TFLite] Model loaded successfully');
       return true;
     } catch (e) {
-      debugPrint('[TFLite] Model not found in assets: $e');
+      debugPrint('[TFLite] Model not found in assets or load failed: $e');
       _isModelLoaded = false;
       return false;
     }
@@ -64,21 +61,66 @@ class TfliteService {
   /// Chạy inference trên thiết bị
   /// Returns text kết quả hoặc null nếu model chưa load
   Future<String?> detectMoney(Uint8List imageBytes) async {
-    if (!_isModelLoaded || _modelBytes == null) {
-      return null;
+    if (!_isModelLoaded || _interpreter == null) {
+      return 'Chưa tải được model nhận diện offline.';
     }
 
     try {
-      // TODO: Tích hợp tflite_flutter interpreter khi có model thật
-      // Hiện tại trả về placeholder để giữ flow
-      // Khi có model .tflite thật:
-      // 1. final interpreter = Interpreter.fromBuffer(_modelBytes!);
-      // 2. Resize & normalize imageBytes → input tensor
-      // 3. interpreter.run(input, output)
-      // 4. Parse output → label + confidence
-      debugPrint('[TFLite] Inference requested (${imageBytes.length} bytes)');
+      debugPrint('[TFLite] Decoding image...');
+      final image = img.decodeImage(imageBytes);
+      if (image == null) {
+        return 'Lỗi đọc khung hình camera.';
+      }
 
-      return 'Chế độ offline: Cần file model .tflite trong assets/models/ để nhận diện.';
+      // Resize về 224x224
+      debugPrint('[TFLite] Resizing image for model input...');
+      final resizedImage = img.copyResize(image, width: 224, height: 224);
+
+      // Chuyển pixel thành tensor chuẩn Normalize [-1, 1]
+      // tùy thuộc vào model được huấn luyện cụ thể
+      var input = List.generate(
+        1,
+        (i) => List.generate(
+          224,
+          (y) => List.generate(224, (x) {
+            final pixel = resizedImage.getPixel(x, y);
+            return [
+              (pixel.r / 127.5) - 1.0,
+              (pixel.g / 127.5) - 1.0,
+              (pixel.b / 127.5) - 1.0,
+            ];
+          }),
+        ),
+      );
+
+      // Giả định model trả về xác suất 9 class
+      var output = List.filled(1 * 9, 0.0).reshape([1, 9]);
+
+      debugPrint('[TFLite] Running interpreter...');
+      _interpreter!.run(input, output);
+
+      final probabilities = output[0] as List<double>;
+      double maxProb = probabilities[0];
+      int maxIndex = 0;
+
+      for (int i = 1; i < probabilities.length; i++) {
+        if (probabilities[i] > maxProb) {
+          maxProb = probabilities[i];
+          maxIndex = i;
+        }
+      }
+
+      debugPrint(
+        '[TFLite] Inference done. Max prob: $maxProb at index $maxIndex',
+      );
+
+      if (maxProb > 0.6) {
+        // Ngưỡng nhận diện
+        String label = _labels[maxIndex];
+        return labelToDenomination(label);
+      } else {
+        return 'Không nhận diện rõ mệnh giá';
+      }
     } catch (e) {
       debugPrint('[TFLite] Inference error: $e');
       return 'Lỗi nhận diện offline: $e';
@@ -91,7 +133,8 @@ class TfliteService {
   }
 
   void dispose() {
-    _modelBytes = null;
+    _interpreter?.close();
+    _interpreter = null;
     _isModelLoaded = false;
   }
 }
