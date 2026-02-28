@@ -49,16 +49,6 @@ export class VisionGateway implements OnGatewayConnection, OnGatewayDisconnect {
       return;
     }
 
-    // Edge processing (Luồng 1): Mobile already knows if it's danger
-    if (data.is_danger && (data.distance ?? 2.0) < 2.0) {
-      client.emit('danger_alert', {
-        level: 'HIGH',
-        message: 'Stop immediately!',
-        distance: data.distance,
-      });
-      return;
-    }
-
     if (data.task_type) {
       await this.taskQueueService.pushHeavyTask(
         client.id,

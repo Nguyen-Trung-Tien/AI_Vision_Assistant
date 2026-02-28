@@ -6,6 +6,7 @@ Fallback sang in-memory cache khi Redis không khả dụng.
 
 import hashlib
 import os
+import subprocess
 from typing import Optional
 
 try:
@@ -57,13 +58,33 @@ class TTSCacheService:
         return f"tts_audio:{text_hash}:vi-VN"
 
     @classmethod
-    def _generate_audio_url(cls, cache_key: str) -> str:
+    def _generate_audio_url(cls, text: str, cache_key: str) -> str:
         """
-        Tạo URL audio từ TTS engine.
-        TODO: Tích hợp Google Cloud TTS hoặc edge-tts thực tế.
-        Hiện tại trả URL giả định từ S3.
+        Tạo URL audio từ TTS engine (edge-tts).
+        Lưu file trả về dạng URL cục bộ hoặc public tùy cấu hình.
         """
-        return f"https://s3.aws.abc/vision-assistant/{cache_key}.mp3"
+        # Thư mục lưu trữ tạm thời
+        audio_dir = "/tmp/vision_audio" if os.name != "nt" else os.path.join(os.environ.get("TEMP", "C:\\temp"), "vision_audio")
+        os.makedirs(audio_dir, exist_ok=True)
+        
+        file_name = f"{cache_key}.mp3"
+        file_path = os.path.join(audio_dir, file_name)
+        
+        if not os.path.exists(file_path):
+            try:
+                # Gọi edge-tts qua subprocess cli
+                voice = "vi-VN-HoaiMyNeural"
+                cmd = ["edge-tts", "--voice", voice, "--text", text, "--write-media", file_path]
+                subprocess.run(cmd, check=True)
+                print(f"[TTS Cache] Generated new audio at {file_path}")
+            except Exception as e:
+                print(f"[TTS Cache] Error generating edge-tts: {e}")
+                return ""
+                
+        # Trong thực tế, bạn cần một static file server (FastAPI/Express/Nginx) map tới thư mục này.
+        # Hoặc backend-gateway sẽ proxy file này.
+        # Ở đây trả về relative path để Gateway hoặc Client tự xử lý:
+        return f"/audio/{file_name}"
 
     @classmethod
     def get_audio_url(cls, text: str) -> str:
@@ -92,7 +113,7 @@ class TTSCacheService:
             return cls._memory_cache[cache_key]
 
         # Cache Miss — generate
-        audio_url = cls._generate_audio_url(cache_key)
+        audio_url = cls._generate_audio_url(text, cache_key)
 
         # Store in Redis
         if cls._redis_client is not None:

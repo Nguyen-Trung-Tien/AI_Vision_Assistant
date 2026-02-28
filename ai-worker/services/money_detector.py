@@ -19,6 +19,7 @@ from .constants import (
 from .image_utils import decode_base64_image, get_dominant_color, is_blurry
 from .model_manager import ModelManager
 from .stabilizer import Stabilizer
+from .translations import t
 
 
 def normalize_label(label: str) -> str:
@@ -95,7 +96,7 @@ def process_ocr(image_base64: str, client_id: str = "default", lang: str = "vi")
     image = decode_base64_image(image_base64)
     if image is None:
         return {
-            "text": "Không đọc được khung hình.",
+            "text": t("no_frame", lang=lang),
             "confidence_score": 0.0,
             "boxes": [],
         }
@@ -103,7 +104,7 @@ def process_ocr(image_base64: str, client_id: str = "default", lang: str = "vi")
     # 1. Kiểm tra độ nhòe
     if is_blurry(image):
         return {
-            "text": "Hình ảnh hơi mờ, vui lòng giữ tay ổn định.",
+            "text": t("blurry", lang=lang),
             "confidence_score": 0.3,
             "boxes": [],
             "is_blurry": True,
@@ -172,22 +173,35 @@ def process_ocr(image_base64: str, client_id: str = "default", lang: str = "vi")
 
             conf = round(float(best_item["confidence"]), 2)
             label = best_item["label"]
-            display_text = LABEL_TRANSLATIONS.get(label, f"{denomination} đồng")
+            
+            # Format display text according to language
+            if lang == "en":
+                # For English we might want just "50000 VND"
+                display_text = f"{denomination} VND" if denomination else label
+            else:
+                display_text = LABEL_TRANSLATIONS.get(label, f"{denomination} đồng")
 
             # Thêm đặc trưng landmark
             feature = DENOMINATION_FEATURES.get(denomination)
-            feature_text = f", có hình {feature}" if feature else ""
+            if feature:
+                feature_text = t("feature_prefix", lang=lang) + feature
+            else:
+                feature_text = ""
 
             color_info = ""
             if "hsv" in best_item:
                 h, s, v = best_item["hsv"]
-                status = "khớp" if best_item.get("color_valid") else "không khớp lắm"
-                color_info = f" (Màu sắc {status})"
+                status_key = "color_match" if best_item.get("color_valid") else "color_mismatch"
+                color_info = t(status_key, lang=lang)
 
             result = {
-                "text": (
-                    f"Phát hiện tờ {display_text}{feature_text}{color_info}. "
-                    f"Độ tin cậy {conf}."
+                "text": t(
+                    "denomination_found",
+                    lang=lang,
+                    display_text=display_text,
+                    feature=feature_text,
+                    color=color_info,
+                    conf=conf,
                 ),
                 "confidence_score": conf,
                 "boxes": [d["box"] for d in money_detections],
@@ -199,10 +213,7 @@ def process_ocr(image_base64: str, client_id: str = "default", lang: str = "vi")
             best = max(money_detections, key=lambda x: x["confidence"])
             conf = round(float(best["confidence"]), 2)
             result = {
-                "text": (
-                    "Phát hiện tiền Việt Nam nhưng model hiện tại chưa tách mệnh giá rõ ràng. "
-                    f"Độ tin cậy {conf}."
-                ),
+                "text": t("unknown_money", lang=lang, conf=conf),
                 "confidence_score": conf,
                 "boxes": [d["box"] for d in money_detections],
                 "denomination": "unknown_money",
@@ -211,7 +222,7 @@ def process_ocr(image_base64: str, client_id: str = "default", lang: str = "vi")
     else:
         best_conf = round(max((d["confidence"] for d in detections), default=0.0), 2)
         result = {
-            "text": "Không phát hiện tiền trong khung hình.",
+            "text": t("no_money", lang=lang),
             "confidence_score": best_conf,
             "boxes": [d["box"] for d in detections],
             "denomination": None,
@@ -223,6 +234,8 @@ def process_ocr(image_base64: str, client_id: str = "default", lang: str = "vi")
     if stable:
         result["stable"] = True
         if result.get("denomination") and result["denomination"] != "unknown_money":
-            result["text"] = result["text"].replace("Phát hiện", "Xác nhận")
+            detected_str = t("detected", lang=lang)
+            confirmed_str = t("confirmed", lang=lang)
+            result["text"] = result["text"].replace(detected_str, confirmed_str)
 
     return result

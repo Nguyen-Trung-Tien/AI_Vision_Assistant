@@ -1,4 +1,4 @@
-﻿import 'package:camera/camera.dart';
+import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:mobile_app/screens/main_screen.dart';
 import 'package:mobile_app/services/accessibility_manager.dart';
@@ -140,7 +140,9 @@ class _LoginScreenState extends State<LoginScreen> {
                           setState(() => _showPassword = !_showPassword);
                         },
                         icon: Icon(
-                          _showPassword ? Icons.visibility_off : Icons.visibility,
+                          _showPassword
+                              ? Icons.visibility_off
+                              : Icons.visibility,
                           color: Colors.white70,
                         ),
                       ),
@@ -166,7 +168,9 @@ class _LoginScreenState extends State<LoginScreen> {
                             });
                           },
                           icon: Icon(
-                            _showConfirmPassword ? Icons.visibility_off : Icons.visibility,
+                            _showConfirmPassword
+                                ? Icons.visibility_off
+                                : Icons.visibility,
                             color: Colors.white70,
                           ),
                         ),
@@ -239,5 +243,3 @@ class _LoginScreenState extends State<LoginScreen> {
     );
   }
 }
-
-

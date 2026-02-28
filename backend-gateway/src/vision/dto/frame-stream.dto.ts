@@ -5,14 +5,6 @@ export class FrameStreamDto {
   frame: string;
 
   @IsOptional()
-  @IsBoolean()
-  is_danger?: boolean;
-
-  @IsOptional()
-  @IsNumber()
-  distance?: number;
-
-  @IsOptional()
   @IsString()
   task_type?: string;
 

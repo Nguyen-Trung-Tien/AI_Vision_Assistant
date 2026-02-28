@@ -7,7 +7,6 @@ class WebSocketService {
 
   /// Token dùng để authenticate với WebSocket gateway.
   /// Trong development dùng dev_bypass_token.
-  /// TODO: Thay bằng JWT thật từ login flow khi có auth screen.
   String _authToken = const String.fromEnvironment(
     'WS_TOKEN',
     defaultValue: '',
@@ -115,9 +114,7 @@ class WebSocketService {
   }
 
   void sendFrame(
-    String base64Frame,
-    bool isDanger,
-    double distance, {
+    String base64Frame, {
     String? taskType,
     String lang = 'vi',
     double warningDistanceM = 2.0,
@@ -129,8 +126,6 @@ class WebSocketService {
 
     socket.emit('frame_stream', {
       'frame': base64Frame,
-      'is_danger': isDanger,
-      'distance': distance,
       'task_type': taskType,
       'lang': lang,
       'warning_distance_m': warningDistanceM,

@@ -62,8 +62,7 @@ class EdgeAIService {
           _lastSpokenTime = now;
 
           // Save to history
-          final historyType =
-              taskType == 'CAPTION'
+          final historyType = taskType == 'CAPTION'
               ? 'caption'
               : taskType == 'OCR'
               ? 'money'
@@ -79,7 +78,9 @@ class EdgeAIService {
       final status = data['status']?.toString();
       if (status == 'throttled') {
         _setProcessing(false);
-        _accessibilityManager.speak('Khung hình gửi quá nhanh, vui lòng thử lại.');
+        _accessibilityManager.speak(
+          'Khung hình gửi quá nhanh, vui lòng thử lại.',
+        );
       }
     };
   }
@@ -101,14 +102,14 @@ class EdgeAIService {
     _accessibilityManager.triggerSuccessVibration();
     _accessibilityManager.speak('Đang nhận diện...');
     _setProcessing(true);
-    _sendFrameFromCamera(isDanger: false, distance: 2.0, taskType: 'OCR');
+    _sendFrameFromCamera(taskType: 'OCR');
   }
 
   void requestCaptioning() {
     _accessibilityManager.triggerSuccessVibration();
     _accessibilityManager.speak('Đang mô tả...');
     _setProcessing(true);
-    _sendFrameFromCamera(isDanger: false, distance: 2.0, taskType: 'CAPTION');
+    _sendFrameFromCamera(taskType: 'CAPTION');
   }
 
   /// Mode 1: Online OCR — gửi frame lên server để đọc văn bản
@@ -116,14 +117,10 @@ class EdgeAIService {
     _accessibilityManager.triggerSuccessVibration();
     _accessibilityManager.speak('Đang gửi lên server để đọc...');
     _setProcessing(true);
-    _sendFrameFromCamera(isDanger: false, distance: 2.0, taskType: 'TEXT_OCR');
+    _sendFrameFromCamera(taskType: 'TEXT_OCR');
   }
 
-  Future<void> _sendFrameFromCamera({
-    required bool isDanger,
-    required double distance,
-    String? taskType,
-  }) async {
+  Future<void> _sendFrameFromCamera({String? taskType}) async {
     if (!_isRunning) {
       _setProcessing(false);
       return;
@@ -140,8 +137,6 @@ class EdgeAIService {
 
     _wsService.sendFrame(
       base64Frame,
-      isDanger,
-      distance,
       taskType: taskType,
       lang: settings.language,
       warningDistanceM: settings.warningDistance,

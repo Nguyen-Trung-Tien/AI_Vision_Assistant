@@ -1,4 +1,4 @@
-﻿import 'package:flutter/foundation.dart';
+import 'package:flutter/foundation.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:mobile_app/services/accessibility_manager.dart';
 
@@ -42,7 +42,9 @@ class VoiceCommandService {
     if (!_isInitialized || !_speechToText.isAvailable) {
       await init();
       if (!_isInitialized || !_speechToText.isAvailable) {
-        _accessibilityManager.speak('Thiết bị không hỗ trợ nhận diện giọng nói.');
+        _accessibilityManager.speak(
+          'Thiết bị không hỗ trợ nhận diện giọng nói.',
+        );
         return;
       }
     }
@@ -84,4 +86,3 @@ class VoiceCommandService {
     _isListening = false;
   }
 }
-

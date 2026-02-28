@@ -18,10 +18,10 @@ class AuthService {
     required String email,
     required String password,
   }) async {
-    final payload = await _postJson(
-      '/auth/login',
-      {'email': email, 'password': password},
-    );
+    final payload = await _postJson('/auth/login', {
+      'email': email,
+      'password': password,
+    });
 
     final token = payload['access_token']?.toString() ?? '';
     final userEmail = payload['user']?['email']?.toString() ?? email;
@@ -36,10 +36,10 @@ class AuthService {
     required String email,
     required String password,
   }) async {
-    final payload = await _postJson(
-      '/auth/register',
-      {'email': email, 'password': password},
-    );
+    final payload = await _postJson('/auth/register', {
+      'email': email,
+      'password': password,
+    });
 
     final token = payload['access_token']?.toString() ?? '';
     final userEmail = payload['user']?['email']?.toString() ?? email;
