@@ -92,10 +92,11 @@ class _SplashScreenState extends State<SplashScreen>
       if (mounted) {
         Navigator.of(context).pushReplacement(
           PageRouteBuilder(
-            pageBuilder: (_, __, ___) => widget.nextScreen,
-            transitionsBuilder: (_, animation, __, child) {
-              return FadeTransition(opacity: animation, child: child);
-            },
+            pageBuilder: (context, animation1, animation2) => widget.nextScreen,
+            transitionsBuilder:
+                (context, animation, secondaryAnimation, child) {
+                  return FadeTransition(opacity: animation, child: child);
+                },
             transitionDuration: const Duration(milliseconds: 800),
           ),
         );
@@ -146,14 +147,14 @@ class _SplashScreenState extends State<SplashScreen>
                             BoxShadow(
                               color: const Color(
                                 0xFF6C63FF,
-                              ).withOpacity(_pulseAnimation.value * 0.6),
+                              ).withValues(alpha: _pulseAnimation.value * 0.6),
                               blurRadius: 40,
                               spreadRadius: 10,
                             ),
                             BoxShadow(
                               color: const Color(
                                 0xFF00D4FF,
-                              ).withOpacity(_pulseAnimation.value * 0.3),
+                              ).withValues(alpha: _pulseAnimation.value * 0.3),
                               blurRadius: 60,
                               spreadRadius: 20,
                             ),
@@ -197,7 +198,7 @@ class _SplashScreenState extends State<SplashScreen>
                       Text(
                         'Trợ lý thị giác thông minh',
                         style: TextStyle(
-                          color: Colors.white.withOpacity(0.7),
+                          color: Colors.white.withValues(alpha: 0.7),
                           fontSize: 16,
                           letterSpacing: 0.5,
                         ),
@@ -220,7 +221,7 @@ class _SplashScreenState extends State<SplashScreen>
                       child: ClipRRect(
                         borderRadius: BorderRadius.circular(4),
                         child: LinearProgressIndicator(
-                          backgroundColor: Colors.white.withOpacity(0.1),
+                          backgroundColor: Colors.white.withValues(alpha: 0.1),
                           valueColor: AlwaysStoppedAnimation<Color>(
                             Color.lerp(
                               const Color(0xFF6C63FF),

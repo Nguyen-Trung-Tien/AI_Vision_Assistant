@@ -535,7 +535,7 @@ class _MainScreenState extends State<MainScreen> {
                 itemBuilder: (context, index) {
                   final modes = _getModes(_settings.language);
                   return Container(
-                    color: Colors.black.withOpacity(0.3),
+                    color: Colors.black.withValues(alpha: 0.3),
                     alignment: Alignment.center,
                     child: Container(
                       margin: const EdgeInsets.symmetric(horizontal: 24),
@@ -544,10 +544,10 @@ class _MainScreenState extends State<MainScreen> {
                         vertical: 18,
                       ),
                       decoration: BoxDecoration(
-                        color: Colors.black.withOpacity(0.45),
+                        color: Colors.black.withValues(alpha: 0.45),
                         borderRadius: BorderRadius.circular(20),
                         border: Border.all(
-                          color: Colors.white.withOpacity(0.15),
+                          color: Colors.white.withValues(alpha: 0.15),
                         ),
                       ),
                       child: Column(
@@ -603,7 +603,7 @@ class _MainScreenState extends State<MainScreen> {
                             (_isConnected
                                     ? const Color(0xFF00E676)
                                     : const Color(0xFFFF5252))
-                                .withOpacity(0.6),
+                                .withValues(alpha: 0.6),
                         blurRadius: 8,
                         spreadRadius: 2,
                       ),
@@ -616,7 +616,7 @@ class _MainScreenState extends State<MainScreen> {
                       ? AppLocalizations.t('main_online', _settings.language)
                       : AppLocalizations.t('main_offline', _settings.language),
                   style: TextStyle(
-                    color: Colors.white.withOpacity(0.7),
+                    color: Colors.white.withValues(alpha: 0.7),
                     fontSize: 12,
                   ),
                 ),
@@ -634,7 +634,7 @@ class _MainScreenState extends State<MainScreen> {
                   vertical: 4,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.amber.withOpacity(0.8),
+                  color: Colors.amber.withValues(alpha: 0.8),
                   borderRadius: BorderRadius.circular(12),
                 ),
                 child: Row(
@@ -675,12 +675,12 @@ class _MainScreenState extends State<MainScreen> {
                   horizontal: 20,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.redAccent.withOpacity(0.9),
+                  color: Colors.redAccent.withValues(alpha: 0.9),
                   borderRadius: BorderRadius.circular(16),
                   border: Border.all(color: Colors.white, width: 2),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.red.withOpacity(0.5),
+                      color: Colors.red.withValues(alpha: 0.5),
                       blurRadius: 20,
                       spreadRadius: 5,
                     ),
@@ -712,7 +712,7 @@ class _MainScreenState extends State<MainScreen> {
           if (_isProcessing || _isScanningMLKit)
             Positioned.fill(
               child: Container(
-                color: Colors.black.withOpacity(0.4),
+                color: Colors.black.withValues(alpha: 0.4),
                 child: Center(
                   child: Column(
                     mainAxisSize: MainAxisSize.min,
@@ -793,12 +793,12 @@ class _MainScreenState extends State<MainScreen> {
                 child: Container(
                   padding: const EdgeInsets.all(12),
                   decoration: BoxDecoration(
-                    color: Colors.black.withOpacity(0.55),
+                    color: Colors.black.withValues(alpha: 0.55),
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white.withOpacity(0.18)),
+                    border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
                     boxShadow: [
                       BoxShadow(
-                        color: const Color(0xFF6C63FF).withOpacity(0.28),
+                        color: const Color(0xFF6C63FF).withValues(alpha: 0.28),
                         blurRadius: 12,
                         spreadRadius: 1,
                       ),
@@ -875,9 +875,9 @@ class _HintChip extends StatelessWidget {
     return Container(
       padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
       decoration: BoxDecoration(
-        color: Colors.black.withOpacity(0.45),
+        color: Colors.black.withValues(alpha: 0.45),
         borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withOpacity(0.12)),
+        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,

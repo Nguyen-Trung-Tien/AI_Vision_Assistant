@@ -62,11 +62,13 @@ class VoiceCommandService {
 
     await _speechToText.listen(
       localeId: 'vi_VN',
-      cancelOnError: true,
-      listenMode: ListenMode.deviceDefault,
+      listenOptions: SpeechListenOptions(
+        cancelOnError: true,
+        listenMode: ListenMode.deviceDefault,
+        partialResults: true,
+      ),
       listenFor: const Duration(seconds: 8),
       pauseFor: const Duration(seconds: 2),
-      partialResults: true,
       onResult: (result) {
         final recognizedWords = result.recognizedWords.trim();
         if (recognizedWords.isEmpty) return;

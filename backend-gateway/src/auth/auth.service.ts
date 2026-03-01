@@ -47,7 +47,10 @@ export class AuthService implements OnModuleInit {
 
     let isSamePassword = false;
     try {
-      isSamePassword = await bcrypt.compare(adminPassword, existing.password_hash);
+      isSamePassword = await bcrypt.compare(
+        adminPassword,
+        existing.password_hash,
+      );
     } catch {
       isSamePassword = false;
     }
@@ -60,7 +63,7 @@ export class AuthService implements OnModuleInit {
     this.logger.log(`Default admin account is ready: ${adminEmail}`);
   }
 
-  async validateUser(email: string, pass: string): Promise<any> {
+  async validateUser(email: string, pass: string) {
     const user = await this.usersService.findOneByEmail(email);
     if (!user) {
       return null;
@@ -71,11 +74,17 @@ export class AuthService implements OnModuleInit {
       return null;
     }
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password_hash, ...result } = user;
     return result;
   }
 
-  async login(user: any) {
+  login(user: {
+    id: string;
+    email: string;
+    role: string;
+    accessibility_prefs: Record<string, unknown>;
+  }) {
     const payload = { email: user.email, sub: user.id, role: user.role };
     return {
       access_token: this.jwtService.sign(payload),
@@ -91,7 +100,7 @@ export class AuthService implements OnModuleInit {
   async register(data: {
     email: string;
     password: string;
-    accessibility_prefs?: any;
+    accessibility_prefs?: Record<string, unknown>;
   }) {
     const existing = await this.usersService.findOneByEmail(data.email);
     if (existing) {

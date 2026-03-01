@@ -1,6 +1,7 @@
 import { Controller, Logger } from '@nestjs/common';
 import { EventPattern, Payload } from '@nestjs/microservices';
 import { TaskQueueService } from './task-queue.service';
+import type { AIResultPayload } from './task-queue.service';
 
 @Controller()
 export class VisionController {
@@ -9,7 +10,7 @@ export class VisionController {
   constructor(private readonly taskQueueService: TaskQueueService) {}
 
   @EventPattern('ai_results_queue')
-  async handleAIResult(@Payload() data: any) {
+  async handleAIResult(@Payload() data: AIResultPayload) {
     this.logger.log(
       `Received final AI result from Python for client: ${data?.clientId}`,
     );

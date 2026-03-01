@@ -5,6 +5,23 @@ import { Repository } from 'typeorm';
 import { Server } from 'socket.io';
 import { DetectionLog } from './entities/detection-log.entity';
 
+export interface AIResultPayload {
+  clientId: string;
+  userId?: string;
+  taskType?: string;
+  task_type?: string;
+  text?: string;
+  confidence_score?: number;
+  audio_url?: string;
+  stable?: boolean;
+  danger_alerts?: {
+    distance: number;
+    label: string;
+    message: string;
+    position: string;
+  }[];
+}
+
 @Injectable()
 export class TaskQueueService {
   private readonly logger = new Logger(TaskQueueService.name);
@@ -41,7 +58,7 @@ export class TaskQueueService {
   }
 
   // Push heavy tasks to RabbitMQ
-  async pushHeavyTask(
+  pushHeavyTask(
     clientId: string,
     userId: string | undefined,
     taskType: string,
@@ -65,7 +82,7 @@ export class TaskQueueService {
   }
 
   // Receive AI result from RabbitMQ and relay to client via WebSocket
-  async handleAIResult(result: any) {
+  async handleAIResult(result: AIResultPayload) {
     this.logger.log(
       `Received AI result for client ${result?.clientId} (userId: ${result?.userId ?? 'anonymous'})`,
     );
@@ -73,10 +90,10 @@ export class TaskQueueService {
     // Persist to database
     try {
       const log = this.detectionLogRepo.create({
-        userId: result.userId || null,
+        userId: result.userId || undefined,
         action_type: result.taskType || result.task_type || 'UNKNOWN',
         result_text: result.text || '',
-        confidence_score: result.confidence_score || null,
+        confidence_score: result.confidence_score || undefined,
       });
       await this.detectionLogRepo.save(log);
       this.logger.log(`DetectionLog saved for client ${result.clientId}`);

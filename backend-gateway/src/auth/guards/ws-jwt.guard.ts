@@ -18,13 +18,17 @@ export class WsJwtGuard implements CanActivate {
     private configService: ConfigService,
   ) {}
 
-  async canActivate(context: ExecutionContext): Promise<boolean> {
+  canActivate(context: ExecutionContext): boolean {
     try {
       const client: Socket = context.switchToWs().getClient<Socket>();
       // Client passes token via: socket.auth = { token: '...' }
       // or headers: { authorization: 'Bearer ...' }
-      let token =
-        client.handshake.auth?.token || client.handshake.headers?.authorization;
+      let token: string | undefined =
+        typeof client.handshake.auth?.token === 'string'
+          ? client.handshake.auth.token
+          : typeof client.handshake.headers?.authorization === 'string'
+            ? client.handshake.headers.authorization
+            : undefined;
       if (token && token.startsWith('Bearer ')) {
         token = token.slice(7);
       }
@@ -36,12 +40,15 @@ export class WsJwtGuard implements CanActivate {
       const nodeEnv = this.configService.get<string>('NODE_ENV', 'development');
       if (nodeEnv !== 'production' && token === 'dev_bypass_token') {
         this.logger.warn('Dev bypass token used — disable in production!');
-        client.data.user = { sub: 999, username: 'dev_user' };
+        (client.data as { user?: unknown }).user = {
+          sub: 999,
+          username: 'dev_user',
+        };
         return true;
       }
 
-      const payload = this.jwtService.verify(token);
-      client.data.user = payload; // Attach user to socket data
+      const payload = this.jwtService.verify<Record<string, unknown>>(token);
+      (client.data as { user?: unknown }).user = payload; // Attach user to socket data
       return true;
     } catch (ex) {
       this.logger.error('WebSocket Auth Error: ', ex);

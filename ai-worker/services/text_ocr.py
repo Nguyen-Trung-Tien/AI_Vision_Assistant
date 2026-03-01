@@ -6,6 +6,9 @@ Uses pytesseract when available.
 import cv2
 import pytesseract
 
+# Set explicit path to Tesseract OCR executable for Windows
+pytesseract.pytesseract.tesseract_cmd = r'C:\Program Files\Tesseract-OCR\tesseract.exe'
+
 from .image_utils import decode_base64_image, is_blurry
 from .translations import t
 

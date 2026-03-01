@@ -51,12 +51,15 @@ class _HistoryScreenState extends State<HistoryScreen> {
     final now = DateTime.now();
     final diff = now.difference(dt);
 
-    if (diff.inMinutes < 1)
+    if (diff.inMinutes < 1) {
       return AppLocalizations.t('history_time_just_now', lang);
-    if (diff.inMinutes < 60)
+    }
+    if (diff.inMinutes < 60) {
       return '${diff.inMinutes} ${AppLocalizations.t('history_time_mins', lang)}';
-    if (diff.inHours < 24)
+    }
+    if (diff.inHours < 24) {
       return '${diff.inHours} ${AppLocalizations.t('history_time_hours', lang)}';
+    }
     return '${diff.inDays} ${AppLocalizations.t('history_time_days', lang)}';
   }
 
@@ -107,13 +110,13 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   Icon(
                     Icons.history,
                     size: 80,
-                    color: Colors.white.withOpacity(0.2),
+                    color: Colors.white.withValues(alpha: 0.2),
                   ),
                   const SizedBox(height: 16),
                   Text(
                     AppLocalizations.t('history_no_results', lang),
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.4),
+                      color: Colors.white.withValues(alpha: 0.4),
                       fontSize: 18,
                     ),
                   ),
@@ -135,9 +138,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     margin: const EdgeInsets.only(bottom: 12),
                     padding: const EdgeInsets.all(16),
                     decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.06),
+                      color: Colors.white.withValues(alpha: 0.06),
                       borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white.withOpacity(0.1)),
+                      border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
                     ),
                     child: Column(
                       crossAxisAlignment: CrossAxisAlignment.start,
@@ -156,7 +159,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             Text(
                               _formatTime(entry.timestamp, lang),
                               style: TextStyle(
-                                color: Colors.white.withOpacity(0.4),
+                                color: Colors.white.withValues(alpha: 0.4),
                                 fontSize: 12,
                               ),
                             ),

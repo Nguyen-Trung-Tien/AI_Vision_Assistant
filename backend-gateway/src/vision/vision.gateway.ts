@@ -37,11 +37,12 @@ export class VisionGateway implements OnGatewayConnection, OnGatewayDisconnect {
 
   @UseGuards(WsJwtGuard)
   @SubscribeMessage('frame_stream')
-  async handleFrameStream(
+  handleFrameStream(
     @MessageBody() data: FrameStreamDto,
     @ConnectedSocket() client: Socket,
   ) {
-    const userId = client.data?.user?.sub?.toString();
+    const userData = client.data as { user?: { sub?: string | number } };
+    const userId = userData?.user?.sub?.toString();
 
     // Rate limiting: max 2 frames/second per client
     if (!this.taskQueueService.checkRateLimit(client.id)) {
@@ -50,7 +51,7 @@ export class VisionGateway implements OnGatewayConnection, OnGatewayDisconnect {
     }
 
     if (data.task_type) {
-      await this.taskQueueService.pushHeavyTask(
+      this.taskQueueService.pushHeavyTask(
         client.id,
         userId,
         data.task_type,

@@ -128,7 +128,7 @@ class _LoginScreenState extends State<LoginScreen> {
                           ),
                     textAlign: TextAlign.center,
                     style: TextStyle(
-                      color: Colors.white.withOpacity(0.7),
+                      color: Colors.white.withValues(alpha: 0.7),
                       fontSize: 16,
                     ),
                   ),
@@ -142,16 +142,18 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     validator: (value) {
                       final v = (value ?? '').trim();
-                      if (v.isEmpty)
+                      if (v.isEmpty) {
                         return AppLocalizations.t(
                           'login_email_err_empty',
                           _settings.language,
                         );
-                      if (!v.contains('@'))
+                      }
+                      if (!v.contains('@')) {
                         return AppLocalizations.t(
                           'login_email_err_invalid',
                           _settings.language,
                         );
+                      }
                       return null;
                     },
                   ),
@@ -176,11 +178,12 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     validator: (value) {
                       final v = value ?? '';
-                      if (v.length < 6)
+                      if (v.length < 6) {
                         return AppLocalizations.t(
                           'login_password_err_length',
                           _settings.language,
                         );
+                      }
                       return null;
                     },
                   ),
@@ -285,10 +288,10 @@ class _LoginScreenState extends State<LoginScreen> {
   InputDecoration _inputDecoration(String label, {Widget? suffixIcon}) {
     return InputDecoration(
       labelText: label,
-      labelStyle: TextStyle(color: Colors.white.withOpacity(0.7)),
+      labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
       suffixIcon: suffixIcon,
       filled: true,
-      fillColor: Colors.white.withOpacity(0.08),
+      fillColor: Colors.white.withValues(alpha: 0.08),
       border: OutlineInputBorder(
         borderRadius: BorderRadius.circular(12),
         borderSide: BorderSide.none,

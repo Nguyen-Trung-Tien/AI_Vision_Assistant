@@ -79,7 +79,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Container(
             padding: const EdgeInsets.all(12),
             decoration: BoxDecoration(
-              color: Colors.white.withOpacity(0.05),
+              color: Colors.white.withValues(alpha: 0.05),
               borderRadius: BorderRadius.circular(12),
             ),
             child: Column(
@@ -90,7 +90,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     child: Text(
                       AppLocalizations.t('settings_emergency_empty', _language),
-                      style: TextStyle(color: Colors.white.withOpacity(0.5)),
+                      style: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
                       textAlign: TextAlign.center,
                     ),
                   )
@@ -128,7 +128,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ),
                       ),
                       style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white.withOpacity(0.2),
+                        backgroundColor: Colors.white.withValues(alpha: 0.2),
                         foregroundColor: Colors.white,
                         padding: const EdgeInsets.symmetric(vertical: 12),
                       ),
@@ -149,7 +149,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           SliderTheme(
             data: SliderTheme.of(context).copyWith(
               activeTrackColor: const Color(0xFF6C63FF),
-              inactiveTrackColor: Colors.white.withOpacity(0.2),
+              inactiveTrackColor: Colors.white.withValues(alpha: 0.2),
               thumbColor: const Color(0xFF00D4FF),
               thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 14),
               trackHeight: 6,
@@ -205,8 +205,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? const Color(0xFF6C63FF).withOpacity(0.3)
-                        : Colors.white.withOpacity(0.05),
+                        ? const Color(0xFF6C63FF).withValues(alpha: 0.3)
+                        : Colors.white.withValues(alpha: 0.05),
                     borderRadius: BorderRadius.circular(12),
                     border: Border.all(
                       color: isSelected
@@ -271,7 +271,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
           SliderTheme(
             data: SliderTheme.of(context).copyWith(
               activeTrackColor: const Color(0xFFFF6B6B),
-              inactiveTrackColor: Colors.white.withOpacity(0.2),
+              inactiveTrackColor: Colors.white.withValues(alpha: 0.2),
               thumbColor: const Color(0xFFFF6B6B),
               thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 14),
               trackHeight: 6,
@@ -309,7 +309,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 _accessibility.speak(
                   AppLocalizations.t('settings_logged_out', _language),
                 );
-                if (!mounted) return;
+                if (!context.mounted) return;
                 Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(builder: (_) => const LoginScreen()),
                   (route) => false,
@@ -318,7 +318,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
               icon: const Icon(Icons.logout),
               label: Text(AppLocalizations.t('settings_logout', _language)),
               style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent.withOpacity(0.2),
+                backgroundColor: Colors.redAccent.withValues(alpha: 0.2),
                 foregroundColor: Colors.white,
                 padding: const EdgeInsets.symmetric(vertical: 14),
               ),
@@ -358,8 +358,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
             color: isSelected
-                ? const Color(0xFF6C63FF).withOpacity(0.3)
-                : Colors.white.withOpacity(0.05),
+                ? const Color(0xFF6C63FF).withValues(alpha: 0.3)
+                : Colors.white.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
               color: isSelected ? const Color(0xFF6C63FF) : Colors.transparent,
@@ -387,7 +387,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withOpacity(0.1),
+        color: Colors.white.withValues(alpha: 0.1),
         borderRadius: BorderRadius.circular(8),
       ),
       child: Row(
@@ -478,7 +478,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 'settings_emergency_hint',
                 _language,
               ),
-              hintStyle: TextStyle(color: Colors.white.withOpacity(0.5)),
+              hintStyle: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
             ),
             onChanged: (val) => tempNumber = val,
             onSubmitted: (_) => Navigator.pop(context, tempNumber),

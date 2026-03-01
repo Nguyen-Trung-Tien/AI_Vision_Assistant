@@ -1,9 +1,9 @@
 ﻿import 'dart:async';
-import 'package:socket_io_client/socket_io_client.dart' as IO;
+import 'package:socket_io_client/socket_io_client.dart' as io;
 import 'package:flutter/foundation.dart';
 
 class WebSocketService {
-  late IO.Socket socket;
+  late io.Socket socket;
 
   /// Token dùng để authenticate với WebSocket gateway.
   /// Trong development dùng dev_bypass_token.
@@ -35,9 +35,9 @@ class WebSocketService {
       defaultValue: 'http://10.0.2.2:3000',
     );
 
-    socket = IO.io(
+    socket = io.io(
       baseUrl,
-      IO.OptionBuilder()
+      io.OptionBuilder()
           .setTransports(['websocket'])
           .disableAutoConnect()
           .setAuth({'token': _authToken})

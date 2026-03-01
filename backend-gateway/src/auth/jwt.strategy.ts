@@ -13,7 +13,7 @@ export class JwtStrategy extends PassportStrategy(Strategy) {
     });
   }
 
-  async validate(payload: any) {
+  validate(payload: { sub: string; email: string; role: string }) {
     // payload is the decoded token data (e.g. { sub: user.id, email: user.email })
     if (!payload.sub) {
       throw new UnauthorizedException();
