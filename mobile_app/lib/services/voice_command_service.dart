@@ -25,7 +25,11 @@ class VoiceCommandService {
         onError: (errorNotification) {
           debugPrint('Speech error: $errorNotification');
           _isListening = false;
-          _accessibilityManager.speak('Lỗi nhận diện giọng nói.');
+          // Chỉ thông báo nếu không phải lỗi thông thường khi dừng
+          if (errorNotification.errorMsg != 'error_speech_timeout' &&
+              errorNotification.errorMsg != 'error_no_match') {
+            _accessibilityManager.speak('Lỗi nhận diện giọng nói.');
+          }
         },
       );
 
@@ -39,6 +43,13 @@ class VoiceCommandService {
   }
 
   Future<void> startListening() async {
+    // Nếu đang nghe thì dừng lại
+    if (_isListening) {
+      await stopListening();
+      return;
+    }
+
+    // Thử khởi tạo lại nếu chưa sẵn sàng
     if (!_isInitialized || !_speechToText.isAvailable) {
       await init();
       if (!_isInitialized || !_speechToText.isAvailable) {
@@ -49,34 +60,39 @@ class VoiceCommandService {
       }
     }
 
-    if (_isListening) {
-      await stopListening();
-      return;
-    }
-
     _isListening = true;
     _accessibilityManager.triggerSuccessVibration();
     _accessibilityManager.speak('Tôi đang nghe...');
 
-    await Future.delayed(const Duration(milliseconds: 800));
+    // Chờ TTS đọc xong trước khi bắt đầu nghe
+    await Future.delayed(const Duration(milliseconds: 900));
 
     await _speechToText.listen(
       localeId: 'vi_VN',
       listenOptions: SpeechListenOptions(
-        cancelOnError: true,
-        listenMode: ListenMode.deviceDefault,
-        partialResults: true,
+        // Dùng confirmation mode để nhận lệnh chính xác hơn
+        listenMode: ListenMode.confirmation,
+        // Tắt partial results để chỉ xử lý kết quả cuối
+        partialResults: false,
+        // Không hủy khi có lỗi nhỏ
+        cancelOnError: false,
+        // Bật auto punctuation để nhận diện tốt hơn
+        autoPunctuation: false,
       ),
-      listenFor: const Duration(seconds: 8),
-      pauseFor: const Duration(seconds: 2),
+      listenFor: const Duration(seconds: 10),
+      // Tăng thời gian nghỉ để tránh cắt câu giữa chừng
+      pauseFor: const Duration(seconds: 3),
       onResult: (result) {
         final recognizedWords = result.recognizedWords.trim();
         if (recognizedWords.isEmpty) return;
 
-        if (result.finalResult || result.confidence >= 0.6) {
+        // Chỉ xử lý khi là kết quả cuối cùng
+        if (result.finalResult) {
           _isListening = false;
           final command = recognizedWords.toLowerCase();
-          debugPrint('Command recognized: $command');
+          debugPrint(
+            'Command recognized: $command (confidence: ${result.confidence})',
+          );
           onCommandRecognized(command);
         }
       },
@@ -86,5 +102,13 @@ class VoiceCommandService {
   Future<void> stopListening() async {
     await _speechToText.stop();
     _isListening = false;
+  }
+
+  /// Đặt lại service khi cần thiết (ví dụ: sau khi app resume)
+  Future<void> reset() async {
+    _isListening = false;
+    _isInitialized = false;
+    await _speechToText.cancel();
+    await init();
   }
 }
