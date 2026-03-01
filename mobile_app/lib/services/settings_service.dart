@@ -12,11 +12,22 @@ class SettingsService {
     _prefs = await SharedPreferences.getInstance();
   }
 
-  // --- Emergency Number ---
-  String get emergencyNumber => _prefs?.getString('emergency_number') ?? '';
+  // --- Emergency Numbers ---
+  List<String> get emergencyNumbers {
+    final list = _prefs?.getStringList('emergency_numbers');
+    if (list != null && list.isNotEmpty) {
+      return list;
+    }
+    // Fallback: check if old single string exists
+    final oldNum = _prefs?.getString('emergency_number') ?? '';
+    if (oldNum.isNotEmpty) {
+      return [oldNum];
+    }
+    return [];
+  }
 
-  Future<void> setEmergencyNumber(String value) async {
-    await _prefs?.setString('emergency_number', value);
+  Future<void> setEmergencyNumbers(List<String> values) async {
+    await _prefs?.setStringList('emergency_numbers', values);
   }
 
   // --- TTS Speech Rate (0.1 - 1.0) ---

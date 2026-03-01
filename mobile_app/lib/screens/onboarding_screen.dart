@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_app/services/accessibility_manager.dart';
 import 'package:mobile_app/services/settings_service.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 
 class OnboardingScreen extends StatefulWidget {
   final Widget nextScreen;
@@ -17,48 +18,35 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final SettingsService _settings = SettingsService();
   int _currentPage = 0;
 
-  final List<_OnboardingStep> _steps = [
-    _OnboardingStep(
-      icon: Icons.visibility,
-      title: 'Chào mừng bạn',
-      description:
-          'AI Vision Assistant giúp bạn nhận diện tiền, đọc văn bản, '
-          'và mô tả không gian xung quanh bằng trí tuệ nhân tạo.',
-      ttsText:
-          'Chào mừng bạn đến với ứng dụng Trợ lý thị giác. '
-          'Ứng dụng giúp bạn nhận diện tiền, đọc văn bản, '
-          'và mô tả không gian xung quanh.',
-    ),
-    _OnboardingStep(
-      icon: Icons.swipe,
-      title: 'Cách sử dụng',
-      description:
-          'Vuốt trái/phải để đổi chế độ.\n'
-          'Chạm đúp để nhận diện.\n'
-          'Nhấn giữ để ra lệnh giọng nói.',
-      ttsText:
-          'Vuốt trái hoặc phải để đổi chế độ. '
-          'Chạm đúp vào màn hình để nhận diện. '
-          'Nhấn giữ để ra lệnh bằng giọng nói.',
-    ),
-    _OnboardingStep(
-      icon: Icons.emergency,
-      title: 'Tính năng khẩn cấp',
-      description:
-          'Nhấn nút nguồn 3 lần liên tiếp hoặc\n'
-          'nói "Cứu tôi" để gọi SOS.',
-      ttsText:
-          'Trong trường hợp khẩn cấp, nhấn nút nguồn 3 lần liên tiếp, '
-          'hoặc nói cứu tôi để kích hoạt cuộc gọi khẩn cấp.',
-    ),
-    _OnboardingStep(
-      icon: Icons.rocket_launch,
-      title: 'Sẵn sàng!',
-      description: 'Chạm đúp vào màn hình để bắt đầu sử dụng.',
-      ttsText:
-          'Bạn đã sẵn sàng. Chạm đúp vào màn hình để bắt đầu sử dụng ứng dụng.',
-    ),
-  ];
+  // Since _steps depends on language, we use a getter
+  List<_OnboardingStep> _getSteps(String lang) {
+    return [
+      _OnboardingStep(
+        icon: Icons.visibility,
+        title: AppLocalizations.t('onboarding_title_1', lang),
+        description: AppLocalizations.t('onboarding_desc_1', lang),
+        ttsText: AppLocalizations.t('onboarding_tts_1', lang),
+      ),
+      _OnboardingStep(
+        icon: Icons.swipe,
+        title: AppLocalizations.t('onboarding_title_2', lang),
+        description: AppLocalizations.t('onboarding_desc_2', lang),
+        ttsText: AppLocalizations.t('onboarding_tts_2', lang),
+      ),
+      _OnboardingStep(
+        icon: Icons.emergency,
+        title: AppLocalizations.t('onboarding_title_3', lang),
+        description: AppLocalizations.t('onboarding_desc_3', lang),
+        ttsText: AppLocalizations.t('onboarding_tts_3', lang),
+      ),
+      _OnboardingStep(
+        icon: Icons.rocket_launch,
+        title: AppLocalizations.t('onboarding_title_4', lang),
+        description: AppLocalizations.t('onboarding_desc_4', lang),
+        ttsText: AppLocalizations.t('onboarding_tts_4', lang),
+      ),
+    ];
+  }
 
   @override
   void initState() {
@@ -76,7 +64,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   void _speakCurrentStep() {
-    _accessibility.speak(_steps[_currentPage].ttsText);
+    final lang = _settings.language;
+    final steps = _getSteps(lang);
+    _accessibility.speak(steps[_currentPage].ttsText);
   }
 
   void _onPageChanged(int index) {
@@ -86,8 +76,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   }
 
   Future<void> _finishOnboarding() async {
+    final lang = _settings.language;
     await _settings.setFirstLaunchDone();
-    _accessibility.speak('Bắt đầu sử dụng');
+    _accessibility.speak(AppLocalizations.t('onboarding_start_spoken', lang));
     if (mounted) {
       Navigator.of(
         context,
@@ -101,7 +92,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
       backgroundColor: const Color(0xFF0D0D1A),
       body: GestureDetector(
         onDoubleTap: () {
-          if (_currentPage == _steps.length - 1) {
+          if (_currentPage == _getSteps(_settings.language).length - 1) {
             _finishOnboarding();
           } else {
             _pageController.nextPage(
@@ -118,9 +109,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 alignment: Alignment.topRight,
                 child: TextButton(
                   onPressed: _finishOnboarding,
-                  child: const Text(
-                    'Bỏ qua',
-                    style: TextStyle(color: Colors.white54, fontSize: 16),
+                  child: Text(
+                    AppLocalizations.t('onboarding_skip', _settings.language),
+                    style: const TextStyle(color: Colors.white54, fontSize: 16),
                   ),
                 ),
               ),
@@ -130,9 +121,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                 child: PageView.builder(
                   controller: _pageController,
                   onPageChanged: _onPageChanged,
-                  itemCount: _steps.length,
+                  itemCount: _getSteps(_settings.language).length,
                   itemBuilder: (context, index) {
-                    final step = _steps[index];
+                    final step = _getSteps(_settings.language)[index];
                     return Padding(
                       padding: const EdgeInsets.symmetric(horizontal: 32),
                       child: Column(
@@ -203,7 +194,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     // Dots
                     Row(
                       children: List.generate(
-                        _steps.length,
+                        _getSteps(_settings.language).length,
                         (index) => AnimatedContainer(
                           duration: const Duration(milliseconds: 200),
                           margin: const EdgeInsets.only(right: 8),
@@ -222,7 +213,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                     // Next / Start button
                     GestureDetector(
                       onTap: () {
-                        if (_currentPage == _steps.length - 1) {
+                        if (_currentPage ==
+                            _getSteps(_settings.language).length - 1) {
                           _finishOnboarding();
                         } else {
                           _pageController.nextPage(
@@ -250,9 +242,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           ],
                         ),
                         child: Text(
-                          _currentPage == _steps.length - 1
-                              ? 'Bắt đầu'
-                              : 'Tiếp',
+                          _currentPage ==
+                                  _getSteps(_settings.language).length - 1
+                              ? AppLocalizations.t(
+                                  'onboarding_start',
+                                  _settings.language,
+                                )
+                              : AppLocalizations.t(
+                                  'onboarding_next',
+                                  _settings.language,
+                                ),
                           style: const TextStyle(
                             color: Colors.white,
                             fontSize: 18,

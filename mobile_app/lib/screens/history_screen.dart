@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:mobile_app/services/accessibility_manager.dart';
 import 'package:mobile_app/services/history_service.dart';
+import 'package:mobile_app/services/settings_service.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 
 class HistoryScreen extends StatefulWidget {
   const HistoryScreen({super.key});
@@ -19,55 +21,63 @@ class _HistoryScreenState extends State<HistoryScreen> {
   void initState() {
     super.initState();
     _entries = _historyService.getHistory();
+    final lang = SettingsService().language;
 
     if (_entries.isEmpty) {
-      _accessibility.speak('Lịch sử trống.');
+      _accessibility.speak(AppLocalizations.t('history_empty_tts', lang));
     } else {
-      _accessibility.speak(
-        'Lịch sử nhận diện. Có ${_entries.length} kết quả. Chạm vào để nghe lại.',
-      );
+      final msg1 = AppLocalizations.t('history_count_tts_1', lang);
+      final msg2 = AppLocalizations.t('history_count_tts_2', lang);
+      _accessibility.speak('$msg1 ${_entries.length} $msg2');
     }
   }
 
-  String _getTypeLabel(String type) {
+  String _getTypeLabel(String type, String lang) {
     switch (type) {
       case 'money':
-        return '💵 Tiền';
+        return AppLocalizations.t('history_type_money', lang);
       case 'text':
-        return '📝 Văn bản';
+        return AppLocalizations.t('history_type_text', lang);
       case 'caption':
-        return '🖼️ Mô tả';
+        return AppLocalizations.t('history_type_caption', lang);
       case 'barcode':
-        return '📊 Mã vạch';
+        return AppLocalizations.t('history_type_barcode', lang);
       default:
-        return '🔍 Nhận diện';
+        return AppLocalizations.t('history_type_default', lang);
     }
   }
 
-  String _formatTime(DateTime dt) {
+  String _formatTime(DateTime dt, String lang) {
     final now = DateTime.now();
     final diff = now.difference(dt);
 
-    if (diff.inMinutes < 1) return 'Vừa xong';
-    if (diff.inMinutes < 60) return '${diff.inMinutes} phút trước';
-    if (diff.inHours < 24) return '${diff.inHours} giờ trước';
-    return '${diff.inDays} ngày trước';
+    if (diff.inMinutes < 1)
+      return AppLocalizations.t('history_time_just_now', lang);
+    if (diff.inMinutes < 60)
+      return '${diff.inMinutes} ${AppLocalizations.t('history_time_mins', lang)}';
+    if (diff.inHours < 24)
+      return '${diff.inHours} ${AppLocalizations.t('history_time_hours', lang)}';
+    return '${diff.inDays} ${AppLocalizations.t('history_time_days', lang)}';
   }
 
   @override
   Widget build(BuildContext context) {
+    final lang = SettingsService().language;
     return Scaffold(
       backgroundColor: const Color(0xFF0D0D2B),
       appBar: AppBar(
         backgroundColor: const Color(0xFF1A1A4E),
-        title: const Text(
-          'Lịch sử nhận diện',
-          style: TextStyle(color: Colors.white, fontWeight: FontWeight.bold),
+        title: Text(
+          AppLocalizations.t('history_title', lang),
+          style: const TextStyle(
+            color: Colors.white,
+            fontWeight: FontWeight.bold,
+          ),
         ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back, color: Colors.white, size: 32),
           onPressed: () {
-            _accessibility.speak('Quay lại');
+            _accessibility.speak(AppLocalizations.t('back', lang));
             Navigator.pop(context);
           },
         ),
@@ -82,7 +92,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
               onPressed: () async {
                 await _historyService.clearHistory();
                 setState(() => _entries = []);
-                _accessibility.speak('Đã xóa toàn bộ lịch sử.');
+                _accessibility.speak(
+                  AppLocalizations.t('history_cleared', lang),
+                );
               },
             ),
         ],
@@ -99,7 +111,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                   ),
                   const SizedBox(height: 16),
                   Text(
-                    'Chưa có kết quả nào',
+                    AppLocalizations.t('history_no_results', lang),
                     style: TextStyle(
                       color: Colors.white.withOpacity(0.4),
                       fontSize: 18,
@@ -116,7 +128,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 return GestureDetector(
                   onTap: () {
                     _accessibility.speak(
-                      '${_getTypeLabel(entry.type)}: ${entry.result}',
+                      '${_getTypeLabel(entry.type, lang)}: ${entry.result}',
                     );
                   },
                   child: Container(
@@ -133,7 +145,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         Row(
                           children: [
                             Text(
-                              _getTypeLabel(entry.type),
+                              _getTypeLabel(entry.type, lang),
                               style: const TextStyle(
                                 color: Color(0xFF00D4FF),
                                 fontSize: 14,
@@ -142,7 +154,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                             ),
                             const Spacer(),
                             Text(
-                              _formatTime(entry.timestamp),
+                              _formatTime(entry.timestamp, lang),
                               style: TextStyle(
                                 color: Colors.white.withOpacity(0.4),
                                 fontSize: 12,

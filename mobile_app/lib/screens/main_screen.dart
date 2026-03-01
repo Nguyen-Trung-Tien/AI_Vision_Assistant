@@ -17,6 +17,7 @@ import 'package:mobile_app/services/tflite_service.dart';
 import 'package:mobile_app/services/voice_command_service.dart';
 import 'package:mobile_app/services/volume_button_service.dart';
 import 'package:mobile_app/services/websocket_service.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 
 class MainScreen extends StatefulWidget {
   final List<CameraDescription>? cameras;
@@ -45,6 +46,9 @@ class _MainScreenState extends State<MainScreen> {
   bool _isConnected = false;
   bool _isProcessing = false;
 
+  String? _dangerMessage;
+  Timer? _dangerTimer;
+
   final PageController _pageController = PageController();
   int _currentModeIndex = 0;
   bool _isScanningMLKit = false;
@@ -61,13 +65,16 @@ class _MainScreenState extends State<MainScreen> {
     Icons.navigation,
   ];
 
-  final List<String> _modes = [
-    'Chế độ nhận diện tổng hợp',
-    'Chế độ đọc văn bản (Online)',
-    'Chế độ đọc chữ nhanh (Offline)',
-    'Chế độ mô tả không gian',
-    'Chế độ định vị và định hướng',
-  ];
+  // Replace with a getter
+  List<String> _getModes(String lang) {
+    return [
+      AppLocalizations.t('mode_0', lang),
+      AppLocalizations.t('mode_1', lang),
+      AppLocalizations.t('mode_2', lang),
+      AppLocalizations.t('mode_3', lang),
+      AppLocalizations.t('mode_4', lang),
+    ];
+  }
 
   @override
   void initState() {
@@ -90,6 +97,17 @@ class _MainScreenState extends State<MainScreen> {
         setState(() => _isProcessing = isProcessing);
       }
     };
+
+    _aiService.onDangerAlertDetected = (message, level) {
+      if (mounted) {
+        setState(() => _dangerMessage = message);
+        _dangerTimer?.cancel();
+        _dangerTimer = Timer(const Duration(seconds: 4), () {
+          if (mounted) setState(() => _dangerMessage = null);
+        });
+      }
+    };
+
     _aiService.start();
 
     _tfliteService.loadModel();
@@ -102,7 +120,7 @@ class _MainScreenState extends State<MainScreen> {
     _initSosDetection();
 
     final defaultMode = _settings.defaultModeIndex;
-    if (defaultMode > 0 && defaultMode < _modes.length) {
+    if (defaultMode > 0 && defaultMode < _getModes(_settings.language).length) {
       _currentModeIndex = defaultMode;
       WidgetsBinding.instance.addPostFrameCallback((_) {
         _pageController.jumpToPage(defaultMode);
@@ -149,6 +167,7 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   void dispose() {
+    _dangerTimer?.cancel();
     _cameraController?.dispose();
     _aiService.stop();
     _wsService.dispose();
@@ -265,32 +284,55 @@ class _MainScreenState extends State<MainScreen> {
   void _onCommandRecognized(String command) {
     final cmd = _normalizeCommand(command);
 
-    if (_containsAny(cmd, ['khan cap', 'cuu toi', 'cuu voi', 'giup toi'])) {
+    if (_containsAny(cmd, [
+      'khan cap',
+      'cuu toi',
+      'cuu voi',
+      'giup toi',
+      'help',
+      'emergency',
+      'sos',
+    ])) {
       _sosService.triggerEmergency();
       return;
     }
 
-    if (_containsAny(cmd, ['cai dat'])) {
+    if (_containsAny(cmd, ['cai dat', 'settings'])) {
       _openSettings();
-    } else if (_containsAny(cmd, ['lich su'])) {
+    } else if (_containsAny(cmd, ['lich su', 'history'])) {
       _openHistory();
-    } else if (_containsAny(cmd, ['den', 'flash'])) {
+    } else if (_containsAny(cmd, ['den', 'flash', 'light'])) {
       _toggleFlash();
-    } else if (_containsAny(cmd, ['tro giup', 'giup do'])) {
+    } else if (_containsAny(cmd, ['tro giup', 'giup do', 'help'])) {
       _speakHelp();
-    } else if (_containsAny(cmd, ['doc van ban', 'doc chu'])) {
+    } else if (_containsAny(cmd, [
+      'doc van ban',
+      'doc chu',
+      'read text',
+      'online',
+    ])) {
       _goToMode(1);
-    } else if (_containsAny(cmd, ['nhanh', 'offline'])) {
+    } else if (_containsAny(cmd, ['nhanh', 'offline', 'quick read'])) {
       _goToMode(2);
-    } else if (_containsAny(cmd, ['mo ta', 'khong gian'])) {
+    } else if (_containsAny(cmd, [
+      'mo ta',
+      'khong gian',
+      'scene',
+      'describe',
+    ])) {
       _goToMode(3);
-    } else if (_containsAny(cmd, ['dinh huong', 'dinh vi'])) {
+    } else if (_containsAny(cmd, [
+      'dinh huong',
+      'dinh vi',
+      'navigate',
+      'navigation',
+    ])) {
       _goToMode(4);
-    } else if (_containsAny(cmd, ['tong hop', 'tien'])) {
+    } else if (_containsAny(cmd, ['tong hop', 'tien', 'general', 'money'])) {
       _goToMode(0);
     } else {
       _accessibilityManager.speak(
-        'Không hiểu lệnh. Nói trợ giúp để nghe danh sách lệnh.',
+        AppLocalizations.t('main_unknown_command', _settings.language),
       );
     }
   }
@@ -305,13 +347,16 @@ class _MainScreenState extends State<MainScreen> {
 
   void _speakHelp() {
     _accessibilityManager.speak(
-      'Các lệnh có sẵn: đọc văn bản, đọc chữ nhanh, mô tả không gian, định hướng, tổng hợp, cài đặt, lịch sử, đèn, khẩn cấp, trợ giúp.',
+      AppLocalizations.t('main_help_spoken', _settings.language),
     );
   }
 
   Future<void> _toggleFlash({bool? forceOn}) async {
+    final lang = _settings.language;
     if (_cameraController == null || !_cameraController!.value.isInitialized) {
-      _accessibilityManager.speak('Camera chưa sẵn sàng.');
+      _accessibilityManager.speak(
+        AppLocalizations.t('main_camera_not_ready', lang),
+      );
       return;
     }
 
@@ -324,18 +369,22 @@ class _MainScreenState extends State<MainScreen> {
         _isFlashOn = newState;
       });
       _accessibilityManager.speak(
-        newState ? 'Đã bật đèn flash' : 'Đã tắt đèn flash',
+        newState
+            ? AppLocalizations.t('main_flash_on', lang)
+            : AppLocalizations.t('main_flash_off', lang),
       );
       _accessibilityManager.triggerSuccessVibration();
       _settings.setFlashOn(newState);
     } catch (_) {
-      _accessibilityManager.speak('Không thể điều khiển đèn flash.');
+      _accessibilityManager.speak(AppLocalizations.t('main_flash_error', lang));
       _accessibilityManager.triggerErrorVibration();
     }
   }
 
   void _openSettings() {
-    _accessibilityManager.speak('Mở cài đặt');
+    _accessibilityManager.speak(
+      AppLocalizations.t('main_open_settings', _settings.language),
+    );
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const SettingsScreen()),
@@ -345,7 +394,9 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   void _openHistory() {
-    _accessibilityManager.speak('Mở lịch sử');
+    _accessibilityManager.speak(
+      AppLocalizations.t('main_open_history', _settings.language),
+    );
     Navigator.push(
       context,
       MaterialPageRoute(builder: (_) => const HistoryScreen()),
@@ -353,9 +404,12 @@ class _MainScreenState extends State<MainScreen> {
   }
 
   void _onPageChanged(int index) {
+    final lang = _settings.language;
     setState(() => _currentModeIndex = index);
     _accessibilityManager.triggerSuccessVibration();
-    _accessibilityManager.speak(_modes[index]);
+    _accessibilityManager.speak(
+      AppLocalizations.t('mode_${index}_spoken', lang),
+    );
 
     if (index == 4) {
       _navigationService.startNavigation();
@@ -385,7 +439,9 @@ class _MainScreenState extends State<MainScreen> {
         _aiService.requestCaptioning();
         break;
       case 4:
-        _accessibilityManager.speak('Đang định vị...');
+        _accessibilityManager.speak(
+          AppLocalizations.t('main_navigating', _settings.language),
+        );
         _navigationService.startNavigation();
         break;
     }
@@ -401,7 +457,8 @@ class _MainScreenState extends State<MainScreen> {
     }
 
     setState(() => _isScanningMLKit = true);
-    _accessibilityManager.speak('Đang quét...');
+    final lang = _settings.language;
+    _accessibilityManager.speak(AppLocalizations.t('main_scanning', lang));
     _accessibilityManager.triggerSuccessVibration();
 
     try {
@@ -422,13 +479,18 @@ class _MainScreenState extends State<MainScreen> {
     }
 
     setState(() => _isProcessing = true);
-    _accessibilityManager.speak('Đang nhận diện offline...');
+    final lang = _settings.language;
+    _accessibilityManager.speak(
+      AppLocalizations.t('main_detecting_offline', lang),
+    );
     _accessibilityManager.triggerSuccessVibration();
 
     try {
       final bytes = await _captureCurrentFrame();
       if (bytes == null) {
-        _accessibilityManager.speak('Không chụp được ảnh.');
+        _accessibilityManager.speak(
+          AppLocalizations.t('main_no_capture', lang),
+        );
         return;
       }
 
@@ -437,12 +499,14 @@ class _MainScreenState extends State<MainScreen> {
         _accessibilityManager.speak(result);
       } else {
         _accessibilityManager.speak(
-          'Chưa có model offline. Vui lòng kết nối mạng để nhận diện.',
+          AppLocalizations.t('main_no_offline_model', lang),
         );
       }
     } catch (e) {
       debugPrint('TFLite offline error: $e');
-      _accessibilityManager.speak('Lỗi nhận diện offline.');
+      _accessibilityManager.speak(
+        AppLocalizations.t('main_offline_error', lang),
+      );
     } finally {
       if (mounted) {
         setState(() => _isProcessing = false);
@@ -467,8 +531,9 @@ class _MainScreenState extends State<MainScreen> {
               child: PageView.builder(
                 controller: _pageController,
                 onPageChanged: _onPageChanged,
-                itemCount: _modes.length,
+                itemCount: _getModes(_settings.language).length,
                 itemBuilder: (context, index) {
+                  final modes = _getModes(_settings.language);
                   return Container(
                     color: Colors.black.withOpacity(0.3),
                     alignment: Alignment.center,
@@ -495,7 +560,7 @@ class _MainScreenState extends State<MainScreen> {
                           ),
                           const SizedBox(height: 12),
                           Text(
-                            _modes[index].toUpperCase(),
+                            modes[index].toUpperCase(),
                             textAlign: TextAlign.center,
                             style: const TextStyle(
                               color: Colors.white,
@@ -547,7 +612,9 @@ class _MainScreenState extends State<MainScreen> {
                 ),
                 const SizedBox(width: 8),
                 Text(
-                  _isConnected ? 'Online' : 'Offline',
+                  _isConnected
+                      ? AppLocalizations.t('main_online', _settings.language)
+                      : AppLocalizations.t('main_offline', _settings.language),
                   style: TextStyle(
                     color: Colors.white.withOpacity(0.7),
                     fontSize: 12,
@@ -580,11 +647,61 @@ class _MainScreenState extends State<MainScreen> {
                     ),
                     const SizedBox(width: 4),
                     Text(
-                      _isNightMode ? 'NIGHT' : 'FLASH',
+                      _isNightMode
+                          ? AppLocalizations.t('main_night', _settings.language)
+                          : AppLocalizations.t(
+                              'main_flash',
+                              _settings.language,
+                            ),
                       style: const TextStyle(
                         color: Colors.black,
                         fontSize: 12,
                         fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
+          if (_dangerMessage != null)
+            Positioned(
+              top: 100,
+              left: 16,
+              right: 16,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  vertical: 16,
+                  horizontal: 20,
+                ),
+                decoration: BoxDecoration(
+                  color: Colors.redAccent.withOpacity(0.9),
+                  borderRadius: BorderRadius.circular(16),
+                  border: Border.all(color: Colors.white, width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.red.withOpacity(0.5),
+                      blurRadius: 20,
+                      spreadRadius: 5,
+                    ),
+                  ],
+                ),
+                child: Row(
+                  children: [
+                    const Icon(
+                      Icons.warning_amber_rounded,
+                      color: Colors.white,
+                      size: 36,
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        _dangerMessage!.toUpperCase(),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
                       ),
                     ),
                   ],
@@ -610,7 +727,15 @@ class _MainScreenState extends State<MainScreen> {
                       ),
                       const SizedBox(height: 16),
                       Text(
-                        _isScanningMLKit ? 'Đang quét...' : 'Đang xử lý...',
+                        _isScanningMLKit
+                            ? AppLocalizations.t(
+                                'main_scanning',
+                                _settings.language,
+                              )
+                            : AppLocalizations.t(
+                                'main_processing',
+                                _settings.language,
+                              ),
                         style: const TextStyle(
                           color: Colors.white,
                           fontSize: 18,
@@ -627,14 +752,32 @@ class _MainScreenState extends State<MainScreen> {
             bottom: 74,
             left: 0,
             right: 0,
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: const [
-                _HintChip(icon: Icons.touch_app, label: 'Nhấn đúp'),
-                SizedBox(width: 8),
-                _HintChip(icon: Icons.mic, label: 'Giữ để nói'),
-                SizedBox(width: 8),
-                _HintChip(icon: Icons.swipe, label: 'Vuốt để đổi chế độ'),
+            child: Wrap(
+              alignment: WrapAlignment.center,
+              spacing: 8,
+              runSpacing: 8,
+              children: [
+                _HintChip(
+                  icon: Icons.touch_app,
+                  label: AppLocalizations.t(
+                    'main_hint_double_tap',
+                    _settings.language,
+                  ),
+                ),
+                _HintChip(
+                  icon: Icons.mic,
+                  label: AppLocalizations.t(
+                    'main_hint_hold',
+                    _settings.language,
+                  ),
+                ),
+                _HintChip(
+                  icon: Icons.swipe,
+                  label: AppLocalizations.t(
+                    'main_hint_swipe',
+                    _settings.language,
+                  ),
+                ),
               ],
             ),
           ),
@@ -678,7 +821,7 @@ class _MainScreenState extends State<MainScreen> {
             child: Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(
-                _modes.length,
+                _getModes(_settings.language).length,
                 (index) => Container(
                   margin: const EdgeInsets.symmetric(horizontal: 4),
                   width: _currentModeIndex == index ? 24 : 8,

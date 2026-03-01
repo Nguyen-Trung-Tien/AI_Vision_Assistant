@@ -2,6 +2,7 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:mobile_app/services/accessibility_manager.dart';
 import 'package:mobile_app/services/settings_service.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 
 class SplashScreen extends StatefulWidget {
   final Widget nextScreen;
@@ -77,17 +78,12 @@ class _SplashScreenState extends State<SplashScreen>
     // Voice onboarding
     Future.delayed(const Duration(milliseconds: 800), () {
       if (!mounted) return;
+      final String lang = _settings.language;
       if (_settings.isFirstLaunch) {
-        _accessibility.speak(
-          'Chào mừng bạn đến với AI Vision Assistant. '
-          'Vuốt trái phải để chuyển chế độ. '
-          'Chạm hai lần để kích hoạt. '
-          'Nhấn giữ để ra lệnh giọng nói. '
-          'Nhấn nút giảm âm lượng 5 lần liên tục để gọi khẩn cấp.',
-        );
+        _accessibility.speak(AppLocalizations.t('splash_welcome_tts', lang));
         _settings.setFirstLaunchDone();
       } else {
-        _accessibility.speak('AI Vision Assistant đã sẵn sàng.');
+        _accessibility.speak(AppLocalizations.t('splash_ready_tts', lang));
       }
     });
 

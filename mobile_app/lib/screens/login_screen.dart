@@ -4,6 +4,7 @@ import 'package:mobile_app/screens/main_screen.dart';
 import 'package:mobile_app/services/accessibility_manager.dart';
 import 'package:mobile_app/services/auth_service.dart';
 import 'package:mobile_app/services/settings_service.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 
 class LoginScreen extends StatefulWidget {
   final List<CameraDescription>? cameras;
@@ -31,7 +32,9 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   void initState() {
     super.initState();
-    _accessibility.speak('Vui lòng nhập thông tin đăng nhập.');
+    _accessibility.speak(
+      AppLocalizations.t('login_tts_welcome', _settings.language),
+    );
   }
 
   @override
@@ -53,7 +56,9 @@ class _LoginScreenState extends State<LoginScreen> {
       final email = _emailController.text.trim();
       final password = _passwordController.text;
       if (_isRegisterMode && password != _confirmPasswordController.text) {
-        throw Exception('Mật khẩu xác nhận không khớp');
+        throw Exception(
+          AppLocalizations.t('login_err_password_match', _settings.language),
+        );
       }
 
       final result = _isRegisterMode
@@ -66,14 +71,18 @@ class _LoginScreenState extends State<LoginScreen> {
       );
 
       if (!mounted) return;
-      _accessibility.speak('Đăng nhập thành công.');
+      _accessibility.speak(
+        AppLocalizations.t('login_success_tts', _settings.language),
+      );
       Navigator.of(context).pushReplacement(
         MaterialPageRoute(builder: (_) => MainScreen(cameras: widget.cameras)),
       );
     } catch (e) {
       if (!mounted) return;
       _accessibility.triggerErrorVibration();
-      _accessibility.speak('Đăng nhập không thành công.');
+      _accessibility.speak(
+        AppLocalizations.t('login_fail_tts', _settings.language),
+      );
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
       );
@@ -108,7 +117,15 @@ class _LoginScreenState extends State<LoginScreen> {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    _isRegisterMode ? 'Tạo tài khoản mới' : 'Đăng nhập',
+                    _isRegisterMode
+                        ? AppLocalizations.t(
+                            'login_title_register',
+                            _settings.language,
+                          )
+                        : AppLocalizations.t(
+                            'login_title_login',
+                            _settings.language,
+                          ),
                     textAlign: TextAlign.center,
                     style: TextStyle(
                       color: Colors.white.withOpacity(0.7),
@@ -120,11 +137,21 @@ class _LoginScreenState extends State<LoginScreen> {
                     controller: _emailController,
                     keyboardType: TextInputType.emailAddress,
                     style: const TextStyle(color: Colors.white),
-                    decoration: _inputDecoration('Email'),
+                    decoration: _inputDecoration(
+                      AppLocalizations.t('login_email', _settings.language),
+                    ),
                     validator: (value) {
                       final v = (value ?? '').trim();
-                      if (v.isEmpty) return 'Nhập email';
-                      if (!v.contains('@')) return 'Email không hợp lệ';
+                      if (v.isEmpty)
+                        return AppLocalizations.t(
+                          'login_email_err_empty',
+                          _settings.language,
+                        );
+                      if (!v.contains('@'))
+                        return AppLocalizations.t(
+                          'login_email_err_invalid',
+                          _settings.language,
+                        );
                       return null;
                     },
                   ),
@@ -134,7 +161,7 @@ class _LoginScreenState extends State<LoginScreen> {
                     obscureText: !_showPassword,
                     style: const TextStyle(color: Colors.white),
                     decoration: _inputDecoration(
-                      'Mật khẩu',
+                      AppLocalizations.t('login_password', _settings.language),
                       suffixIcon: IconButton(
                         onPressed: () {
                           setState(() => _showPassword = !_showPassword);
@@ -149,7 +176,11 @@ class _LoginScreenState extends State<LoginScreen> {
                     ),
                     validator: (value) {
                       final v = value ?? '';
-                      if (v.length < 6) return 'Mật khẩu tối thiểu 6 ký tự';
+                      if (v.length < 6)
+                        return AppLocalizations.t(
+                          'login_password_err_length',
+                          _settings.language,
+                        );
                       return null;
                     },
                   ),
@@ -160,7 +191,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       obscureText: !_showConfirmPassword,
                       style: const TextStyle(color: Colors.white),
                       decoration: _inputDecoration(
-                        'Xác nhận mật khẩu',
+                        AppLocalizations.t(
+                          'login_confirm_password',
+                          _settings.language,
+                        ),
                         suffixIcon: IconButton(
                           onPressed: () {
                             setState(() {
@@ -177,7 +211,10 @@ class _LoginScreenState extends State<LoginScreen> {
                       ),
                       validator: (value) {
                         if (_isRegisterMode && (value ?? '').isEmpty) {
-                          return 'Nhập lại mật khẩu';
+                          return AppLocalizations.t(
+                            'login_confirm_err_empty',
+                            _settings.language,
+                          );
                         }
                         return null;
                       },
@@ -200,7 +237,17 @@ class _LoginScreenState extends State<LoginScreen> {
                               color: Colors.white,
                             ),
                           )
-                        : Text(_isRegisterMode ? 'Đăng ký' : 'Đăng nhập'),
+                        : Text(
+                            _isRegisterMode
+                                ? AppLocalizations.t(
+                                    'login_btn_register',
+                                    _settings.language,
+                                  )
+                                : AppLocalizations.t(
+                                    'login_btn_login',
+                                    _settings.language,
+                                  ),
+                          ),
                   ),
                   const SizedBox(height: 10),
                   TextButton(
@@ -216,8 +263,14 @@ class _LoginScreenState extends State<LoginScreen> {
                           },
                     child: Text(
                       _isRegisterMode
-                          ? 'Đã có tài khoản? Đăng nhập'
-                          : 'Chưa có tài khoản? Đăng ký',
+                          ? AppLocalizations.t(
+                              'login_switch_to_login',
+                              _settings.language,
+                            )
+                          : AppLocalizations.t(
+                              'login_switch_to_register',
+                              _settings.language,
+                            ),
                     ),
                   ),
                 ],

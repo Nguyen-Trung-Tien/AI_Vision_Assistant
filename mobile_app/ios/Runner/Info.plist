@@ -47,5 +47,7 @@
 	<true/>
 	<key>NSCameraUsageDescription</key>
 	<string>App needs camera access to capture frames for vision recognition.</string>
+	<key>NSContactsUsageDescription</key>
+	<string>App needs contacts access to let you select emergency contacts.</string>
 </dict>
 </plist>

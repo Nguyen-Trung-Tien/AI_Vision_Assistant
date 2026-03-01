@@ -134,6 +134,8 @@ def process_captioning(image_base64: str, client_id: str = "default", lang: str 
         label = d["label"]
         translated = translate_label(label, lang)
         pos = get_spatial_position(d["box"], img_w)
+        
+        d["position"] = "left" if pos == "Bên trái" else "right" if pos == "Bên phải" else "center"
         significant_objects.append(translated)
 
         if translated not in spatial_groups[pos]:
@@ -141,6 +143,9 @@ def process_captioning(image_base64: str, client_id: str = "default", lang: str 
 
         # Ước tính khoảng cách
         dist = estimate_distance(label, abs(d["box"][3] - d["box"][1]), img_h)
+        if dist is not None:
+            d["distance"] = dist
+            
         spatial_groups[pos][translated].append(dist)
 
     # Xây dựng câu mô tả
@@ -203,4 +208,5 @@ def process_captioning(image_base64: str, client_id: str = "default", lang: str 
         "boxes": [d["box"] for d in detections],
         "object_count": total_objects,
         "stable": stable,
+        "raw_detections": [d for d in detections if "distance" in d],
     }

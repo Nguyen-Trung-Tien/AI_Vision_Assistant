@@ -6,9 +6,11 @@ import 'package:mobile_app/services/accessibility_manager.dart';
 import 'package:mobile_app/services/history_service.dart';
 import 'package:mobile_app/services/settings_service.dart';
 import 'package:mobile_app/services/websocket_service.dart';
+import 'package:mobile_app/l10n/app_localizations.dart';
 
 /// Callback khi trạng thái xử lý thay đổi (loading/done).
 typedef ProcessingStateCallback = void Function(bool isProcessing);
+typedef DangerAlertCallback = void Function(String message, String level);
 
 class EdgeAIService {
   final WebSocketService _wsService;
@@ -28,13 +30,19 @@ class EdgeAIService {
   /// Callback cho UI biết trạng thái loading
   ProcessingStateCallback? onProcessingStateChanged;
 
+  /// Callback khi có cảnh báo nguy hiểm
+  DangerAlertCallback? onDangerAlertDetected;
+
   EdgeAIService(this._wsService, this._captureFrame) {
     _wsService.onDangerAlert = (data) {
       final distance = ((data['distance'] as num?) ?? 2.0).toDouble();
+      final message = data['message']?.toString() ?? 'Stop immediately!';
+      final level = data['level']?.toString() ?? 'HIGH';
+
       _accessibilityManager.triggerDangerVibration(distance);
-      _accessibilityManager.speak(
-        data['message']?.toString() ?? 'Stop immediately!',
-      );
+      _accessibilityManager.speak(message);
+
+      onDangerAlertDetected?.call(message, level);
     };
 
     _wsService.onAIResult = (data) {
@@ -78,9 +86,8 @@ class EdgeAIService {
       final status = data['status']?.toString();
       if (status == 'throttled') {
         _setProcessing(false);
-        _accessibilityManager.speak(
-          'Khung hình gửi quá nhanh, vui lòng thử lại.',
-        );
+        final lang = SettingsService().language;
+        _accessibilityManager.speak(AppLocalizations.t('ai_throttled', lang));
       }
     };
   }
@@ -99,23 +106,26 @@ class EdgeAIService {
   }
 
   void requestMoneyDetection() {
+    final lang = SettingsService().language;
     _accessibilityManager.triggerSuccessVibration();
-    _accessibilityManager.speak('Đang nhận diện...');
+    _accessibilityManager.speak(AppLocalizations.t('ai_detecting', lang));
     _setProcessing(true);
     _sendFrameFromCamera(taskType: 'OCR');
   }
 
   void requestCaptioning() {
+    final lang = SettingsService().language;
     _accessibilityManager.triggerSuccessVibration();
-    _accessibilityManager.speak('Đang mô tả...');
+    _accessibilityManager.speak(AppLocalizations.t('ai_describing', lang));
     _setProcessing(true);
     _sendFrameFromCamera(taskType: 'CAPTION');
   }
 
   /// Mode 1: Online OCR — gửi frame lên server để đọc văn bản
   void requestOnlineOCR() {
+    final lang = SettingsService().language;
     _accessibilityManager.triggerSuccessVibration();
-    _accessibilityManager.speak('Đang gửi lên server để đọc...');
+    _accessibilityManager.speak(AppLocalizations.t('ai_online_reading', lang));
     _setProcessing(true);
     _sendFrameFromCamera(taskType: 'TEXT_OCR');
   }
@@ -146,7 +156,9 @@ class EdgeAIService {
     Future.delayed(const Duration(seconds: 15), () {
       if (_isProcessing) {
         _setProcessing(false);
-        _accessibilityManager.speak('Hết thời gian chờ phản hồi.');
+        _accessibilityManager.speak(
+          AppLocalizations.t('ai_timeout', settings.language),
+        );
       }
     });
   }
