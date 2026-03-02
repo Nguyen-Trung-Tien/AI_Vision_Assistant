@@ -7,7 +7,6 @@ Fallback sang in-memory cache khi Redis không khả dụng.
 import hashlib
 import os
 import subprocess
-from typing import Optional
 
 try:
     import redis
@@ -52,13 +51,19 @@ class TTSCacheService:
             cls._redis_client = None
 
     @classmethod
-    def _make_cache_key(cls, text: str) -> str:
-        """Tạo cache key từ nội dung text."""
+    def _make_cache_key(cls, text: str, lang: str = "vi") -> str:
+        """Tạo cache key từ nội dung text và ngôn ngữ."""
         text_hash = hashlib.md5(text.encode("utf-8")).hexdigest()
-        return f"tts_audio_{text_hash}_vi-VN"
+        return f"tts_audio_{text_hash}_{lang}"
+
+    # Map ngôn ngữ sang giọng edge-tts
+    _VOICE_MAP: dict[str, str] = {
+        "vi": "vi-VN-HoaiMyNeural",
+        "en": "en-US-JennyNeural",
+    }
 
     @classmethod
-    def _generate_audio_url(cls, text: str, cache_key: str) -> str:
+    def _generate_audio_url(cls, text: str, cache_key: str, lang: str = "vi") -> str:
         """
         Tạo URL audio từ TTS engine (edge-tts).
         Lưu file trả về dạng URL cục bộ hoặc public tùy cấu hình.
@@ -66,28 +71,28 @@ class TTSCacheService:
         # Thư mục lưu trữ tạm thời
         audio_dir = "/tmp/vision_audio" if os.name != "nt" else os.path.join(os.environ.get("TEMP", "C:\\temp"), "vision_audio")
         os.makedirs(audio_dir, exist_ok=True)
-        
+
         file_name = f"{cache_key}.mp3"
         file_path = os.path.join(audio_dir, file_name)
-        
+
         if not os.path.exists(file_path):
             try:
                 # Gọi edge-tts qua subprocess cli
-                voice = "vi-VN-HoaiMyNeural"
+                voice = cls._VOICE_MAP.get(lang, "vi-VN-HoaiMyNeural")
                 cmd = ["edge-tts", "--voice", voice, "--text", text, "--write-media", file_path]
                 subprocess.run(cmd, check=True)
                 print(f"[TTS Cache] Generated new audio at {file_path}")
             except Exception as e:
                 print(f"[TTS Cache] Error generating edge-tts: {e}")
                 return ""
-                
+
         # Trong thực tế, bạn cần một static file server (FastAPI/Express/Nginx) map tới thư mục này.
         # Hoặc backend-gateway sẽ proxy file này.
         # Ở đây trả về relative path để Gateway hoặc Client tự xử lý:
         return f"/audio/{file_name}"
 
     @classmethod
-    def get_audio_url(cls, text: str) -> str:
+    def get_audio_url(cls, text: str, lang: str = "vi") -> str:
         """
         Lấy audio URL cho text.
         Cache Hit → trả URL đã lưu.
@@ -95,7 +100,7 @@ class TTSCacheService:
         """
         cls._init_redis()
 
-        cache_key = cls._make_cache_key(text)
+        cache_key = cls._make_cache_key(text, lang)
 
         # Try Redis first
         if cls._redis_client is not None:
@@ -113,7 +118,7 @@ class TTSCacheService:
             return cls._memory_cache[cache_key]
 
         # Cache Miss — generate
-        audio_url = cls._generate_audio_url(text, cache_key)
+        audio_url = cls._generate_audio_url(text, cache_key, lang)
 
         # Store in Redis
         if cls._redis_client is not None:

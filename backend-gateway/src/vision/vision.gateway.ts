@@ -5,6 +5,7 @@ import {
   ConnectedSocket,
   OnGatewayConnection,
   OnGatewayDisconnect,
+  OnGatewayInit,
   WebSocketServer,
 } from '@nestjs/websockets';
 import { Server, Socket } from 'socket.io';
@@ -14,7 +15,9 @@ import { TaskQueueService } from './task-queue.service';
 import { FrameStreamDto } from './dto/frame-stream.dto';
 
 @WebSocketGateway({ cors: { origin: '*' } })
-export class VisionGateway implements OnGatewayConnection, OnGatewayDisconnect {
+export class VisionGateway
+  implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit
+{
   @WebSocketServer()
   server: Server;
 

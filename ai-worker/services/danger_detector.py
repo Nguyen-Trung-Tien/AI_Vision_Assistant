@@ -2,7 +2,7 @@
 Hệ thống nhận diện cảnh báo nguy hiểm thời gian thực.
 """
 from typing import Any
-from services.translations import t, translate_label
+from .translations import t, translate_label
 
 DANGER_LABELS = {"car", "motorcycle", "bus", "truck", "bicycle", "dog"}
 

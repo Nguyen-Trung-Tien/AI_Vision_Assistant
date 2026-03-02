@@ -66,7 +66,7 @@ def on_message(channel, method, properties, body):
             final_text = f"{top_danger} {final_text}"
         
         # Post-Process: Get TTS Audio URL from Redis Cache
-        audio_url = TTSCacheService.get_audio_url(final_text)
+        audio_url = TTSCacheService.get_audio_url(final_text, lang=lang)
         
         # In a real app, emit RPC back. Here we just print the final composed response.
         print(f"[+] Task Completed! Final Result for Socket:")

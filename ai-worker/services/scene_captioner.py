@@ -94,7 +94,7 @@ def process_captioning(image_base64: str, client_id: str = "default", lang: str 
     """
     image = decode_base64_image(image_base64)
     if image is None:
-        return {"text": t("no_frame", lang), "confidence_score": 0.0}
+        return {"text": t("no_frame", lang), "confidence_score": 0.0, "stable": False}
 
     img_h, img_w, _ = image.shape
     print(f"[AI Worker Caption] Scene frame: {img_w}x{img_h}", flush=True)
