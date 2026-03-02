@@ -131,7 +131,7 @@ export default function LoginV2({ onLoginSuccess }) {
         <button
           type="submit"
           disabled={submitting}
-          className="w-full rounded-xl bg-gradient-to-r from-accent-purple to-accent-cyan py-3 font-semibold text-white disabled:opacity-60 inline-flex items-center justify-center gap-2"
+          className="w-full rounded-xl bg-linear-to-r from-accent-purple to-accent-cyan py-3 font-semibold text-white disabled:opacity-60 inline-flex items-center justify-center gap-2"
         >
           {submitting ? (
             <>
@@ -139,8 +139,10 @@ export default function LoginV2({ onLoginSuccess }) {
               {isRegisterMode ? "Đang tạo tài khoản" : "Đang đăng nhập"}
               <span className="loading-dots" />
             </>
+          ) : isRegisterMode ? (
+            "Đăng ký"
           ) : (
-            isRegisterMode ? "Đăng ký" : "Đăng nhập"
+            "Đăng nhập"
           )}
         </button>
 

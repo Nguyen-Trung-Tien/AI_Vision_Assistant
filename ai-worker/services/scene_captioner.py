@@ -11,17 +11,17 @@ from .stabilizer import Stabilizer
 from .translations import t, translate_label
 
 
-def get_spatial_position(box: list[int], img_width: int) -> str:
+def get_spatial_position(box: list[int], img_width: int, lang: str = "vi") -> str:
     """Xác định vị trí tương đối của vật thể trong khung hình."""
     x1, y1, x2, y2 = box
     center_x = (x1 + x2) / 2
 
     if center_x < img_width / 3:
-        return "Bên trái"
+        return t("position_left", lang)
     elif center_x > (2 * img_width) / 3:
-        return "Bên phải"
+        return t("position_right", lang)
     else:
-        return "Phía trước"
+        return t("position_front", lang)
 
 
 def estimate_distance(label: str, box_height_px: int, img_height_px: int) -> float | None:
@@ -39,10 +39,10 @@ def estimate_distance(label: str, box_height_px: int, img_height_px: int) -> flo
     return round(distance, 1)
 
 
-def find_clear_paths(detections: list[dict], img_width: int) -> list[str]:
+def find_clear_paths(detections: list[dict], img_width: int, lang: str = "vi") -> list[str]:
     """Tìm các khoảng trống ngang trong khung hình để gợi ý lối đi."""
     if not detections:
-        return ["Toàn bộ đường phía trước đều trống."]
+        return [t("all_clear", lang)]
 
     # Lấy dải X của tất cả vật thể gần (conf cao)
     occupied_intervals = []
@@ -79,11 +79,11 @@ def find_clear_paths(detections: list[dict], img_width: int) -> list[str]:
     for g_start, g_end in gaps:
         center = (g_start + g_end) / 2
         if center < img_width / 3:
-            suggestions.append("Lối đi trống bên trái")
+            suggestions.append(t("clear_path_left", lang))
         elif center > (2 * img_width) / 3:
-            suggestions.append("Lối đi trống bên phải")
+            suggestions.append(t("clear_path_right", lang))
         else:
-            suggestions.append("Lối đi trống ở giữa")
+            suggestions.append(t("clear_path_center", lang))
 
     return suggestions
 
@@ -121,9 +121,9 @@ def process_captioning(image_base64: str, client_id: str = "default", lang: str 
 
     # Nhóm vật thể theo vị trí và loại
     spatial_groups = {
-        "Phía trước": {},
-        "Bên trái": {},
-        "Bên phải": {},
+        t("position_front", lang): {},
+        t("position_left", lang): {},
+        t("position_right", lang): {},
     }
 
     significant_objects = []
@@ -133,9 +133,13 @@ def process_captioning(image_base64: str, client_id: str = "default", lang: str 
 
         label = d["label"]
         translated = translate_label(label, lang)
-        pos = get_spatial_position(d["box"], img_w)
+        pos = get_spatial_position(d["box"], img_w, lang)  # pass lang
         
-        d["position"] = "left" if pos == "Bên trái" else "right" if pos == "Bên phải" else "center"
+        d["position"] = (
+            "left" if pos == t("position_left", lang)
+            else "right" if pos == t("position_right", lang)
+            else "center"
+        )
         significant_objects.append(translated)
 
         if translated not in spatial_groups[pos]:
@@ -168,7 +172,12 @@ def process_captioning(image_base64: str, client_id: str = "default", lang: str 
             else:
                 obj_strings.append(f"{name}{dist_str}")
 
-        pos_translated = t(f"position_{('left' if pos == 'Bên trái' else 'right' if pos == 'Bên phải' else 'front')}", lang)
+        pos_key = (
+            "left" if pos == t("position_left", lang)
+            else "right" if pos == t("position_right", lang)
+            else "front"
+        )
+        pos_translated = t(f"position_{pos_key}", lang)
         parts.append(t("has_objects", lang, pos=pos_translated, objects=', '.join(obj_strings)))
 
     if not parts:
@@ -183,7 +192,7 @@ def process_captioning(image_base64: str, client_id: str = "default", lang: str 
     base_text = ". ".join(parts) + "."
 
     # Thêm gợi ý lối đi
-    clear_paths = find_clear_paths(detections, img_w)
+    clear_paths = find_clear_paths(detections, img_w, lang)  # pass lang
     if clear_paths:
         base_text += t("suggestion", lang) + ", ".join(clear_paths) + "."
 

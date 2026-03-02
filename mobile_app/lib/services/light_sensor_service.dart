@@ -2,10 +2,12 @@ import 'dart:async';
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:mobile_app/services/accessibility_manager.dart';
+import 'package:mobile_app/services/settings_service.dart';
 
 /// Service phát hiện ánh sáng yếu từ camera exposure.
 class LightSensorService {
   final AccessibilityManager _accessibility = AccessibilityManager();
+  final SettingsService _settings = SettingsService();
 
   bool _isLowLight = false;
   bool get isLowLight => _isLowLight;
@@ -28,8 +30,6 @@ class LightSensorService {
     if (!controller.value.isInitialized) return;
 
     try {
-      // Heuristic: nếu đang ở auto exposure, kiểm tra qua image brightness
-      // Camera trên Android/iOS tự điều chỉnh, ta dùng image stream để detect
       _evaluateBrightness(controller);
     } catch (e) {
       debugPrint('Light sensor error: $e');
@@ -42,17 +42,22 @@ class LightSensorService {
       final image = await controller.takePicture();
       final bytes = await image.readAsBytes();
 
-      // Heuristic đơn giản: file size nhỏ = ảnh tối (ít detail = nén tốt hơn)
-      // Threshold ~15KB cho ảnh medium resolution tối
+      // Heuristic: file size nhỏ = ảnh tối (ít detail = nén tốt hơn)
+      // Threshold được đọc từ settings (cho phép người dùng tùy chỉnh)
       final fileSizeKB = bytes.length / 1024;
+      final threshold = _settings.lightThresholdKB; // #13: đọc từ settings
       final wasLowLight = _isLowLight;
 
-      if (fileSizeKB < 20) {
+      if (fileSizeKB < threshold) {
         _isLowLight = true;
       } else {
         _isLowLight = false;
         _hasWarned = false;
       }
+
+      debugPrint(
+        '[LightSensor] fileSize=${fileSizeKB.toStringAsFixed(1)}KB, threshold=${threshold}KB, lowLight=$_isLowLight',
+      );
 
       if (_isLowLight != wasLowLight) {
         onLightChanged?.call(_isLowLight);

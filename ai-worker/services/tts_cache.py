@@ -1,32 +1,75 @@
 """
 TTS (Text-To-Speech) Cache Service.
 Sử dụng Redis để cache URL audio, tránh tạo lại TTS cho cùng nội dung.
-Fallback sang in-memory cache khi Redis không khả dụng.
+Fallback sang LRU in-memory cache (tối đa MAX_MEMORY_ITEMS entries) khi Redis không khả dụng.
 """
 
 import hashlib
 import os
 import subprocess
+from collections import OrderedDict
 
 try:
     import redis
-
     _redis_available = True
 except ImportError:
     _redis_available = False
+
+
+class _LRUCache:
+    """Thread-unsafe simple LRU cache dựa trên OrderedDict."""
+
+    def __init__(self, maxsize: int = 512):
+        self._cache: OrderedDict[str, str] = OrderedDict()
+        self._maxsize = maxsize
+
+    def get(self, key: str):
+        if key not in self._cache:
+            return None
+        # Move to end (most recently used)
+        self._cache.move_to_end(key)
+        return self._cache[key]
+
+    def set(self, key: str, value: str) -> None:
+        if key in self._cache:
+            self._cache.move_to_end(key)
+        self._cache[key] = value
+        if len(self._cache) > self._maxsize:
+            # Evict oldest
+            evicted = next(iter(self._cache))
+            del self._cache[evicted]
+
+    def clear(self) -> None:
+        self._cache.clear()
+
+    def __len__(self) -> int:
+        return len(self._cache)
 
 
 class TTSCacheService:
     """
     Cache TTS audio URLs.
     - Production: Redis cache
-    - Fallback: In-memory dict (khi Redis không có sẵn hoặc bị lỗi)
+    - Fallback:   LRU in-memory dict (tối đa 512 entries, evict oldest khi đầy)
     """
 
     _redis_client = None
-    _memory_cache: dict[str, str] = {}
+    _memory_cache: _LRUCache = _LRUCache(maxsize=512)
     _initialized = False
     _cache_ttl: int = 86400  # 24 giờ
+
+    # Audio directory — configurable via env
+    _audio_dir: str = os.getenv(
+        "TTS_AUDIO_DIR",
+        "/tmp/vision_audio" if os.name != "nt"
+        else os.path.join(os.environ.get("TEMP", "C:\\temp"), "vision_audio"),
+    )
+
+    # Map ngôn ngữ sang giọng edge-tts
+    _VOICE_MAP: dict[str, str] = {
+        "vi": "vi-VN-HoaiMyNeural",
+        "en": "en-US-JennyNeural",
+    }
 
     @classmethod
     def _init_redis(cls) -> None:
@@ -36,7 +79,7 @@ class TTSCacheService:
         cls._initialized = True
 
         if not _redis_available:
-            print("[TTS Cache] redis package not installed — using memory cache")
+            print("[TTS Cache] redis package not installed — using LRU memory cache")
             return
 
         redis_url = os.getenv("REDIS_URL", "redis://127.0.0.1:6379")
@@ -47,7 +90,7 @@ class TTSCacheService:
             cls._redis_client.ping()
             print(f"[TTS Cache] Connected to Redis: {redis_url}")
         except Exception as exc:
-            print(f"[TTS Cache] Redis unavailable ({exc}) — using memory cache")
+            print(f"[TTS Cache] Redis unavailable ({exc}) — using LRU memory cache")
             cls._redis_client = None
 
     @classmethod
@@ -56,53 +99,51 @@ class TTSCacheService:
         text_hash = hashlib.md5(text.encode("utf-8")).hexdigest()
         return f"tts_audio_{text_hash}_{lang}"
 
-    # Map ngôn ngữ sang giọng edge-tts
-    _VOICE_MAP: dict[str, str] = {
-        "vi": "vi-VN-HoaiMyNeural",
-        "en": "en-US-JennyNeural",
-    }
-
     @classmethod
-    def _generate_audio_url(cls, text: str, cache_key: str, lang: str = "vi") -> str:
+    def _generate_audio(cls, text: str, cache_key: str, lang: str = "vi") -> str:
         """
-        Tạo URL audio từ TTS engine (edge-tts).
-        Lưu file trả về dạng URL cục bộ hoặc public tùy cấu hình.
+        Tạo file MP3 bằng edge-tts và trả về URL path tương đối.
+
+        URL format: /audio/<filename>.mp3
+        → Backend-gateway (hoặc `main.py` FastAPI) phải mount static dir
+          tại GET /audio/* → audio_dir.
         """
-        # Thư mục lưu trữ tạm thời
-        audio_dir = "/tmp/vision_audio" if os.name != "nt" else os.path.join(os.environ.get("TEMP", "C:\\temp"), "vision_audio")
-        os.makedirs(audio_dir, exist_ok=True)
+        os.makedirs(cls._audio_dir, exist_ok=True)
 
         file_name = f"{cache_key}.mp3"
-        file_path = os.path.join(audio_dir, file_name)
+        file_path = os.path.join(cls._audio_dir, file_name)
 
         if not os.path.exists(file_path):
             try:
-                # Gọi edge-tts qua subprocess cli
                 voice = cls._VOICE_MAP.get(lang, "vi-VN-HoaiMyNeural")
-                cmd = ["edge-tts", "--voice", voice, "--text", text, "--write-media", file_path]
-                subprocess.run(cmd, check=True)
-                print(f"[TTS Cache] Generated new audio at {file_path}")
-            except Exception as e:
-                print(f"[TTS Cache] Error generating edge-tts: {e}")
+                cmd = [
+                    "edge-tts",
+                    "--voice", voice,
+                    "--text", text,
+                    "--write-media", file_path,
+                ]
+                subprocess.run(cmd, check=True, timeout=30)
+                print(f"[TTS Cache] Generated audio → {file_path}")
+            except subprocess.TimeoutExpired:
+                print("[TTS Cache] edge-tts timed out")
+                return ""
+            except Exception as exc:
+                print(f"[TTS Cache] edge-tts error: {exc}")
                 return ""
 
-        # Trong thực tế, bạn cần một static file server (FastAPI/Express/Nginx) map tới thư mục này.
-        # Hoặc backend-gateway sẽ proxy file này.
-        # Ở đây trả về relative path để Gateway hoặc Client tự xử lý:
         return f"/audio/{file_name}"
 
     @classmethod
     def get_audio_url(cls, text: str, lang: str = "vi") -> str:
         """
         Lấy audio URL cho text.
-        Cache Hit → trả URL đã lưu.
+        Cache Hit  → trả URL đã lưu.
         Cache Miss → tạo mới, lưu cache, trả URL.
         """
         cls._init_redis()
-
         cache_key = cls._make_cache_key(text, lang)
 
-        # Try Redis first
+        # 1. Try Redis
         if cls._redis_client is not None:
             try:
                 cached_url = cls._redis_client.get(cache_key)
@@ -112,13 +153,14 @@ class TTSCacheService:
             except Exception as exc:
                 print(f"[TTS Cache] Redis read error: {exc}")
 
-        # Try memory cache
-        if cache_key in cls._memory_cache:
-            print(f"[TTS Cache] HIT (Memory): {cache_key}")
-            return cls._memory_cache[cache_key]
+        # 2. Try LRU memory cache
+        cached_url = cls._memory_cache.get(cache_key)
+        if cached_url is not None:
+            print(f"[TTS Cache] HIT (Memory LRU): {cache_key} | cache_size={len(cls._memory_cache)}")
+            return cached_url
 
-        # Cache Miss — generate
-        audio_url = cls._generate_audio_url(text, cache_key, lang)
+        # 3. Cache Miss — generate
+        audio_url = cls._generate_audio(text, cache_key, lang)
 
         # Store in Redis
         if cls._redis_client is not None:
@@ -128,8 +170,9 @@ class TTSCacheService:
             except Exception as exc:
                 print(f"[TTS Cache] Redis write error: {exc}")
 
-        # Always store in memory as fallback
-        cls._memory_cache[cache_key] = audio_url
+        # Always store in LRU memory as fallback
+        cls._memory_cache.set(cache_key, audio_url)
+        print(f"[TTS Cache] MISS → stored in LRU Memory: {cache_key} | cache_size={len(cls._memory_cache)}")
 
         return audio_url
 
@@ -137,4 +180,9 @@ class TTSCacheService:
     def clear_cache(cls) -> None:
         """Xóa toàn bộ memory cache."""
         cls._memory_cache.clear()
-        print("[TTS Cache] Memory cache cleared")
+        print("[TTS Cache] LRU Memory cache cleared")
+
+    @classmethod
+    def get_audio_dir(cls) -> str:
+        """Trả về thư mục chứa file audio (để mount static server)."""
+        return cls._audio_dir

@@ -79,6 +79,16 @@ class SettingsService {
     await _prefs?.setBool('auto_flash', value);
   }
 
+  // --- Light Threshold (KB) for low-light detection ---
+  // Smaller value = more sensitive (flash triggers more easily)
+  // Range: 5 (very sensitive) to 50 (less sensitive), default 20
+  double get lightThresholdKB =>
+      _prefs?.getDouble('light_threshold_kb') ?? 20.0;
+
+  Future<void> setLightThresholdKB(double value) async {
+    await _prefs?.setDouble('light_threshold_kb', value);
+  }
+
   // --- Auth Token / User ---
   String get authToken => _prefs?.getString('auth_token') ?? '';
 

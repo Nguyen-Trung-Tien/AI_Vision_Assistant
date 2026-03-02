@@ -2,6 +2,7 @@
 import PieChartV2 from "../components/PieChartV2";
 import LineChartV2 from "../components/LineChartV2";
 import RecentLogsV2 from "../components/RecentLogsV2";
+import RealtimeStatsBar from "../components/RealtimeStatsBar";
 import { getStoredEmail } from "../services/api";
 
 export default function DashboardV2({ onLogout }) {
@@ -11,10 +12,12 @@ export default function DashboardV2({ onLogout }) {
     <div className="max-w-[1400px] mx-auto px-6 py-8">
       <div className="flex items-center justify-between mb-10">
         <div>
-          <h1 className="text-3xl font-extrabold tracking-tight bg-gradient-to-r from-accent-purple to-accent-cyan bg-clip-text text-transparent">
+          <h1 className="text-3xl font-extrabold tracking-tight bg-linear-to-r from-accent-purple to-accent-cyan bg-clip-text text-transparent">
             AI Vision Dashboard
           </h1>
-          <p className="text-sm text-white/50 mt-1">Theo dõi hoạt động nhận diện</p>
+          <p className="text-sm text-white/50 mt-1">
+            Theo dõi hoạt động nhận diện
+          </p>
         </div>
         <button
           onClick={() => window.location.reload()}
@@ -25,7 +28,9 @@ export default function DashboardV2({ onLogout }) {
       </div>
 
       <div className="flex items-center justify-between mb-6">
-        <p className="text-xs text-white/40">{email ? `Tài khoản: ${email}` : "Chưa có tài khoản"}</p>
+        <p className="text-xs text-white/40">
+          {email ? `Tài khoản: ${email}` : "Chưa có tài khoản"}
+        </p>
         <button
           onClick={onLogout}
           className="px-4 py-2 rounded-xl border border-accent-red/30 bg-accent-red/10 text-accent-red text-sm font-medium hover:bg-accent-red/20 transition-all duration-300"
@@ -33,6 +38,8 @@ export default function DashboardV2({ onLogout }) {
           Đăng xuất
         </button>
       </div>
+
+      <RealtimeStatsBar />
 
       <StatsCardsV2 />
 

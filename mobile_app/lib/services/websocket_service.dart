@@ -3,10 +3,9 @@ import 'package:socket_io_client/socket_io_client.dart' as io;
 import 'package:flutter/foundation.dart';
 
 class WebSocketService {
-  late io.Socket socket;
+  io.Socket? _socket;
 
   /// Token dùng để authenticate với WebSocket gateway.
-  /// Trong development dùng dev_bypass_token.
   String _authToken = const String.fromEnvironment(
     'WS_TOKEN',
     defaultValue: '',
@@ -18,6 +17,7 @@ class WebSocketService {
   Function(bool isConnected)? onConnectionStatus;
 
   bool _isConnected = false;
+  bool _isDisposed = false;
   bool get isConnected => _isConnected;
 
   int _reconnectAttempts = 0;
@@ -29,13 +29,9 @@ class WebSocketService {
     _authToken = token;
   }
 
-  void connect() {
-    String baseUrl = const String.fromEnvironment(
-      'BACKEND_URL',
-      defaultValue: 'http://10.0.2.2:3000',
-    );
-
-    socket = io.io(
+  /// Tạo và config một socket instance mới.
+  io.Socket _createSocket(String baseUrl) {
+    return io.io(
       baseUrl,
       io.OptionBuilder()
           .setTransports(['websocket'])
@@ -43,9 +39,9 @@ class WebSocketService {
           .setAuth({'token': _authToken})
           .build(),
     );
+  }
 
-    socket.connect();
-
+  void _attachListeners(io.Socket socket) {
     socket.onConnect((_) {
       debugPrint('Connected to Gateway WS');
       _isConnected = true;
@@ -55,21 +51,18 @@ class WebSocketService {
     });
 
     socket.on('danger_alert', (data) {
-      debugPrint('Received Danger Alert: $data');
       if (onDangerAlert != null) {
         onDangerAlert!(Map<String, dynamic>.from(data as Map));
       }
     });
 
     socket.on('ai_result', (data) {
-      debugPrint('Received AI Result: $data');
       if (onAIResult != null) {
         onAIResult!(Map<String, dynamic>.from(data as Map));
       }
     });
 
     socket.on('stream_ack', (data) {
-      debugPrint('Received Stream Ack: $data');
       if (onStreamAck != null) {
         onStreamAck!(Map<String, dynamic>.from(data as Map));
       }
@@ -79,19 +72,32 @@ class WebSocketService {
       debugPrint('Disconnected from Gateway WS');
       _isConnected = false;
       onConnectionStatus?.call(false);
-      _scheduleReconnect();
+      if (!_isDisposed) _scheduleReconnect();
     });
 
     socket.onConnectError((error) {
       debugPrint('WS Connection Error: $error');
       _isConnected = false;
       onConnectionStatus?.call(false);
-      _scheduleReconnect();
+      if (!_isDisposed) _scheduleReconnect();
     });
 
     socket.onError((error) {
       debugPrint('WS Error: $error');
     });
+  }
+
+  void connect() {
+    if (_isDisposed) return;
+
+    final baseUrl = const String.fromEnvironment(
+      'BACKEND_URL',
+      defaultValue: 'http://10.0.2.2:3000',
+    );
+
+    _socket = _createSocket(baseUrl);
+    _attachListeners(_socket!);
+    _socket!.connect();
   }
 
   void _scheduleReconnect() {
@@ -106,9 +112,14 @@ class WebSocketService {
     );
 
     _reconnectTimer = Timer(Duration(seconds: delay), () {
-      if (!_isConnected) {
-        debugPrint('Attempting reconnect...');
-        socket.connect();
+      if (!_isConnected && !_isDisposed) {
+        debugPrint(
+          'Attempting reconnect — disposing old socket and creating new one...',
+        );
+        // Dispose old socket properly before creating a new one to avoid memory leak
+        _socket?.dispose();
+        _socket = null;
+        connect();
       }
     });
   }
@@ -119,12 +130,12 @@ class WebSocketService {
     String lang = 'vi',
     double warningDistanceM = 2.0,
   }) {
-    if (!socket.connected) {
+    if (_socket == null || !_socket!.connected) {
       debugPrint('WS not connected, frame dropped');
       return;
     }
 
-    socket.emit('frame_stream', {
+    _socket!.emit('frame_stream', {
       'frame': base64Frame,
       'task_type': taskType,
       'lang': lang,
@@ -133,7 +144,9 @@ class WebSocketService {
   }
 
   void dispose() {
+    _isDisposed = true;
     _reconnectTimer?.cancel();
-    socket.dispose();
+    _socket?.dispose();
+    _socket = null;
   }
 }

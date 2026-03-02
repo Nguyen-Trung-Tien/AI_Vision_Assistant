@@ -15,21 +15,50 @@ class _HistoryScreenState extends State<HistoryScreen> {
   final AccessibilityManager _accessibility = AccessibilityManager();
   final HistoryService _historyService = HistoryService();
 
-  late List<HistoryEntry> _entries;
+  late List<HistoryEntry> _allEntries;
+  List<HistoryEntry> _filtered = [];
+
+  // --- Filter state ---
+  final TextEditingController _searchCtrl = TextEditingController();
+  String _selectedType =
+      'all'; // 'all' | 'money' | 'text' | 'caption' | 'barcode'
+
+  static const _types = ['all', 'money', 'text', 'caption', 'barcode'];
 
   @override
   void initState() {
     super.initState();
-    _entries = _historyService.getHistory();
-    final lang = SettingsService().language;
+    _allEntries = _historyService.getHistory();
+    _filtered = List.from(_allEntries);
 
-    if (_entries.isEmpty) {
+    final lang = SettingsService().language;
+    if (_allEntries.isEmpty) {
       _accessibility.speak(AppLocalizations.t('history_empty_tts', lang));
     } else {
       final msg1 = AppLocalizations.t('history_count_tts_1', lang);
       final msg2 = AppLocalizations.t('history_count_tts_2', lang);
-      _accessibility.speak('$msg1 ${_entries.length} $msg2');
+      _accessibility.speak('$msg1 ${_allEntries.length} $msg2');
     }
+
+    _searchCtrl.addListener(_applyFilter);
+  }
+
+  @override
+  void dispose() {
+    _searchCtrl.dispose();
+    super.dispose();
+  }
+
+  void _applyFilter() {
+    final query = _searchCtrl.text.trim().toLowerCase();
+    setState(() {
+      _filtered = _allEntries.where((e) {
+        final typeMatch = _selectedType == 'all' || e.type == _selectedType;
+        final textMatch =
+            query.isEmpty || e.result.toLowerCase().contains(query);
+        return typeMatch && textMatch;
+      }).toList();
+    });
   }
 
   String _getTypeLabel(String type, String lang) {
@@ -50,7 +79,6 @@ class _HistoryScreenState extends State<HistoryScreen> {
   String _formatTime(DateTime dt, String lang) {
     final now = DateTime.now();
     final diff = now.difference(dt);
-
     if (diff.inMinutes < 1) {
       return AppLocalizations.t('history_time_just_now', lang);
     }
@@ -85,7 +113,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
           },
         ),
         actions: [
-          if (_entries.isNotEmpty)
+          if (_allEntries.isNotEmpty)
             IconButton(
               icon: const Icon(
                 Icons.delete_outline,
@@ -94,7 +122,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
               ),
               onPressed: () async {
                 await _historyService.clearHistory();
-                setState(() => _entries = []);
+                setState(() {
+                  _allEntries = [];
+                  _filtered = [];
+                });
                 _accessibility.speak(
                   AppLocalizations.t('history_cleared', lang),
                 );
@@ -102,86 +133,186 @@ class _HistoryScreenState extends State<HistoryScreen> {
             ),
         ],
       ),
-      body: _entries.isEmpty
-          ? Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                  Icon(
-                    Icons.history,
-                    size: 80,
-                    color: Colors.white.withValues(alpha: 0.2),
-                  ),
-                  const SizedBox(height: 16),
-                  Text(
-                    AppLocalizations.t('history_no_results', lang),
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.4),
-                      fontSize: 18,
-                    ),
-                  ),
-                ],
+      body: Column(
+        children: [
+          // --- Search bar ---
+          Padding(
+            padding: const EdgeInsets.fromLTRB(16, 12, 16, 0),
+            child: TextField(
+              controller: _searchCtrl,
+              style: const TextStyle(color: Colors.white),
+              decoration: InputDecoration(
+                hintText: lang == 'vi' ? 'Tìm kiếm...' : 'Search...',
+                hintStyle: TextStyle(
+                  color: Colors.white.withValues(alpha: 0.4),
+                ),
+                prefixIcon: const Icon(Icons.search, color: Color(0xFF6C63FF)),
+                suffixIcon: _searchCtrl.text.isNotEmpty
+                    ? IconButton(
+                        icon: const Icon(Icons.clear, color: Colors.white54),
+                        onPressed: () {
+                          _searchCtrl.clear();
+                          _applyFilter();
+                        },
+                      )
+                    : null,
+                filled: true,
+                fillColor: Colors.white.withValues(alpha: 0.07),
+                border: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(12),
+                  borderSide: BorderSide.none,
+                ),
               ),
-            )
-          : ListView.builder(
-              padding: const EdgeInsets.all(16),
-              itemCount: _entries.length,
-              itemBuilder: (context, index) {
-                final entry = _entries[index];
-                return GestureDetector(
-                  onTap: () {
-                    _accessibility.speak(
-                      '${_getTypeLabel(entry.type, lang)}: ${entry.result}',
-                    );
-                  },
-                  child: Container(
-                    margin: const EdgeInsets.only(bottom: 12),
-                    padding: const EdgeInsets.all(16),
-                    decoration: BoxDecoration(
-                      color: Colors.white.withValues(alpha: 0.06),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(color: Colors.white.withValues(alpha: 0.1)),
+            ),
+          ),
+
+          // --- Filter chips ---
+          SizedBox(
+            height: 50,
+            child: ListView(
+              scrollDirection: Axis.horizontal,
+              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+              children: _types.map((type) {
+                final isSelected = _selectedType == type;
+                final label = type == 'all'
+                    ? (lang == 'vi' ? 'Tất cả' : 'All')
+                    : _getTypeLabel(type, lang);
+                return Padding(
+                  padding: const EdgeInsets.only(right: 8),
+                  child: FilterChip(
+                    label: Text(label),
+                    selected: isSelected,
+                    onSelected: (_) {
+                      setState(() => _selectedType = type);
+                      _applyFilter();
+                    },
+                    backgroundColor: Colors.white.withValues(alpha: 0.07),
+                    selectedColor: const Color(
+                      0xFF6C63FF,
+                    ).withValues(alpha: 0.4),
+                    checkmarkColor: Colors.white,
+                    labelStyle: TextStyle(
+                      color: isSelected ? Colors.white : Colors.white70,
+                      fontWeight: isSelected
+                          ? FontWeight.bold
+                          : FontWeight.normal,
                     ),
+                    side: BorderSide(
+                      color: isSelected
+                          ? const Color(0xFF6C63FF)
+                          : Colors.white.withValues(alpha: 0.15),
+                    ),
+                  ),
+                );
+              }).toList(),
+            ),
+          ),
+
+          // --- Results count ---
+          if (_allEntries.isNotEmpty)
+            Padding(
+              padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  '${_filtered.length} ${lang == "vi" ? "kết quả" : "results"}',
+                  style: TextStyle(
+                    color: Colors.white.withValues(alpha: 0.4),
+                    fontSize: 12,
+                  ),
+                ),
+              ),
+            ),
+
+          // --- List ---
+          Expanded(
+            child: _filtered.isEmpty
+                ? Center(
                     child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
                       children: [
-                        Row(
-                          children: [
-                            Text(
-                              _getTypeLabel(entry.type, lang),
-                              style: const TextStyle(
-                                color: Color(0xFF00D4FF),
-                                fontSize: 14,
-                                fontWeight: FontWeight.bold,
-                              ),
-                            ),
-                            const Spacer(),
-                            Text(
-                              _formatTime(entry.timestamp, lang),
-                              style: TextStyle(
-                                color: Colors.white.withValues(alpha: 0.4),
-                                fontSize: 12,
-                              ),
-                            ),
-                          ],
+                        Icon(
+                          Icons.history,
+                          size: 80,
+                          color: Colors.white.withValues(alpha: 0.2),
                         ),
-                        const SizedBox(height: 8),
+                        const SizedBox(height: 16),
                         Text(
-                          entry.result,
-                          maxLines: 3,
-                          overflow: TextOverflow.ellipsis,
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 16,
-                            height: 1.4,
+                          AppLocalizations.t('history_no_results', lang),
+                          style: TextStyle(
+                            color: Colors.white.withValues(alpha: 0.4),
+                            fontSize: 18,
                           ),
                         ),
                       ],
                     ),
+                  )
+                : ListView.builder(
+                    padding: const EdgeInsets.all(16),
+                    itemCount: _filtered.length,
+                    itemBuilder: (context, index) {
+                      final entry = _filtered[index];
+                      return GestureDetector(
+                        onTap: () {
+                          _accessibility.speak(
+                            '${_getTypeLabel(entry.type, lang)}: ${entry.result}',
+                          );
+                        },
+                        child: Container(
+                          margin: const EdgeInsets.only(bottom: 12),
+                          padding: const EdgeInsets.all(16),
+                          decoration: BoxDecoration(
+                            color: Colors.white.withValues(alpha: 0.06),
+                            borderRadius: BorderRadius.circular(12),
+                            border: Border.all(
+                              color: Colors.white.withValues(alpha: 0.1),
+                            ),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Row(
+                                children: [
+                                  Text(
+                                    _getTypeLabel(entry.type, lang),
+                                    style: const TextStyle(
+                                      color: Color(0xFF00D4FF),
+                                      fontSize: 14,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                  const Spacer(),
+                                  Text(
+                                    _formatTime(entry.timestamp, lang),
+                                    style: TextStyle(
+                                      color: Colors.white.withValues(
+                                        alpha: 0.4,
+                                      ),
+                                      fontSize: 12,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                              const SizedBox(height: 8),
+                              Text(
+                                entry.result,
+                                maxLines: 3,
+                                overflow: TextOverflow.ellipsis,
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  height: 1.4,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      );
+                    },
                   ),
-                );
-              },
-            ),
+          ),
+        ],
+      ),
     );
   }
 }

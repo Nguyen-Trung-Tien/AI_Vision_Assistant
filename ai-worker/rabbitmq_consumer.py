@@ -1,6 +1,8 @@
 import pika
 import os
 import json
+import time
+import traceback
 from dotenv import load_dotenv
 
 from services.ai_service import AIService
@@ -12,6 +14,10 @@ load_dotenv()
 
 RABBITMQ_URL = os.getenv("RABBITMQ_URL", "amqp://guest:guest@127.0.0.1:5672/")
 
+# Retry config
+MAX_RETRIES = 3
+RETRY_HEADER = "x-retry-count"
+
 def apply_hallucination_guard(confidence: float, text: str, lang: str = "vi") -> str:
     """ Appends warning prefix if confidence is low """
     if confidence < 0.6:
@@ -21,6 +27,10 @@ def apply_hallucination_guard(confidence: float, text: str, lang: str = "vi") ->
     return text
 
 def on_message(channel, method, properties, body):
+    # Track retry count via message headers
+    headers = properties.headers or {}
+    retry_count = int(headers.get(RETRY_HEADER, 0))
+
     try:
         # Message format from NestJS: { "data": { clientId, taskType, frameData, timestamp } }
         message = json.loads(body.decode())
@@ -35,7 +45,7 @@ def on_message(channel, method, properties, body):
         lang = data.get("lang", "vi")
         warning_m = data.get("warningDistanceM", 2.0)
         
-        print(f"[*] Received Task: Client={client_id} | Type={task_type} | Lang={lang} | WarningDist={warning_m}m")
+        print(f"[*] Received Task: Client={client_id} | Type={task_type} | Lang={lang} | WarningDist={warning_m}m | Retry={retry_count}")
         
         ai_result = {}
         if task_type == "OCR":
@@ -68,12 +78,12 @@ def on_message(channel, method, properties, body):
         # Post-Process: Get TTS Audio URL from Redis Cache
         audio_url = TTSCacheService.get_audio_url(final_text, lang=lang)
         
-        # In a real app, emit RPC back. Here we just print the final composed response.
         print(f"[+] Task Completed! Final Result for Socket:")
         print(f"    - Text: {final_text}")
         print(f"    - Confidence: {ai_result['confidence_score']}")
         print(f"    - Dangers: {len(danger_alerts)}")
         print("-" * 50)
+
         # Publish result back to Gateway in NestJS Microservice format
         result_payload = {
             "pattern": "ai_results_queue",
@@ -98,9 +108,32 @@ def on_message(channel, method, properties, body):
         channel.basic_ack(delivery_tag=method.delivery_tag)
         
     except Exception as e:
-        print(f"[Error] Processing message: {e}")
-        # Negative acknowledge, push to dead letter exchange or requeue
-        channel.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
+        print(f"[Error] Processing message (retry {retry_count}/{MAX_RETRIES}): {e}")
+        traceback.print_exc()
+
+        if retry_count < MAX_RETRIES:
+            # Exponential backoff before requeue
+            delay = 2 ** retry_count
+            print(f"[Retry] Will retry in {delay}s (attempt {retry_count + 1}/{MAX_RETRIES})")
+            time.sleep(delay)
+
+            # Re-publish with incremented retry counter
+            new_headers = {**headers, RETRY_HEADER: retry_count + 1}
+            channel.basic_publish(
+                exchange='',
+                routing_key=method.routing_key,
+                body=body,
+                properties=pika.BasicProperties(
+                    headers=new_headers,
+                    delivery_mode=2,  # persistent
+                ),
+            )
+            # ACK original so it's not requeued twice
+            channel.basic_ack(delivery_tag=method.delivery_tag)
+        else:
+            # Max retries exceeded — send to dead-letter or drop
+            print(f"[Fatal] Max retries ({MAX_RETRIES}) exceeded. Dropping message.")
+            channel.basic_nack(delivery_tag=method.delivery_tag, requeue=False)
 
 def start_consumer():
     print("[*] Connecting to RabbitMQ Server...")

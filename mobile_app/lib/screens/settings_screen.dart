@@ -21,6 +21,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   late int _defaultMode;
   late String _language;
   late double _warningDistance;
+  late double _lightThreshold; // #13 ngưỡng ánh sáng auto-flash
 
   // getter for modes since it depends on language
   List<String> _getModeNames(String lang) {
@@ -41,6 +42,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _defaultMode = _settings.defaultModeIndex;
     _language = _settings.language;
     _warningDistance = _settings.warningDistance;
+    _lightThreshold = _settings.lightThresholdKB;
 
     _accessibility.speak(
       AppLocalizations.t('settings_screen_spoken', _language),
@@ -90,7 +92,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     padding: const EdgeInsets.symmetric(vertical: 8),
                     child: Text(
                       AppLocalizations.t('settings_emergency_empty', _language),
-                      style: TextStyle(color: Colors.white.withValues(alpha: 0.5)),
+                      style: TextStyle(
+                        color: Colors.white.withValues(alpha: 0.5),
+                      ),
                       textAlign: TextAlign.center,
                     ),
                   )
@@ -295,6 +299,54 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   _language,
                 );
                 _accessibility.speak('$msg ${value.toStringAsFixed(1)} $unit');
+              },
+            ),
+          ),
+
+          const SizedBox(height: 32),
+
+          // --- Light Threshold (#13) ---
+          _buildSectionTitle(
+            '${AppLocalizations.t('settings_light_threshold', _language)} ${_lightThreshold.toStringAsFixed(0)}KB',
+          ),
+          const SizedBox(height: 4),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                AppLocalizations.t('settings_light_low', _language),
+                style: const TextStyle(color: Colors.amber, fontSize: 13),
+              ),
+              Text(
+                AppLocalizations.t('settings_light_high', _language),
+                style: const TextStyle(color: Colors.white54, fontSize: 13),
+              ),
+            ],
+          ),
+          const SizedBox(height: 4),
+          SliderTheme(
+            data: SliderTheme.of(context).copyWith(
+              activeTrackColor: Colors.amber,
+              inactiveTrackColor: Colors.white.withValues(alpha: 0.2),
+              thumbColor: Colors.amber,
+              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 14),
+              trackHeight: 6,
+            ),
+            child: Slider(
+              value: _lightThreshold,
+              min: 5,
+              max: 50,
+              divisions: 9,
+              onChanged: (value) {
+                setState(() => _lightThreshold = value);
+              },
+              onChangeEnd: (value) async {
+                await _settings.setLightThresholdKB(value);
+                final msg = AppLocalizations.t(
+                  'settings_light_threshold_spoken',
+                  _language,
+                );
+                _accessibility.speak('$msg ${value.toStringAsFixed(0)}KB');
               },
             ),
           ),

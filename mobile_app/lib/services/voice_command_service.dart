@@ -1,10 +1,12 @@
 import 'package:flutter/foundation.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 import 'package:mobile_app/services/accessibility_manager.dart';
+import 'package:mobile_app/services/settings_service.dart';
 
 class VoiceCommandService {
   final SpeechToText _speechToText = SpeechToText();
   final AccessibilityManager _accessibilityManager = AccessibilityManager();
+  final SettingsService _settings = SettingsService();
 
   bool _isListening = false;
   bool _isInitialized = false;
@@ -12,6 +14,17 @@ class VoiceCommandService {
   final Function(String command) onCommandRecognized;
 
   VoiceCommandService({required this.onCommandRecognized});
+
+  /// Map ngôn ngữ app → locale ID cho speech_to_text.
+  static String _langToLocale(String lang) {
+    switch (lang) {
+      case 'en':
+        return 'en_US';
+      case 'vi':
+      default:
+        return 'vi_VN';
+    }
+  }
 
   Future<void> init() async {
     try {
@@ -67,26 +80,26 @@ class VoiceCommandService {
     // Chờ TTS đọc xong trước khi bắt đầu nghe
     await Future.delayed(const Duration(milliseconds: 900));
 
+    // Đọc locale từ settings — đúng ngôn ngữ người dùng đã chọn
+    final locale = _langToLocale(_settings.language);
+    debugPrint(
+      '[VoiceCommand] Using locale: $locale (lang=${_settings.language})',
+    );
+
     await _speechToText.listen(
-      localeId: 'vi_VN',
+      localeId: locale,
       listenOptions: SpeechListenOptions(
-        // Dùng confirmation mode để nhận lệnh chính xác hơn
         listenMode: ListenMode.confirmation,
-        // Tắt partial results để chỉ xử lý kết quả cuối
         partialResults: false,
-        // Không hủy khi có lỗi nhỏ
         cancelOnError: false,
-        // Bật auto punctuation để nhận diện tốt hơn
         autoPunctuation: false,
       ),
       listenFor: const Duration(seconds: 10),
-      // Tăng thời gian nghỉ để tránh cắt câu giữa chừng
       pauseFor: const Duration(seconds: 3),
       onResult: (result) {
         final recognizedWords = result.recognizedWords.trim();
         if (recognizedWords.isEmpty) return;
 
-        // Chỉ xử lý khi là kết quả cuối cùng
         if (result.finalResult) {
           _isListening = false;
           final command = recognizedWords.toLowerCase();

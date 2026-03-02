@@ -335,6 +335,51 @@ class AppLocalizations {
       'vi': 'Không thể lấy được định vị. Sẽ gọi điện trực tiếp.',
       'en': 'Cannot get location. Calling directly.',
     },
+    'sos_countdown': {
+      'vi': 'Gửi SOS sau {seconds} giây. Nhấn nút nguồn để hủy.',
+      'en':
+          'SOS will be sent in {seconds} seconds. Press power button to cancel.',
+    },
+    'sos_cancelled': {'vi': 'Đã hủy gửi SOS.', 'en': 'SOS cancelled.'},
+    // --- Settings auto-flash threshold ---
+    'settings_light_threshold': {
+      'vi': '💡 Ngưỡng ánh sáng tự động:',
+      'en': '💡 Auto-flash Light Threshold:',
+    },
+    'settings_light_threshold_spoken': {
+      'vi': 'Ngưỡng ánh sáng tự động:',
+      'en': 'Auto-flash light threshold:',
+    },
+    'settings_light_low': {'vi': 'Nhạy cao', 'en': 'High sensitivity'},
+    'settings_light_high': {'vi': 'Nhạy thấp', 'en': 'Low sensitivity'},
+    // --- Navigation ---
+    'nav_gps_disabled': {
+      'vi': 'Vui lòng bật định vị GPS.',
+      'en': 'Please enable GPS location.',
+    },
+    'nav_permission_denied': {
+      'vi': 'Cần cấp quyền vị trí để định hướng.',
+      'en': 'Location permission is required for navigation.',
+    },
+    'nav_permission_forever': {
+      'vi':
+          'Quyền vị trí bị từ chối vĩnh viễn. Vui lòng cấp trong cài đặt hệ thống.',
+      'en':
+          'Location permission is permanently denied. Please enable in system settings.',
+    },
+    'nav_started': {'vi': 'Bắt đầu định hướng.', 'en': 'Navigation started.'},
+    'nav_heading': {
+      'vi': 'Bạn đang hướng về phía {dir}',
+      'en': 'You are heading {dir}',
+    },
+    'nav_dir_north': {'vi': 'Bắc', 'en': 'North'},
+    'nav_dir_east': {'vi': 'Đông', 'en': 'East'},
+    'nav_dir_south': {'vi': 'Nam', 'en': 'South'},
+    'nav_dir_west': {'vi': 'Tây', 'en': 'West'},
+    'nav_on_street': {
+      'vi': 'Bạn đang trên đường {road}{area}',
+      'en': 'You are on {road}{area}',
+    },
   };
 
   /// Translate localized string based on lang code ('en' or 'vi')
