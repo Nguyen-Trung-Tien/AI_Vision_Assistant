@@ -8,24 +8,18 @@ DANGER_LABELS = {"car", "motorcycle", "bus", "truck", "bicycle", "dog"}
 
 def detect_dangers(detections: list[dict[str, Any]], threshold_m: float = 2.0, lang: str = "vi") -> list[dict[str, Any]]:
     alerts = []
-    
+
     for obj in detections:
         label = obj.get('label')
         if not label or label not in DANGER_LABELS:
             continue
-            
-        distances = obj.get('distances', {})
-        if not distances:
-            # Fallback simple distance if missing from scene_captioner
-            dist = obj.get('distance')
-            if not dist:
-                continue
-            d_min = dist
-        else:
-            valid_dist = [d for d in [distances.get("left"), distances.get("center"), distances.get("right")] if d is not None]
-            if not valid_dist:
-                continue
-            d_min = min(valid_dist)
+
+        # scene_captioner.py attaches 'distance' (singular float) — use it directly.
+        # The old 'distances' dict branch was dead code that caused all alerts to be dropped.
+        dist = obj.get('distance')
+        if dist is None:
+            continue
+        d_min = float(dist)
             
         if d_min <= threshold_m:
             pos = obj.get('position', 'center')

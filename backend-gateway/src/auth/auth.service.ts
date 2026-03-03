@@ -4,6 +4,7 @@ import {
   Logger,
   OnModuleInit,
 } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
@@ -17,6 +18,7 @@ export class AuthService implements OnModuleInit {
   constructor(
     private usersService: UsersService,
     private jwtService: JwtService,
+    private configService: ConfigService,
   ) {}
 
   async onModuleInit() {
@@ -25,7 +27,19 @@ export class AuthService implements OnModuleInit {
 
   private async ensureDefaultAdmin() {
     const adminEmail = 'admin@gmail.com';
-    const adminPassword = '123456';
+    // Read from env — fallback to '123456' only in non-production
+    const nodeEnv = this.configService.get<string>('NODE_ENV', 'development');
+    const adminPassword =
+      this.configService.get<string>('ADMIN_DEFAULT_PASSWORD') ??
+      (nodeEnv !== 'production' ? '123456' : null);
+
+    if (!adminPassword) {
+      this.logger.warn(
+        'ADMIN_DEFAULT_PASSWORD is not set in production. Skipping admin seed.',
+      );
+      return;
+    }
+
     const hashedPassword = await bcrypt.hash(adminPassword, BCRYPT_SALT_ROUNDS);
 
     const existing = await this.usersService.findOneByEmail(adminEmail);

@@ -25,8 +25,12 @@ class WebSocketService {
   static const int _maxReconnectDelay = 30; // seconds
 
   /// Cập nhật token khi user login thành công.
+  /// Tự động kết nối WebSocket nếu chưa kết nối.
   void setAuthToken(String token) {
     _authToken = token;
+    if (!_isConnected && !_isDisposed) {
+      connect();
+    }
   }
 
   /// Tạo và config một socket instance mới.
@@ -89,6 +93,14 @@ class WebSocketService {
 
   void connect() {
     if (_isDisposed) return;
+
+    // Do not attempt connection without a token — WsJwtGuard will reject immediately.
+    if (_authToken.isEmpty) {
+      debugPrint(
+        'WS: Skipping connect — no auth token set. Call setAuthToken() after login.',
+      );
+      return;
+    }
 
     final baseUrl = const String.fromEnvironment(
       'BACKEND_URL',

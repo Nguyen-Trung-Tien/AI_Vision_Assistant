@@ -61,10 +61,12 @@ class EdgeAIService {
 
       // Voice feedback logic
       final now = DateTime.now();
-      final timeSinceLastSpeak = now.difference(_lastSpokenTime).inSeconds;
+      final timeSinceLastSpeakMs = now
+          .difference(_lastSpokenTime)
+          .inMilliseconds;
 
       if (text.isNotEmpty && text != _lastSpokenText) {
-        if (isStable || timeSinceLastSpeak >= 1.5) {
+        if (isStable || timeSinceLastSpeakMs >= 1500) {
           _accessibilityManager.speak(text);
           _lastSpokenText = text;
           _lastSpokenTime = now;

@@ -49,7 +49,16 @@ class TfliteService {
         'assets/models/money_detector.tflite',
       );
       _isModelLoaded = true;
-      debugPrint('[TFLite] Model loaded successfully');
+      // Log output tensor shape để phát hiện sớm nếu model bị thay đổi
+      final outputShape = _interpreter!.getOutputTensor(0).shape;
+      debugPrint('[TFLite] Model loaded. Output shape: $outputShape');
+      if (outputShape.last != _labels.length) {
+        debugPrint(
+          '[TFLite] WARNING: Model output size (${outputShape.last}) '
+          'does not match label count (${_labels.length}). '
+          'Results may be incorrect.',
+        );
+      }
       return true;
     } catch (e) {
       debugPrint('[TFLite] Model not found in assets or load failed: $e');
@@ -100,6 +109,15 @@ class TfliteService {
       _interpreter!.run(input, output);
 
       final probabilities = output[0] as List<double>;
+
+      // Guard: ensure output length matches label count to prevent RangeError
+      if (probabilities.length != _labels.length) {
+        debugPrint(
+          '[TFLite] Output length mismatch: '
+          'got ${probabilities.length}, expected ${_labels.length}',
+        );
+        return 'Lỗi: Model không tương thích (đầu ra ${probabilities.length} lớp).';
+      }
       double maxProb = probabilities[0];
       int maxIndex = 0;
 

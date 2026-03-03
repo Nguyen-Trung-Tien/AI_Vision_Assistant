@@ -7,6 +7,7 @@ Fallback sang LRU in-memory cache (tối đa MAX_MEMORY_ITEMS entries) khi Redis
 import hashlib
 import os
 import subprocess
+import threading
 from collections import OrderedDict
 
 try:
@@ -17,30 +18,34 @@ except ImportError:
 
 
 class _LRUCache:
-    """Thread-unsafe simple LRU cache dựa trên OrderedDict."""
+    """Thread-safe LRU cache dựa trên OrderedDict."""
 
     def __init__(self, maxsize: int = 512):
         self._cache: OrderedDict[str, str] = OrderedDict()
         self._maxsize = maxsize
+        self._lock = threading.RLock()
 
     def get(self, key: str):
-        if key not in self._cache:
-            return None
-        # Move to end (most recently used)
-        self._cache.move_to_end(key)
-        return self._cache[key]
+        with self._lock:
+            if key not in self._cache:
+                return None
+            # Move to end (most recently used)
+            self._cache.move_to_end(key)
+            return self._cache[key]
 
     def set(self, key: str, value: str) -> None:
-        if key in self._cache:
-            self._cache.move_to_end(key)
-        self._cache[key] = value
-        if len(self._cache) > self._maxsize:
-            # Evict oldest
-            evicted = next(iter(self._cache))
-            del self._cache[evicted]
+        with self._lock:
+            if key in self._cache:
+                self._cache.move_to_end(key)
+            self._cache[key] = value
+            if len(self._cache) > self._maxsize:
+                # Evict oldest
+                evicted = next(iter(self._cache))
+                del self._cache[evicted]
 
     def clear(self) -> None:
-        self._cache.clear()
+        with self._lock:
+            self._cache.clear()
 
     def __len__(self) -> int:
         return len(self._cache)

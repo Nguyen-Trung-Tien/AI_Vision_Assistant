@@ -66,7 +66,7 @@ def on_message(channel, method, properties, body):
         print(f"[AI Worker] Raw AI Result: {ai_result}")
         
         # Use text directly from AI Service
-        final_text = ai_result['text']
+        final_text = ai_result.get('text', '') or ''
         
         # Danger alerts injection
         danger_alerts = ai_result.get("danger_alerts", [])
@@ -101,7 +101,11 @@ def on_message(channel, method, properties, body):
         channel.basic_publish(
             exchange='',
             routing_key='ai_results_queue',
-            body=json.dumps(result_payload)
+            body=json.dumps(result_payload),
+            properties=pika.BasicProperties(
+                delivery_mode=2,  # persistent — survives RabbitMQ restart
+                content_type='application/json',
+            ),
         )
         
         # Acknowledge the message so RabbitMQ removes it from Queue
@@ -112,13 +116,10 @@ def on_message(channel, method, properties, body):
         traceback.print_exc()
 
         if retry_count < MAX_RETRIES:
-            # Exponential backoff before requeue
-            delay = 2 ** retry_count
-            print(f"[Retry] Will retry in {delay}s (attempt {retry_count + 1}/{MAX_RETRIES})")
-            time.sleep(delay)
-
-            # Re-publish with incremented retry counter
+            # Re-publish with incremented retry counter BEFORE sleeping
+            # to avoid blocking the channel and causing heartbeat timeout.
             new_headers = {**headers, RETRY_HEADER: retry_count + 1}
+            delay = 2 ** retry_count
             channel.basic_publish(
                 exchange='',
                 routing_key=method.routing_key,
@@ -128,8 +129,9 @@ def on_message(channel, method, properties, body):
                     delivery_mode=2,  # persistent
                 ),
             )
-            # ACK original so it's not requeued twice
+            # ACK original BEFORE sleeping so RabbitMQ doesn't redeliver
             channel.basic_ack(delivery_tag=method.delivery_tag)
+            print(f"[Retry] Queued retry attempt {retry_count + 1}/{MAX_RETRIES} (delay reference: {delay}s)")
         else:
             # Max retries exceeded — send to dead-letter or drop
             print(f"[Fatal] Max retries ({MAX_RETRIES}) exceeded. Dropping message.")
