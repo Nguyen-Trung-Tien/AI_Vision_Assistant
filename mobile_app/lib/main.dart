@@ -4,6 +4,7 @@ import 'package:mobile_app/screens/main_screen.dart';
 import 'package:mobile_app/screens/login_screen.dart';
 import 'package:mobile_app/screens/onboarding_screen.dart';
 import 'package:mobile_app/screens/splash_screen.dart';
+import 'package:mobile_app/services/connectivity_service.dart';
 import 'package:mobile_app/services/settings_service.dart';
 import 'package:mobile_app/services/history_service.dart';
 
@@ -15,6 +16,7 @@ Future<void> main() async {
   // Initialize services that need async setup
   await SettingsService().init();
   await HistoryService().init();
+  await ConnectivityService().init();
 
   try {
     cameras = await availableCameras();

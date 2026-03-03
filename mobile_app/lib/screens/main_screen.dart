@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile_app/screens/history_screen.dart';
 import 'package:mobile_app/screens/settings_screen.dart';
 import 'package:mobile_app/services/accessibility_manager.dart';
+import 'package:mobile_app/services/connectivity_service.dart';
 import 'package:mobile_app/services/edge_ai_service.dart';
 import 'package:mobile_app/services/light_sensor_service.dart';
 import 'package:mobile_app/services/ml_kit_service.dart';
@@ -43,8 +44,11 @@ class _MainScreenState extends State<MainScreen> {
   CameraController? _cameraController;
   bool _isCapturing = false;
   bool _isFlashOn = false;
-  bool _isConnected = false;
+  bool _isConnected = false; // WebSocket connected
+  bool _isNetworkOnline = true; // True network connectivity
   bool _isProcessing = false;
+
+  StreamSubscription<bool>? _connectivitySub;
 
   String? _dangerMessage;
   Timer? _dangerTimer;
@@ -90,6 +94,25 @@ class _MainScreenState extends State<MainScreen> {
       }
     };
     _wsService.connect();
+
+    // ── Connectivity monitoring ─────────────────────────────────
+    ConnectivityService().init().then((_) {
+      if (!mounted) return;
+      setState(() => _isNetworkOnline = ConnectivityService().isOnline);
+      _connectivitySub = ConnectivityService().onConnectivityChanged.listen((
+        isOnline,
+      ) {
+        if (!mounted) return;
+        setState(() => _isNetworkOnline = isOnline);
+        final lang = _settings.language;
+        if (isOnline) {
+          _accessibilityManager.speak(AppLocalizations.t('net_restored', lang));
+        } else {
+          _accessibilityManager.speak(AppLocalizations.t('net_lost', lang));
+        }
+      });
+    });
+    // ───────────────────────────────────────────────────────────
 
     _aiService = EdgeAIService(_wsService, _captureCurrentFrame);
     _aiService.onProcessingStateChanged = (isProcessing) {
@@ -167,6 +190,7 @@ class _MainScreenState extends State<MainScreen> {
 
   @override
   void dispose() {
+    _connectivitySub?.cancel();
     _dangerTimer?.cancel();
     _cameraController?.dispose();
     _aiService.stop();
@@ -423,20 +447,31 @@ class _MainScreenState extends State<MainScreen> {
 
     switch (_currentModeIndex) {
       case 0:
-        if (!_isConnected && _tfliteService.isModelLoaded) {
+        // Nhận diện tiền: offline ưu tiên TFLite, online dùng AI server
+        if (!_isNetworkOnline && _tfliteService.isModelLoaded) {
           _detectMoneyOffline();
         } else {
           _aiService.requestMoneyDetection();
         }
         break;
       case 1:
-        _aiService.requestOnlineOCR();
+        // Đọc văn bản: offline fallback sang MLKit OCR
+        if (!_isNetworkOnline) {
+          _scanWithMLKit();
+        } else {
+          _aiService.requestOnlineOCR();
+        }
         break;
       case 2:
         _scanWithMLKit();
         break;
       case 3:
-        _aiService.requestCaptioning();
+        // Mô tả không gian: offline dùng TFLite scene model
+        if (!_isNetworkOnline) {
+          _describeSceneOffline();
+        } else {
+          _aiService.requestCaptioning();
+        }
         break;
       case 4:
         _accessibilityManager.speak(
@@ -506,6 +541,48 @@ class _MainScreenState extends State<MainScreen> {
       debugPrint('TFLite offline error: $e');
       _accessibilityManager.speak(
         AppLocalizations.t('main_offline_error', lang),
+      );
+    } finally {
+      if (mounted) {
+        setState(() => _isProcessing = false);
+      }
+    }
+  }
+
+  /// Mô tả không gian offline bằng TFLite scene_descriptor model.
+  Future<void> _describeSceneOffline() async {
+    if (_cameraController == null || !_cameraController!.value.isInitialized) {
+      return;
+    }
+
+    setState(() => _isProcessing = true);
+    final lang = _settings.language;
+    _accessibilityManager.speak(
+      AppLocalizations.t('main_detecting_scene_offline', lang),
+    );
+    _accessibilityManager.triggerSuccessVibration();
+
+    try {
+      final bytes = await _captureCurrentFrame();
+      if (bytes == null) {
+        _accessibilityManager.speak(
+          AppLocalizations.t('main_no_capture', lang),
+        );
+        return;
+      }
+
+      final result = await _tfliteService.describeScene(bytes);
+      if (result != null) {
+        _accessibilityManager.speak(result);
+      } else {
+        _accessibilityManager.speak(
+          AppLocalizations.t('main_no_scene_model', lang),
+        );
+      }
+    } catch (e) {
+      debugPrint('TFLite scene offline error: $e');
+      _accessibilityManager.speak(
+        AppLocalizations.t('main_scene_offline_error', lang),
       );
     } finally {
       if (mounted) {
@@ -795,7 +872,9 @@ class _MainScreenState extends State<MainScreen> {
                   decoration: BoxDecoration(
                     color: Colors.black.withValues(alpha: 0.55),
                     shape: BoxShape.circle,
-                    border: Border.all(color: Colors.white.withValues(alpha: 0.18)),
+                    border: Border.all(
+                      color: Colors.white.withValues(alpha: 0.18),
+                    ),
                     boxShadow: [
                       BoxShadow(
                         color: const Color(0xFF6C63FF).withValues(alpha: 0.28),
