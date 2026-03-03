@@ -99,16 +99,6 @@ class AppLocalizations {
       'en': 'Navigation mode',
     },
 
-    // --- Network Status ---
-    'net_lost': {
-      'vi': 'Mất kết nối mạng. Chuyển sang chế độ offline.',
-      'en': 'Network lost. Switching to offline mode.',
-    },
-    'net_restored': {
-      'vi': 'Đã kết nối mạng. Chế độ online sẵn sàng.',
-      'en': 'Network restored. Online mode available.',
-    },
-
     // --- Main Screen UI ---
     'main_offline': {'vi': 'Offline', 'en': 'Offline'},
     'main_online': {'vi': 'Online', 'en': 'Online'},
@@ -160,18 +150,6 @@ class AppLocalizations {
     'main_offline_error': {
       'vi': 'Lỗi nhận diện offline.',
       'en': 'Offline detection error.',
-    },
-    'main_detecting_scene_offline': {
-      'vi': 'Đang mô tả không gian offline...',
-      'en': 'Describing scene offline...',
-    },
-    'main_no_scene_model': {
-      'vi': 'Chưa có model mô tả không gian. Vui lòng kết nối mạng.',
-      'en': 'Scene model not available. Please connect to the internet.',
-    },
-    'main_scene_offline_error': {
-      'vi': 'Lỗi nhận diện cảnh vật offline.',
-      'en': 'Offline scene detection error.',
     },
 
     // --- Edge AI AI Service ---
