@@ -6,8 +6,8 @@ import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { ClientsModule, Transport } from '@nestjs/microservices';
 import { TaskQueueService } from './task-queue.service';
+import { HeatmapService } from './heatmap.service';
 import { WsJwtGuard } from '../auth/guards/ws-jwt.guard';
-
 import { VisionController } from './vision.controller';
 
 @Module({
@@ -40,6 +40,7 @@ import { VisionController } from './vision.controller';
     ]),
   ],
   controllers: [VisionController],
-  providers: [VisionGateway, TaskQueueService, WsJwtGuard],
+  providers: [VisionGateway, TaskQueueService, HeatmapService, WsJwtGuard],
+  exports: [HeatmapService],
 })
 export class VisionModule {}

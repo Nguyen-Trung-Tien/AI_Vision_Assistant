@@ -77,20 +77,22 @@ export class AuthService implements OnModuleInit {
     this.logger.log(`Default admin account is ready: ${adminEmail}`);
   }
 
-  async validateUser(email: string, pass: string) {
+  async validateUser(
+    email: string,
+    pass: string,
+  ): Promise<Record<string, unknown> | null> {
     const user = await this.usersService.findOneByEmail(email);
-    if (!user) {
-      return null;
-    }
+    if (!user) return null;
+
+    // Locked account — cannot login
+    if (user.is_active === false) return { __locked: true };
 
     const isPasswordValid = await bcrypt.compare(pass, user.password_hash);
-    if (!isPasswordValid) {
-      return null;
-    }
+    if (!isPasswordValid) return null;
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const { password_hash, ...result } = user;
-    return result;
+    return result as Record<string, unknown>;
   }
 
   login(user: {

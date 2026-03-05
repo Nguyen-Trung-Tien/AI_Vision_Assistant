@@ -9,6 +9,8 @@ import {
 import { AuthService } from './auth.service';
 import { LoginDto, RegisterDto } from './dto/auth.dto';
 
+type ValidatedUser = Record<string, unknown>;
+
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
@@ -16,27 +18,43 @@ export class AuthController {
   @HttpCode(HttpStatus.OK)
   @Post('admin/login')
   async adminLogin(@Body() loginDto: LoginDto) {
-    const user = await this.authService.validateUser(
+    const user: ValidatedUser | null = await this.authService.validateUser(
       loginDto.email,
       loginDto.password,
     );
-    if (!user || user.role !== 'ADMIN') {
+    if (!user) throw new UnauthorizedException('Admin credentials required');
+    if (user['__locked'])
+      throw new UnauthorizedException('Tài khoản đã bị khoá');
+    if (user['role'] !== 'ADMIN')
       throw new UnauthorizedException('Admin credentials required');
-    }
-    return this.authService.login(user);
+    return this.authService.login(
+      user as {
+        id: string;
+        email: string;
+        role: string;
+        accessibility_prefs: Record<string, unknown>;
+      },
+    );
   }
 
   @HttpCode(HttpStatus.OK)
   @Post('login')
   async login(@Body() loginDto: LoginDto) {
-    const user = await this.authService.validateUser(
+    const user: ValidatedUser | null = await this.authService.validateUser(
       loginDto.email,
       loginDto.password,
     );
-    if (!user) {
-      throw new UnauthorizedException('Invalid email or password');
-    }
-    return this.authService.login(user);
+    if (!user) throw new UnauthorizedException('Invalid email or password');
+    if (user['__locked'])
+      throw new UnauthorizedException('Tài khoản đã bị khoá bởi admin');
+    return this.authService.login(
+      user as {
+        id: string;
+        email: string;
+        role: string;
+        accessibility_prefs: Record<string, unknown>;
+      },
+    );
   }
 
   @Post('register')

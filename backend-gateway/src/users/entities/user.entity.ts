@@ -22,6 +22,9 @@ export class User {
   @Column({ default: 'USER' })
   role: string;
 
+  @Column({ default: true })
+  is_active: boolean;
+
   @Column({ type: 'jsonb', nullable: true })
   accessibility_prefs: any;
 

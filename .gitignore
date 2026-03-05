@@ -109,3 +109,4 @@ ai-worker/frames/
 **/*datasheet*.jpeg
 **/*datasheet*.png
 **/*datasheet*.webp
+.agents/

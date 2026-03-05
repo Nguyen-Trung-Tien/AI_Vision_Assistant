@@ -8,39 +8,40 @@ import {
 } from 'typeorm';
 import { User } from '../../users/entities/user.entity';
 
-@Entity('detection_logs')
-export class DetectionLog {
+@Entity('sos_alerts')
+export class SosAlert {
   @PrimaryGeneratedColumn('increment', { type: 'bigint' })
   id: string;
 
-  @ManyToOne(() => User, (user) => user.detectionLogs, { nullable: true })
+  @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'user_id' })
   user: User | null;
 
   @Column({ name: 'user_id', nullable: true })
   userId: string | null;
 
-  @Column({ length: 50 })
-  action_type: string; // OCR, OBJECT_DETECT, CAPTIONING
-
-  @Column({ type: 'text', nullable: true })
-  result_text: string;
-
-  @Column({ type: 'float', nullable: true })
-  confidence_score: number;
-
-  @Column({ type: 'float', nullable: true })
+  @Column({ type: 'float' })
   latitude: number;
 
-  @Column({ type: 'float', nullable: true })
+  @Column({ type: 'float' })
   longitude: number;
 
   @Column({ type: 'text', nullable: true })
   image_url: string;
 
-  @Column({ length: 20, nullable: true })
-  severity: string;
+  @Column({ length: 20, default: 'pending' })
+  status: string; // pending, acknowledged, resolved
+
+  @ManyToOne(() => User, { nullable: true })
+  @JoinColumn({ name: 'handled_by' })
+  handledBy: User | null;
+
+  @Column({ type: 'text', nullable: true })
+  note: string;
 
   @CreateDateColumn()
   created_at: Date;
+
+  @Column({ type: 'timestamptz', nullable: true })
+  resolved_at: Date;
 }

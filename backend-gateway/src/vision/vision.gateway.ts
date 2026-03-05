@@ -14,6 +14,12 @@ import { WsJwtGuard } from '../auth/guards/ws-jwt.guard';
 import { TaskQueueService } from './task-queue.service';
 import { FrameStreamDto } from './dto/frame-stream.dto';
 
+interface AuthSocket extends Socket {
+  data: {
+    user?: { sub?: string | number };
+  };
+}
+
 @WebSocketGateway({ cors: { origin: '*' } })
 export class VisionGateway
   implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit
@@ -42,10 +48,9 @@ export class VisionGateway
   @SubscribeMessage('frame_stream')
   handleFrameStream(
     @MessageBody() data: FrameStreamDto,
-    @ConnectedSocket() client: Socket,
+    @ConnectedSocket() client: AuthSocket,
   ) {
-    const userData = client.data as { user?: { sub?: string | number } };
-    const userId = userData?.user?.sub?.toString();
+    const userId = client.data?.user?.sub?.toString();
 
     // Rate limiting: max 2 frames/second per client
     if (!this.taskQueueService.checkRateLimit(client.id)) {
@@ -65,5 +70,56 @@ export class VisionGateway
     }
 
     client.emit('stream_ack', { status: 'received', timestamp: Date.now() });
+  }
+
+  /**
+   * SOS Alert: User gửi sự kiện khẩn cấp
+   * Payload: { latitude, longitude, imageBase64? }
+   */
+  @UseGuards(WsJwtGuard)
+  @SubscribeMessage('sos_alert')
+  handleSosAlert(
+    @MessageBody()
+    data: { latitude: number; longitude: number; imageBase64?: string },
+    @ConnectedSocket() client: AuthSocket,
+  ) {
+    const userId = client.data?.user?.sub?.toString();
+    this.logger.warn(`SOS Alert received from user ${userId ?? 'unknown'}`);
+
+    // Broadcast to all admins in room 'admin'
+    this.server.to('admin').emit('sos_incoming', {
+      userId,
+      latitude: data.latitude,
+      longitude: data.longitude,
+      imageBase64: data.imageBase64,
+      timestamp: new Date().toISOString(),
+    });
+
+    client.emit('sos_ack', { status: 'received', timestamp: Date.now() });
+  }
+
+  /**
+   * Admin join: admin vào room để nhận SOS và broadcasts
+   */
+  @UseGuards(WsJwtGuard)
+  @SubscribeMessage('join_admin')
+  handleJoinAdmin(@ConnectedSocket() client: AuthSocket) {
+    void client.join('admin');
+    this.logger.log(`Admin joined admin room: ${client.id}`);
+    client.emit('join_admin_ack', { status: 'ok' });
+  }
+
+  /**
+   * User join: user vào room riêng để nhận broadcast TTS
+   */
+  @UseGuards(WsJwtGuard)
+  @SubscribeMessage('join_user')
+  handleJoinUser(@ConnectedSocket() client: AuthSocket) {
+    const userId = client.data?.user?.sub?.toString();
+    if (userId) {
+      void client.join(`user:${userId}`);
+      void client.join('users');
+    }
+    client.emit('join_user_ack', { status: 'ok' });
   }
 }
