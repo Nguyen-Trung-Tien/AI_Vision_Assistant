@@ -240,7 +240,7 @@ export default function FeedbackPage() {
                       ))}
                     {fb.review_status === "reviewed" && (
                       <span className="text-green-400/50 text-xs">
-                        ✓ Đã duyệt
+                        Đã duyệt
                       </span>
                     )}
                   </td>

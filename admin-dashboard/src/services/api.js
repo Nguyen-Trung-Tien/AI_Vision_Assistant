@@ -1,15 +1,15 @@
 ﻿const STATS_API_BASE = "/api/stats";
 const AUTH_API_BASE = "/api/auth";
-const TOKEN_KEY = "admin_access_token";
 const EMAIL_KEY = "admin_email";
 
-export function getStoredToken() {
-  return localStorage.getItem(TOKEN_KEY) ?? "";
-}
-
 export function clearSession() {
-  localStorage.removeItem(TOKEN_KEY);
   localStorage.removeItem(EMAIL_KEY);
+  localStorage.removeItem("admin_authenticated");
+  // Fire and forget logout to clear httpOnly cookie
+  fetch(`${AUTH_API_BASE}/logout`, {
+    method: "POST",
+    credentials: "include",
+  }).catch(() => {});
 }
 
 export function getStoredEmail() {
@@ -17,17 +17,16 @@ export function getStoredEmail() {
 }
 
 async function requestJson(url, options = {}) {
-  const token = getStoredToken();
   const headers = {
     "Content-Type": "application/json",
     ...(options.headers ?? {}),
   };
 
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
-
-  const response = await fetch(url, { ...options, headers });
+  const response = await fetch(url, {
+    ...options,
+    headers,
+    credentials: "include", // Send & receive httpOnly cookies automatically
+  });
   let payload = null;
   try {
     payload = await response.json();
@@ -37,7 +36,7 @@ async function requestJson(url, options = {}) {
 
   if (response.status === 401) {
     clearSession();
-    throw new Error("UNAUTHORIZED");
+    throw new Error("ERROR");
   }
 
   if (!response.ok) {
@@ -53,17 +52,13 @@ export async function loginAdmin(email, password) {
     body: JSON.stringify({ email, password }),
   });
 
-  const token = payload?.access_token || "";
   const role = payload?.user?.role || "";
-  if (!token) {
-    throw new Error("Login response missing token");
-  }
   if (role !== "ADMIN") {
     clearSession();
     throw new Error("Chỉ admin mới được đăng nhập dashboard");
   }
 
-  localStorage.setItem(TOKEN_KEY, token);
+  localStorage.setItem("admin_authenticated", "true");
   localStorage.setItem(EMAIL_KEY, payload?.user?.email || email);
   return payload;
 }
@@ -74,18 +69,8 @@ export async function registerAdmin(email, password) {
     body: JSON.stringify({ email, password }),
   });
 
-  const token = payload?.access_token || "";
-  const role = payload?.user?.role || "";
-  if (!token) {
-    throw new Error("Register response missing token");
-  }
-  if (role !== "ADMIN") {
-    clearSession();
-    throw new Error("Chỉ tài khoản admin mới dùng được dashboard");
-  }
-
-  localStorage.setItem(TOKEN_KEY, token);
-  localStorage.setItem(EMAIL_KEY, payload?.user?.email || email);
+  // Note: auth controller might not set cookie on register (only on login)
+  // If we auto-login after register, need to adjust backend or call login.
   return payload;
 }
 
@@ -136,7 +121,7 @@ export async function fetchLogs(page = 1, limit = 20) {
   }
 }
 
-// ── SOS ───────────────────────────────────────────
+//  SOS
 export async function fetchSosAlerts(page = 1, limit = 20) {
   try {
     return (
@@ -159,7 +144,7 @@ export async function acknowledgeSos(id) {
   return requestJson(`/api/sos/${id}/acknowledge`, { method: "PATCH" });
 }
 
-// ── FEEDBACK ──────────────────────────────────────
+//  FEEDBACK
 export async function fetchFeedback(page = 1, limit = 20, onlyWrong = false) {
   try {
     return (
@@ -192,7 +177,7 @@ export async function reviewFeedback(id, correctLabel) {
   });
 }
 
-// ── BROADCAST ─────────────────────────────────────
+//  BROADCAST
 export async function fetchBroadcasts(page = 1, limit = 20) {
   try {
     return (
@@ -217,7 +202,7 @@ export async function sendBroadcast(
   });
 }
 
-// ── HEATMAP ───────────────────────────────────────
+//  HEATMAP
 export async function fetchHeatmap(type = "danger", days = 30) {
   try {
     return (
@@ -230,7 +215,7 @@ export async function fetchHeatmap(type = "danger", days = 30) {
   }
 }
 
-// ── USERS ─────────────────────────────────────────
+//  USERS
 export async function fetchUsers(page = 1, limit = 20, search = "") {
   try {
     return (

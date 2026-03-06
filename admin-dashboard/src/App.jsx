@@ -6,10 +6,10 @@ import FeedbackPage from "./pages/FeedbackPage";
 import BroadcastPage from "./pages/BroadcastPage";
 import HeatmapPage from "./pages/HeatmapPage";
 import UsersPage from "./pages/UsersPage";
-import { clearSession, getStoredToken, getStoredEmail } from "./services/api";
+import { clearSession, getStoredEmail } from "./services/api";
 import { ToastProvider } from "./components/Toast";
 
-// ── SVG Icons ─────────────────────────────────────────────────────────────────
+//  SVG Icons
 const Icons = {
   dashboard: (
     <svg
@@ -340,12 +340,14 @@ function AdminShell({ onLogout }) {
 
 // ── App ───────────────────────────────────────────────────────────────────────
 export default function App() {
-  const [token, setToken] = useState(() => getStoredToken());
+  const [isAuthenticated, setIsAuthenticated] = useState(() => {
+    return localStorage.getItem("admin_authenticated") === "true";
+  });
 
-  if (!token) {
+  if (!isAuthenticated) {
     return (
       <ToastProvider>
-        <LoginV2 onLoginSuccess={() => setToken(getStoredToken())} />
+        <LoginV2 onLoginSuccess={() => setIsAuthenticated(true)} />
       </ToastProvider>
     );
   }
@@ -355,7 +357,7 @@ export default function App() {
       <AdminShell
         onLogout={() => {
           clearSession();
-          setToken("");
+          setIsAuthenticated(false);
         }}
       />
     </ToastProvider>

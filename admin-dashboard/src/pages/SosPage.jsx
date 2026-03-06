@@ -1,7 +1,6 @@
 import { useEffect, useState, useRef, useCallback } from "react";
 import { fetchSosAlerts, acknowledgeSos, resolveSos } from "../services/api";
 import { io } from "socket.io-client";
-import { getStoredToken } from "../services/api";
 import { useToast } from "../components/Toast";
 import ConfirmDialog from "../components/ConfirmDialog";
 
@@ -33,8 +32,11 @@ export default function SosPage() {
 
   useEffect(() => {
     load();
-    const socket = io(import.meta.env.VITE_SOCKET_URL ?? "", {
-      auth: { token: getStoredToken() },
+    const socket = io("http://127.0.0.1:3000", {
+      path: "/socket.io/",
+      reconnectionDelayMax: 10000,
+      withCredentials: true,
+      transports: ["websocket", "polling"],
     });
     socket.emit("join_admin");
     socket.on("sos_incoming", (data) => {
@@ -107,7 +109,7 @@ export default function SosPage() {
             ? "Bạn sẽ xác nhận đã nhận tín hiệu SOS này."
             : "Bạn sẽ đánh dấu SOS này là đã được xử lý xong."
         }
-        confirmLabel={confirm?.type === "ack" ? "Đã nhận" : "Đã xử lý ✓"}
+        confirmLabel={confirm?.type === "ack" ? "Đã nhận" : "Đã xử lý  "}
         confirmClass={
           confirm?.type === "ack"
             ? "bg-yellow-500 hover:bg-yellow-400"
@@ -152,7 +154,7 @@ export default function SosPage() {
                 onClick={() => handleResolveDirect(incoming.sosId)}
                 className="px-5 py-2 rounded-xl bg-green-500/20 border border-green-500/40 text-green-300 text-sm font-medium hover:bg-green-500/30 transition-all"
               >
-                Đã xử lý ✓
+                Đã xử lý
               </button>
             </div>
           </div>
@@ -237,7 +239,7 @@ export default function SosPage() {
                           }
                           className="px-3 py-1 rounded-lg bg-green-500/10 border border-green-500/20 text-green-300 text-xs hover:bg-green-500/20 transition-all"
                         >
-                          Xử lý ✓
+                          Xử lý
                         </button>
                       )}
                     </div>
