@@ -21,6 +21,9 @@ import 'package:mobile_app/services/voice_command_service.dart';
 import 'package:mobile_app/services/volume_button_service.dart';
 import 'package:mobile_app/services/websocket_service.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
+import 'package:mobile_app/utils/text_utils.dart';
+import 'package:mobile_app/widgets/status_overlay.dart';
+import 'package:mobile_app/widgets/mode_carousel.dart';
 
 class MainScreen extends StatefulWidget {
   final List<CameraDescription>? cameras;
@@ -208,110 +211,10 @@ class _MainScreenState extends State<MainScreen> {
     super.dispose();
   }
 
-  String _mapVietnameseRune(int rune) {
-    switch (rune) {
-      case 224:
-      case 225:
-      case 7841:
-      case 7843:
-      case 227:
-      case 226:
-      case 7847:
-      case 7845:
-      case 7853:
-      case 7849:
-      case 7851:
-      case 259:
-      case 7857:
-      case 7855:
-      case 7863:
-      case 7859:
-      case 7861:
-        return 'a';
-      case 232:
-      case 233:
-      case 7865:
-      case 7867:
-      case 7869:
-      case 234:
-      case 7873:
-      case 7871:
-      case 7879:
-      case 7875:
-      case 7877:
-        return 'e';
-      case 236:
-      case 237:
-      case 7883:
-      case 7881:
-      case 297:
-        return 'i';
-      case 242:
-      case 243:
-      case 7885:
-      case 7887:
-      case 245:
-      case 244:
-      case 7891:
-      case 7889:
-      case 7897:
-      case 7893:
-      case 7895:
-      case 417:
-      case 7901:
-      case 7899:
-      case 7907:
-      case 7903:
-      case 7905:
-        return 'o';
-      case 249:
-      case 250:
-      case 7909:
-      case 7911:
-      case 361:
-      case 432:
-      case 7915:
-      case 7913:
-      case 7921:
-      case 7917:
-      case 7919:
-        return 'u';
-      case 7923:
-      case 253:
-      case 7925:
-      case 7927:
-      case 7929:
-        return 'y';
-      case 273:
-        return 'd';
-      default:
-        return String.fromCharCode(rune);
-    }
-  }
-
-  String _normalizeCommand(String input) {
-    final buffer = StringBuffer();
-    for (final rune in input.toLowerCase().runes) {
-      buffer.write(_mapVietnameseRune(rune));
-    }
-
-    var s = buffer.toString();
-    s = s.replaceAll(RegExp(r'[^a-z0-9\s]'), ' ');
-    s = s.replaceAll(RegExp(r'\s+'), ' ').trim();
-    return s;
-  }
-
-  bool _containsAny(String text, List<String> keywords) {
-    for (final kw in keywords) {
-      if (text.contains(kw)) return true;
-    }
-    return false;
-  }
-
   void _onCommandRecognized(String command) {
-    final cmd = _normalizeCommand(command);
+    final cmd = TextUtils.normalizeCommand(command);
 
-    if (_containsAny(cmd, [
+    if (TextUtils.containsAny(cmd, [
       'khan cap',
       'cuu toi',
       'cuu voi',
@@ -325,48 +228,48 @@ class _MainScreenState extends State<MainScreen> {
     }
 
     if (_pendingFeedbackDetectionId != null) {
-      if (_containsAny(cmd, ['dung', 'chinh xac', 'correct'])) {
+      if (TextUtils.containsAny(cmd, ['dung', 'chinh xac', 'correct'])) {
         _submitFeedback(true);
         return;
       }
-      if (_containsAny(cmd, ['sai', 'khong dung', 'wrong'])) {
+      if (TextUtils.containsAny(cmd, ['sai', 'khong dung', 'wrong'])) {
         _submitFeedback(false);
         return;
       }
     }
 
-    if (_containsAny(cmd, ['cai dat', 'settings'])) {
+    if (TextUtils.containsAny(cmd, ['cai dat', 'settings'])) {
       _openSettings();
-    } else if (_containsAny(cmd, ['lich su', 'history'])) {
+    } else if (TextUtils.containsAny(cmd, ['lich su', 'history'])) {
       _openHistory();
-    } else if (_containsAny(cmd, ['den', 'flash', 'light'])) {
+    } else if (TextUtils.containsAny(cmd, ['den', 'flash', 'light'])) {
       _toggleFlash();
-    } else if (_containsAny(cmd, ['tro giup', 'giup do', 'help'])) {
+    } else if (TextUtils.containsAny(cmd, ['tro giup', 'giup do', 'help'])) {
       _speakHelp();
-    } else if (_containsAny(cmd, [
+    } else if (TextUtils.containsAny(cmd, [
       'doc van ban',
       'doc chu',
       'read text',
       'online',
     ])) {
       _goToMode(1);
-    } else if (_containsAny(cmd, ['nhanh', 'offline', 'quick read'])) {
+    } else if (TextUtils.containsAny(cmd, ['nhanh', 'offline', 'quick read'])) {
       _goToMode(2);
-    } else if (_containsAny(cmd, [
+    } else if (TextUtils.containsAny(cmd, [
       'mo ta',
       'khong gian',
       'scene',
       'describe',
     ])) {
       _goToMode(3);
-    } else if (_containsAny(cmd, [
+    } else if (TextUtils.containsAny(cmd, [
       'dinh huong',
       'dinh vi',
       'navigate',
       'navigation',
     ])) {
       _goToMode(4);
-    } else if (_containsAny(cmd, ['tong hop', 'tien', 'general', 'money'])) {
+    } else if (TextUtils.containsAny(cmd, ['tong hop', 'tien', 'general', 'money'])) {
       _goToMode(0);
     } else {
       _accessibilityManager.speak(
@@ -664,141 +567,24 @@ class _MainScreenState extends State<MainScreen> {
             child: GestureDetector(
               onDoubleTap: _handleDoubleTap,
               onLongPress: _handleLongPress,
-              child: PageView.builder(
-                controller: _pageController,
+              child: ModeCarousel(
+                pageController: _pageController,
                 onPageChanged: _onPageChanged,
-                itemCount: _getModes(_settings.language).length,
-                itemBuilder: (context, index) {
-                  final modes = _getModes(_settings.language);
-                  return Container(
-                    color: Colors.black.withValues(alpha: 0.3),
-                    alignment: Alignment.center,
-                    child: Container(
-                      margin: const EdgeInsets.symmetric(horizontal: 24),
-                      padding: const EdgeInsets.symmetric(
-                        horizontal: 22,
-                        vertical: 18,
-                      ),
-                      decoration: BoxDecoration(
-                        color: Colors.black.withValues(alpha: 0.45),
-                        borderRadius: BorderRadius.circular(20),
-                        border: Border.all(
-                          color: Colors.white.withValues(alpha: 0.15),
-                        ),
-                      ),
-                      child: Column(
-                        mainAxisSize: MainAxisSize.min,
-                        children: [
-                          Icon(
-                            _modeIcons[index],
-                            color: const Color(0xFF6C63FF),
-                            size: 46,
-                          ),
-                          const SizedBox(height: 12),
-                          Text(
-                            modes[index].toUpperCase(),
-                            textAlign: TextAlign.center,
-                            style: const TextStyle(
-                              color: Colors.white,
-                              fontSize: 24,
-                              fontWeight: FontWeight.bold,
-                              shadows: [
-                                Shadow(
-                                  blurRadius: 10.0,
-                                  color: Colors.black87,
-                                  offset: Offset(2.0, 2.0),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ],
-                      ),
-                    ),
-                  );
-                },
+                modes: _getModes(_settings.language),
+                modeIcons: _modeIcons,
               ),
             ),
           ),
 
-          Positioned(
-            top: 50,
-            left: 16,
-            child: Row(
-              children: [
-                Container(
-                  width: 12,
-                  height: 12,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: _isConnected
-                        ? const Color(0xFF00E676)
-                        : const Color(0xFFFF5252),
-                    boxShadow: [
-                      BoxShadow(
-                        color:
-                            (_isConnected
-                                    ? const Color(0xFF00E676)
-                                    : const Color(0xFFFF5252))
-                                .withValues(alpha: 0.6),
-                        blurRadius: 8,
-                        spreadRadius: 2,
-                      ),
-                    ],
-                  ),
-                ),
-                const SizedBox(width: 8),
-                Text(
-                  _isConnected
-                      ? AppLocalizations.t('main_online', _settings.language)
-                      : AppLocalizations.t('main_offline', _settings.language),
-                  style: TextStyle(
-                    color: Colors.white.withValues(alpha: 0.7),
-                    fontSize: 12,
-                  ),
-                ),
-              ],
-            ),
+          StatusOverlay(
+            isConnected: _isConnected,
+            isFlashOn: _isFlashOn,
+            isNightMode: _isNightMode,
+            onlineText: AppLocalizations.t('main_online', _settings.language),
+            offlineText: AppLocalizations.t('main_offline', _settings.language),
+            nightText: AppLocalizations.t('main_night', _settings.language),
+            flashText: AppLocalizations.t('main_flash', _settings.language),
           ),
-
-          if (_isFlashOn || _isNightMode)
-            Positioned(
-              top: 50,
-              right: 16,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  horizontal: 10,
-                  vertical: 4,
-                ),
-                decoration: BoxDecoration(
-                  color: Colors.amber.withValues(alpha: 0.8),
-                  borderRadius: BorderRadius.circular(12),
-                ),
-                child: Row(
-                  mainAxisSize: MainAxisSize.min,
-                  children: [
-                    Icon(
-                      _isNightMode ? Icons.nights_stay : Icons.flashlight_on,
-                      color: Colors.black,
-                      size: 16,
-                    ),
-                    const SizedBox(width: 4),
-                    Text(
-                      _isNightMode
-                          ? AppLocalizations.t('main_night', _settings.language)
-                          : AppLocalizations.t(
-                              'main_flash',
-                              _settings.language,
-                            ),
-                      style: const TextStyle(
-                        color: Colors.black,
-                        fontSize: 12,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-            ),
 
           if (_dangerMessage != null)
             Positioned(
