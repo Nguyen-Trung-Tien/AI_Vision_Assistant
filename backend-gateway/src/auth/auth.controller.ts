@@ -81,7 +81,7 @@ export class AuthController {
     );
 
     res.cookie('access_token', result.access_token, COOKIE_OPTIONS);
-    return { user: result.user };
+    return { user: result.user, access_token: result.access_token };
   }
 
   @HttpCode(HttpStatus.OK)

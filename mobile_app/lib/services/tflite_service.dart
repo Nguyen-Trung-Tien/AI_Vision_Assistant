@@ -108,7 +108,7 @@ class TfliteService {
       debugPrint('[TFLite] Running interpreter...');
       _interpreter!.run(input, output);
 
-      final probabilities = output[0] as List<double>;
+      final probabilities = (output[0] as List).cast<double>();
 
       // Guard: ensure output length matches label count to prevent RangeError
       if (probabilities.length != _labels.length) {

@@ -18,7 +18,7 @@ class AuthService {
     required String email,
     required String password,
   }) async {
-    final payload = await _postJson('/auth/login', {
+    final payload = await _postJson('/api/auth/login', {
       'email': email,
       'password': password,
     });
@@ -36,7 +36,7 @@ class AuthService {
     required String email,
     required String password,
   }) async {
-    final payload = await _postJson('/auth/register', {
+    final payload = await _postJson('/api/auth/register', {
       'email': email,
       'password': password,
     });
@@ -60,8 +60,17 @@ class AuthService {
       request.headers.contentType = ContentType.json;
       request.add(utf8.encode(jsonEncode(body)));
 
+      print('=== API REQUEST DEBUG ===');
+      print('URL: $_baseUrl$path');
+      print('Body: $body');
+      
       final response = await request.close();
       final raw = await response.transform(utf8.decoder).join();
+      
+      print('=== API RESPONSE DEBUG ===');
+      print('Status: ${response.statusCode}');
+      print('Raw Response: $raw');
+      
       final decoded = raw.isEmpty
           ? <String, dynamic>{}
           : jsonDecode(raw) as Map<String, dynamic>;
@@ -72,7 +81,35 @@ class AuthService {
         throw HttpException(message);
       }
 
+      // Normalize token keys if backend returns accessToken/token
+      if (!decoded.containsKey('access_token')) {
+        final altToken = decoded['accessToken'] ?? decoded['token'];
+        if (altToken != null && altToken.toString().isNotEmpty) {
+          decoded['access_token'] = altToken.toString();
+        }
+      }
+
+      // Extract access_token from Set-Cookie header if not in JSON body
+      if (!decoded.containsKey('access_token')) {
+        final cookies = response.headers['set-cookie'];
+        if (cookies != null) {
+          for (final cookie in cookies) {
+            if (cookie.contains('access_token=')) {
+              final match = RegExp(r'access_token=([^;]+)').firstMatch(cookie);
+              if (match != null) {
+                decoded['access_token'] = match.group(1);
+                break;
+              }
+            }
+          }
+        }
+      }
+
       return decoded;
+    } catch (e) {
+      print('=== API EXCEPTION ===');
+      print(e.toString());
+      rethrow;
     } finally {
       client.close(force: true);
     }

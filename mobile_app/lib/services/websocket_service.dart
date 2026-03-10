@@ -56,6 +56,10 @@ class WebSocketService {
       onConnectionStatus?.call(true);
     });
 
+    socket.on('join_user_ack', (data) {
+      debugPrint('WS join_user_ack: $data');
+    });
+
     socket.on('danger_alert', (data) {
       if (onDangerAlert != null) {
         onDangerAlert!(Map<String, dynamic>.from(data as Map));
@@ -110,6 +114,8 @@ class WebSocketService {
       return;
     }
 
+    debugPrint('WS: Connecting with token length ${_authToken.length}');
+
     final baseUrl = const String.fromEnvironment(
       'BACKEND_URL',
       defaultValue: 'http://10.0.2.2:3000',
@@ -156,6 +162,11 @@ class WebSocketService {
       debugPrint('WS not connected, frame dropped');
       return;
     }
+
+    debugPrint(
+      'WS sendFrame: task=$taskType len=${base64Frame.length} lang=$lang '
+      'lat=${latitude ?? 'n/a'} lon=${longitude ?? 'n/a'}',
+    );
 
     _socket!.emit('frame_stream', {
       'frame': base64Frame,

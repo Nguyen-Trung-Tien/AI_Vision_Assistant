@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mobile_app/services/accessibility_manager.dart';
 import 'package:mobile_app/services/history_service.dart';
@@ -146,16 +147,35 @@ class EdgeAIService {
       return;
     }
 
+    final settings = SettingsService();
+    if (!_wsService.isConnected) {
+      _setProcessing(false);
+      _accessibilityManager.speak(
+        AppLocalizations.t('main_offline', settings.language),
+      );
+      _accessibilityManager.triggerErrorVibration();
+      return;
+    }
+
     final bytes = await _captureFrame();
     if (bytes == null || bytes.isEmpty) {
       _setProcessing(false);
+      _accessibilityManager.speak(
+        AppLocalizations.t('main_no_capture', settings.language),
+      );
+      _accessibilityManager.triggerErrorVibration();
       return;
     }
     _lastFrameForFeedback = bytes;
 
     final base64Frame = base64Encode(bytes);
-    final settings = SettingsService();
-    final position = await _getCurrentLocation();
+    Position? position;
+    try {
+      position = await _getCurrentLocation();
+    } catch (e) {
+      debugPrint('[EdgeAI] Location fetch failed: $e');
+      position = null;
+    }
 
     _wsService.sendFrame(
       base64Frame,

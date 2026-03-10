@@ -48,10 +48,12 @@ class _MainScreenState extends State<MainScreen> {
   late VolumeButtonService _volumeButtonService;
 
   CameraController? _cameraController;
+  static const Duration _captureTimeout = Duration(seconds: 6);
   bool _isCapturing = false;
   bool _isFlashOn = false;
   bool _isConnected = false;
   bool _isProcessing = false;
+  bool _isRestartingCamera = false;
 
   String? _dangerMessage;
   Timer? _dangerTimer;
@@ -106,7 +108,7 @@ class _MainScreenState extends State<MainScreen> {
       final priority = data['priority']?.toString().toLowerCase() ?? 'normal';
       if (message.isNotEmpty) {
         _accessibilityManager.speakSystemMessage(
-          'Thong bao he thong: $message',
+          'Thông báo hệ thống: $message',
           highPriority: priority == 'high' || priority == 'urgent',
         );
       }
@@ -403,8 +405,17 @@ class _MainScreenState extends State<MainScreen> {
     _accessibilityManager.triggerSuccessVibration();
 
     try {
-      final file = await _cameraController!.takePicture();
+      final file = await _cameraController!
+          .takePicture()
+          .timeout(_captureTimeout);
       await _mlKitService.processImageFile(file.path);
+    } on TimeoutException catch (_) {
+      debugPrint('[Camera] MLKit capture timeout');
+      _accessibilityManager.speak(
+        AppLocalizations.t('main_no_capture', lang),
+      );
+      _accessibilityManager.triggerErrorVibration();
+      _restartCamera();
     } catch (e) {
       debugPrint('Lỗi khi quét ML Kit: $e');
     } finally {
@@ -478,9 +489,11 @@ class _MainScreenState extends State<MainScreen> {
         isCorrect: isCorrect,
         imageBase64: imageBase64,
       );
-      _accessibilityManager.speak(isCorrect ? 'Da ghi nhan dung' : 'Da ghi nhan sai');
+      _accessibilityManager.speak(
+        isCorrect ? 'Đã ghi nhận đúng' : 'Đã ghi nhận sai',
+      );
     } catch (_) {
-      _accessibilityManager.speak('Khong gui duoc phan hoi');
+      _accessibilityManager.speak('Không gửi được phản hồi');
     } finally {
       if (mounted) {
         setState(() => _pendingFeedbackDetectionId = null);
@@ -542,9 +555,9 @@ class _MainScreenState extends State<MainScreen> {
         longitude: position.longitude,
         imageBase64: frame != null ? base64Encode(frame) : null,
       );
-      _accessibilityManager.speak('Da gui canh bao SOS');
+      _accessibilityManager.speak('Đã gửi cảnh báo SOS');
     } else {
-      _accessibilityManager.speak('Khong lay duoc vi tri SOS');
+      _accessibilityManager.speak('Không lấy được vị trí SOS');
     }
 
     _sosService.triggerEmergency(countdownSeconds: 3);
@@ -686,7 +699,7 @@ class _MainScreenState extends State<MainScreen> {
                   children: [
                     const Expanded(
                       child: Text(
-                        'Ket qua AI co dung khong?',
+                        'Kết quả AI có đúng không?',
                         style: TextStyle(color: Colors.white, fontSize: 14),
                       ),
                     ),
@@ -698,7 +711,7 @@ class _MainScreenState extends State<MainScreen> {
                         foregroundColor: Colors.white,
                         minimumSize: const Size(44, 36),
                       ),
-                      child: const Text('Dung'),
+                      child: const Text('Đúng'),
                     ),
                     const SizedBox(width: 6),
                     ElevatedButton(
@@ -868,14 +881,51 @@ class _MainScreenState extends State<MainScreen> {
 
     try {
       _isCapturing = true;
-      final image = await controller.takePicture();
+      final image = await controller.takePicture().timeout(_captureTimeout);
       return await image.readAsBytes();
+    } on TimeoutException catch (_) {
+      debugPrint('[Camera] Capture timeout');
+      _restartCamera();
+      return null;
     } catch (_) {
       return null;
     } finally {
       if (mounted) {
         _isCapturing = false;
       }
+    }
+  }
+
+  Future<void> _restartCamera() async {
+    if (_isRestartingCamera) return;
+    final cams = widget.cameras;
+    if (cams == null || cams.isEmpty) return;
+
+    _isRestartingCamera = true;
+    try {
+      _lightSensor.stop();
+      final oldController = _cameraController;
+      _cameraController = null;
+      await oldController?.dispose();
+
+      final controller = CameraController(
+        cams.first,
+        ResolutionPreset.medium,
+        enableAudio: false,
+      );
+      await controller.initialize();
+
+      if (!mounted) {
+        await controller.dispose();
+        return;
+      }
+
+      setState(() => _cameraController = controller);
+      _lightSensor.startMonitoring(controller);
+    } catch (e) {
+      debugPrint('[Camera] Restart failed: $e');
+    } finally {
+      _isRestartingCamera = false;
     }
   }
 }
