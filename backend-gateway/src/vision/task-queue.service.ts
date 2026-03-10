@@ -14,6 +14,8 @@ export interface AIResultPayload {
   confidence_score?: number;
   audio_url?: string;
   stable?: boolean;
+  latitude?: number;
+  longitude?: number;
   danger_alerts?: {
     distance: number;
     label: string;
@@ -65,6 +67,8 @@ export class TaskQueueService {
     frameData: string,
     lang: string = 'vi',
     warningDistanceM: number = 2.0,
+    latitude?: number,
+    longitude?: number,
   ) {
     this.logger.log(
       `Pushing task ${taskType} to RabbitMQ for client ${clientId} (userId: ${userId ?? 'anonymous'}, lang: ${lang})`,
@@ -77,6 +81,8 @@ export class TaskQueueService {
       frameData,
       lang,
       warningDistanceM,
+      latitude,
+      longitude,
       timestamp: Date.now(),
     });
   }
@@ -89,29 +95,55 @@ export class TaskQueueService {
 
     // Persist to database
     try {
+      const dangerAlerts = result.danger_alerts || [];
+      const highestDangerDistance = dangerAlerts.reduce(
+        (min, a) => Math.min(min, a.distance),
+        Number.POSITIVE_INFINITY,
+      );
+
       const log = this.detectionLogRepo.create({
         userId: result.userId || undefined,
         action_type: result.taskType || result.task_type || 'UNKNOWN',
         result_text: result.text || '',
         confidence_score: result.confidence_score || undefined,
+        latitude: result.latitude,
+        longitude: result.longitude,
+        severity:
+          dangerAlerts.length === 0
+            ? undefined
+            : highestDangerDistance < 1
+              ? 'CRITICAL'
+              : 'HIGH',
       });
-      await this.detectionLogRepo.save(log);
+      const savedLog = await this.detectionLogRepo.save(log);
       this.logger.log(`DetectionLog saved for client ${result.clientId}`);
+
+      // Relay to client via WebSocket
+      if (this.server) {
+        this.server.to(result.clientId).emit('ai_result', {
+          detectionId: savedLog.id,
+          taskType: result.taskType || result.task_type,
+          task_type: result.taskType || result.task_type,
+          text: result.text,
+          audio_url: result.audio_url,
+          stable: result.stable,
+          danger_alerts: result.danger_alerts || [],
+        });
+      }
     } catch (err) {
       this.logger.error(`Failed to save DetectionLog: ${err}`);
-    }
-
-    // Relay to client via WebSocket
-    if (this.server) {
-      this.server.to(result.clientId).emit('ai_result', {
-        taskType: result.taskType || result.task_type,
-        task_type: result.taskType || result.task_type,
-        text: result.text,
-        audio_url: result.audio_url,
-        stable: result.stable,
-        danger_alerts: result.danger_alerts || [],
-      });
-
+      if (this.server) {
+        this.server.to(result.clientId).emit('ai_result', {
+          taskType: result.taskType || result.task_type,
+          task_type: result.taskType || result.task_type,
+          text: result.text,
+          audio_url: result.audio_url,
+          stable: result.stable,
+          danger_alerts: result.danger_alerts || [],
+        });
+      }
+    } finally {
+      if (!this.server) return;
       // Emit separate danger_alert events for immediate mobile handling
       const dangerAlerts = result.danger_alerts || [];
       for (const alert of dangerAlerts) {

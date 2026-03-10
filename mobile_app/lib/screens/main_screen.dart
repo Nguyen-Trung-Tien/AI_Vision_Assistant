@@ -1,12 +1,15 @@
 import 'dart:async';
+import 'dart:convert';
 import 'dart:typed_data';
 
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:geolocator/geolocator.dart';
 import 'package:mobile_app/screens/history_screen.dart';
 import 'package:mobile_app/screens/settings_screen.dart';
 import 'package:mobile_app/services/accessibility_manager.dart';
 import 'package:mobile_app/services/edge_ai_service.dart';
+import 'package:mobile_app/services/feedback_service.dart';
 import 'package:mobile_app/services/light_sensor_service.dart';
 import 'package:mobile_app/services/ml_kit_service.dart';
 import 'package:mobile_app/services/navigation_service.dart';
@@ -36,6 +39,7 @@ class _MainScreenState extends State<MainScreen> {
   late VoiceCommandService _voiceCommandService;
   final NavigationService _navigationService = NavigationService();
   final SosService _sosService = SosService();
+  final FeedbackService _feedbackService = FeedbackService();
   final SettingsService _settings = SettingsService();
   late PowerButtonService _powerButtonService;
   late VolumeButtonService _volumeButtonService;
@@ -56,6 +60,11 @@ class _MainScreenState extends State<MainScreen> {
   final LightSensorService _lightSensor = LightSensorService();
   final TfliteService _tfliteService = TfliteService();
   bool _isNightMode = false;
+  String? _pendingFeedbackDetectionId;
+  Timer? _feedbackTimer;
+  double _sosHoldProgress = 0;
+  Timer? _sosHoldProgressTimer;
+  Timer? _sosHoldCompleteTimer;
 
   final List<IconData> _modeIcons = [
     Icons.auto_awesome,
@@ -89,6 +98,16 @@ class _MainScreenState extends State<MainScreen> {
         setState(() => _isConnected = connected);
       }
     };
+    _wsService.onTtsBroadcast = (data) {
+      final message = data['message']?.toString().trim() ?? '';
+      final priority = data['priority']?.toString().toLowerCase() ?? 'normal';
+      if (message.isNotEmpty) {
+        _accessibilityManager.speakSystemMessage(
+          'Thong bao he thong: $message',
+          highPriority: priority == 'high' || priority == 'urgent',
+        );
+      }
+    };
     _wsService.connect();
 
     _aiService = EdgeAIService(_wsService, _captureCurrentFrame);
@@ -106,6 +125,11 @@ class _MainScreenState extends State<MainScreen> {
           if (mounted) setState(() => _dangerMessage = null);
         });
       }
+    };
+    _aiService.onAIResultReceived = (result) {
+      final detectionId = result['detectionId']?.toString();
+      if (detectionId == null || detectionId.isEmpty) return;
+      _showFeedbackPrompt(detectionId);
     };
 
     _aiService.start();
@@ -168,6 +192,9 @@ class _MainScreenState extends State<MainScreen> {
   @override
   void dispose() {
     _dangerTimer?.cancel();
+    _feedbackTimer?.cancel();
+    _sosHoldProgressTimer?.cancel();
+    _sosHoldCompleteTimer?.cancel();
     _cameraController?.dispose();
     _aiService.stop();
     _wsService.dispose();
@@ -295,6 +322,17 @@ class _MainScreenState extends State<MainScreen> {
     ])) {
       _sosService.triggerEmergency();
       return;
+    }
+
+    if (_pendingFeedbackDetectionId != null) {
+      if (_containsAny(cmd, ['dung', 'chinh xac', 'correct'])) {
+        _submitFeedback(true);
+        return;
+      }
+      if (_containsAny(cmd, ['sai', 'khong dung', 'wrong'])) {
+        _submitFeedback(false);
+        return;
+      }
     }
 
     if (_containsAny(cmd, ['cai dat', 'settings'])) {
@@ -511,6 +549,104 @@ class _MainScreenState extends State<MainScreen> {
       if (mounted) {
         setState(() => _isProcessing = false);
       }
+    }
+  }
+
+  void _showFeedbackPrompt(String detectionId) {
+    _feedbackTimer?.cancel();
+    if (!mounted) return;
+    setState(() => _pendingFeedbackDetectionId = detectionId);
+    _feedbackTimer = Timer(const Duration(seconds: 5), () {
+      if (!mounted) return;
+      setState(() => _pendingFeedbackDetectionId = null);
+    });
+  }
+
+  Future<void> _submitFeedback(bool isCorrect) async {
+    final detectionId = _pendingFeedbackDetectionId;
+    if (detectionId == null) return;
+
+    final frame = _aiService.lastFrameForFeedback;
+    final imageBase64 = (!isCorrect && frame != null) ? base64Encode(frame) : null;
+
+    try {
+      await _feedbackService.submitFeedback(
+        detectionId: detectionId,
+        isCorrect: isCorrect,
+        imageBase64: imageBase64,
+      );
+      _accessibilityManager.speak(isCorrect ? 'Da ghi nhan dung' : 'Da ghi nhan sai');
+    } catch (_) {
+      _accessibilityManager.speak('Khong gui duoc phan hoi');
+    } finally {
+      if (mounted) {
+        setState(() => _pendingFeedbackDetectionId = null);
+      }
+    }
+  }
+
+  void _startSosHold(LongPressStartDetails details) {
+    _sosHoldProgressTimer?.cancel();
+    _sosHoldCompleteTimer?.cancel();
+    if (!mounted) return;
+
+    final startedAt = DateTime.now();
+    setState(() => _sosHoldProgress = 0);
+    _sosHoldProgressTimer = Timer.periodic(const Duration(milliseconds: 100), (_) {
+      final elapsed = DateTime.now().difference(startedAt).inMilliseconds;
+      final progress = (elapsed / 3000).clamp(0, 1).toDouble();
+      if (!mounted) return;
+      setState(() => _sosHoldProgress = progress);
+    });
+
+    _sosHoldCompleteTimer = Timer(const Duration(seconds: 3), () {
+      _sosHoldProgressTimer?.cancel();
+      if (mounted) {
+        setState(() => _sosHoldProgress = 1);
+      }
+      _triggerSosAlert();
+    });
+  }
+
+  void _cancelSosHold() {
+    _sosHoldProgressTimer?.cancel();
+    _sosHoldCompleteTimer?.cancel();
+    if (!mounted) return;
+    setState(() => _sosHoldProgress = 0);
+  }
+
+  Future<void> _triggerSosAlert() async {
+    final frame = await _captureCurrentFrame();
+    Position? position;
+    try {
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission != LocationPermission.denied &&
+          permission != LocationPermission.deniedForever) {
+        position = await Geolocator.getCurrentPosition(
+          locationSettings: const LocationSettings(
+            accuracy: LocationAccuracy.bestForNavigation,
+          ),
+        );
+      }
+    } catch (_) {}
+
+    if (position != null) {
+      _wsService.sendSosAlert(
+        latitude: position.latitude,
+        longitude: position.longitude,
+        imageBase64: frame != null ? base64Encode(frame) : null,
+      );
+      _accessibilityManager.speak('Da gui canh bao SOS');
+    } else {
+      _accessibilityManager.speak('Khong lay duoc vi tri SOS');
+    }
+
+    _sosService.triggerEmergency(countdownSeconds: 3);
+    if (mounted) {
+      setState(() => _sosHoldProgress = 0);
     }
   }
 
@@ -748,6 +884,51 @@ class _MainScreenState extends State<MainScreen> {
               ),
             ),
 
+          if (_pendingFeedbackDetectionId != null)
+            Positioned(
+              bottom: 180,
+              left: 16,
+              right: 16,
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.72),
+                  borderRadius: BorderRadius.circular(14),
+                  border: Border.all(color: Colors.white24),
+                ),
+                child: Row(
+                  children: [
+                    const Expanded(
+                      child: Text(
+                        'Ket qua AI co dung khong?',
+                        style: TextStyle(color: Colors.white, fontSize: 14),
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                    ElevatedButton(
+                      onPressed: () => _submitFeedback(true),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.green,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(44, 36),
+                      ),
+                      child: const Text('Dung'),
+                    ),
+                    const SizedBox(width: 6),
+                    ElevatedButton(
+                      onPressed: () => _submitFeedback(false),
+                      style: ElevatedButton.styleFrom(
+                        backgroundColor: Colors.red,
+                        foregroundColor: Colors.white,
+                        minimumSize: const Size(44, 36),
+                      ),
+                      child: const Text('Sai'),
+                    ),
+                  ],
+                ),
+              ),
+            ),
+
           Positioned(
             bottom: 74,
             left: 0,
@@ -811,6 +992,53 @@ class _MainScreenState extends State<MainScreen> {
                     color: Color(0xFF00D4FF),
                     size: 24,
                   ),
+                ),
+              ),
+            ),
+          ),
+
+          Positioned(
+            bottom: 130,
+            left: 16,
+            child: GestureDetector(
+              onLongPressStart: _startSosHold,
+              onLongPressEnd: (_) => _cancelSosHold(),
+              onLongPressCancel: _cancelSosHold,
+              child: Container(
+                width: 68,
+                height: 68,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: Colors.red.shade700,
+                  border: Border.all(color: Colors.white70, width: 2),
+                  boxShadow: [
+                    BoxShadow(
+                      color: Colors.red.withValues(alpha: 0.6),
+                      blurRadius: 16,
+                      spreadRadius: 2,
+                    ),
+                  ],
+                ),
+                child: Stack(
+                  alignment: Alignment.center,
+                  children: [
+                    CircularProgressIndicator(
+                      value: _sosHoldProgress,
+                      strokeWidth: 4,
+                      valueColor: const AlwaysStoppedAnimation<Color>(
+                        Colors.white,
+                      ),
+                      backgroundColor: Colors.white24,
+                    ),
+                    const Text(
+                      'SOS',
+                      style: TextStyle(
+                        color: Colors.white,
+                        fontWeight: FontWeight.w900,
+                        fontSize: 18,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

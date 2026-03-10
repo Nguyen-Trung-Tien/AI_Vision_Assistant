@@ -6,7 +6,6 @@ import {
   useState,
 } from "react";
 
-// ── Types: { id, type: 'success'|'error'|'info'|'warning', message }
 const ToastContext = createContext(null);
 
 const ICONS = {

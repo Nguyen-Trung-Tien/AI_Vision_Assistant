@@ -9,6 +9,18 @@ import { JwtService } from '@nestjs/jwt';
 import { WsException } from '@nestjs/websockets';
 import { Socket } from 'socket.io';
 
+function readCookieToken(cookieHeader?: string): string | undefined {
+  if (!cookieHeader) return undefined;
+  const pairs = cookieHeader.split(';');
+  for (const pair of pairs) {
+    const [key, ...rest] = pair.trim().split('=');
+    if (key === 'access_token') {
+      return decodeURIComponent(rest.join('='));
+    }
+  }
+  return undefined;
+}
+
 @Injectable()
 export class WsJwtGuard implements CanActivate {
   private readonly logger = new Logger(WsJwtGuard.name);
@@ -28,7 +40,11 @@ export class WsJwtGuard implements CanActivate {
           ? client.handshake.auth.token
           : typeof client.handshake.headers?.authorization === 'string'
             ? client.handshake.headers.authorization
-            : undefined;
+            : readCookieToken(
+                typeof client.handshake.headers?.cookie === 'string'
+                  ? client.handshake.headers.cookie
+                  : undefined,
+              );
       if (token && token.startsWith('Bearer ')) {
         token = token.slice(7);
       }

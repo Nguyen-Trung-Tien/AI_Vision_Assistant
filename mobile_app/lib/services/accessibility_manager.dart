@@ -32,6 +32,16 @@ class AccessibilityManager {
     await flutterTts.speak(text);
   }
 
+  Future<void> speakSystemMessage(
+    String text, {
+    bool highPriority = false,
+  }) async {
+    if (highPriority) {
+      await flutterTts.stop();
+    }
+    await flutterTts.speak(text);
+  }
+
   Future<void> stopSpeak() async {
     await flutterTts.stop();
   }

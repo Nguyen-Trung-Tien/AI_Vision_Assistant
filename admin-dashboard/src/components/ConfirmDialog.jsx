@@ -1,18 +1,3 @@
-/**
- * ConfirmDialog — Reusable confirmation popup
- *
- * Usage:
- *   <ConfirmDialog
- *     open={!!confirm}
- *     title="Xoá tài khoản?"
- *     message="Hành động này không thể hoàn tác."
- *     confirmLabel="Xoá"
- *     confirmClass="bg-red-500 hover:bg-red-400"
- *     loading={loading}
- *     onConfirm={handleConfirm}
- *     onCancel={() => setConfirm(null)}
- *   />
- */
 export default function ConfirmDialog({
   open,
   title,

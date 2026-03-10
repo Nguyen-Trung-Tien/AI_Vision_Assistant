@@ -44,6 +44,8 @@ def on_message(channel, method, properties, body):
         frame_data = data.get("frameData", "")
         lang = data.get("lang", "vi")
         warning_m = data.get("warningDistanceM", 2.0)
+        latitude = data.get("latitude")
+        longitude = data.get("longitude")
         
         print(f"[*] Received Task: Client={client_id} | Type={task_type} | Lang={lang} | WarningDist={warning_m}m | Retry={retry_count}")
         
@@ -95,6 +97,8 @@ def on_message(channel, method, properties, body):
                 "confidence_score": ai_result.get("confidence_score", 0.0),
                 "audio_url": audio_url,
                 "stable": ai_result.get("stable", False),
+                "latitude": latitude,
+                "longitude": longitude,
                 "danger_alerts": danger_alerts
             }
         }

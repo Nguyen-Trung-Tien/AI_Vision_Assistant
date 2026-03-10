@@ -2,6 +2,7 @@ import 'dart:async';
 import 'dart:convert';
 import 'dart:typed_data';
 
+import 'package:geolocator/geolocator.dart';
 import 'package:mobile_app/services/accessibility_manager.dart';
 import 'package:mobile_app/services/history_service.dart';
 import 'package:mobile_app/services/settings_service.dart';
@@ -11,6 +12,7 @@ import 'package:mobile_app/l10n/app_localizations.dart';
 /// Callback khi trạng thái xử lý thay đổi (loading/done).
 typedef ProcessingStateCallback = void Function(bool isProcessing);
 typedef DangerAlertCallback = void Function(String message, String level);
+typedef AIResultCallback = void Function(Map<String, dynamic> result);
 
 class EdgeAIService {
   final WebSocketService _wsService;
@@ -32,6 +34,10 @@ class EdgeAIService {
 
   /// Callback khi có cảnh báo nguy hiểm
   DangerAlertCallback? onDangerAlertDetected;
+  AIResultCallback? onAIResultReceived;
+
+  Uint8List? _lastFrameForFeedback;
+  Uint8List? get lastFrameForFeedback => _lastFrameForFeedback;
 
   EdgeAIService(this._wsService, this._captureFrame) {
     _wsService.onDangerAlert = (data) {
@@ -46,6 +52,8 @@ class EdgeAIService {
     };
 
     _wsService.onAIResult = (data) {
+      onAIResultReceived?.call(data);
+
       final text = data['text']?.toString() ?? '';
       final isStable = data['stable'] == true;
       final taskType =
@@ -143,15 +151,19 @@ class EdgeAIService {
       _setProcessing(false);
       return;
     }
+    _lastFrameForFeedback = bytes;
 
     final base64Frame = base64Encode(bytes);
     final settings = SettingsService();
+    final position = await _getCurrentLocation();
 
     _wsService.sendFrame(
       base64Frame,
       taskType: taskType,
       lang: settings.language,
       warningDistanceM: settings.warningDistance,
+      latitude: position?.latitude,
+      longitude: position?.longitude,
     );
 
     // Timeout: auto-reset processing state after 15 seconds
@@ -163,5 +175,25 @@ class EdgeAIService {
         );
       }
     });
+  }
+
+  Future<Position?> _getCurrentLocation() async {
+    try {
+      var permission = await Geolocator.checkPermission();
+      if (permission == LocationPermission.denied) {
+        permission = await Geolocator.requestPermission();
+      }
+      if (permission == LocationPermission.denied ||
+          permission == LocationPermission.deniedForever) {
+        return null;
+      }
+      return Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.bestForNavigation,
+        ),
+      ).timeout(const Duration(seconds: 2));
+    } catch (_) {
+      return null;
+    }
   }
 }

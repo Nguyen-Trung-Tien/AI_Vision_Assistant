@@ -3,9 +3,22 @@ import {
   fetchFeedback,
   fetchFeedbackStats,
   reviewFeedback,
+  exportFeedbackDataset,
 } from "../services/api";
 import { useToast } from "../components/Toast";
 import ConfirmDialog from "../components/ConfirmDialog";
+
+function AccBar({ label, value, color }) {
+  return (
+    <div className="flex items-center gap-3">
+      <span className="text-white/50 text-xs w-16">{label}</span>
+      <div className="flex-1 bg-white/10 rounded-full h-2 overflow-hidden">
+        <div className={`h-full rounded-full ${color}`} style={{ width: `${value}%` }} />
+      </div>
+      <span className="text-white/60 text-xs w-10 text-right">{value}%</span>
+    </div>
+  );
+}
 
 export default function FeedbackPage() {
   const toast = useToast();
@@ -24,6 +37,7 @@ export default function FeedbackPage() {
   const [label, setLabel] = useState("");
   const [confirm, setConfirm] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   const load = async (p = 1, wrong = onlyWrong) => {
     setLoading(true);
@@ -64,18 +78,22 @@ export default function FeedbackPage() {
     setActionLoading(false);
   };
 
-  const AccBar = ({ label: lbl, value, color }) => (
-    <div className="flex items-center gap-3">
-      <span className="text-white/50 text-xs w-16">{lbl}</span>
-      <div className="flex-1 bg-white/10 rounded-full h-2 overflow-hidden">
-        <div
-          className={`h-full rounded-full ${color}`}
-          style={{ width: `${value}%` }}
-        />
-      </div>
-      <span className="text-white/60 text-xs w-10 text-right">{value}%</span>
-    </div>
-  );
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const blob = await exportFeedbackDataset();
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement("a");
+      a.href = url;
+      a.download = "feedback-yolo-dataset.zip";
+      a.click();
+      URL.revokeObjectURL(url);
+      toast.success("Export dataset thành công");
+    } catch {
+      toast.error("Export dataset thất bại");
+    }
+    setExporting(false);
+  };
 
   return (
     <div className="space-y-6">
@@ -132,6 +150,13 @@ export default function FeedbackPage() {
       <div className="flex items-center justify-between">
         <h2 className="text-2xl font-bold text-white">🤖 Feedback AI</h2>
         <div className="flex gap-3">
+          <button
+            onClick={handleExport}
+            disabled={exporting}
+            className="px-4 py-2 rounded-xl bg-purple-500/20 border border-purple-500/30 text-purple-300 text-sm hover:bg-purple-500/30 transition-all disabled:opacity-50"
+          >
+            {exporting ? "Dang export..." : "Export dataset"}
+          </button>
           <button
             onClick={toggleFilter}
             className={`px-4 py-2 rounded-xl border text-sm font-medium transition-all ${

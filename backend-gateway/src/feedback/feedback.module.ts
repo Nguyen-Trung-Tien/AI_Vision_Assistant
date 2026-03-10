@@ -5,10 +5,11 @@ import { FeedbackService } from './feedback.service';
 import { FeedbackController } from './feedback.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { DetectionLog } from '../vision/entities/detection-log.entity';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([AiFeedback]),
+    TypeOrmModule.forFeature([AiFeedback, DetectionLog]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

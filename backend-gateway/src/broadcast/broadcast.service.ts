@@ -36,6 +36,7 @@ export class BroadcastService {
     const saved = await this.broadcastRepo.save(broadcast);
 
     // Emit via WebSocket
+    let sentCount = 0;
     if (this.server) {
       const payload = {
         broadcastId: saved.id,
@@ -46,14 +47,18 @@ export class BroadcastService {
 
       if (targetType === 'all') {
         this.server.to('users').emit('tts_broadcast', payload);
+        sentCount = -1; // broadcast room size is not tracked server-side
       } else if (targetIds.length > 0) {
         // get sockets for specific users via room naming convention
         targetIds.forEach((uid) => {
           this.server.to(`user:${uid}`).emit('tts_broadcast', payload);
         });
+        sentCount = targetIds.length;
       }
     }
 
+    saved.sent_count = sentCount;
+    await this.broadcastRepo.save(saved);
     return saved;
   }
 

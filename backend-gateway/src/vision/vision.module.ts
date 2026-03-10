@@ -9,6 +9,8 @@ import { TaskQueueService } from './task-queue.service';
 import { HeatmapService } from './heatmap.service';
 import { WsJwtGuard } from '../auth/guards/ws-jwt.guard';
 import { VisionController } from './vision.controller';
+import { SosModule } from '../sos/sos.module';
+import { BroadcastModule } from '../broadcast/broadcast.module';
 
 @Module({
   imports: [
@@ -38,6 +40,8 @@ import { VisionController } from './vision.controller';
         }),
       },
     ]),
+    SosModule,
+    BroadcastModule,
   ],
   controllers: [VisionController],
   providers: [VisionGateway, TaskQueueService, HeatmapService, WsJwtGuard],

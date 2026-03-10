@@ -14,6 +14,7 @@ class WebSocketService {
   Function(Map<String, dynamic>)? onDangerAlert;
   Function(Map<String, dynamic>)? onAIResult;
   Function(Map<String, dynamic>)? onStreamAck;
+  Function(Map<String, dynamic>)? onTtsBroadcast;
   Function(bool isConnected)? onConnectionStatus;
 
   bool _isConnected = false;
@@ -51,6 +52,7 @@ class WebSocketService {
       _isConnected = true;
       _reconnectAttempts = 0;
       _reconnectTimer?.cancel();
+      socket.emit('join_user');
       onConnectionStatus?.call(true);
     });
 
@@ -69,6 +71,12 @@ class WebSocketService {
     socket.on('stream_ack', (data) {
       if (onStreamAck != null) {
         onStreamAck!(Map<String, dynamic>.from(data as Map));
+      }
+    });
+
+    socket.on('tts_broadcast', (data) {
+      if (onTtsBroadcast != null) {
+        onTtsBroadcast!(Map<String, dynamic>.from(data as Map));
       }
     });
 
@@ -141,6 +149,8 @@ class WebSocketService {
     String? taskType,
     String lang = 'vi',
     double warningDistanceM = 2.0,
+    double? latitude,
+    double? longitude,
   }) {
     if (_socket == null || !_socket!.connected) {
       debugPrint('WS not connected, frame dropped');
@@ -152,6 +162,27 @@ class WebSocketService {
       'task_type': taskType,
       'lang': lang,
       'warning_distance_m': warningDistanceM,
+      'latitude': latitude,
+      'longitude': longitude,
+    });
+  }
+
+  void sendSosAlert({
+    required double latitude,
+    required double longitude,
+    String? imageBase64,
+    String? timestamp,
+  }) {
+    if (_socket == null || !_socket!.connected) {
+      debugPrint('WS not connected, SOS dropped');
+      return;
+    }
+
+    _socket!.emit('sos_alert', {
+      'latitude': latitude,
+      'longitude': longitude,
+      'imageBase64': imageBase64,
+      'timestamp': timestamp ?? DateTime.now().toIso8601String(),
     });
   }
 

@@ -76,6 +76,7 @@ export default function SosPage() {
 
   // Direct actions from incoming popup (no extra confirm needed for already visible popup)
   const handleAckDirect = async (id) => {
+    if (!id) return;
     try {
       await acknowledgeSos(id);
       toast.success("Đã xác nhận nhận SOS");
@@ -86,6 +87,7 @@ export default function SosPage() {
     }
   };
   const handleResolveDirect = async (id) => {
+    if (!id) return;
     try {
       await resolveSos(id, "Đã xử lý bởi admin");
       toast.success("Đã xử lý SOS thành công");
@@ -145,13 +147,13 @@ export default function SosPage() {
             )}
             <div className="flex gap-3 justify-center">
               <button
-                onClick={() => handleAckDirect(incoming.sosId)}
+                onClick={() => handleAckDirect(incoming.sosId ?? incoming.id)}
                 className="px-5 py-2 rounded-xl bg-yellow-500/20 border border-yellow-500/40 text-yellow-300 text-sm font-medium hover:bg-yellow-500/30 transition-all"
               >
                 Đã nhận
               </button>
               <button
-                onClick={() => handleResolveDirect(incoming.sosId)}
+                onClick={() => handleResolveDirect(incoming.sosId ?? incoming.id)}
                 className="px-5 py-2 rounded-xl bg-green-500/20 border border-green-500/40 text-green-300 text-sm font-medium hover:bg-green-500/30 transition-all"
               >
                 Đã xử lý

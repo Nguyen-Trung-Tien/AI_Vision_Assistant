@@ -13,6 +13,8 @@ import { UseGuards, Logger } from '@nestjs/common';
 import { WsJwtGuard } from '../auth/guards/ws-jwt.guard';
 import { TaskQueueService } from './task-queue.service';
 import { FrameStreamDto } from './dto/frame-stream.dto';
+import { SosService } from '../sos/sos.service';
+import { BroadcastService } from '../broadcast/broadcast.service';
 
 interface AuthSocket extends Socket {
   data: {
@@ -29,10 +31,15 @@ export class VisionGateway
 
   private readonly logger = new Logger(VisionGateway.name);
 
-  constructor(private readonly taskQueueService: TaskQueueService) {}
+  constructor(
+    private readonly taskQueueService: TaskQueueService,
+    private readonly sosService: SosService,
+    private readonly broadcastService: BroadcastService,
+  ) {}
 
   afterInit(server: Server) {
     this.taskQueueService.setServer(server);
+    this.broadcastService.setServer(server);
   }
 
   handleConnection(client: Socket) {
@@ -66,6 +73,8 @@ export class VisionGateway
         data.frame,
         data.lang ?? 'vi',
         data.warning_distance_m ?? 2.0,
+        data.latitude,
+        data.longitude,
       );
     }
 
@@ -78,7 +87,7 @@ export class VisionGateway
    */
   @UseGuards(WsJwtGuard)
   @SubscribeMessage('sos_alert')
-  handleSosAlert(
+  async handleSosAlert(
     @MessageBody()
     data: { latitude: number; longitude: number; imageBase64?: string },
     @ConnectedSocket() client: AuthSocket,
@@ -86,8 +95,18 @@ export class VisionGateway
     const userId = client.data?.user?.sub?.toString();
     this.logger.warn(`SOS Alert received from user ${userId ?? 'unknown'}`);
 
+    const savedAlert = await this.sosService.createAlert(
+      userId ?? null,
+      data.latitude,
+      data.longitude,
+      data.imageBase64
+        ? `data:image/jpeg;base64,${data.imageBase64}`
+        : undefined,
+    );
+
     // Broadcast to all admins in room 'admin'
     this.server.to('admin').emit('sos_incoming', {
+      sosId: savedAlert.id,
       userId,
       latitude: data.latitude,
       longitude: data.longitude,

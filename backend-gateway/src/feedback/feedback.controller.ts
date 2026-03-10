@@ -9,6 +9,8 @@ import {
   UseGuards,
   Request,
 } from '@nestjs/common';
+import { Res } from '@nestjs/common';
+import type { Response } from 'express';
 import { FeedbackService } from './feedback.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
@@ -25,14 +27,23 @@ export class FeedbackController {
   findAll(
     @Query('page') page = 1,
     @Query('limit') limit = 20,
-    @Query('onlyWrong') onlyWrong = false,
+    @Query('onlyWrong') onlyWrong = 'false',
   ) {
-    return this.feedbackService.findAll(+page, +limit, Boolean(onlyWrong));
+    return this.feedbackService.findAll(
+      +page,
+      +limit,
+      onlyWrong === 'true' || onlyWrong === '1',
+    );
   }
 
   @Get('stats')
   getStats() {
     return this.feedbackService.getStats();
+  }
+
+  @Get('export')
+  exportDataset(@Res() res: Response) {
+    return this.feedbackService.exportYoloDatasetZip(res);
   }
 
   @Post()
@@ -43,6 +54,7 @@ export class FeedbackController {
       detectionId: string;
       isCorrect: boolean;
       correctLabel?: string;
+      imageBase64?: string;
     },
   ) {
     return this.feedbackService.create(
@@ -50,6 +62,7 @@ export class FeedbackController {
       req.user.sub,
       body.isCorrect,
       body.correctLabel,
+      body.imageBase64,
     );
   }
 

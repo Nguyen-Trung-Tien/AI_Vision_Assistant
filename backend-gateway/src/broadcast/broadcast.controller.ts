@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import { BroadcastService } from './broadcast.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { UsersService } from '../users/users.service';
 
 interface AuthRequest extends Request {
   user: { sub: string };
@@ -17,7 +18,10 @@ interface AuthRequest extends Request {
 @Controller('broadcast')
 @UseGuards(JwtAuthGuard)
 export class BroadcastController {
-  constructor(private readonly broadcastService: BroadcastService) {}
+  constructor(
+    private readonly broadcastService: BroadcastService,
+    private readonly usersService: UsersService,
+  ) {}
 
   @Get()
   findAll(@Query('page') page = 1, @Query('limit') limit = 20) {
@@ -25,7 +29,7 @@ export class BroadcastController {
   }
 
   @Post()
-  send(
+  async send(
     @Request() req: AuthRequest,
     @Body()
     body: {
@@ -35,11 +39,26 @@ export class BroadcastController {
       priority?: string;
     },
   ) {
+    const rawTargets = body.targetIds ?? [];
+    let resolvedTargetIds = rawTargets;
+
+    if ((body.targetType ?? 'all') === 'specific' && rawTargets.length > 0) {
+      const maybeEmails = rawTargets.filter((v) => v.includes('@'));
+      if (maybeEmails.length > 0) {
+        const users = await Promise.all(
+          maybeEmails.map((email) => this.usersService.findOneByEmail(email)),
+        );
+        resolvedTargetIds = users
+          .filter((u): u is NonNullable<typeof u> => Boolean(u))
+          .map((u) => u.id);
+      }
+    }
+
     return this.broadcastService.sendBroadcast(
       req.user.sub,
       body.message,
       body.targetType ?? 'all',
-      body.targetIds ?? [],
+      resolvedTargetIds,
       body.priority ?? 'normal',
     );
   }

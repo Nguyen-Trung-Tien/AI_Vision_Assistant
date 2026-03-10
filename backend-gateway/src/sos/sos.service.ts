@@ -12,13 +12,13 @@ export class SosService {
   ) {}
 
   async createAlert(
-    userId: string,
+    userId: string | null,
     latitude: number,
     longitude: number,
     imageUrl?: string,
   ): Promise<SosAlert> {
     const alert = this.sosRepo.create({
-      userId,
+      userId: userId || null,
       latitude,
       longitude,
       image_url: imageUrl,

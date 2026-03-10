@@ -142,7 +142,7 @@ const NAV_ITEMS = [
   { id: "users", label: "Người dùng", icon: Icons.users },
 ];
 
-// ── NavItem ───────────────────────────────────────────────────────────────────
+//  NavItem 
 function NavItem({ item, active, onClick }) {
   return (
     <button

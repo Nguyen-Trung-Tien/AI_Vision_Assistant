@@ -1,4 +1,4 @@
-﻿const STATS_API_BASE = "/api/stats";
+const STATS_API_BASE = "/api/stats";
 const AUTH_API_BASE = "/api/auth";
 const EMAIL_KEY = "admin_email";
 
@@ -175,6 +175,13 @@ export async function reviewFeedback(id, correctLabel) {
     method: "PATCH",
     body: JSON.stringify({ correctLabel }),
   });
+}
+export async function exportFeedbackDataset() {
+  const response = await fetch("/api/feedback/export", {
+    credentials: "include",
+  });
+  if (!response.ok) throw new Error("Export failed");
+  return response.blob();
 }
 
 //  BROADCAST

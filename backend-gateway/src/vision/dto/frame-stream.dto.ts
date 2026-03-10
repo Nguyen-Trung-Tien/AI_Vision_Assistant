@@ -1,4 +1,10 @@
-import { IsString, IsNumber, IsOptional } from 'class-validator';
+import {
+  IsString,
+  IsNumber,
+  IsOptional,
+  IsLatitude,
+  IsLongitude,
+} from 'class-validator';
 
 export class FrameStreamDto {
   @IsString()
@@ -15,4 +21,12 @@ export class FrameStreamDto {
   @IsOptional()
   @IsNumber()
   warning_distance_m?: number;
+
+  @IsOptional()
+  @IsLatitude()
+  latitude?: number;
+
+  @IsOptional()
+  @IsLongitude()
+  longitude?: number;
 }
