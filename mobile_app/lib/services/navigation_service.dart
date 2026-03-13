@@ -5,19 +5,15 @@ import 'package:flutter/foundation.dart';
 import 'package:flutter_compass/flutter_compass.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:http/http.dart' as http;
+import 'package:mobile_app/l10n/app_localizations.dart';
 import 'package:mobile_app/services/accessibility_manager.dart';
 import 'package:mobile_app/services/settings_service.dart';
-import 'package:mobile_app/l10n/app_localizations.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
 class NavigationService {
   final AccessibilityManager _accessibilityManager = AccessibilityManager();
   final SettingsService _settings = SettingsService();
   final SpeechToText _speechToText = SpeechToText();
-
-  // Load GMaps API Key from dart constants, or leave empty if not set
-  final String _googleMapsApiKey =
-      const String.fromEnvironment('MAP_API_KEY', defaultValue: '');
 
   bool _isNavigating = false;
   bool _isSpeechInitialized = false;
@@ -72,58 +68,182 @@ class NavigationService {
       return recognizedText;
     }
 
-    _accessibilityManager.speak("Không nghe rõ địa điểm, vui lòng thử lại.");
+    _accessibilityManager.speak(
+      "Không nghe rõ địa điểm, vui lòng thử lại.",
+    );
     return null;
   }
 
   Future<Map<String, dynamic>?> getDirections(
-      String destinationQuery, double lat, double lng) async {
-    if (_googleMapsApiKey.isEmpty) {
-      _accessibilityManager.speak(
-          "Thiếu API Key bản đồ. Tính năng chỉ đường nâng cao không hoạt động.");
-      return null;
-    }
-
+    String destinationQuery,
+    double lat,
+    double lng,
+  ) async {
     try {
-      final placeSearchUrl = Uri.parse(
-          'https://maps.googleapis.com/maps/api/place/findplacefromtext/json?'
-          'input=${Uri.encodeComponent(destinationQuery)}&inputtype=textquery&fields=place_id,name,geometry'
-          '&locationbias=circle:50000@$lat,$lng'
-          '&key=$_googleMapsApiKey');
+      final searchUrl = Uri.parse(
+        'https://nominatim.openstreetmap.org/search'
+        '?format=jsonv2&limit=1&q=${Uri.encodeComponent(destinationQuery)}',
+      );
 
-      final placeResponse = await http.get(placeSearchUrl);
-      if (placeResponse.statusCode != 200) return null;
+      final searchResponse = await http.get(
+        searchUrl,
+        headers: {'User-Agent': 'AIVisionAssistant/1.0'},
+      );
+      if (searchResponse.statusCode != 200) return null;
 
-      final placeData = json.decode(placeResponse.body);
-      if (placeData['status'] != 'OK' || placeData['candidates'].isEmpty) {
+      final searchData = json.decode(searchResponse.body) as List<dynamic>;
+      if (searchData.isEmpty) {
         _accessibilityManager.speak("Không tìm thấy địa điểm này.");
         return null;
       }
 
-      final candidate = placeData['candidates'][0];
-      final targetLat = candidate['geometry']['location']['lat'];
-      final targetLng = candidate['geometry']['location']['lng'];
-      final targetName = candidate['name'];
+      final candidate = searchData.first as Map<String, dynamic>;
+      final targetLat = double.tryParse(candidate['lat']?.toString() ?? '');
+      final targetLng = double.tryParse(candidate['lon']?.toString() ?? '');
+      final targetName = candidate['display_name']?.toString() ??
+          destinationQuery;
 
-      _accessibilityManager
-          .speak("Đã tìm thấy $targetName. Bắt đầu hướng dẫn lộ trình.");
+      if (targetLat == null || targetLng == null) {
+        _accessibilityManager.speak("Không tìm thấy địa điểm này.");
+        return null;
+      }
+
+      _accessibilityManager.speak(
+        "Đã tìm thấy $targetName. Bắt đầu hướng dẫn lộ trình.",
+      );
 
       final directionsUrl = Uri.parse(
-          'https://maps.googleapis.com/maps/api/directions/json?'
-          'origin=$lat,$lng'
-          '&destination=$targetLat,$targetLng'
-          '&mode=walking&language=vi'
-          '&key=$_googleMapsApiKey');
+        'https://router.project-osrm.org/route/v1/foot/'
+        '$lng,$lat;$targetLng,$targetLat'
+        '?overview=false&steps=true',
+      );
 
-      final dirResponse = await http.get(directionsUrl);
-      if (dirResponse.statusCode == 200) {
-        return json.decode(dirResponse.body);
+      final dirResponse = await http.get(
+        directionsUrl,
+        headers: {'User-Agent': 'AIVisionAssistant/1.0'},
+      );
+      if (dirResponse.statusCode != 200) return null;
+
+      final routeData = json.decode(dirResponse.body) as Map<String, dynamic>;
+      final routes = routeData['routes'] as List<dynamic>?;
+      if (routes == null || routes.isEmpty) return null;
+
+      final route = routes.first as Map<String, dynamic>;
+      final legs = route['legs'] as List<dynamic>? ?? [];
+      if (legs.isEmpty) return null;
+
+      final leg = legs.first as Map<String, dynamic>;
+      final stepsRaw = leg['steps'] as List<dynamic>? ?? [];
+      final steps = <Map<String, dynamic>>[];
+
+      for (final raw in stepsRaw) {
+        final step = raw as Map<String, dynamic>;
+        final maneuver = step['maneuver'] as Map<String, dynamic>? ?? {};
+        final location = maneuver['location'] as List<dynamic>? ?? [];
+        if (location.length < 2) continue;
+        final endLng = (location[0] as num).toDouble();
+        final endLat = (location[1] as num).toDouble();
+        final instruction = _formatOsrmInstruction(step);
+        steps.add({
+          'end_location': {'lat': endLat, 'lng': endLng},
+          'html_instructions': instruction,
+        });
       }
+
+      if (steps.isEmpty) {
+        steps.add({
+          'end_location': {'lat': targetLat, 'lng': targetLng},
+          'html_instructions': 'Đi tới điểm đến',
+        });
+      }
+
+      return {
+        'routes': [
+          {
+            'legs': [
+              {
+                'steps': steps,
+                'end_location': {'lat': targetLat, 'lng': targetLng},
+                'end_address': targetName,
+              },
+            ],
+          },
+        ],
+      };
     } catch (e) {
       debugPrint("Error getting directions: $e");
-      _accessibilityManager.speak("Đã có lỗi xảy ra khi lấy lộ trình.");
+      _accessibilityManager.speak(
+        "Đã có lỗi xảy ra khi lấy lộ trình.",
+      );
     }
     return null;
+  }
+
+  String _formatOsrmInstruction(Map<String, dynamic> step) {
+    final maneuver = step['maneuver'] as Map<String, dynamic>? ?? {};
+    final type = maneuver['type']?.toString() ?? '';
+    final modifier = maneuver['modifier']?.toString() ?? '';
+    final roadName = (step['name'] as String?)?.trim() ?? '';
+
+    final action = _formatAction(type, modifier);
+    if (roadName.isNotEmpty && action != 'Đã đến nơi') {
+      return '$action vào $roadName';
+    }
+    return action;
+  }
+
+  String _formatAction(String type, String modifier) {
+    final direction = _formatDirection(modifier);
+    switch (type) {
+      case 'depart':
+        return 'Bắt đầu đi';
+      case 'arrive':
+        return 'Đã đến nơi';
+      case 'roundabout':
+        return 'Đi vào vòng xuyến';
+      case 'merge':
+        return 'Nhập vào';
+      case 'on ramp':
+        return 'Lên đường dẫn';
+      case 'off ramp':
+        return 'Ra khỏi đường dẫn';
+      case 'fork':
+      case 'turn':
+      case 'end of road':
+        return direction.isNotEmpty ? 'Rẽ $direction' : 'Rẽ';
+      case 'continue':
+      case 'new name':
+        return direction.isNotEmpty && direction != 'thẳng'
+            ? 'Tiếp tục $direction'
+            : 'Tiếp tục đi thẳng';
+      case 'uturn':
+        return 'Quay đầu';
+      default:
+        return direction.isNotEmpty ? 'Rẽ $direction' : 'Tiếp tục';
+    }
+  }
+
+  String _formatDirection(String modifier) {
+    switch (modifier) {
+      case 'left':
+        return 'trái';
+      case 'right':
+        return 'phải';
+      case 'straight':
+        return 'thẳng';
+      case 'slight left':
+        return 'chếch trái';
+      case 'slight right':
+        return 'chếch phải';
+      case 'sharp left':
+        return 'gắt trái';
+      case 'sharp right':
+        return 'gắt phải';
+      case 'uturn':
+        return 'quay đầu';
+      default:
+        return '';
+    }
   }
 
   String stripHtmlTags(String htmlString) {
@@ -217,7 +337,7 @@ class NavigationService {
     }
   }
 
-  /// Reverse geocode via Nominatim (OpenStreetMap, miễn phí).
+  /// Reverse geocode via Nominatim (OpenStreetMap).
   /// Chỉ gọi tối đa 1 lần/30 giây để tránh spam API.
   Future<void> _announceStreetName(Position position, String lang) async {
     final now = DateTime.now();

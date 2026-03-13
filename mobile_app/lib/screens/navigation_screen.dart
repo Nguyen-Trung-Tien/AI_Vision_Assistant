@@ -1,10 +1,11 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
-import 'package:mobile_app/services/navigation_service.dart';
-import 'package:mobile_app/services/accessibility_manager.dart';
-import 'package:google_maps_flutter/google_maps_flutter.dart';
+import 'package:latlong2/latlong.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
+import 'package:mobile_app/services/accessibility_manager.dart';
+import 'package:mobile_app/services/navigation_service.dart';
 import 'package:mobile_app/services/settings_service.dart';
 
 class NavigationScreen extends StatefulWidget {
@@ -27,9 +28,10 @@ class _NavigationScreenState extends State<NavigationScreen> {
   Position? _currentPosition;
   StreamSubscription<Position>? _positionSub;
 
-  final Completer<GoogleMapController> _controller = Completer();
-  final Set<Polyline> _polylines = {};
-  final Set<Marker> _markers = {};
+  final MapController _mapController = MapController();
+  LatLng? _destination;
+  LatLng? _pendingCenter;
+  bool _mapReady = false;
 
   @override
   void initState() {
@@ -56,20 +58,27 @@ class _NavigationScreenState extends State<NavigationScreen> {
             distanceFilter: 5,
           ),
         ).listen((Position position) {
-          if (mounted) {
-            setState(() {
-              _currentPosition = position;
-            });
-            if (_isNavigating &&
-                _steps.isNotEmpty &&
-                _currentStepIndex < _steps.length) {
-              _checkWaypointDistance(position);
-            }
+          if (!mounted) return;
+          setState(() {
+            _currentPosition = position;
+          });
+          if (_pendingCenter == null) {
+            _moveCamera(LatLng(position.latitude, position.longitude));
+          }
+          if (_isNavigating &&
+              _steps.isNotEmpty &&
+              _currentStepIndex < _steps.length) {
+            _checkWaypointDistance(position);
           }
         });
 
     _currentPosition = await Geolocator.getCurrentPosition();
     setState(() {});
+    if (_currentPosition != null) {
+      _moveCamera(
+        LatLng(_currentPosition!.latitude, _currentPosition!.longitude),
+      );
+    }
   }
 
   Future<void> _startVoiceSearch() async {
@@ -127,20 +136,11 @@ class _NavigationScreenState extends State<NavigationScreen> {
   void _updateMap(dynamic route) {
     if (_currentPosition == null) return;
 
-    // Polyline decoding from overview_polyline could be added here
-    // For simplicity, just marking destination
     final leg = route['legs'][0];
     final endLoc = leg['end_location'];
 
     setState(() {
-      _markers.clear();
-      _markers.add(
-        Marker(
-          markerId: const MarkerId('destination'),
-          position: LatLng(endLoc['lat'], endLoc['lng']),
-          infoWindow: InfoWindow(title: leg['end_address']),
-        ),
-      );
+      _destination = LatLng(endLoc['lat'], endLoc['lng']);
     });
 
     _moveCamera(
@@ -149,10 +149,10 @@ class _NavigationScreenState extends State<NavigationScreen> {
   }
 
   Future<void> _moveCamera(LatLng pos) async {
-    final GoogleMapController controller = await _controller.future;
-    controller.animateCamera(
-      CameraUpdate.newCameraPosition(CameraPosition(target: pos, zoom: 16)),
-    );
+    _pendingCenter = pos;
+    if (_mapReady) {
+      _mapController.move(pos, 16);
+    }
   }
 
   void _checkWaypointDistance(Position position) {
@@ -203,8 +203,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
       _isNavigating = false;
       _currentInstruction = "Bấm vào mic để nói điểm đến";
       _steps.clear();
-      _markers.clear();
-      _polylines.clear();
+      _destination = null;
     });
     _accessibilityManager.speak("Đã dừng điều hướng.");
   }
@@ -221,7 +220,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
     final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.t('nav_title', lang)),
+        title: Text(AppLocalizations.t('mode_4', lang)),
         actions: [
           if (_isNavigating)
             IconButton(
@@ -248,22 +247,38 @@ class _NavigationScreenState extends State<NavigationScreen> {
                       Positioned.fill(
                         child: _currentPosition == null
                             ? const Center(child: CircularProgressIndicator())
-                            : GoogleMap(
-                                initialCameraPosition: CameraPosition(
-                                  target: LatLng(
+                            : FlutterMap(
+                                mapController: _mapController,
+                                options: MapOptions(
+                                  initialCenter: LatLng(
                                     _currentPosition!.latitude,
                                     _currentPosition!.longitude,
                                   ),
-                                  zoom: 15,
+                                  initialZoom: 15,
+                                  onMapReady: () {
+                                    _mapReady = true;
+                                    if (_pendingCenter != null) {
+                                      _mapController.move(_pendingCenter!, 16);
+                                    }
+                                  },
                                 ),
-                                myLocationEnabled: true,
-                                myLocationButtonEnabled: true,
-                                compassEnabled: true,
-                                markers: _markers,
-                                polylines: _polylines,
-                                onMapCreated: (GoogleMapController controller) {
-                                  _controller.complete(controller);
-                                },
+                                children: [
+                                  TileLayer(
+                                    urlTemplate:
+                                        'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+                                    userAgentPackageName: 'mobile_app',
+                                  ),
+                                  MarkerLayer(
+                                    markers: _buildMapMarkers(colorScheme),
+                                  ),
+                                  RichAttributionWidget(
+                                    attributions: [
+                                      TextSourceAttribution(
+                                        '© OpenStreetMap contributors',
+                                      ),
+                                    ],
+                                  ),
+                                ],
                               ),
                       ),
                       Positioned(
@@ -285,7 +300,8 @@ class _NavigationScreenState extends State<NavigationScreen> {
   }
 
   Widget _buildStatusRow(ColorScheme colorScheme) {
-    final statusText = _isNavigating ? 'Đang điều hướng' : 'Chưa điều hướng';
+    final statusText =
+        _isNavigating ? 'Đang điều hướng' : 'Chưa điều hướng';
     final statusColor = _isNavigating ? Colors.green : colorScheme.outline;
     return Row(
       children: [
@@ -387,5 +403,41 @@ class _NavigationScreenState extends State<NavigationScreen> {
         ),
       ),
     );
+  }
+
+  List<Marker> _buildMapMarkers(ColorScheme colorScheme) {
+    final markers = <Marker>[];
+    if (_currentPosition != null) {
+      markers.add(
+        Marker(
+          point: LatLng(
+            _currentPosition!.latitude,
+            _currentPosition!.longitude,
+          ),
+          width: 36,
+          height: 36,
+          child: Icon(
+            Icons.my_location,
+            color: colorScheme.primary,
+            size: 30,
+          ),
+        ),
+      );
+    }
+    if (_destination != null) {
+      markers.add(
+        Marker(
+          point: _destination!,
+          width: 40,
+          height: 40,
+          child: const Icon(
+            Icons.flag,
+            color: Colors.red,
+            size: 32,
+          ),
+        ),
+      );
+    }
+    return markers;
   }
 }

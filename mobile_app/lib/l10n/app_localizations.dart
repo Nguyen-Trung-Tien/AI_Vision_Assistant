@@ -93,11 +93,8 @@ class AppLocalizations {
       'vi': 'Chế độ mô tả không gian',
       'en': 'Scene description mode',
     },
-    'mode_4': {'vi': 'Định vị và định hướng', 'en': 'Navigation'},
-    'mode_4_spoken': {
-      'vi': 'Chế độ định vị và định hướng',
-      'en': 'Navigation mode',
-    },
+    'mode_4': {'vi': 'Chỉ hướng', 'en': 'Navigation'},
+    'mode_4_spoken': {'vi': 'Chế độ chỉ hướng', 'en': 'Navigation mode'},
 
     // --- Main Screen UI ---
     'main_offline': {'vi': 'Offline', 'en': 'Offline'},
