@@ -69,6 +69,7 @@ export class TaskQueueService {
     warningDistanceM: number = 2.0,
     latitude?: number,
     longitude?: number,
+    question?: string,
   ) {
     this.logger.log(
       `Pushing task ${taskType} to RabbitMQ for client ${clientId} (userId: ${userId ?? 'anonymous'}, lang: ${lang})`,
@@ -83,6 +84,7 @@ export class TaskQueueService {
       warningDistanceM,
       latitude,
       longitude,
+      question,
       timestamp: Date.now(),
     });
   }

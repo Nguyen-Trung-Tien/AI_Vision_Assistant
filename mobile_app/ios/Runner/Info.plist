@@ -49,5 +49,13 @@
 	<string>App needs camera access to capture frames for vision recognition.</string>
 	<key>NSContactsUsageDescription</key>
 	<string>App needs contacts access to let you select emergency contacts.</string>
+	<key>NSMicrophoneUsageDescription</key>
+	<string>App needs microphone access for voice commands and queries.</string>
+	<key>NSSpeechRecognitionUsageDescription</key>
+	<string>App needs speech recognition for converting your voice into text commands.</string>
+	<key>NSLocationWhenInUseUsageDescription</key>
+	<string>App needs location access to provide GPS navigation.</string>
+	<key>NSLocationAlwaysUsageDescription</key>
+	<string>App needs location access to provide GPS navigation in the background.</string>
 </dict>
 </plist>

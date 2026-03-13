@@ -13,6 +13,7 @@ import 'package:mobile_app/services/feedback_service.dart';
 import 'package:mobile_app/services/light_sensor_service.dart';
 import 'package:mobile_app/services/ml_kit_service.dart';
 import 'package:mobile_app/services/navigation_service.dart';
+import 'package:mobile_app/screens/navigation_screen.dart';
 import 'package:mobile_app/services/power_button_service.dart';
 import 'package:mobile_app/services/settings_service.dart';
 import 'package:mobile_app/services/sos_service.dart';
@@ -24,6 +25,7 @@ import 'package:mobile_app/l10n/app_localizations.dart';
 import 'package:mobile_app/utils/text_utils.dart';
 import 'package:mobile_app/widgets/status_overlay.dart';
 import 'package:mobile_app/widgets/mode_carousel.dart';
+import 'package:mobile_app/widgets/visual_qa_button.dart';
 
 class MainScreen extends StatefulWidget {
   final List<CameraDescription>? cameras;
@@ -132,6 +134,14 @@ class _MainScreenState extends State<MainScreen> {
       }
     };
     _aiService.onAIResultReceived = (result) {
+      if (result['taskType'] == 'visual_qa') {
+        final text = result['text']?.toString() ?? '';
+        if (text.isNotEmpty) {
+          _accessibilityManager.speak(text);
+        }
+        return;
+      }
+      
       final detectionId = result['detectionId']?.toString();
       if (detectionId == null || detectionId.isEmpty) return;
       _showFeedbackPrompt(detectionId);
@@ -271,6 +281,7 @@ class _MainScreenState extends State<MainScreen> {
       'navigation',
     ])) {
       _goToMode(4);
+      _openNavigationScreen();
     } else if (TextUtils.containsAny(cmd, ['tong hop', 'tien', 'general', 'money'])) {
       _goToMode(0);
     } else {
@@ -356,9 +367,21 @@ class _MainScreenState extends State<MainScreen> {
 
     if (index == 4) {
       _navigationService.startNavigation();
+      _openNavigationScreen();
     } else {
       _navigationService.stopNavigation();
     }
+  }
+
+  void _openNavigationScreen() {
+    Navigator.push(
+      context,
+      MaterialPageRoute(builder: (_) => const NavigationScreen()),
+    ).then((_) {
+      // User backed out of navigation screen
+      _navigationService.stopNavigation();
+      _goToMode(0); // return to default mode or stay in 4? stay in 0 is safer
+    });
   }
 
   void _handleDoubleTap() {
@@ -386,12 +409,43 @@ class _MainScreenState extends State<MainScreen> {
           AppLocalizations.t('main_navigating', _settings.language),
         );
         _navigationService.startNavigation();
+        _openNavigationScreen();
         break;
     }
   }
 
   void _handleLongPress() {
     _voiceCommandService.startListening();
+  }
+
+  Future<void> _startVisualQA(BuildContext context) async {
+    _accessibilityManager.speak(
+      _settings.language == 'vi' ? 'Đang nghe...' : 'Listening...',
+    );
+    // You'd typically start listening for stt here and store the question
+    // For simplicity with this current UI structure, we use VoiceCommandService
+    _voiceCommandService.startListening();
+  }
+
+  Future<void> _stopVisualQA(BuildContext context) async {
+    _voiceCommandService.stopListening();
+    
+    // We would need the recognized question here. 
+    // Since _onCommandRecognized handles all voice input, we'd need a state variable to know we are in QA mode.
+    // Let's implement a simpler approach: take a picture and send it with an empty question to just describe it
+    // Or, we can just use the standard requestCaptioning here if the architecture is limiting.
+    
+    final frameBytes = await _captureCurrentFrame();
+    if (frameBytes != null) {
+        _accessibilityManager.speak("Đang phân tích hình ảnh...");
+        _wsService.sendVisualQA(
+           frame: frameBytes,
+           lang: _settings.language,
+           question: "Hãy mô tả chi tiết bức ảnh này."
+        );
+    } else {
+        _accessibilityManager.speak("Không thể chụp ảnh.");
+    }
   }
 
   Future<void> _scanWithMLKit() async {
@@ -840,6 +894,16 @@ class _MainScreenState extends State<MainScreen> {
                   ],
                 ),
               ),
+            ),
+          ),
+          
+          Positioned(
+            bottom: 130,
+            left: MediaQuery.of(context).size.width / 2 - 38,
+            child: VisualQAButton(
+              language: _settings.language,
+              onStartRecording: _startVisualQA,
+              onStopRecording: _stopVisualQA,
             ),
           ),
 

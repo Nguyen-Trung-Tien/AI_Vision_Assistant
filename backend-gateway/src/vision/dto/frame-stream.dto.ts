@@ -29,4 +29,8 @@ export class FrameStreamDto {
   @IsOptional()
   @IsLongitude()
   longitude?: number;
+
+  @IsOptional()
+  @IsString()
+  question?: string;
 }

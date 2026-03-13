@@ -1,4 +1,5 @@
-﻿import 'dart:async';
+import 'dart:async';
+import 'dart:convert';
 import 'package:socket_io_client/socket_io_client.dart' as io;
 import 'package:flutter/foundation.dart';
 
@@ -194,6 +195,30 @@ class WebSocketService {
       'longitude': longitude,
       'imageBase64': imageBase64,
       'timestamp': timestamp ?? DateTime.now().toIso8601String(),
+    });
+  }
+
+  void sendVisualQA({
+    required Uint8List frame,
+    String lang = 'vi',
+    required String question,
+    double? latitude,
+    double? longitude,
+  }) {
+    if (_socket == null || !_socket!.connected) {
+      debugPrint('WS not connected, Visual QA dropped');
+      return;
+    }
+
+    // Convert frame to base64
+    final base64Frame = base64Encode(frame);
+
+    _socket!.emit('visual_qa', {
+      'frame': base64Frame,
+      'lang': lang,
+      'question': question,
+      'latitude': latitude,
+      'longitude': longitude,
     });
   }
 

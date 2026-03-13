@@ -8,12 +8,19 @@ import 'package:http/http.dart' as http;
 import 'package:mobile_app/services/accessibility_manager.dart';
 import 'package:mobile_app/services/settings_service.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
+import 'package:speech_to_text/speech_to_text.dart';
 
 class NavigationService {
   final AccessibilityManager _accessibilityManager = AccessibilityManager();
   final SettingsService _settings = SettingsService();
+  final SpeechToText _speechToText = SpeechToText();
+
+  // Load GMaps API Key from dart constants, or leave empty if not set
+  final String _googleMapsApiKey =
+      const String.fromEnvironment('MAP_API_KEY', defaultValue: '');
 
   bool _isNavigating = false;
+  bool _isSpeechInitialized = false;
   StreamSubscription<CompassEvent>? _compassSub;
   StreamSubscription<Position>? _positionSub;
 
@@ -24,6 +31,105 @@ class NavigationService {
   DateTime _lastGeocodedTime = DateTime.now().subtract(
     const Duration(seconds: 30),
   );
+
+  Future<void> initSpeech() async {
+    _isSpeechInitialized = await _speechToText.initialize(
+      onError: (val) => debugPrint('Speech error: $val'),
+      onStatus: (val) => debugPrint('Speech status: $val'),
+    );
+  }
+
+  Future<String?> listenForDestination() async {
+    if (!_isSpeechInitialized) {
+      await initSpeech();
+    }
+    if (!_isSpeechInitialized) return null;
+
+    if (_speechToText.isListening) {
+      await _speechToText.stop();
+      return null;
+    }
+
+    String recognizedText = '';
+    _accessibilityManager.speak("Hãy nói tên địa điểm bạn muốn đến");
+    await Future.delayed(const Duration(seconds: 2));
+
+    await _speechToText.listen(
+      onResult: (result) {
+        recognizedText = result.recognizedWords;
+      },
+      localeId: 'vi_VN',
+      pauseFor: const Duration(seconds: 3),
+    );
+
+    while (_speechToText.isListening) {
+      await Future.delayed(const Duration(milliseconds: 100));
+    }
+
+    if (recognizedText.isNotEmpty) {
+      _accessibilityManager.speak("Đang tìm đường đến $recognizedText");
+      debugPrint('Recognized Destination: $recognizedText');
+      return recognizedText;
+    }
+
+    _accessibilityManager.speak("Không nghe rõ địa điểm, vui lòng thử lại.");
+    return null;
+  }
+
+  Future<Map<String, dynamic>?> getDirections(
+      String destinationQuery, double lat, double lng) async {
+    if (_googleMapsApiKey.isEmpty) {
+      _accessibilityManager.speak(
+          "Thiếu API Key bản đồ. Tính năng chỉ đường nâng cao không hoạt động.");
+      return null;
+    }
+
+    try {
+      final placeSearchUrl = Uri.parse(
+          'https://maps.googleapis.com/maps/api/place/findplacefromtext/json?'
+          'input=${Uri.encodeComponent(destinationQuery)}&inputtype=textquery&fields=place_id,name,geometry'
+          '&locationbias=circle:50000@$lat,$lng'
+          '&key=$_googleMapsApiKey');
+
+      final placeResponse = await http.get(placeSearchUrl);
+      if (placeResponse.statusCode != 200) return null;
+
+      final placeData = json.decode(placeResponse.body);
+      if (placeData['status'] != 'OK' || placeData['candidates'].isEmpty) {
+        _accessibilityManager.speak("Không tìm thấy địa điểm này.");
+        return null;
+      }
+
+      final candidate = placeData['candidates'][0];
+      final targetLat = candidate['geometry']['location']['lat'];
+      final targetLng = candidate['geometry']['location']['lng'];
+      final targetName = candidate['name'];
+
+      _accessibilityManager
+          .speak("Đã tìm thấy $targetName. Bắt đầu hướng dẫn lộ trình.");
+
+      final directionsUrl = Uri.parse(
+          'https://maps.googleapis.com/maps/api/directions/json?'
+          'origin=$lat,$lng'
+          '&destination=$targetLat,$targetLng'
+          '&mode=walking&language=vi'
+          '&key=$_googleMapsApiKey');
+
+      final dirResponse = await http.get(directionsUrl);
+      if (dirResponse.statusCode == 200) {
+        return json.decode(dirResponse.body);
+      }
+    } catch (e) {
+      debugPrint("Error getting directions: $e");
+      _accessibilityManager.speak("Đã có lỗi xảy ra khi lấy lộ trình.");
+    }
+    return null;
+  }
+
+  String stripHtmlTags(String htmlString) {
+    RegExp exp = RegExp(r"<[^>]*>", multiLine: true, caseSensitive: true);
+    return htmlString.replaceAll(exp, '');
+  }
 
   Future<void> startNavigation() async {
     if (_isNavigating) return;

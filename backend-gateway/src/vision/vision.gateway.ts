@@ -81,6 +81,31 @@ export class VisionGateway
     client.emit('stream_ack', { status: 'received', timestamp: Date.now() });
   }
 
+  @UseGuards(WsJwtGuard)
+  @SubscribeMessage('visual_qa')
+  handleVisualQA(
+    @MessageBody() data: FrameStreamDto,
+    @ConnectedSocket() client: AuthSocket,
+  ) {
+    const userId = client.data?.user?.sub?.toString();
+
+    // Check rate limit if needed, skip for now since it's user-triggered
+
+    this.taskQueueService.pushHeavyTask(
+      client.id,
+      userId,
+      'visual_qa',
+      data.frame,
+      data.lang ?? 'vi',
+      2.0,
+      data.latitude,
+      data.longitude,
+      data.question,
+    );
+
+    client.emit('visual_qa_ack', { status: 'received', timestamp: Date.now() });
+  }
+
   /**
    * SOS Alert: User gửi sự kiện khẩn cấp
    * Payload: { latitude, longitude, imageBase64? }

@@ -8,6 +8,7 @@ from dotenv import load_dotenv
 from services.ai_service import AIService
 from services.tts_cache import TTSCacheService
 from services.danger_detector import detect_dangers
+from services.gemini_service import GeminiService
 from services.translations import t
 
 load_dotenv()
@@ -42,6 +43,7 @@ def on_message(channel, method, properties, body):
         user_id = data.get("userId")
         task_type = data.get("taskType", "UNKNOWN")
         frame_data = data.get("frameData", "")
+        question = data.get("question", "")  # Added for visual_qa
         lang = data.get("lang", "vi")
         warning_m = data.get("warningDistanceM", 2.0)
         latitude = data.get("latitude")
@@ -60,6 +62,17 @@ def on_message(channel, method, properties, body):
             detections = ai_result.get("raw_detections", [])
             danger_alerts = detect_dangers(detections, threshold_m=warning_m, lang=lang)
             ai_result["danger_alerts"] = danger_alerts
+        elif task_type == "visual_qa":
+            gemini_service = GeminiService()
+            import base64
+            image_bytes = base64.b64decode(frame_data.split(',')[1] if ',' in frame_data else frame_data)
+            answer = gemini_service.ask_gemini_vision(image_bytes, question)
+            ai_result = {
+                "text": answer,
+                "confidence_score": 1.0,
+                "stable": True,
+                "danger_alerts": []
+            }
         else:
             print(f"[!] Unknown task type: {task_type}")
             channel.basic_ack(delivery_tag=method.delivery_tag)
@@ -136,6 +149,8 @@ def on_message(channel, method, properties, body):
             # ACK original BEFORE sleeping so RabbitMQ doesn't redeliver
             channel.basic_ack(delivery_tag=method.delivery_tag)
             print(f"[Retry] Queued retry attempt {retry_count + 1}/{MAX_RETRIES} (delay reference: {delay}s)")
+            # Backoff to avoid hot-looping the queue/GPU on repeated failures.
+            time.sleep(delay)
         else:
             # Max retries exceeded — send to dead-letter or drop
             print(f"[Fatal] Max retries ({MAX_RETRIES}) exceeded. Dropping message.")
