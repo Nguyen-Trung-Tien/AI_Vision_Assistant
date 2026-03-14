@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:mobile_app/theme/app_theme.dart';
 import 'package:mobile_app/services/accessibility_manager.dart';
 import 'package:mobile_app/services/settings_service.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
@@ -120,7 +121,12 @@ class _SplashScreenState extends State<SplashScreen>
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [Color(0xFF0D0D2B), Color(0xFF1A1A4E), Color(0xFF2D1B69)],
+            colors: [
+              Color(0xFF0A0A1A),
+              Color(0xFF111128),
+              Color(0xFF16163A),
+              Color(0xFF1A1A4E),
+            ],
           ),
         ),
         child: Center(
@@ -145,16 +151,14 @@ class _SplashScreenState extends State<SplashScreen>
                           shape: BoxShape.circle,
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(
-                                0xFF6C63FF,
-                              ).withValues(alpha: _pulseAnimation.value * 0.6),
+                              color: AppTheme.accentPurple
+                                  .withValues(alpha: _pulseAnimation.value * 0.6),
                               blurRadius: 40,
                               spreadRadius: 10,
                             ),
                             BoxShadow(
-                              color: const Color(
-                                0xFF00D4FF,
-                              ).withValues(alpha: _pulseAnimation.value * 0.3),
+                              color: AppTheme.accentCyan
+                                  .withValues(alpha: _pulseAnimation.value * 0.3),
                               blurRadius: 60,
                               spreadRadius: 20,
                             ),
@@ -188,7 +192,7 @@ class _SplashScreenState extends State<SplashScreen>
                           shadows: [
                             Shadow(
                               blurRadius: 20,
-                              color: Color(0xFF6C63FF),
+                              color: AppTheme.accentPurple,
                               offset: Offset(0, 2),
                             ),
                           ],
@@ -224,8 +228,8 @@ class _SplashScreenState extends State<SplashScreen>
                           backgroundColor: Colors.white.withValues(alpha: 0.1),
                           valueColor: AlwaysStoppedAnimation<Color>(
                             Color.lerp(
-                              const Color(0xFF6C63FF),
-                              const Color(0xFF00D4FF),
+                              AppTheme.accentPurple,
+                              AppTheme.accentCyan,
                               _pulseAnimation.value,
                             )!,
                           ),

@@ -7,7 +7,7 @@ logger = logging.getLogger(__name__)
 
 class GeminiService:
     def __init__(self):
-        self.api_key = os.getenv("GEMINI_API_KEY")
+        self.api_key = os.getenv("AIzaSyBAxCnoUikb9GyqY8-yjiC8M5xbXgPcizM")
         if not self.api_key:
             logger.warning("GEMINI_API_KEY is not set in environment variables.")
         else:

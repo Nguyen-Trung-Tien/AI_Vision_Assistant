@@ -63,14 +63,14 @@ class AuthService {
       print('=== API REQUEST DEBUG ===');
       print('URL: $_baseUrl$path');
       print('Body: $body');
-      
+
       final response = await request.close();
       final raw = await response.transform(utf8.decoder).join();
-      
+
       print('=== API RESPONSE DEBUG ===');
       print('Status: ${response.statusCode}');
       print('Raw Response: $raw');
-      
+
       final decoded = raw.isEmpty
           ? <String, dynamic>{}
           : jsonDecode(raw) as Map<String, dynamic>;

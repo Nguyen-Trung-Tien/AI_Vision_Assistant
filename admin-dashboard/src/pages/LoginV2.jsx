@@ -1,7 +1,9 @@
-﻿import { useState } from "react";
+import { useState } from "react";
 import { loginAdmin, registerAdmin } from "../services/api";
+import { useToast } from "../components/Toast";
 
 export default function LoginV2({ onLoginSuccess }) {
+  const toast = useToast();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -20,30 +22,41 @@ export default function LoginV2({ onLoginSuccess }) {
     try {
       if (isRegisterMode) {
         if (password !== confirmPassword) {
+          toast?.error?.("Mật khẩu xác nhận không khớp");
           throw new Error("Mật khẩu xác nhận không khớp");
         }
         await registerAdmin(email.trim(), password);
+        toast?.success?.("Đăng ký thành công");
       } else {
         await loginAdmin(email.trim(), password);
+        toast?.success?.("Đăng nhập thành công");
       }
       onLoginSuccess?.();
     } catch (err) {
-      setError(
-        err?.message ||
-          (isRegisterMode ? "Đăng ký thất bại" : "Đăng nhập thất bại"),
-      );
+      const msg =
+        err?.message || (isRegisterMode ? "Đăng ký thất bại" : "Đăng nhập thất bại");
+      toast?.error?.(msg);
+      setError(msg);
     } finally {
       setSubmitting(false);
     }
   };
 
   return (
-    <div className="min-h-screen bg-bg-dark flex items-center justify-center p-6 relative overflow-hidden">
+    <div
+      className="min-h-screen bg-bg-primary flex items-center justify-center p-4 sm:p-6 relative overflow-hidden"
+      style={{
+        paddingTop: "max(1rem, var(--safe-top))",
+        paddingBottom: "max(1rem, var(--safe-bottom))",
+        paddingLeft: "max(1rem, var(--safe-left))",
+        paddingRight: "max(1rem, var(--safe-right))",
+      }}
+    >
       <div className="absolute -top-28 -left-24 w-72 h-72 rounded-full bg-accent-purple/15 blur-3xl" />
       <div className="absolute -bottom-28 -right-24 w-80 h-80 rounded-full bg-accent-cyan/10 blur-3xl" />
       <form
         onSubmit={handleSubmit}
-        className="w-full max-w-md bg-bg-card/95 backdrop-blur border border-accent-purple/20 rounded-2xl p-7 shadow-xl relative z-10"
+        className="w-full max-w-md bg-bg-card/95 backdrop-blur border border-accent-purple/20 rounded-2xl p-5 sm:p-7 shadow-xl relative z-10"
       >
         <h1 className="text-2xl font-bold text-white mb-2">Admin Dashboard</h1>
         <p className="text-white/60 mb-6">
@@ -131,7 +144,7 @@ export default function LoginV2({ onLoginSuccess }) {
         <button
           type="submit"
           disabled={submitting}
-          className="w-full rounded-xl bg-linear-to-r from-accent-purple to-accent-cyan py-3 font-semibold text-white disabled:opacity-60 inline-flex items-center justify-center gap-2"
+          className="w-full min-h-[48px] rounded-xl bg-linear-to-r from-accent-purple to-accent-cyan py-3 font-semibold text-white disabled:opacity-60 inline-flex items-center justify-center gap-2 active:scale-[0.99] transition-transform"
         >
           {submitting ? (
             <>

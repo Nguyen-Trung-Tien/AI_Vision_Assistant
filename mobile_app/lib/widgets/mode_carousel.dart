@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_app/theme/app_theme.dart';
 
 class ModeCarousel extends StatelessWidget {
   final PageController pageController;
@@ -22,42 +23,49 @@ class ModeCarousel extends StatelessWidget {
       itemCount: modes.length,
       itemBuilder: (context, index) {
         return Container(
-          color: Colors.black.withValues(alpha: 0.3),
+          color: Colors.transparent,
           alignment: Alignment.center,
           child: Container(
-            margin: const EdgeInsets.symmetric(horizontal: 24),
-            padding: const EdgeInsets.symmetric(
-              horizontal: 22,
-              vertical: 18,
-            ),
-            decoration: BoxDecoration(
-              color: Colors.black.withValues(alpha: 0.45),
-              borderRadius: BorderRadius.circular(20),
+            margin: const EdgeInsets.symmetric(horizontal: 28),
+            padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
+            decoration: AppTheme.glassDecoration(
+              borderRadius: 24,
+              opacity: 0.5,
+            ).copyWith(
               border: Border.all(
-                color: Colors.white.withValues(alpha: 0.15),
+                color: AppTheme.accentPurple.withValues(alpha: 0.25),
+                width: 1.5,
               ),
             ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [
-                Icon(
-                  modeIcons[index],
-                  color: const Color(0xFF6C63FF),
-                  size: 46,
+                Container(
+                  width: 64,
+                  height: 64,
+                  decoration: BoxDecoration(
+                    color: AppTheme.accentPurple.withValues(alpha: 0.2),
+                    borderRadius: BorderRadius.circular(20),
+                  ),
+                  child: Icon(
+                    modeIcons[index],
+                    color: AppTheme.accentCyan,
+                    size: 36,
+                  ),
                 ),
-                const SizedBox(height: 12),
+                const SizedBox(height: 16),
                 Text(
                   modes[index].toUpperCase(),
                   textAlign: TextAlign.center,
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 24,
+                  style: AppTheme.titleLarge.copyWith(
+                    fontSize: 22,
                     fontWeight: FontWeight.bold,
-                    shadows: [
+                    letterSpacing: 1.2,
+                    shadows: const [
                       Shadow(
-                        blurRadius: 10.0,
-                        color: Colors.black87,
-                        offset: Offset(2.0, 2.0),
+                        blurRadius: 12,
+                        color: Colors.black54,
+                        offset: Offset(0, 2),
                       ),
                     ],
                   ),

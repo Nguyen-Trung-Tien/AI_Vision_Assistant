@@ -78,17 +78,16 @@ export default function RealtimeStatsBar() {
   }, [load]);
 
   return (
-    <div className="bg-bg-card rounded-2xl p-6 border border-accent-purple/10 shadow-lg hover:border-accent-purple/30 transition-all duration-300 mb-6">
-      {/* Header */}
-      <div className="flex items-center justify-between mb-4">
-        <div>
+    <div className="bg-bg-card rounded-2xl p-4 sm:p-6 border border-accent-purple/10 shadow-lg hover:border-accent-purple/30 transition-all duration-300 mb-6">
+      {/* Header — stack trên mobile */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
+        <div className="min-w-0">
           <h3 className="text-xs font-semibold text-white/50 uppercase tracking-widest">
-            📊 Realtime — Lượt nhận diện 14 ngày qua
+            📊 Realtime — 14 ngày qua
           </h3>
           {lastUpdated && (
             <p className="text-[11px] text-white/30 mt-0.5">
-              Cập nhật lúc {lastUpdated.toLocaleTimeString("vi-VN")} · Tự động
-              làm mới sau{" "}
+              Cập nhật {lastUpdated.toLocaleTimeString("vi-VN")} · Sau{" "}
               <span className="text-accent-cyan font-bold">{countdown}s</span>
             </p>
           )}
@@ -96,7 +95,7 @@ export default function RealtimeStatsBar() {
         <button
           onClick={load}
           disabled={isRefreshing}
-          className="flex items-center gap-2 px-4 py-1.5 rounded-xl border border-accent-purple/20 bg-bg-card text-white/70 text-xs font-medium hover:border-accent-purple/50 hover:text-white transition-all duration-200 disabled:opacity-40"
+          className="flex items-center justify-center gap-2 min-h-[44px] px-4 py-2.5 sm:py-1.5 rounded-xl border border-accent-purple/20 bg-bg-card text-white/70 text-xs font-medium hover:border-accent-purple/50 hover:text-white active:scale-[0.98] transition-all duration-200 disabled:opacity-40 shrink-0"
         >
           <span
             className={isRefreshing ? "inline-block animate-spin" : ""}
@@ -110,7 +109,7 @@ export default function RealtimeStatsBar() {
 
       {/* Mini stats row */}
       {overview && (
-        <div className="grid grid-cols-3 gap-4 mb-5">
+        <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-4 sm:mb-5">
           {[
             {
               label: "Tổng nhận diện",
@@ -149,7 +148,7 @@ export default function RealtimeStatsBar() {
 
       {/* Area chart */}
       {data.length === 0 ? (
-        <div className="flex items-center justify-center h-[220px] text-white/40 text-sm">
+        <div className="flex items-center justify-center h-[180px] sm:h-[220px] text-white/40 text-sm">
           {isRefreshing ? "Đang tải dữ liệu..." : "Không có dữ liệu"}
         </div>
       ) : (

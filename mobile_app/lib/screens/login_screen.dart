@@ -1,5 +1,8 @@
+import 'dart:io';
+
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
+import 'package:mobile_app/theme/app_theme.dart';
 import 'package:mobile_app/screens/main_screen.dart';
 import 'package:mobile_app/services/accessibility_manager.dart';
 import 'package:mobile_app/services/auth_service.dart';
@@ -83,8 +86,11 @@ class _LoginScreenState extends State<LoginScreen> {
       _accessibility.speak(
         AppLocalizations.t('login_fail_tts', _settings.language),
       );
+      final message = e is HttpException
+          ? e.message
+          : e.toString().replaceFirst(RegExp(r'^Exception:\s*'), '').replaceFirst(RegExp(r'^HttpException:\s*'), '');
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(e.toString().replaceFirst('Exception: ', ''))),
+        SnackBar(content: Text(message)),
       );
     } finally {
       if (mounted) {
@@ -96,205 +102,238 @@ class _LoginScreenState extends State<LoginScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0D2B),
-      body: SafeArea(
-        child: Center(
-          child: SingleChildScrollView(
-            padding: const EdgeInsets.all(24),
-            child: Form(
-              key: _formKey,
-              child: Column(
-                crossAxisAlignment: CrossAxisAlignment.stretch,
-                children: [
-                  const Text(
-                    'AI Vision Assistant',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 30,
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  const SizedBox(height: 8),
-                  Text(
-                    _isRegisterMode
-                        ? AppLocalizations.t(
-                            'login_title_register',
-                            _settings.language,
-                          )
-                        : AppLocalizations.t(
-                            'login_title_login',
-                            _settings.language,
+      backgroundColor: AppTheme.bgPrimary,
+      body: Container(
+        decoration: const BoxDecoration(
+          gradient: LinearGradient(
+            begin: Alignment.topLeft,
+            end: Alignment.bottomRight,
+            colors: [
+              Color(0xFF0A0A1A),
+              Color(0xFF111128),
+              Color(0xFF16163A),
+            ],
+          ),
+        ),
+        child: SafeArea(
+          child: Center(
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.symmetric(horizontal: 24, vertical: 20),
+              child: Form(
+                key: _formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    const SizedBox(height: 16),
+                    Text(
+                      'AI Vision Assistant',
+                      textAlign: TextAlign.center,
+                      style: AppTheme.headlineLarge.copyWith(
+                        shadows: [
+                          Shadow(
+                            color: AppTheme.accentPurple.withValues(alpha: 0.5),
+                            blurRadius: 20,
+                            offset: const Offset(0, 2),
                           ),
-                    textAlign: TextAlign.center,
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.7),
-                      fontSize: 16,
-                    ),
-                  ),
-                  const SizedBox(height: 28),
-                  TextFormField(
-                    controller: _emailController,
-                    keyboardType: TextInputType.emailAddress,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: _inputDecoration(
-                      AppLocalizations.t('login_email', _settings.language),
-                    ),
-                    validator: (value) {
-                      final v = (value ?? '').trim();
-                      if (v.isEmpty) {
-                        return AppLocalizations.t(
-                          'login_email_err_empty',
-                          _settings.language,
-                        );
-                      }
-                      if (!v.contains('@')) {
-                        return AppLocalizations.t(
-                          'login_email_err_invalid',
-                          _settings.language,
-                        );
-                      }
-                      return null;
-                    },
-                  ),
-                  const SizedBox(height: 14),
-                  TextFormField(
-                    controller: _passwordController,
-                    obscureText: !_showPassword,
-                    style: const TextStyle(color: Colors.white),
-                    decoration: _inputDecoration(
-                      AppLocalizations.t('login_password', _settings.language),
-                      suffixIcon: IconButton(
-                        onPressed: () {
-                          setState(() => _showPassword = !_showPassword);
-                        },
-                        icon: Icon(
-                          _showPassword
-                              ? Icons.visibility_off
-                              : Icons.visibility,
-                          color: Colors.white70,
-                        ),
+                        ],
                       ),
                     ),
-                    validator: (value) {
-                      final v = value ?? '';
-                      if (v.length < 6) {
-                        return AppLocalizations.t(
-                          'login_password_err_length',
-                          _settings.language,
-                        );
-                      }
-                      return null;
-                    },
-                  ),
-                  if (_isRegisterMode) ...[
-                    const SizedBox(height: 14),
-                    TextFormField(
-                      controller: _confirmPasswordController,
-                      obscureText: !_showConfirmPassword,
-                      style: const TextStyle(color: Colors.white),
-                      decoration: _inputDecoration(
-                        AppLocalizations.t(
-                          'login_confirm_password',
-                          _settings.language,
-                        ),
-                        suffixIcon: IconButton(
-                          onPressed: () {
-                            setState(() {
-                              _showConfirmPassword = !_showConfirmPassword;
-                            });
-                          },
-                          icon: Icon(
-                            _showConfirmPassword
-                                ? Icons.visibility_off
-                                : Icons.visibility,
-                            color: Colors.white70,
-                          ),
-                        ),
-                      ),
-                      validator: (value) {
-                        if (_isRegisterMode && (value ?? '').isEmpty) {
-                          return AppLocalizations.t(
-                            'login_confirm_err_empty',
-                            _settings.language,
-                          );
-                        }
-                        return null;
-                      },
-                    ),
-                  ],
-                  const SizedBox(height: 20),
-                  ElevatedButton(
-                    onPressed: _isSubmitting ? null : _submit,
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: const Color(0xFF6C63FF),
-                      foregroundColor: Colors.white,
-                      padding: const EdgeInsets.symmetric(vertical: 14),
-                    ),
-                    child: _isSubmitting
-                        ? const SizedBox(
-                            width: 20,
-                            height: 20,
-                            child: CircularProgressIndicator(
-                              strokeWidth: 2,
-                              color: Colors.white,
-                            ),
-                          )
-                        : Text(
-                            _isRegisterMode
-                                ? AppLocalizations.t(
-                                    'login_btn_register',
-                                    _settings.language,
-                                  )
-                                : AppLocalizations.t(
-                                    'login_btn_login',
-                                    _settings.language,
-                                  ),
-                          ),
-                  ),
-                  const SizedBox(height: 10),
-                  TextButton(
-                    onPressed: _isSubmitting
-                        ? null
-                        : () {
-                            setState(() {
-                              _isRegisterMode = !_isRegisterMode;
-                              _showPassword = false;
-                              _showConfirmPassword = false;
-                              _confirmPasswordController.clear();
-                            });
-                          },
-                    child: Text(
+                    const SizedBox(height: 8),
+                    Text(
                       _isRegisterMode
                           ? AppLocalizations.t(
-                              'login_switch_to_login',
+                              'login_title_register',
                               _settings.language,
                             )
                           : AppLocalizations.t(
-                              'login_switch_to_register',
+                              'login_title_login',
                               _settings.language,
                             ),
+                      textAlign: TextAlign.center,
+                      style: AppTheme.bodyLarge.copyWith(
+                        color: AppTheme.whiteAlpha(0.7),
+                      ),
                     ),
-                  ),
-                ],
+                    const SizedBox(height: 28),
+                    Container(
+                      padding: const EdgeInsets.all(24),
+                      decoration: AppTheme.cardDecoration(borderRadius: 20),
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.stretch,
+                        children: [
+                          TextFormField(
+                            controller: _emailController,
+                            keyboardType: TextInputType.emailAddress,
+                            style: const TextStyle(color: Colors.white),
+                            decoration: AppTheme.inputDecoration(
+                              AppLocalizations.t('login_email', _settings.language),
+                            ),
+                            validator: (value) {
+                              final v = (value ?? '').trim();
+                              if (v.isEmpty) {
+                                return AppLocalizations.t(
+                                  'login_email_err_empty',
+                                  _settings.language,
+                                );
+                              }
+                              if (!v.contains('@')) {
+                                return AppLocalizations.t(
+                                  'login_email_err_invalid',
+                                  _settings.language,
+                                );
+                              }
+                              return null;
+                            },
+                          ),
+                          const SizedBox(height: 16),
+                          TextFormField(
+                            controller: _passwordController,
+                            obscureText: !_showPassword,
+                            style: const TextStyle(color: Colors.white),
+                            decoration: AppTheme.inputDecoration(
+                              AppLocalizations.t('login_password', _settings.language),
+                              suffixIcon: IconButton(
+                                onPressed: () {
+                                  setState(() => _showPassword = !_showPassword);
+                                },
+                                icon: Icon(
+                                  _showPassword
+                                      ? Icons.visibility_off
+                                      : Icons.visibility,
+                                  color: AppTheme.whiteAlpha(0.7),
+                                ),
+                              ),
+                            ),
+                            validator: (value) {
+                              final v = value ?? '';
+                              if (v.length < 6) {
+                                return AppLocalizations.t(
+                                  'login_password_err_length',
+                                  _settings.language,
+                                );
+                              }
+                              return null;
+                            },
+                          ),
+                          if (_isRegisterMode) ...[
+                            const SizedBox(height: 16),
+                            TextFormField(
+                              controller: _confirmPasswordController,
+                              obscureText: !_showConfirmPassword,
+                              style: const TextStyle(color: Colors.white),
+                              decoration: AppTheme.inputDecoration(
+                                AppLocalizations.t(
+                                  'login_confirm_password',
+                                  _settings.language,
+                                ),
+                                suffixIcon: IconButton(
+                                  onPressed: () {
+                                    setState(() {
+                                      _showConfirmPassword = !_showConfirmPassword;
+                                    });
+                                  },
+                                  icon: Icon(
+                                    _showConfirmPassword
+                                        ? Icons.visibility_off
+                                        : Icons.visibility,
+                                    color: AppTheme.whiteAlpha(0.7),
+                                  ),
+                                ),
+                              ),
+                              validator: (value) {
+                                if (_isRegisterMode && (value ?? '').isEmpty) {
+                                  return AppLocalizations.t(
+                                    'login_confirm_err_empty',
+                                    _settings.language,
+                                  );
+                                }
+                                return null;
+                              },
+                            ),
+                          ],
+                          const SizedBox(height: 20),
+                          Material(
+                            color: Colors.transparent,
+                            child: InkWell(
+                              onTap: _isSubmitting ? null : _submit,
+                              borderRadius: BorderRadius.circular(14),
+                              child: Container(
+                                width: double.infinity,
+                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                decoration: _isSubmitting
+                                    ? BoxDecoration(
+                                        color: AppTheme.accentPurple.withValues(alpha: 0.5),
+                                        borderRadius: BorderRadius.circular(14),
+                                      )
+                                    : AppTheme.gradientButtonDecoration(),
+                                child: _isSubmitting
+                                    ? const Center(
+                                        child: SizedBox(
+                                          width: 24,
+                                          height: 24,
+                                          child: CircularProgressIndicator(
+                                            strokeWidth: 2,
+                                            color: Colors.white,
+                                          ),
+                                        ),
+                                      )
+                                    : Text(
+                                        _isRegisterMode
+                                            ? AppLocalizations.t(
+                                                'login_btn_register',
+                                                _settings.language,
+                                              )
+                                            : AppLocalizations.t(
+                                                'login_btn_login',
+                                                _settings.language,
+                                              ),
+                                        textAlign: TextAlign.center,
+                                        style: const TextStyle(
+                                          color: Colors.white,
+                                          fontSize: 16,
+                                          fontWeight: FontWeight.w600,
+                                        ),
+                                      ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(height: 12),
+                          TextButton(
+                            onPressed: _isSubmitting
+                                ? null
+                                : () {
+                                    setState(() {
+                                      _isRegisterMode = !_isRegisterMode;
+                                      _showPassword = false;
+                                      _showConfirmPassword = false;
+                                      _confirmPasswordController.clear();
+                                    });
+                                  },
+                            child: Text(
+                              _isRegisterMode
+                                  ? AppLocalizations.t(
+                                      'login_switch_to_login',
+                                      _settings.language,
+                                    )
+                                  : AppLocalizations.t(
+                                      'login_switch_to_register',
+                                      _settings.language,
+                                    ),
+                              style: TextStyle(
+                                color: AppTheme.whiteAlpha(0.8),
+                                fontSize: 14,
+                              ),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
               ),
             ),
           ),
         ),
-      ),
-    );
-  }
-
-  InputDecoration _inputDecoration(String label, {Widget? suffixIcon}) {
-    return InputDecoration(
-      labelText: label,
-      labelStyle: TextStyle(color: Colors.white.withValues(alpha: 0.7)),
-      suffixIcon: suffixIcon,
-      filled: true,
-      fillColor: Colors.white.withValues(alpha: 0.08),
-      border: OutlineInputBorder(
-        borderRadius: BorderRadius.circular(12),
-        borderSide: BorderSide.none,
       ),
     );
   }

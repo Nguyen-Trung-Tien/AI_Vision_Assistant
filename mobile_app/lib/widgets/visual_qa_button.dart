@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_app/theme/app_theme.dart';
 
 class VisualQAButton extends StatefulWidget {
   final Future<void> Function(BuildContext context) onStartRecording;
@@ -78,20 +79,30 @@ class _VisualQAButtonState extends State<VisualQAButton> with SingleTickerProvid
               height: 76,
               decoration: BoxDecoration(
                 shape: BoxShape.circle,
-                color: _isRecording ? Colors.deepPurpleAccent : const Color(0xFF6C63FF),
+                gradient: _isRecording
+                    ? null
+                    : const LinearGradient(
+                        begin: Alignment.topLeft,
+                        end: Alignment.bottomRight,
+                        colors: [
+                          AppTheme.accentPurple,
+                          AppTheme.accentCyan,
+                        ],
+                      ),
+                color: _isRecording ? AppTheme.accentPink : null,
                 border: Border.all(color: Colors.white70, width: 2),
                 boxShadow: _isRecording
                     ? [
                         BoxShadow(
-                          color: Colors.deepPurpleAccent.withValues(alpha: 0.8),
+                          color: AppTheme.accentPink.withValues(alpha: 0.7),
                           blurRadius: 20,
                           spreadRadius: 8,
                         )
                       ]
                     : [
                         BoxShadow(
-                          color: const Color(0xFF6C63FF).withValues(alpha: 0.5),
-                          blurRadius: 10,
+                          color: AppTheme.accentPurple.withValues(alpha: 0.5),
+                          blurRadius: 12,
                           spreadRadius: 2,
                         )
                       ],

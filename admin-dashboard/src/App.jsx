@@ -7,7 +7,7 @@ import BroadcastPage from "./pages/BroadcastPage";
 import HeatmapPage from "./pages/HeatmapPage";
 import UsersPage from "./pages/UsersPage";
 import { clearSession, getStoredEmail } from "./services/api";
-import { ToastProvider } from "./components/Toast";
+import { ToastProvider, useToast } from "./components/Toast";
 
 //  SVG Icons
 const Icons = {
@@ -209,12 +209,13 @@ function AdminShell({ onLogout }) {
 
       {/* ── Sidebar ─────────────────────────────── */}
       <aside
-        className={`fixed top-0 left-0 h-screen z-40 w-64 flex flex-col transition-transform duration-300 ease-in-out lg:sticky lg:translate-x-0 shrink-0 ${
+        className={`fixed top-0 left-0 h-screen z-40 w-[min(280px,85vw)] lg:w-64 flex flex-col transition-transform duration-300 ease-in-out lg:sticky lg:translate-x-0 shrink-0 ${
           sidebarOpen ? "translate-x-0" : "-translate-x-full"
         }`}
         style={{
           background: "linear-gradient(180deg, #111128 0%, #0e0e24 100%)",
           borderRight: "1px solid rgba(255,255,255,0.06)",
+          paddingTop: "max(var(--safe-top), 0px)",
         }}
       >
         {/* Logo */}
@@ -297,21 +298,26 @@ function AdminShell({ onLogout }) {
 
       {/* ── Main content ─────────────────────────── */}
       <div className="flex-1 flex flex-col min-w-0 overflow-hidden">
-        {/* Mobile top bar */}
+        {/* Mobile top bar — đồng bộ safe-area & chiều cao cố định */}
         <header
-          className="lg:hidden flex items-center gap-4 px-4 py-3 border-b border-white/6"
-          style={{ background: "#111128" }}
+          className="lg:hidden flex items-center gap-3 px-4 py-3 border-b border-white/6 shrink-0"
+          style={{
+            background: "#111128",
+            minHeight: "var(--mobile-header-h)",
+            paddingTop: "max(12px, var(--safe-top))",
+          }}
         >
           <button
             onClick={() => setSidebarOpen(true)}
-            className="text-white/60 hover:text-white transition-colors p-1"
+            className="flex items-center justify-center w-11 h-11 rounded-xl text-white/60 hover:text-white hover:bg-white/5 transition-colors -ml-1"
+            aria-label="Mở menu"
           >
             {Icons.menu}
           </button>
-          <div className="flex items-center gap-2">
-            <div className="w-6 h-6 rounded-lg bg-linear-to-br from-purple-500 to-indigo-600 flex items-center justify-center">
+          <div className="flex items-center gap-2 flex-1 min-w-0">
+            <div className="w-8 h-8 rounded-lg bg-linear-to-br from-purple-500 to-indigo-600 flex items-center justify-center shrink-0">
               <svg
-                className="w-3.5 h-3.5 text-white"
+                className="w-4 h-4 text-white"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -324,13 +330,13 @@ function AdminShell({ onLogout }) {
                 />
               </svg>
             </div>
-            <span className="text-white font-semibold text-sm">
+            <span className="text-white font-semibold text-sm truncate">
               {currentLabel}
             </span>
           </div>
         </header>
 
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
+        <main className="flex-1 overflow-y-auto overflow-x-hidden p-4 sm:p-5 lg:p-8">
           {renderPage()}
         </main>
       </div>
@@ -340,26 +346,30 @@ function AdminShell({ onLogout }) {
 
 // ── App ───────────────────────────────────────────────────────────────────────
 export default function App() {
+  return (
+    <ToastProvider>
+      <AppInner />
+    </ToastProvider>
+  );
+}
+
+function AppInner() {
+  const toast = useToast();
   const [isAuthenticated, setIsAuthenticated] = useState(() => {
     return localStorage.getItem("admin_authenticated") === "true";
   });
 
   if (!isAuthenticated) {
-    return (
-      <ToastProvider>
-        <LoginV2 onLoginSuccess={() => setIsAuthenticated(true)} />
-      </ToastProvider>
-    );
+    return <LoginV2 onLoginSuccess={() => setIsAuthenticated(true)} />;
   }
 
   return (
-    <ToastProvider>
-      <AdminShell
-        onLogout={() => {
-          clearSession();
-          setIsAuthenticated(false);
-        }}
-      />
-    </ToastProvider>
+    <AdminShell
+      onLogout={() => {
+        clearSession();
+        setIsAuthenticated(false);
+        toast?.success?.("Đăng xuất thành công");
+      }}
+    />
   );
 }

@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:camera/camera.dart';
+import 'package:mobile_app/theme/app_theme.dart';
 import 'package:mobile_app/screens/main_screen.dart';
 import 'package:mobile_app/screens/login_screen.dart';
 import 'package:mobile_app/screens/onboarding_screen.dart';
@@ -37,7 +38,7 @@ class VisionAssistantApp extends StatelessWidget {
     return MaterialApp(
       title: 'AI Vision Assistant',
       debugShowCheckedModeBanner: false,
-      theme: ThemeData(brightness: Brightness.dark, primarySwatch: Colors.blue),
+      theme: AppTheme.darkTheme,
       home: SplashScreen(
         nextScreen: settings.isFirstLaunch
             ? OnboardingScreen(nextScreen: appEntry)

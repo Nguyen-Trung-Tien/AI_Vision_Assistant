@@ -14,9 +14,41 @@
   --font-family-inter: "Inter", sans-serif;
 }
 
+/* Mobile-first: safe area & touch targets */
+:root {
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-right: env(safe-area-inset-right, 0px);
+  --safe-bottom: env(safe-area-inset-bottom, 0px);
+  --safe-left: env(safe-area-inset-left, 0px);
+  --touch-min: 44px;
+  --mobile-gutter: 1rem;
+  --mobile-header-h: 56px;
+}
+
+@media (min-width: 1024px) {
+  :root {
+    --mobile-gutter: 1.5rem;
+  }
+}
+
 body {
   font-family: var(--font-family-inter);
   background: var(--color-bg-primary);
+  padding-top: var(--safe-top);
+  padding-right: var(--safe-right);
+  padding-bottom: var(--safe-bottom);
+  padding-left: var(--safe-left);
+  -webkit-tap-highlight-color: transparent;
+  -webkit-touch-callout: none;
+}
+
+/* Touch-friendly buttons on mobile */
+@media (max-width: 1023px) {
+  button:not([class*="icon-only"]),
+  a[role="button"],
+  [data-touch-target] {
+    min-height: var(--touch-min);
+  }
 }
 
 /* Custom recharts tooltip */

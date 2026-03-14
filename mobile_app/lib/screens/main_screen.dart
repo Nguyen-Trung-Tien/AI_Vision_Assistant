@@ -23,6 +23,7 @@ import 'package:mobile_app/services/volume_button_service.dart';
 import 'package:mobile_app/services/websocket_service.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
 import 'package:mobile_app/utils/text_utils.dart';
+import 'package:mobile_app/theme/app_theme.dart';
 import 'package:mobile_app/widgets/status_overlay.dart';
 import 'package:mobile_app/widgets/mode_carousel.dart';
 import 'package:mobile_app/widgets/visual_qa_button.dart';
@@ -365,10 +366,9 @@ class _MainScreenState extends State<MainScreen> {
       AppLocalizations.t('mode_${index}_spoken', lang),
     );
 
-    if (index == 4) {
-      _navigationService.startNavigation();
-      _openNavigationScreen();
-    } else {
+    // Khi chuyển sang tab khác với Navigation thì dừng điều hướng,
+    // nhưng không tự mở màn hình navigation khi chỉ vuốt qua tab.
+    if (index != 4) {
       _navigationService.stopNavigation();
     }
   }
@@ -655,7 +655,7 @@ class _MainScreenState extends State<MainScreen> {
 
           if (_dangerMessage != null)
             Positioned(
-              top: 100,
+              top: MediaQuery.of(context).padding.top + 70,
               left: 16,
               right: 16,
               child: Container(
@@ -664,14 +664,14 @@ class _MainScreenState extends State<MainScreen> {
                   horizontal: 20,
                 ),
                 decoration: BoxDecoration(
-                  color: Colors.redAccent.withValues(alpha: 0.9),
-                  borderRadius: BorderRadius.circular(16),
-                  border: Border.all(color: Colors.white, width: 2),
+                  color: AppTheme.accentRed.withValues(alpha: 0.95),
+                  borderRadius: BorderRadius.circular(20),
+                  border: Border.all(color: Colors.white70, width: 2),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.red.withValues(alpha: 0.5),
+                      color: AppTheme.accentRed.withValues(alpha: 0.5),
                       blurRadius: 20,
-                      spreadRadius: 5,
+                      spreadRadius: 4,
                     ),
                   ],
                 ),
@@ -701,19 +701,28 @@ class _MainScreenState extends State<MainScreen> {
           if (_isProcessing || _isScanningMLKit)
             Positioned.fill(
               child: Container(
-                color: Colors.black.withValues(alpha: 0.4),
+                color: Colors.black.withValues(alpha: 0.5),
                 child: Center(
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      const SizedBox(
-                        width: 48,
-                        height: 48,
-                        child: CircularProgressIndicator(
-                          color: Color(0xFF6C63FF),
-                          strokeWidth: 3,
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 32,
+                      vertical: 28,
+                    ),
+                    decoration: AppTheme.glassDecoration(
+                      borderRadius: 24,
+                      opacity: 0.6,
+                    ),
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        const SizedBox(
+                          width: 48,
+                          height: 48,
+                          child: CircularProgressIndicator(
+                            color: AppTheme.accentCyan,
+                            strokeWidth: 3,
+                          ),
                         ),
-                      ),
                       const SizedBox(height: 16),
                       Text(
                         _isScanningMLKit
@@ -730,8 +739,9 @@ class _MainScreenState extends State<MainScreen> {
                           fontSize: 18,
                           fontWeight: FontWeight.w500,
                         ),
-                      ),
-                    ],
+                        ),
+                      ],
+                    ),
                   ),
                 ),
               ),
@@ -743,39 +753,40 @@ class _MainScreenState extends State<MainScreen> {
               left: 16,
               right: 16,
               child: Container(
-                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.72),
-                  borderRadius: BorderRadius.circular(14),
-                  border: Border.all(color: Colors.white24),
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16,
+                  vertical: 14,
+                ),
+                decoration: AppTheme.glassDecoration(
+                  borderRadius: 18,
+                  opacity: 0.75,
+                ).copyWith(
+                  border: Border.all(
+                    color: AppTheme.accentPurple.withValues(alpha: 0.3),
+                  ),
                 ),
                 child: Row(
                   children: [
-                    const Expanded(
+                    Expanded(
                       child: Text(
                         'Kết quả AI có đúng không?',
-                        style: TextStyle(color: Colors.white, fontSize: 14),
+                        style: AppTheme.bodyMedium.copyWith(
+                          color: Colors.white,
+                          fontSize: 14,
+                        ),
                       ),
+                    ),
+                    const SizedBox(width: 10),
+                    _FeedbackChip(
+                      label: 'Đúng',
+                      color: AppTheme.accentGreen,
+                      onTap: () => _submitFeedback(true),
                     ),
                     const SizedBox(width: 8),
-                    ElevatedButton(
-                      onPressed: () => _submitFeedback(true),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.green,
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size(44, 36),
-                      ),
-                      child: const Text('Đúng'),
-                    ),
-                    const SizedBox(width: 6),
-                    ElevatedButton(
-                      onPressed: () => _submitFeedback(false),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.red,
-                        foregroundColor: Colors.white,
-                        minimumSize: const Size(44, 36),
-                      ),
-                      child: const Text('Sai'),
+                    _FeedbackChip(
+                      label: 'Sai',
+                      color: AppTheme.accentRed,
+                      onTap: () => _submitFeedback(false),
                     ),
                   ],
                 ),
@@ -824,28 +835,28 @@ class _MainScreenState extends State<MainScreen> {
               child: InkWell(
                 onTap: _openSettings,
                 borderRadius: BorderRadius.circular(28),
-                child: Container(
-                  padding: const EdgeInsets.all(12),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.55),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.white.withValues(alpha: 0.18),
+              child: Container(
+                padding: const EdgeInsets.all(14),
+                decoration: BoxDecoration(
+                  color: Colors.black.withValues(alpha: 0.5),
+                  shape: BoxShape.circle,
+                  border: Border.all(
+                    color: AppTheme.accentPurple.withValues(alpha: 0.4),
+                  ),
+                  boxShadow: [
+                    BoxShadow(
+                      color: AppTheme.accentPurple.withValues(alpha: 0.3),
+                      blurRadius: 14,
+                      spreadRadius: 1,
                     ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: const Color(0xFF6C63FF).withValues(alpha: 0.28),
-                        blurRadius: 12,
-                        spreadRadius: 1,
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.settings,
-                    color: Color(0xFF00D4FF),
-                    size: 24,
-                  ),
+                  ],
                 ),
+                child: const Icon(
+                  Icons.settings_rounded,
+                  color: AppTheme.accentCyan,
+                  size: 26,
+                ),
+              ),
               ),
             ),
           ),
@@ -858,16 +869,23 @@ class _MainScreenState extends State<MainScreen> {
               onLongPressEnd: (_) => _cancelSosHold(),
               onLongPressCancel: _cancelSosHold,
               child: Container(
-                width: 68,
-                height: 68,
+                width: 70,
+                height: 70,
                 decoration: BoxDecoration(
                   shape: BoxShape.circle,
-                  color: Colors.red.shade700,
-                  border: Border.all(color: Colors.white70, width: 2),
+                  gradient: LinearGradient(
+                    begin: Alignment.topLeft,
+                    end: Alignment.bottomRight,
+                    colors: [
+                      AppTheme.accentRed,
+                      AppTheme.accentRed.withValues(alpha: 0.85),
+                    ],
+                  ),
+                  border: Border.all(color: Colors.white70, width: 2.5),
                   boxShadow: [
                     BoxShadow(
-                      color: Colors.red.withValues(alpha: 0.6),
-                      blurRadius: 16,
+                      color: AppTheme.accentRed.withValues(alpha: 0.6),
+                      blurRadius: 18,
                       spreadRadius: 2,
                     ),
                   ],
@@ -921,8 +939,8 @@ class _MainScreenState extends State<MainScreen> {
                   height: 8,
                   decoration: BoxDecoration(
                     color: _currentModeIndex == index
-                        ? const Color(0xFF6C63FF)
-                        : Colors.white54,
+                        ? AppTheme.accentPurple
+                        : AppTheme.whiteAlpha(0.5),
                     borderRadius: BorderRadius.circular(4),
                   ),
                 ),
@@ -1003,26 +1021,66 @@ class _HintChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
       decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.45),
-        borderRadius: BorderRadius.circular(14),
-        border: Border.all(color: Colors.white.withValues(alpha: 0.12)),
+        color: Colors.black.withValues(alpha: 0.5),
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(
+          color: AppTheme.accentCyan.withValues(alpha: 0.25),
+        ),
       ),
       child: Row(
         mainAxisSize: MainAxisSize.min,
         children: [
-          Icon(icon, size: 14, color: const Color(0xFF00D4FF)),
-          const SizedBox(width: 5),
+          Icon(icon, size: 16, color: AppTheme.accentCyan),
+          const SizedBox(width: 6),
           Text(
             label,
-            style: const TextStyle(
-              color: Colors.white70,
+            style: AppTheme.labelChip.copyWith(
               fontSize: 11,
-              fontWeight: FontWeight.w600,
+              color: AppTheme.whiteAlpha(0.9),
             ),
           ),
         ],
+      ),
+    );
+  }
+}
+
+class _FeedbackChip extends StatelessWidget {
+  final String label;
+  final Color color;
+  final VoidCallback onTap;
+
+  const _FeedbackChip({
+    required this.label,
+    required this.color,
+    required this.onTap,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Material(
+      color: Colors.transparent,
+      child: InkWell(
+        onTap: onTap,
+        borderRadius: BorderRadius.circular(12),
+        child: Container(
+          padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+          decoration: BoxDecoration(
+            color: color.withValues(alpha: 0.25),
+            borderRadius: BorderRadius.circular(12),
+            border: Border.all(color: color.withValues(alpha: 0.6)),
+          ),
+          child: Text(
+            label,
+            style: TextStyle(
+              color: Colors.white,
+              fontSize: 14,
+              fontWeight: FontWeight.w600,
+            ),
+          ),
+        ),
       ),
     );
   }

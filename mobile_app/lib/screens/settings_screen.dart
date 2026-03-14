@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
+import 'package:mobile_app/theme/app_theme.dart';
 import 'package:mobile_app/services/accessibility_manager.dart';
 import 'package:mobile_app/screens/login_screen.dart';
 import 'package:mobile_app/services/settings_service.dart';
@@ -52,18 +53,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0D2B),
+      backgroundColor: AppTheme.bgPrimary,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1A1A4E),
+        backgroundColor: AppTheme.bgCard,
+        elevation: 0,
         title: Text(
           AppLocalizations.t('settings_title', _language),
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: AppTheme.titleLarge,
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white, size: 32),
+          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
           onPressed: () {
             _accessibility.speak(AppLocalizations.t('back', _language));
             Navigator.pop(context);
@@ -73,17 +72,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          // --- Emergency Numbers ---
           _buildSectionTitle(
             AppLocalizations.t('settings_emergency', _language),
           ),
           const SizedBox(height: 8),
           Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(
-              color: Colors.white.withValues(alpha: 0.05),
-              borderRadius: BorderRadius.circular(12),
-            ),
+            padding: const EdgeInsets.all(16),
+            decoration: AppTheme.cardDecoration(borderRadius: 16),
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.stretch,
               children: [
@@ -106,35 +101,54 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Column(
                   crossAxisAlignment: CrossAxisAlignment.stretch,
                   children: [
-                    ElevatedButton.icon(
-                      onPressed: () => _pickContact(),
-                      icon: const Icon(Icons.contacts),
-                      label: Text(
-                        AppLocalizations.t(
-                          'settings_emergency_add_contact',
-                          _language,
+                    Material(
+                      color: Colors.transparent,
+                      child: InkWell(
+                        onTap: () => _pickContact(),
+                        borderRadius: BorderRadius.circular(14),
+                        child: Container(
+                          width: double.infinity,
+                          padding: const EdgeInsets.symmetric(vertical: 14),
+                          decoration: AppTheme.gradientButtonDecoration(),
+                          child: Row(
+                            mainAxisAlignment: MainAxisAlignment.center,
+                            children: [
+                              const Icon(Icons.contacts_rounded,
+                                  color: Colors.white, size: 22),
+                              const SizedBox(width: 10),
+                              Text(
+                                AppLocalizations.t(
+                                  'settings_emergency_add_contact',
+                                  _language,
+                                ),
+                                style: const TextStyle(
+                                  color: Colors.white,
+                                  fontSize: 16,
+                                  fontWeight: FontWeight.w600,
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFF6C63FF),
-                        foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
-                      ),
                     ),
-                    const SizedBox(height: 8),
-                    ElevatedButton.icon(
+                    const SizedBox(height: 10),
+                    OutlinedButton.icon(
                       onPressed: () => _showManualAddDialog(),
-                      icon: const Icon(Icons.dialpad),
+                      icon: const Icon(Icons.dialpad_rounded),
                       label: Text(
                         AppLocalizations.t(
                           'settings_emergency_add_manual',
                           _language,
                         ),
                       ),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: Colors.white.withValues(alpha: 0.2),
+                      style: OutlinedButton.styleFrom(
                         foregroundColor: Colors.white,
-                        padding: const EdgeInsets.symmetric(vertical: 12),
+                        side: BorderSide(
+                            color: AppTheme.accentPurple.withValues(alpha: 0.5)),
+                        padding: const EdgeInsets.symmetric(vertical: 14),
+                        shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(14)),
                       ),
                     ),
                   ],
@@ -152,9 +166,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 8),
           SliderTheme(
             data: SliderTheme.of(context).copyWith(
-              activeTrackColor: const Color(0xFF6C63FF),
-              inactiveTrackColor: Colors.white.withValues(alpha: 0.2),
-              thumbColor: const Color(0xFF00D4FF),
+              activeTrackColor: AppTheme.accentPurple,
+              inactiveTrackColor: AppTheme.whiteAlpha(0.2),
+              thumbColor: AppTheme.accentCyan,
               thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 14),
               trackHeight: 6,
             ),
@@ -209,12 +223,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   ),
                   decoration: BoxDecoration(
                     color: isSelected
-                        ? const Color(0xFF6C63FF).withValues(alpha: 0.3)
-                        : Colors.white.withValues(alpha: 0.05),
-                    borderRadius: BorderRadius.circular(12),
+                        ? AppTheme.accentPurple.withValues(alpha: 0.25)
+                        : AppTheme.whiteAlpha(0.06),
+                    borderRadius: BorderRadius.circular(14),
                     border: Border.all(
                       color: isSelected
-                          ? const Color(0xFF6C63FF)
+                          ? AppTheme.accentPurple
                           : Colors.transparent,
                       width: 2,
                     ),
@@ -223,11 +237,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     children: [
                       Icon(
                         isSelected
-                            ? Icons.radio_button_checked
-                            : Icons.radio_button_off,
+                            ? Icons.radio_button_checked_rounded
+                            : Icons.radio_button_off_rounded,
                         color: isSelected
-                            ? const Color(0xFF00D4FF)
-                            : Colors.white54,
+                            ? AppTheme.accentCyan
+                            : AppTheme.whiteAlpha(0.5),
                         size: 28,
                       ),
                       const SizedBox(width: 12),
@@ -274,9 +288,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
           const SizedBox(height: 8),
           SliderTheme(
             data: SliderTheme.of(context).copyWith(
-              activeTrackColor: const Color(0xFFFF6B6B),
-              inactiveTrackColor: Colors.white.withValues(alpha: 0.2),
-              thumbColor: const Color(0xFFFF6B6B),
+              activeTrackColor: AppTheme.accentRed,
+              inactiveTrackColor: AppTheme.whiteAlpha(0.2),
+              thumbColor: AppTheme.accentRed,
               thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 14),
               trackHeight: 6,
             ),
@@ -355,7 +369,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
 
           SizedBox(
             width: double.infinity,
-            child: ElevatedButton.icon(
+            child: OutlinedButton.icon(
               onPressed: () async {
                 await _settings.clearAuthSession();
                 _accessibility.speak(
@@ -367,12 +381,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   (route) => false,
                 );
               },
-              icon: const Icon(Icons.logout),
+              icon: const Icon(Icons.logout_rounded),
               label: Text(AppLocalizations.t('settings_logout', _language)),
-              style: ElevatedButton.styleFrom(
-                backgroundColor: Colors.redAccent.withValues(alpha: 0.2),
-                foregroundColor: Colors.white,
+              style: OutlinedButton.styleFrom(
+                foregroundColor: AppTheme.accentRed,
+                side: BorderSide(
+                    color: AppTheme.accentRed.withValues(alpha: 0.6)),
                 padding: const EdgeInsets.symmetric(vertical: 14),
+                shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(14)),
               ),
             ),
           ),
@@ -384,11 +401,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   Widget _buildSectionTitle(String title) {
     return Text(
       title,
-      style: const TextStyle(
-        color: Colors.white,
-        fontSize: 20,
-        fontWeight: FontWeight.bold,
-      ),
+      style: AppTheme.titleLarge.copyWith(fontSize: 18),
     );
   }
 
@@ -410,11 +423,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
             color: isSelected
-                ? const Color(0xFF6C63FF).withValues(alpha: 0.3)
-                : Colors.white.withValues(alpha: 0.05),
-            borderRadius: BorderRadius.circular(12),
+                ? AppTheme.accentPurple.withValues(alpha: 0.25)
+                : AppTheme.whiteAlpha(0.06),
+            borderRadius: BorderRadius.circular(14),
             border: Border.all(
-              color: isSelected ? const Color(0xFF6C63FF) : Colors.transparent,
+              color: isSelected ? AppTheme.accentPurple : Colors.transparent,
               width: 2,
             ),
           ),
@@ -439,8 +452,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       margin: const EdgeInsets.only(bottom: 8),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
       decoration: BoxDecoration(
-        color: Colors.white.withValues(alpha: 0.1),
-        borderRadius: BorderRadius.circular(8),
+        color: AppTheme.whiteAlpha(0.08),
+        borderRadius: BorderRadius.circular(12),
+        border: Border.all(color: AppTheme.whiteAlpha(0.1)),
       ),
       child: Row(
         mainAxisAlignment: MainAxisAlignment.spaceBetween,

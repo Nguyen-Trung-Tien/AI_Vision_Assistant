@@ -122,39 +122,44 @@ export default function SosPage() {
         onCancel={() => setConfirm(null)}
       />
 
-      {/* Incoming SOS Popup */}
+      {/* Incoming SOS Popup — mobile-friendly */}
       {incoming && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70">
-          <div className="bg-red-900/90 border-2 border-red-500 rounded-2xl p-8 max-w-sm w-full text-center shadow-2xl shadow-red-500/50">
-            <div className="text-5xl mb-4">🚨</div>
-            <h2 className="text-2xl font-bold text-red-300 mb-2">
+        <div
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70"
+          style={{
+            paddingTop: "max(1rem, var(--safe-top))",
+            paddingBottom: "max(1rem, var(--safe-bottom))",
+          }}
+        >
+          <div className="bg-red-900/90 border-2 border-red-500 rounded-2xl p-5 sm:p-8 max-w-sm w-full text-center shadow-2xl shadow-red-500/50">
+            <div className="text-4xl sm:text-5xl mb-3 sm:mb-4">🚨</div>
+            <h2 className="text-xl sm:text-2xl font-bold text-red-300 mb-2">
               SOS KHẨN CẤP!
             </h2>
-            <p className="text-white/80 mb-1 text-sm">
+            <p className="text-white/80 mb-1 text-sm truncate" title={incoming.userId ?? "Unknown"}>
               User: {incoming.userId ?? "Unknown"}
             </p>
-            <p className="text-white/80 mb-1 text-sm">
-              📍 {incoming.latitude?.toFixed(5)},{" "}
-              {incoming.longitude?.toFixed(5)}
+            <p className="text-white/80 mb-1 text-xs sm:text-sm break-all">
+              📍 {incoming.latitude?.toFixed(5)}, {incoming.longitude?.toFixed(5)}
             </p>
-            <p className="text-white/50 text-xs mb-6">{incoming.timestamp}</p>
+            <p className="text-white/50 text-xs mb-4 sm:mb-6">{incoming.timestamp}</p>
             {incoming.imageBase64 && (
               <img
                 src={`data:image/jpeg;base64,${incoming.imageBase64}`}
                 alt="SOS capture"
-                className="mb-4 rounded-lg w-full max-h-48 object-cover border border-red-500/40"
+                className="mb-4 rounded-lg w-full max-h-40 sm:max-h-48 object-cover border border-red-500/40"
               />
             )}
-            <div className="flex gap-3 justify-center">
+            <div className="flex flex-col sm:flex-row gap-3 justify-center">
               <button
                 onClick={() => handleAckDirect(incoming.sosId ?? incoming.id)}
-                className="px-5 py-2 rounded-xl bg-yellow-500/20 border border-yellow-500/40 text-yellow-300 text-sm font-medium hover:bg-yellow-500/30 transition-all"
+                className="min-h-[48px] px-5 py-2.5 rounded-xl bg-yellow-500/20 border border-yellow-500/40 text-yellow-300 text-sm font-medium hover:bg-yellow-500/30 active:scale-[0.98] transition-all"
               >
                 Đã nhận
               </button>
               <button
                 onClick={() => handleResolveDirect(incoming.sosId ?? incoming.id)}
-                className="px-5 py-2 rounded-xl bg-green-500/20 border border-green-500/40 text-green-300 text-sm font-medium hover:bg-green-500/30 transition-all"
+                className="min-h-[48px] px-5 py-2.5 rounded-xl bg-green-500/20 border border-green-500/40 text-green-300 text-sm font-medium hover:bg-green-500/30 active:scale-[0.98] transition-all"
               >
                 Đã xử lý
               </button>
@@ -163,17 +168,17 @@ export default function SosPage() {
         </div>
       )}
 
-      {/* Header */}
-      <div className="flex items-center justify-between">
+      {/* Header — stack trên mobile */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 sm:mb-6">
         <div>
-          <h2 className="text-2xl font-bold text-white">🚨 SOS Khẩn Cấp</h2>
+          <h2 className="text-xl sm:text-2xl font-bold text-white">🚨 SOS Khẩn Cấp</h2>
           <p className="text-white/40 text-sm mt-1">
-            Danh sách cảnh báo từ người dùng ({total} tổng)
+            Danh sách cảnh báo ({total} tổng)
           </p>
         </div>
         <button
           onClick={() => load(page)}
-          className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white/70 text-sm hover:bg-white/10 transition-all"
+          className="flex items-center justify-center min-h-[44px] px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white/70 text-sm hover:bg-white/10 active:scale-[0.98] transition-all shrink-0"
         >
           🔄 Làm mới
         </button>

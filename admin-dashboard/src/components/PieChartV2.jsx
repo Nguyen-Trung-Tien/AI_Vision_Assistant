@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { PieChart as RePieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
 import { fetchByType } from "../services/api";
 
@@ -13,8 +13,8 @@ export default function PieChartV2() {
 
   if (!data.length) {
     return (
-      <div className="bg-bg-card rounded-2xl p-6 border border-accent-purple/10 shadow-lg">
-        <div className="flex flex-col items-center justify-center h-[340px] text-white/50">
+      <div className="bg-bg-card rounded-2xl p-4 sm:p-6 border border-accent-purple/10 shadow-lg">
+        <div className="flex flex-col items-center justify-center h-[280px] sm:h-[340px] text-white/50 text-sm">
           <div className="loader-ring mb-3" />
           Đang tải dữ liệu biểu đồ
         </div>
@@ -23,7 +23,7 @@ export default function PieChartV2() {
   }
 
   return (
-    <div className="bg-bg-card rounded-2xl p-6 border border-accent-purple/10 shadow-lg hover:border-accent-purple/30 transition-all duration-300">
+    <div className="bg-bg-card rounded-2xl p-4 sm:p-6 border border-accent-purple/10 shadow-lg hover:border-accent-purple/30 transition-all duration-300">
       <h3 className="text-xs font-semibold text-white/50 uppercase tracking-widest mb-4">Phân bố theo loại nhận diện</h3>
       <ResponsiveContainer width="100%" height={300}>
         <RePieChart>

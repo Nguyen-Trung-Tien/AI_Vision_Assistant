@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_app/theme/app_theme.dart';
 import 'package:mobile_app/services/accessibility_manager.dart';
 import 'package:mobile_app/services/history_service.dart';
 import 'package:mobile_app/services/settings_service.dart';
@@ -95,18 +96,16 @@ class _HistoryScreenState extends State<HistoryScreen> {
   Widget build(BuildContext context) {
     final lang = SettingsService().language;
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0D2B),
+      backgroundColor: AppTheme.bgPrimary,
       appBar: AppBar(
-        backgroundColor: const Color(0xFF1A1A4E),
+        backgroundColor: AppTheme.bgCard,
+        elevation: 0,
         title: Text(
           AppLocalizations.t('history_title', lang),
-          style: const TextStyle(
-            color: Colors.white,
-            fontWeight: FontWeight.bold,
-          ),
+          style: AppTheme.titleLarge,
         ),
         leading: IconButton(
-          icon: const Icon(Icons.arrow_back, color: Colors.white, size: 32),
+          icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
           onPressed: () {
             _accessibility.speak(AppLocalizations.t('back', lang));
             Navigator.pop(context);
@@ -116,9 +115,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
           if (_allEntries.isNotEmpty)
             IconButton(
               icon: const Icon(
-                Icons.delete_outline,
-                color: Colors.redAccent,
-                size: 28,
+                Icons.delete_outline_rounded,
+                color: AppTheme.accentRed,
               ),
               onPressed: () async {
                 await _historyService.clearHistory();
@@ -146,7 +144,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 hintStyle: TextStyle(
                   color: Colors.white.withValues(alpha: 0.4),
                 ),
-                prefixIcon: const Icon(Icons.search, color: Color(0xFF6C63FF)),
+                prefixIcon: const Icon(Icons.search_rounded, color: AppTheme.accentPurple),
                 suffixIcon: _searchCtrl.text.isNotEmpty
                     ? IconButton(
                         icon: const Icon(Icons.clear, color: Colors.white54),
@@ -157,10 +155,14 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       )
                     : null,
                 filled: true,
-                fillColor: Colors.white.withValues(alpha: 0.07),
+                fillColor: AppTheme.whiteAlpha(0.08),
                 border: OutlineInputBorder(
-                  borderRadius: BorderRadius.circular(12),
+                  borderRadius: BorderRadius.circular(14),
                   borderSide: BorderSide.none,
+                ),
+                focusedBorder: OutlineInputBorder(
+                  borderRadius: BorderRadius.circular(14),
+                  borderSide: const BorderSide(color: AppTheme.accentCyan),
                 ),
               ),
             ),
@@ -186,21 +188,19 @@ class _HistoryScreenState extends State<HistoryScreen> {
                       setState(() => _selectedType = type);
                       _applyFilter();
                     },
-                    backgroundColor: Colors.white.withValues(alpha: 0.07),
-                    selectedColor: const Color(
-                      0xFF6C63FF,
-                    ).withValues(alpha: 0.4),
+                    backgroundColor: AppTheme.whiteAlpha(0.08),
+                    selectedColor: AppTheme.accentPurple.withValues(alpha: 0.4),
                     checkmarkColor: Colors.white,
                     labelStyle: TextStyle(
-                      color: isSelected ? Colors.white : Colors.white70,
+                      color: isSelected ? Colors.white : AppTheme.whiteAlpha(0.8),
                       fontWeight: isSelected
                           ? FontWeight.bold
                           : FontWeight.normal,
                     ),
                     side: BorderSide(
                       color: isSelected
-                          ? const Color(0xFF6C63FF)
-                          : Colors.white.withValues(alpha: 0.15),
+                          ? AppTheme.accentPurple
+                          : AppTheme.whiteAlpha(0.15),
                     ),
                   ),
                 );
@@ -261,12 +261,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
                         child: Container(
                           margin: const EdgeInsets.only(bottom: 12),
                           padding: const EdgeInsets.all(16),
-                          decoration: BoxDecoration(
-                            color: Colors.white.withValues(alpha: 0.06),
-                            borderRadius: BorderRadius.circular(12),
-                            border: Border.all(
-                              color: Colors.white.withValues(alpha: 0.1),
-                            ),
+                          decoration: AppTheme.cardDecoration(borderRadius: 14)
+                              .copyWith(
+                            color: AppTheme.bgCard.withValues(alpha: 0.9),
                           ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -276,7 +273,7 @@ class _HistoryScreenState extends State<HistoryScreen> {
                                   Text(
                                     _getTypeLabel(entry.type, lang),
                                     style: const TextStyle(
-                                      color: Color(0xFF00D4FF),
+                                      color: AppTheme.accentCyan,
                                       fontSize: 14,
                                       fontWeight: FontWeight.bold,
                                     ),

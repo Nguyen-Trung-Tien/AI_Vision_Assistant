@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:mobile_app/theme/app_theme.dart';
 import 'package:mobile_app/services/accessibility_manager.dart';
 import 'package:mobile_app/services/settings_service.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
@@ -89,7 +90,7 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      backgroundColor: const Color(0xFF0D0D1A),
+      backgroundColor: AppTheme.bgPrimary,
       body: GestureDetector(
         onDoubleTap: () {
           if (_currentPage == _getSteps(_settings.language).length - 1) {
@@ -136,13 +137,15 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                             decoration: BoxDecoration(
                               shape: BoxShape.circle,
                               gradient: const LinearGradient(
-                                colors: [Color(0xFF6C63FF), Color(0xFF9D4EDD)],
+                                colors: [
+                                  AppTheme.accentPurple,
+                                  AppTheme.accentCyan,
+                                ],
                               ),
                               boxShadow: [
                                 BoxShadow(
-                                  color: const Color(
-                                    0xFF6C63FF,
-                                  ).withValues(alpha: 0.4),
+                                  color: AppTheme.accentPurple
+                                      .withValues(alpha: 0.4),
                                   blurRadius: 30,
                                   spreadRadius: 5,
                                 ),
@@ -202,8 +205,8 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                           height: 10,
                           decoration: BoxDecoration(
                             color: _currentPage == index
-                                ? const Color(0xFF6C63FF)
-                                : Colors.white24,
+                                ? AppTheme.accentPurple
+                                : AppTheme.whiteAlpha(0.24),
                             borderRadius: BorderRadius.circular(5),
                           ),
                         ),
@@ -230,12 +233,16 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                         ),
                         decoration: BoxDecoration(
                           gradient: const LinearGradient(
-                            colors: [Color(0xFF6C63FF), Color(0xFF9D4EDD)],
+                            colors: [
+                              AppTheme.accentPurple,
+                              AppTheme.accentCyan,
+                            ],
                           ),
                           borderRadius: BorderRadius.circular(30),
                           boxShadow: [
                             BoxShadow(
-                              color: const Color(0xFF6C63FF).withValues(alpha: 0.4),
+                              color: AppTheme.accentPurple
+                                  .withValues(alpha: 0.4),
                               blurRadius: 15,
                               offset: const Offset(0, 5),
                             ),

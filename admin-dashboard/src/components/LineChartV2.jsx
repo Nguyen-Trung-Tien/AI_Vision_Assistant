@@ -1,4 +1,4 @@
-﻿import { useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from "recharts";
 import { fetchByDay } from "../services/api";
 
@@ -22,8 +22,8 @@ export default function LineChartV2() {
 
   if (!data.length) {
     return (
-      <div className="bg-bg-card rounded-2xl p-6 border border-accent-purple/10 shadow-lg">
-        <div className="flex flex-col items-center justify-center h-[340px] text-white/50">
+      <div className="bg-bg-card rounded-2xl p-4 sm:p-6 border border-accent-purple/10 shadow-lg">
+        <div className="flex flex-col items-center justify-center h-[280px] sm:h-[340px] text-white/50 text-sm">
           <div className="loader-ring mb-3" />
           Đang tải xu hướng 30 ngày
         </div>
@@ -32,7 +32,7 @@ export default function LineChartV2() {
   }
 
   return (
-    <div className="bg-bg-card rounded-2xl p-6 border border-accent-purple/10 shadow-lg hover:border-accent-purple/30 transition-all duration-300">
+    <div className="bg-bg-card rounded-2xl p-4 sm:p-6 border border-accent-purple/10 shadow-lg hover:border-accent-purple/30 transition-all duration-300">
       <h3 className="text-xs font-semibold text-white/50 uppercase tracking-widest mb-4">Lượt nhận diện theo ngày (30 ngày)</h3>
       <ResponsiveContainer width="100%" height={300}>
         <AreaChart data={data}>
