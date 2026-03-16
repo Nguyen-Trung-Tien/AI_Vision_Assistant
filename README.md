@@ -24,7 +24,7 @@
 > 🚧 **THÔNG BÁO TÌNH TRẠNG DỰ ÁN**
 >
 > - **Hiện trạng:** Dự án vẫn đang trong quá trình phát triển (In Development) và liên tục được thử nghiệm tính năng mới.
-> - **Độ chính xác AI:** Một số chức năng nhận diện AI bằng hình ảnh thỉnh thoảng sẽ đưa ra kết quả thiếu chính xác hoặc hoạt động sai logic so với mô tả. Team đang dành thời gian để khắc phục và train thêm dữ liệu.
+> - **Độ chính xác AI:** Một số chức năng nhận diện AI bằng hình ảnh thỉnh thoảng sẽ đưa ra kết quả thiếu chính xác hoặc hoạt động sai logic so với mô tả. Em đang dành thời gian để khắc phục và train thêm dữ liệu.
 > - **Môi trường chạy:** Hệ thống hiện tại **chỉ chạy được trên môi trường Local (máy tính cá nhân)**. Cấu trúc kết nối qua mạng nội bộ hoặc máy ảo Android/iOS, chưa thể cấu hình server Cloud để chạy thương mại.
 
 ---
