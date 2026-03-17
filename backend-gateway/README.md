@@ -1,98 +1,143 @@
-<p align="center">
-  <a href="http://nestjs.com/" target="blank"><img src="https://nestjs.com/img/logo-small.svg" width="120" alt="Nest Logo" /></a>
-</p>
+# Backend Gateway (NestJS)
 
-[circleci-image]: https://img.shields.io/circleci/build/github/nestjs/nest/master?token=abc123def456
-[circleci-url]: https://circleci.com/gh/nestjs/nest
+API Gateway trung tâm cho AI Vision Assistant. Nơi nhận WebSocket từ mobile, đẩy task vào RabbitMQ, lưu log, quản trị user, feedback, SOS, broadcast, heatmap và thống kê dashboard.
 
-  <p align="center">A progressive <a href="http://nodejs.org" target="_blank">Node.js</a> framework for building efficient and scalable server-side applications.</p>
-    <p align="center">
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/v/@nestjs/core.svg" alt="NPM Version" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/l/@nestjs/core.svg" alt="Package License" /></a>
-<a href="https://www.npmjs.com/~nestjscore" target="_blank"><img src="https://img.shields.io/npm/dm/@nestjs/common.svg" alt="NPM Downloads" /></a>
-<a href="https://circleci.com/gh/nestjs/nest" target="_blank"><img src="https://img.shields.io/circleci/build/github/nestjs/nest/master" alt="CircleCI" /></a>
-<a href="https://discord.gg/G7Qnnhy" target="_blank"><img src="https://img.shields.io/badge/discord-online-brightgreen.svg" alt="Discord"/></a>
-<a href="https://opencollective.com/nest#backer" target="_blank"><img src="https://opencollective.com/nest/backers/badge.svg" alt="Backers on Open Collective" /></a>
-<a href="https://opencollective.com/nest#sponsor" target="_blank"><img src="https://opencollective.com/nest/sponsors/badge.svg" alt="Sponsors on Open Collective" /></a>
-  <a href="https://paypal.me/kamilmysliwiec" target="_blank"><img src="https://img.shields.io/badge/Donate-PayPal-ff3f59.svg" alt="Donate us"/></a>
-    <a href="https://opencollective.com/nest#sponsor"  target="_blank"><img src="https://img.shields.io/badge/Support%20us-Open%20Collective-41B883.svg" alt="Support us"></a>
-  <a href="https://twitter.com/nestframework" target="_blank"><img src="https://img.shields.io/twitter/follow/nestframework.svg?style=social&label=Follow" alt="Follow us on Twitter"></a>
-</p>
-  <!--[![Backers on Open Collective](https://opencollective.com/nest/backers/badge.svg)](https://opencollective.com/nest#backer)
-  [![Sponsors on Open Collective](https://opencollective.com/nest/sponsors/badge.svg)](https://opencollective.com/nest#sponsor)-->
+---
 
-## Description
+## ✅ Chức năng chính
 
-[Nest](https://github.com/nestjs/nest) framework TypeScript starter repository.
+- JWT auth (login/register/admin login).
+- WebSocket gateway nhận frame + trả kết quả AI.
+- RabbitMQ producer/consumer bridge cho AI Worker.
+- Lưu Detection Logs, Feedback, SOS, Broadcast, Users.
+- Heatmap nguy hiểm theo thời gian.
+- API phục vụ dashboard admin.
 
-## Project setup
+---
 
-```bash
-$ npm install
-```
+## 📌 Yêu cầu môi trường
 
-## Compile and run the project
+- Node.js `v22+` và npm `v10+`
+- PostgreSQL chạy local (cổng `5433`)
+- RabbitMQ (Docker)
+
+---
+
+## ⚙️ Cài đặt & chạy
+
+### 1. Hạ tầng RabbitMQ
 
 ```bash
-# development
-$ npm run start
-
-# watch mode
-$ npm run start:dev
-
-# production mode
-$ npm run start:prod
+cd backend-gateway
+docker compose up -d
 ```
 
-## Run tests
+RabbitMQ UI: `http://localhost:15672` (guest/guest)
+
+### 2. Tạo `.env`
+
+Tạo `backend-gateway/.env`:
+
+```env
+PORT=3000
+NODE_ENV=development
+DB_HOST=127.0.0.1
+DB_PORT=5433
+DB_USER=postgres
+DB_PASS=your_password
+DB_NAME=AI_Vision_Assistant
+DB_SYNC=true
+JWT_SECRET=super_secret_key
+RABBITMQ_URL=amqp://guest:guest@127.0.0.1:5672
+# Optional: nơi lưu ảnh feedback sai để export YOLO dataset
+FEEDBACK_DATASET_DIR=
+```
+
+### 3. Chạy server
 
 ```bash
-# unit tests
-$ npm run test
-
-# e2e tests
-$ npm run test:e2e
-
-# test coverage
-$ npm run test:cov
+cd backend-gateway
+npm install
+npm run start:dev
 ```
 
-## Deployment
+Server chạy tại `http://localhost:3000`.
 
-When you're ready to deploy your NestJS application to production, there are some key steps you can take to ensure it runs as efficiently as possible. Check out the [deployment documentation](https://docs.nestjs.com/deployment) for more information.
+---
 
-If you are looking for a cloud-based platform to deploy your NestJS application, check out [Mau](https://mau.nestjs.com), our official platform for deploying NestJS applications on AWS. Mau makes deployment straightforward and fast, requiring just a few simple steps:
+## 🔌 WebSocket Events
 
-```bash
-$ npm install -g @nestjs/mau
-$ mau deploy
-```
+**Kết nối:**
+- Client cần gửi JWT trong handshake auth: `{ token: <jwt> }`
+- Sau khi connect, client gọi `join_user`.
+- Admin dashboard gọi `join_admin`.
 
-With Mau, you can deploy your application in just a few clicks, allowing you to focus on building features rather than managing infrastructure.
+**Client → Server**
+- `frame_stream`
+  ```json
+  {
+    "frame": "<base64>",
+    "task_type": "OCR|TEXT_OCR|CAPTION",
+    "lang": "vi",
+    "warning_distance_m": 2.0,
+    "latitude": 10.123,
+    "longitude": 106.123
+  }
+  ```
+- `visual_qa`
+  ```json
+  { "frame": "<base64>", "question": "Cái gì đây?" }
+  ```
+- `sos_alert`
+  ```json
+  { "latitude": 10.1, "longitude": 106.1, "imageBase64": "<base64>" }
+  ```
 
-## Resources
+**Server → Client**
+- `stream_ack` (received / throttled)
+- `ai_result` (text + audio_url + danger_alerts)
+- `danger_alert` (cảnh báo nguy hiểm realtime)
 
-Check out a few resources that may come in handy when working with NestJS:
+**Server → Admin**
+- `sos_incoming`
+- `tts_broadcast`
 
-- Visit the [NestJS Documentation](https://docs.nestjs.com) to learn more about the framework.
-- For questions and support, please visit our [Discord channel](https://discord.gg/G7Qnnhy).
-- To dive deeper and get more hands-on experience, check out our official video [courses](https://courses.nestjs.com/).
-- Deploy your application to AWS with the help of [NestJS Mau](https://mau.nestjs.com) in just a few clicks.
-- Visualize your application graph and interact with the NestJS application in real-time using [NestJS Devtools](https://devtools.nestjs.com).
-- Need help with your project (part-time to full-time)? Check out our official [enterprise support](https://enterprise.nestjs.com).
-- To stay in the loop and get updates, follow us on [X](https://x.com/nestframework) and [LinkedIn](https://linkedin.com/company/nestjs).
-- Looking for a job, or have a job to offer? Check out our official [Jobs board](https://jobs.nestjs.com).
+---
 
-## Support
+## 📬 RabbitMQ Queues
 
-Nest is an MIT-licensed open source project. It can grow thanks to the sponsors and support by the amazing backers. If you'd like to join them, please [read more here](https://docs.nestjs.com/support).
+- `ai_tasks_queue`: Gateway đẩy task AI sang Python.
+- `ai_results_queue`: AI Worker trả kết quả về Gateway.
 
-## Stay in touch
+---
 
-- Author - [Kamil Myśliwiec](https://twitter.com/kammysliwiec)
-- Website - [https://nestjs.com](https://nestjs.com/)
-- Twitter - [@nestframework](https://twitter.com/nestframework)
+## 📚 REST API chính (Dashboard)
 
-## License
+Các endpoint này phục vụ dashboard:
 
-Nest is [MIT licensed](https://github.com/nestjs/nest/blob/master/LICENSE).
+- `POST /auth/admin/login`
+- `GET /stats/overview`
+- `GET /stats/by-type`
+- `GET /stats/by-day?days=30`
+- `GET /stats/logs?page=1&limit=20`
+- `GET /sos`
+- `PATCH /sos/:id/acknowledge`
+- `PATCH /sos/:id/resolve`
+- `GET /feedback`
+- `PATCH /feedback/:id/review`
+- `GET /feedback/stats`
+- `GET /feedback/export`
+- `POST /broadcast`
+- `GET /broadcast`
+- `GET /detections/heatmap`
+- `GET /users`
+
+---
+
+## 🛠 Troubleshooting
+
+- **Không kết nối DB**: kiểm tra `DB_*` trong `.env`.
+- **Không kết nối RabbitMQ**: kiểm tra Docker và `RABBITMQ_URL`.
+- **WS bị từ chối**: JWT invalid hoặc thiếu `token` trong handshake.
+- **Rate limit**: Gateway giới hạn ~2 FPS per client.
+
