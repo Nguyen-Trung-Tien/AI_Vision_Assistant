@@ -4,7 +4,6 @@ import {
   Injectable,
   Logger,
 } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
 import { JwtService } from '@nestjs/jwt';
 import { WsException } from '@nestjs/websockets';
 import { Socket } from 'socket.io';
@@ -25,10 +24,7 @@ function readCookieToken(cookieHeader?: string): string | undefined {
 export class WsJwtGuard implements CanActivate {
   private readonly logger = new Logger(WsJwtGuard.name);
 
-  constructor(
-    private jwtService: JwtService,
-    private configService: ConfigService,
-  ) {}
+  constructor(private jwtService: JwtService) {}
 
   canActivate(context: ExecutionContext): boolean {
     try {
@@ -50,17 +46,6 @@ export class WsJwtGuard implements CanActivate {
       }
       if (!token) {
         throw new WsException('Unauthorized Access');
-      }
-
-      // Dev bypass token — only enabled when NODE_ENV !== 'production'
-      const nodeEnv = this.configService.get<string>('NODE_ENV', 'development');
-      if (nodeEnv !== 'production' && token === 'dev_bypass_token') {
-        this.logger.warn('Dev bypass token used — disable in production!');
-        (client.data as { user?: unknown }).user = {
-          sub: 999,
-          username: 'dev_user',
-        };
-        return true;
       }
 
       const payload = this.jwtService.verify<Record<string, unknown>>(token);

@@ -18,6 +18,21 @@ export class FeedbackService {
     private readonly detectionRepo: Repository<DetectionLog>,
   ) {}
 
+  private sanitizeLabel(raw?: string | null): string {
+    const text = (raw ?? '').toString().trim();
+    if (!text) return 'unknown';
+
+    let cleaned = text.replace(/[\r\n\t]+/g, ' ').trim();
+    cleaned = cleaned.replace(/\s+/g, '_');
+    cleaned = cleaned.replace(/['"]/g, '');
+    cleaned = cleaned.replace(/[^\p{L}\p{N}_-]/gu, '_');
+    cleaned = cleaned.replace(/_+/g, '_').replace(/^_+|_+$/g, '');
+
+    if (!cleaned) return 'unknown';
+    if (cleaned.length > 64) cleaned = cleaned.slice(0, 64);
+    return cleaned;
+  }
+
   private getFeedbackDatasetDir(): string {
     const envDir = process.env.FEEDBACK_DATASET_DIR;
     if (envDir) return envDir;
@@ -137,17 +152,24 @@ export class FeedbackService {
 
     const classes = new Set<string>();
     validRows.forEach(row => {
-      classes.add(row.correct_label || row.detection?.result_text || 'unknown');
+      classes.add(
+        this.sanitizeLabel(row.correct_label || row.detection?.result_text),
+      );
     });
     const classArray = Array.from(classes);
+    const classMap = new Map<string, number>();
+    classArray.forEach((name, index) => classMap.set(name, index));
     
     let yamlContent = `train: images\nval: images\n\nnc: ${classArray.length}\nnames: [`;
     yamlContent += classArray.map(c => `'${c}'`).join(', ') + `]\n`;
     archive.append(yamlContent, { name: 'data.yaml' });
 
     for (const row of validRows) {
-      const clsName = row.correct_label || row.detection?.result_text || 'unknown';
-      const classId = classArray.indexOf(clsName);
+      const clsName = this.sanitizeLabel(
+        row.correct_label || row.detection?.result_text,
+      );
+      const classId =
+        classMap.get(clsName) ?? classMap.get('unknown') ?? 0;
 
       try {
         const imageBuffer = await fs.readFile(row.image_path!);

@@ -8,13 +8,15 @@ import {
   Query,
   UseGuards,
   Request,
+  ForbiddenException,
 } from '@nestjs/common';
 import { Res } from '@nestjs/common';
 import type { Response } from 'express';
+import type { Request as ExpressRequest } from 'express';
 import { FeedbackService } from './feedback.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
-interface AuthRequest extends Request {
+interface AuthRequest extends ExpressRequest {
   user: { sub: string };
 }
 
@@ -22,6 +24,13 @@ interface AuthRequest extends Request {
 @UseGuards(JwtAuthGuard)
 export class FeedbackController {
   constructor(private readonly feedbackService: FeedbackService) {}
+
+  private ensureAdmin(req: ExpressRequest) {
+    const user = req.user as { role?: string } | undefined;
+    if (user?.role !== 'ADMIN') {
+      throw new ForbiddenException('Admin access required');
+    }
+  }
 
   @Get()
   findAll(
@@ -42,7 +51,8 @@ export class FeedbackController {
   }
 
   @Get('export')
-  exportDataset(@Res() res: Response) {
+  exportDataset(@Request() req: ExpressRequest, @Res() res: Response) {
+    this.ensureAdmin(req);
     return this.feedbackService.exportYoloDatasetZip(res);
   }
 
@@ -72,6 +82,7 @@ export class FeedbackController {
     @Request() req: AuthRequest,
     @Body() body: { correctLabel: string },
   ) {
+    this.ensureAdmin(req);
     return this.feedbackService.review(id, req.user.sub, body.correctLabel);
   }
 }

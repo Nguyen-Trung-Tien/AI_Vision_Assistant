@@ -4,6 +4,7 @@ import json
 import time
 import traceback
 from dotenv import load_dotenv
+import re
 
 from services.ai_service import AIService
 from services.tts_cache import TTSCacheService
@@ -26,6 +27,25 @@ def apply_hallucination_guard(confidence: float, text: str, lang: str = "vi") ->
     elif confidence < 0.85:
         return t("seems_like", lang, text=text)
     return text
+
+def sanitize_for_tts(text: str) -> str:
+    """Strip markdown/formatting tokens so TTS doesn't read punctuation noise."""
+    if not text:
+        return ""
+    cleaned = text
+    # Remove markdown headings and list markers
+    cleaned = re.sub(r'^\s{0,3}#{1,6}\s+', '', cleaned, flags=re.MULTILINE)
+    cleaned = re.sub(r'^\s*[-*+]\s+', '', cleaned, flags=re.MULTILINE)
+    cleaned = re.sub(r'^\s*\d+\.\s+', '', cleaned, flags=re.MULTILINE)
+    # Remove emphasis/code markers
+    cleaned = cleaned.replace("**", "")
+    cleaned = cleaned.replace("*", "")
+    cleaned = cleaned.replace("__", "")
+    cleaned = cleaned.replace("_", "")
+    cleaned = cleaned.replace("`", "")
+    # Collapse excess whitespace
+    cleaned = re.sub(r'\s+', ' ', cleaned).strip()
+    return cleaned
 
 def on_message(channel, method, properties, body):
     # Track retry count via message headers
@@ -90,8 +110,12 @@ def on_message(channel, method, properties, body):
             top_danger = danger_alerts[0]["message"]
             final_text = f"{top_danger} {final_text}"
         
-        # Post-Process: Get TTS Audio URL from Redis Cache
-        audio_url = TTSCacheService.get_audio_url(final_text, lang=lang)
+        # Post-Process: Get TTS Audio URL from Redis Cache (clean formatting)
+        # Visual QA uses on-device TTS, so skip server-side TTS to reduce latency.
+        audio_url = ""
+        if task_type != "visual_qa":
+            tts_text = sanitize_for_tts(final_text)
+            audio_url = TTSCacheService.get_audio_url(tts_text, lang=lang)
         
         print(f"[+] Task Completed! Final Result for Socket:")
         print(f"    - Text: {final_text}")

@@ -1,38 +1,60 @@
 import os
-import google.generativeai as genai
 import logging
 from typing import Optional
+
+from google import genai
+from google.genai import types
 
 logger = logging.getLogger(__name__)
 
 class GeminiService:
     def __init__(self):
-        self.api_key = os.getenv("AIzaSyBAxCnoUikb9GyqY8-yjiC8M5xbXgPcizM")
+        # Read API key from environment variable (do not hardcode secrets)
+        self.api_key = os.getenv("GEMINI_API_KEY")
         if not self.api_key:
             logger.warning("GEMINI_API_KEY is not set in environment variables.")
+            self.client = None
         else:
-            genai.configure(api_key=self.api_key)
-            # Use flash for speed
-            self.model = genai.GenerativeModel('gemini-1.5-flash')
+            # Use the new Google Gen AI SDK client
+            self.client = genai.Client(api_key=self.api_key)
+            # Use a current stable flash model; allow override via env
+            self.model = os.getenv("GEMINI_MODEL", "gemini-3-flash-preview")
             logger.info("Gemini Service initialized.")
 
     def ask_gemini_vision(self, image_bytes: bytes, question: str) -> Optional[str]:
-        if not self.api_key:
+        if not self.api_key or self.client is None:
             return "Chưa cấu hình API Key của Gemini."
 
         try:
-            # Prepare image for Gemini (using the raw bytes and mime_type)
-            image_parts = [
-                {
-                    "mime_type": "image/jpeg",
-                    "data": image_bytes
-                }
-            ]
-            
-            prompt = question if question else "Bức ảnh này có gì đặc biệt?"
+            # Prepare image for Gemini (using raw bytes and mime_type)
+            base_prompt = question if question else "Hãy mô tả bức ảnh này."
+            prompt = (
+                "Trả lời ngắn gọn 1-2 câu, không dùng markdown hay danh sách. "
+                + base_prompt
+            )
             logger.info(f"Asking Gemini: {prompt}")
 
-            response = self.model.generate_content([prompt, image_parts[0]])
+            max_tokens = os.getenv("GEMINI_MAX_OUTPUT_TOKENS")
+            config = None
+            if max_tokens:
+                try:
+                    config = types.GenerateContentConfig(
+                        max_output_tokens=int(max_tokens)
+                    )
+                except Exception:
+                    config = None
+
+            response = self.client.models.generate_content(
+                model=self.model,
+                contents=[
+                    prompt,
+                    types.Part.from_bytes(
+                        data=image_bytes,
+                        mime_type="image/jpeg",
+                    ),
+                ],
+                config=config,
+            )
             
             if response.text:
                 return response.text

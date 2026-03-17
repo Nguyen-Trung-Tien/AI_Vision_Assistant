@@ -6,12 +6,14 @@ import {
   Query,
   UseGuards,
   Request,
+  ForbiddenException,
 } from '@nestjs/common';
+import type { Request as ExpressRequest } from 'express';
 import { BroadcastService } from './broadcast.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UsersService } from '../users/users.service';
 
-interface AuthRequest extends Request {
+interface AuthRequest extends ExpressRequest {
   user: { sub: string };
 }
 
@@ -23,8 +25,20 @@ export class BroadcastController {
     private readonly usersService: UsersService,
   ) {}
 
+  private ensureAdmin(req: ExpressRequest) {
+    const user = req.user as { role?: string } | undefined;
+    if (user?.role !== 'ADMIN') {
+      throw new ForbiddenException('Admin access required');
+    }
+  }
+
   @Get()
-  findAll(@Query('page') page = 1, @Query('limit') limit = 20) {
+  findAll(
+    @Request() req: ExpressRequest,
+    @Query('page') page = 1,
+    @Query('limit') limit = 20,
+  ) {
+    this.ensureAdmin(req);
     return this.broadcastService.findAll(+page, +limit);
   }
 
@@ -39,6 +53,7 @@ export class BroadcastController {
       priority?: string;
     },
   ) {
+    this.ensureAdmin(req);
     const rawTargets = body.targetIds ?? [];
     let resolvedTargetIds = rawTargets;
 

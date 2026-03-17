@@ -82,6 +82,20 @@ class _MainScreenState extends State<MainScreen> {
     Icons.navigation,
   ];
 
+  String _sanitizeForTts(String text) {
+    var cleaned = text;
+    cleaned = cleaned.replaceAll(RegExp(r'^\s{0,3}#{1,6}\s+', multiLine: true), '');
+    cleaned = cleaned.replaceAll(RegExp(r'^\s*[-*+]\s+', multiLine: true), '');
+    cleaned = cleaned.replaceAll(RegExp(r'^\s*\d+\.\s+', multiLine: true), '');
+    cleaned = cleaned.replaceAll('**', '');
+    cleaned = cleaned.replaceAll('*', '');
+    cleaned = cleaned.replaceAll('__', '');
+    cleaned = cleaned.replaceAll('_', '');
+    cleaned = cleaned.replaceAll('`', '');
+    cleaned = cleaned.replaceAll(RegExp(r'\s+'), ' ').trim();
+    return cleaned;
+  }
+
   // Replace with a getter
   List<String> _getModes(String lang) {
     return [
@@ -138,7 +152,7 @@ class _MainScreenState extends State<MainScreen> {
       if (result['taskType'] == 'visual_qa') {
         final text = result['text']?.toString() ?? '';
         if (text.isNotEmpty) {
-          _accessibilityManager.speak(text);
+          _accessibilityManager.speak(_sanitizeForTts(text));
         }
         return;
       }

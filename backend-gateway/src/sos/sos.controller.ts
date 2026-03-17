@@ -8,11 +8,13 @@ import {
   Query,
   UseGuards,
   Request,
+  ForbiddenException,
 } from '@nestjs/common';
+import type { Request as ExpressRequest } from 'express';
 import { SosService } from './sos.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
-interface AuthRequest extends Request {
+interface AuthRequest extends ExpressRequest {
   user: { sub: string };
 }
 
@@ -20,6 +22,13 @@ interface AuthRequest extends Request {
 @UseGuards(JwtAuthGuard)
 export class SosController {
   constructor(private readonly sosService: SosService) {}
+
+  private ensureAdmin(req: ExpressRequest) {
+    const user = req.user as { role?: string } | undefined;
+    if (user?.role !== 'ADMIN') {
+      throw new ForbiddenException('Admin access required');
+    }
+  }
 
   @Get()
   findAll(@Query('page') page = 1, @Query('limit') limit = 20) {
@@ -45,11 +54,13 @@ export class SosController {
     @Request() req: AuthRequest,
     @Body() body: { note?: string },
   ) {
+    this.ensureAdmin(req);
     return this.sosService.resolve(id, req.user.sub, body.note);
   }
 
   @Patch(':id/acknowledge')
-  acknowledge(@Param('id') id: string) {
+  acknowledge(@Param('id') id: string, @Request() req: AuthRequest) {
+    this.ensureAdmin(req);
     return this.sosService.acknowledge(id);
   }
 }
