@@ -4,7 +4,7 @@ Hệ thống nhận diện cảnh báo nguy hiểm thời gian thực.
 from typing import Any
 from .translations import t, translate_label
 
-DANGER_LABELS = {"car", "motorcycle", "bus", "truck", "bicycle", "dog"}
+DANGER_LABELS = {"car", "truck", "manhole", "stairs_down", "stairs_up"}
 
 def detect_dangers(detections: list[dict[str, Any]], threshold_m: float = 2.0, lang: str = "vi") -> list[dict[str, Any]]:
     alerts = []

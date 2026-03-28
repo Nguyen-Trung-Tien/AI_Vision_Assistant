@@ -22,6 +22,10 @@ class ModelManager:
     def model_candidates(cls) -> list[Path]:
         """Danh sách đường dẫn model theo thứ tự ưu tiên."""
         return [
+            Path("runs/detect/vision_assistant_model_v3/weights/best.pt"),
+            Path("runs/detect/vision_assistant_model_v3/weights/last.pt"),
+            Path("runs/detect/vision_assistant_model_v2/weights/best.pt"),
+            Path("runs/detect/vision_assistant_model_v2/weights/last.pt"),
             Path("runs/detect/vision_assistant_model5/weights/best.pt"),
             Path("runs/detect/vision_assistant_model4/weights/best.pt"),
             Path("runs/detect/vision_assistant_model3/weights/best.pt"),

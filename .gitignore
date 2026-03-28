@@ -88,7 +88,11 @@ DerivedData/
 ai-worker/venv/
 ai-worker/runs/
 ai-worker/dataset/
+ai-worker/data_image/
 ai-worker/debug_frames/
+ai-worker/dataset_roboflow/
+ai-worker/_colab_bundle
+colab_train_bundle.zip
 ai-worker/*.pt
 ai-worker/*.onnx
 ai-worker/*.engine
@@ -110,3 +114,6 @@ ai-worker/frames/
 **/*datasheet*.png
 **/*datasheet*.webp
 .agents/
+.agents
+.agent
+ai-worker-colab.zip

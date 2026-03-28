@@ -1,6 +1,5 @@
 """
-Hằng số và dữ liệu tham chiếu cho AI Vision Assistant.
-Bao gồm: nhãn tiền, bản dịch, alias mệnh giá, dải màu HSV, đặc trưng tờ tiền.
+Constants and reference dictionaries used by AI Vision Assistant.
 """
 
 # --- Money labels ---
@@ -27,34 +26,51 @@ LABEL_TRANSLATIONS: dict[str, str] = {
     "tien_100k": "100 nghìn",
     "tien_200k": "200 nghìn",
     "tien_500k": "500 nghìn",
-    # COCO Street objects
+    # Custom trained objects
     "person": "người đi bộ",
-    "bicycle": "xe đạp",
     "car": "ô tô",
+    "truck": "xe tải",
+    "motorbike": "xe máy",
+    "chair": "ghế",
+    "manhole": "nắp cống",
+    "phone": "điện thoại",
+    "road": "đường",
+    "sidewalk": "vỉa hè",
+    "stairs_down": "cầu thang đi xuống",
+    "stairs_up": "cầu thang đi lên",
+    "water_bottle": "chai nước",
+    "money": "tiền",
+    # COCO fallback objects
+    "bicycle": "xe đạp",
     "motorcycle": "xe máy",
     "bus": "xe buýt",
-    "truck": "xe tải",
     "traffic_light": "đèn giao thông",
     "stop_sign": "biển báo dừng lại",
-    "dog": "con chó",
-    "cat": "con mèo",
     "tree": "cái cây",
     "bench": "ghế dài",
 }
 
-# --- Chiều cao trung bình (mét) của vật thể để ước tính khoảng cách ---
+# --- Average object heights (meters) for rough distance estimation ---
 OBJECT_REAL_HEIGHTS: dict[str, float] = {
     "person": 1.7,
     "car": 1.5,
     "motorcycle": 1.1,
+    "motorbike": 1.1,
     "bus": 3.0,
     "truck": 2.5,
     "traffic_light": 2.5,
     "stop_sign": 2.0,
     "bicycle": 1.0,
+    "chair": 0.9,
+    "manhole": 0.1,
+    "phone": 0.15,
+    "water_bottle": 0.25,
+    "stairs_down": 0.5,
+    "stairs_up": 0.5,
+    "money": 0.07,
 }
 
-# --- Alias mệnh giá tiền ---
+# --- Money denomination aliases ---
 DENOMINATION_ALIASES: dict[str, set[str]] = {
     "200": {
         "200d", "200", "tien_200d", "tien200d", "hai_tram",
@@ -100,18 +116,18 @@ DENOMINATION_ALIASES: dict[str, set[str]] = {
     },
 }
 
-# --- Dải màu HSV cho các mệnh giá polymer VNĐ ---
+# --- HSV ranges for VN polymer banknotes ---
 # OpenCV HSV: H: 0-180, S: 0-255, V: 0-255
 COLOR_RANGES: dict[str, dict[str, tuple[int, int]]] = {
-    "10000": {"h": (10, 30), "s": (50, 255)},     # Vàng nâu
-    "20000": {"h": (100, 130), "s": (50, 255)},    # Xanh dương
-    "50000": {"h": (140, 175), "s": (40, 255)},    # Hồng/Tím
-    "100000": {"h": (40, 90), "s": (40, 255)},     # Xanh lá
-    "200000": {"h": (0, 20), "s": (60, 255)},      # Đỏ cam / Nâu đỏ
-    "500000": {"h": (85, 105), "s": (60, 255)},    # Xanh lơ (Cyan)
+    "10000": {"h": (10, 30), "s": (50, 255)},    # Yellow-brown
+    "20000": {"h": (100, 130), "s": (50, 255)},  # Blue
+    "50000": {"h": (140, 175), "s": (40, 255)},  # Pink/Purple
+    "100000": {"h": (40, 90), "s": (40, 255)},   # Green
+    "200000": {"h": (0, 20), "s": (60, 255)},    # Red-Orange/Brown
+    "500000": {"h": (85, 105), "s": (60, 255)},  # Cyan
 }
 
-# --- Đặc trưng (danh lam thắng cảnh) trên mỗi mệnh giá ---
+# --- Landmark cues printed on denominations ---
 DENOMINATION_FEATURES: dict[str, str] = {
     "10000": "mỏ dầu Bạch Hổ",
     "20000": "Chùa Cầu (Hội An)",

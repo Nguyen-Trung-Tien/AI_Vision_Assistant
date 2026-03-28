@@ -1,6 +1,5 @@
 """
-Multi-language translations cho AI Vision Assistant.
-Hỗ trợ vi (Việt) và en (English).
+Multi-language translations for AI Vision Assistant.
 """
 
 TRANSLATIONS: dict[str, dict[str, str]] = {
@@ -33,10 +32,8 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "position_front": "Phía trước",
         "has_objects": "{pos} có {objects}",
         "approx_distance": " cách khoảng {dist} mét",
-        # Danger
         "danger_warning": "Cảnh báo! {label} ở {position}, cách khoảng {distance} mét!",
         "danger_stop": "Dừng lại! Có {label} rất gần phía trước!",
-        # Hallucination guard
         "maybe_blurry": "Hình như hơi mờ, nhưng có vẻ là: {text}",
         "seems_like": "Có vẻ như là: {text}",
     },
@@ -69,10 +66,8 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "position_front": "Ahead",
         "has_objects": "{pos}: {objects}",
         "approx_distance": " approximately {dist} meters away",
-        # Danger
         "danger_warning": "Warning! {label} {position}, approximately {distance} meters away!",
         "danger_stop": "Stop! {label} very close ahead!",
-        # Hallucination guard
         "maybe_blurry": "Image seems blurry, but it looks like: {text}",
         "seems_like": "It seems to be: {text}",
     },
@@ -81,20 +76,56 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
 # Label translations per language
 LABEL_TRANSLATIONS_MULTI: dict[str, dict[str, str]] = {
     "vi": {
-        "nguoi": "người", "o_to": "ô tô", "xe_may": "xe máy",
+        "nguoi": "người",
+        "o_to": "ô tô",
+        "xe_may": "xe máy",
         "xe_khach_tai": "xe khách hoặc xe tải",
-        "person": "người đi bộ", "bicycle": "xe đạp", "car": "ô tô",
-        "motorcycle": "xe máy", "bus": "xe buýt", "truck": "xe tải",
-        "traffic_light": "đèn giao thông", "stop_sign": "biển báo dừng lại",
-        "dog": "con chó", "cat": "con mèo", "tree": "cái cây", "bench": "ghế dài",
+        "person": "người đi bộ",
+        "car": "ô tô",
+        "truck": "xe tải",
+        "motorbike": "xe máy",
+        "chair": "ghế",
+        "manhole": "nắp cống",
+        "phone": "điện thoại",
+        "road": "đường",
+        "sidewalk": "vỉa hè",
+        "stairs_down": "cầu thang đi xuống",
+        "stairs_up": "cầu thang đi lên",
+        "water_bottle": "chai nước",
+        "money": "tiền",
+        "bicycle": "xe đạp",
+        "motorcycle": "xe máy",
+        "bus": "xe buýt",
+        "traffic_light": "đèn giao thông",
+        "stop_sign": "biển báo dừng lại",
+        "tree": "cái cây",
+        "bench": "ghế dài",
     },
     "en": {
-        "nguoi": "person", "o_to": "car", "xe_may": "motorbike",
+        "nguoi": "person",
+        "o_to": "car",
+        "xe_may": "motorbike",
         "xe_khach_tai": "bus or truck",
-        "person": "pedestrian", "bicycle": "bicycle", "car": "car",
-        "motorcycle": "motorcycle", "bus": "bus", "truck": "truck",
-        "traffic_light": "traffic light", "stop_sign": "stop sign",
-        "dog": "dog", "cat": "cat", "tree": "tree", "bench": "bench",
+        "person": "pedestrian",
+        "car": "car",
+        "truck": "truck",
+        "motorbike": "motorbike",
+        "chair": "chair",
+        "manhole": "manhole",
+        "phone": "phone",
+        "road": "road",
+        "sidewalk": "sidewalk",
+        "stairs_down": "stairs down",
+        "stairs_up": "stairs up",
+        "water_bottle": "water bottle",
+        "money": "money",
+        "bicycle": "bicycle",
+        "motorcycle": "motorcycle",
+        "bus": "bus",
+        "traffic_light": "traffic light",
+        "stop_sign": "stop sign",
+        "tree": "tree",
+        "bench": "bench",
     },
 }
 

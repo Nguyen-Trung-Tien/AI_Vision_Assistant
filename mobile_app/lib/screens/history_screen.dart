@@ -144,7 +144,10 @@ class _HistoryScreenState extends State<HistoryScreen> {
                 hintStyle: TextStyle(
                   color: Colors.white.withValues(alpha: 0.4),
                 ),
-                prefixIcon: const Icon(Icons.search_rounded, color: AppTheme.accentPurple),
+                prefixIcon: const Icon(
+                  Icons.search_rounded,
+                  color: AppTheme.accentPurple,
+                ),
                 suffixIcon: _searchCtrl.text.isNotEmpty
                     ? IconButton(
                         icon: const Icon(Icons.clear, color: Colors.white54),
@@ -192,7 +195,9 @@ class _HistoryScreenState extends State<HistoryScreen> {
                     selectedColor: AppTheme.accentPurple.withValues(alpha: 0.4),
                     checkmarkColor: Colors.white,
                     labelStyle: TextStyle(
-                      color: isSelected ? Colors.white : AppTheme.whiteAlpha(0.8),
+                      color: isSelected
+                          ? Colors.white
+                          : AppTheme.whiteAlpha(0.8),
                       fontWeight: isSelected
                           ? FontWeight.bold
                           : FontWeight.normal,
@@ -263,8 +268,8 @@ class _HistoryScreenState extends State<HistoryScreen> {
                           padding: const EdgeInsets.all(16),
                           decoration: AppTheme.cardDecoration(borderRadius: 14)
                               .copyWith(
-                            color: AppTheme.bgCard.withValues(alpha: 0.9),
-                          ),
+                                color: AppTheme.bgCard.withValues(alpha: 0.9),
+                              ),
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
                             children: [
