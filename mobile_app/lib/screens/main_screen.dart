@@ -611,6 +611,10 @@ class _MainScreenState extends State<MainScreen> {
     _sosHoldCompleteTimer?.cancel();
     if (!mounted) return;
 
+    // Phản hồi rung 3 lần ngay khi bắt đầu nhấn giữ (kéo dài ~1.7 giây) 
+    // để tạo cảm giác thực hiện cầu cứu
+    _accessibilityManager.triggerSOSVibration();
+
     final startedAt = DateTime.now();
     setState(() => _sosHoldProgress = 0);
     _sosHoldProgressTimer = Timer.periodic(const Duration(milliseconds: 100), (_) {
@@ -632,6 +636,7 @@ class _MainScreenState extends State<MainScreen> {
   void _cancelSosHold() {
     _sosHoldProgressTimer?.cancel();
     _sosHoldCompleteTimer?.cancel();
+    _accessibilityManager.stopVibration();
     if (!mounted) return;
     setState(() => _sosHoldProgress = 0);
   }

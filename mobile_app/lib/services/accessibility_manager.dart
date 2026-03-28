@@ -46,6 +46,13 @@ class AccessibilityManager {
     await flutterTts.stop();
   }
 
+  Future<void> stopVibration() async {
+    bool? hasVibrator = await Vibration.hasVibrator();
+    if (hasVibrator == true) {
+      Vibration.cancel();
+    }
+  }
+
   // ─── Haptic Patterns ───
 
   Future<void> triggerDangerVibration(double distance) async {
