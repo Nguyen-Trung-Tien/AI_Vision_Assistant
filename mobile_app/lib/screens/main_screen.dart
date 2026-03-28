@@ -849,39 +849,6 @@ class _MainScreenState extends State<MainScreen> {
               ),
             ),
 
-          Positioned(
-            bottom: 74,
-            left: 0,
-            right: 0,
-            child: Wrap(
-              alignment: WrapAlignment.center,
-              spacing: 8,
-              runSpacing: 8,
-              children: [
-                _HintChip(
-                  icon: Icons.touch_app,
-                  label: AppLocalizations.t(
-                    'main_hint_double_tap',
-                    _settings.language,
-                  ),
-                ),
-                _HintChip(
-                  icon: Icons.mic,
-                  label: AppLocalizations.t(
-                    'main_hint_hold',
-                    _settings.language,
-                  ),
-                ),
-                _HintChip(
-                  icon: Icons.swipe,
-                  label: AppLocalizations.t(
-                    'main_hint_swipe',
-                    _settings.language,
-                  ),
-                ),
-              ],
-            ),
-          ),
 
           Positioned(
             bottom: 130,
@@ -1068,40 +1035,7 @@ class _MainScreenState extends State<MainScreen> {
   }
 }
 
-class _HintChip extends StatelessWidget {
-  final IconData icon;
-  final String label;
 
-  const _HintChip({required this.icon, required this.label});
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
-      decoration: BoxDecoration(
-        color: Colors.black.withValues(alpha: 0.5),
-        borderRadius: BorderRadius.circular(16),
-        border: Border.all(
-          color: AppTheme.accentCyan.withValues(alpha: 0.25),
-        ),
-      ),
-      child: Row(
-        mainAxisSize: MainAxisSize.min,
-        children: [
-          Icon(icon, size: 16, color: AppTheme.accentCyan),
-          const SizedBox(width: 6),
-          Text(
-            label,
-            style: AppTheme.labelChip.copyWith(
-              fontSize: 11,
-              color: AppTheme.whiteAlpha(0.9),
-            ),
-          ),
-        ],
-      ),
-    );
-  }
-}
 
 class _FeedbackChip extends StatelessWidget {
   final String label;
