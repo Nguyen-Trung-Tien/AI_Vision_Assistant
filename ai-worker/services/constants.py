@@ -40,6 +40,15 @@ LABEL_TRANSLATIONS: dict[str, str] = {
     "stairs_up": "cầu thang đi lên",
     "water_bottle": "chai nước",
     "money": "tiền",
+    "male": "người nam",
+    "female": "người nữ",
+    "plastic_bottle": "chai nhựa",
+    "glass_bottle": "chai thủy tinh",
+    "pothole": "ổ gà hoặc ổ voi",
+    "open_manhole": "nắp cống đang mở",
+    "traffic_light_red": "đèn đỏ",
+    "traffic_light_yellow": "đèn vàng",
+    "traffic_light_green": "đèn xanh",
     # COCO fallback objects
     "bicycle": "xe đạp",
     "motorcycle": "xe máy",
@@ -68,6 +77,15 @@ OBJECT_REAL_HEIGHTS: dict[str, float] = {
     "stairs_down": 0.5,
     "stairs_up": 0.5,
     "money": 0.07,
+    "male": 1.7,
+    "female": 1.6,
+    "plastic_bottle": 0.25,
+    "glass_bottle": 0.25,
+    "pothole": 0.0,
+    "open_manhole": 0.0,
+    "traffic_light_red": 0.5,
+    "traffic_light_yellow": 0.5,
+    "traffic_light_green": 0.5,
 }
 
 # --- Money denomination aliases ---

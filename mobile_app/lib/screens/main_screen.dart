@@ -10,6 +10,7 @@ import 'package:mobile_app/screens/settings_screen.dart';
 import 'package:mobile_app/services/accessibility_manager.dart';
 import 'package:mobile_app/services/edge_ai_service.dart';
 import 'package:mobile_app/services/feedback_service.dart';
+import 'package:mobile_app/services/document_reader_service.dart';
 import 'package:mobile_app/services/light_sensor_service.dart';
 import 'package:mobile_app/services/ml_kit_service.dart';
 import 'package:mobile_app/services/navigation_service.dart';
@@ -40,6 +41,7 @@ class MainScreen extends StatefulWidget {
 class _MainScreenState extends State<MainScreen> {
   late WebSocketService _wsService;
   late EdgeAIService _aiService;
+  final DocumentReaderService _documentReaderService = DocumentReaderService();
   final AccessibilityManager _accessibilityManager = AccessibilityManager();
   final MlKitService _mlKitService = MlKitService();
   late VoiceCommandService _voiceCommandService;
@@ -80,6 +82,7 @@ class _MainScreenState extends State<MainScreen> {
     Icons.document_scanner,
     Icons.landscape,
     Icons.navigation,
+    Icons.folder_open,
   ];
 
   String _sanitizeForTts(String text) {
@@ -104,6 +107,7 @@ class _MainScreenState extends State<MainScreen> {
       AppLocalizations.t('mode_2', lang),
       AppLocalizations.t('mode_3', lang),
       AppLocalizations.t('mode_4', lang),
+      AppLocalizations.t('mode_5', lang),
     ];
   }
 
@@ -297,6 +301,8 @@ class _MainScreenState extends State<MainScreen> {
     ])) {
       _goToMode(4);
       _openNavigationScreen();
+    } else if (TextUtils.containsAny(cmd, ['doc tep', 'mo file', 'doc file', 'mo tep', 'open file', 'read file'])) {
+      _goToMode(5);
     } else if (TextUtils.containsAny(cmd, ['tong hop', 'tien', 'general', 'money'])) {
       _goToMode(0);
     } else {
@@ -425,11 +431,42 @@ class _MainScreenState extends State<MainScreen> {
         _navigationService.startNavigation();
         _openNavigationScreen();
         break;
+      case 5:
+        _pickAndReadFile();
+        break;
     }
   }
 
   void _handleLongPress() {
     _voiceCommandService.startListening();
+  }
+
+  Future<void> _pickAndReadFile() async {
+    final lang = _settings.language;
+    _accessibilityManager.speak(AppLocalizations.t('main_reading_file', lang));
+    
+    try {
+      final text = await _documentReaderService.pickAndExtractText();
+      if (text == null) {
+        // User canceled
+        return;
+      }
+      
+      if (text.isEmpty) {
+        _accessibilityManager.speak(AppLocalizations.t('main_file_empty', lang));
+        return;
+      }
+      
+      // Speak the text
+      _accessibilityManager.speak(_sanitizeForTts(text));
+    } catch (e) {
+      debugPrint('Lỗi đọc file: $e');
+      if (e.toString().contains('Unsupported format')) {
+        _accessibilityManager.speak(AppLocalizations.t('main_file_unsupported', lang));
+      } else {
+        _accessibilityManager.speak(AppLocalizations.t('main_file_error', lang));
+      }
+    }
   }
 
   Future<void> _startVisualQA(BuildContext context) async {

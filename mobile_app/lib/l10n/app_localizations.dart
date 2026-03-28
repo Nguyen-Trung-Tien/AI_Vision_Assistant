@@ -95,6 +95,11 @@ class AppLocalizations {
     },
     'mode_4': {'vi': 'Chỉ hướng', 'en': 'Navigation'},
     'mode_4_spoken': {'vi': 'Chế độ chỉ hướng', 'en': 'Navigation mode'},
+    'mode_5': {'vi': 'Đọc tệp', 'en': 'Read File'},
+    'mode_5_spoken': {
+      'vi': 'Chế độ đọc tệp từ bộ nhớ',
+      'en': 'Local file reading mode',
+    },
 
     // --- Main Screen UI ---
     'main_offline': {'vi': 'Offline', 'en': 'Offline'},
@@ -147,6 +152,22 @@ class AppLocalizations {
     'main_offline_error': {
       'vi': 'Lỗi nhận diện offline.',
       'en': 'Offline detection error.',
+    },
+    'main_reading_file': {
+      'vi': 'Đang đọc nội dung tệp...',
+      'en': 'Reading file content...',
+    },
+    'main_file_empty': {
+      'vi': 'Không tìm thấy văn bản nào trong tệp.',
+      'en': 'No text found in the file.',
+    },
+    'main_file_error': {
+      'vi': 'Có lỗi xảy ra khi mở tệp.',
+      'en': 'An error occurred while opening the file.',
+    },
+    'main_file_unsupported': {
+      'vi': 'Định dạng tệp chưa được hỗ trợ.',
+      'en': 'File format not supported.',
     },
 
     // --- Edge AI AI Service ---

@@ -52,6 +52,8 @@ dependencies:
   http: ^1.6.0
   flutter_map: ^7.0.2
   latlong2: ^0.9.1
+  file_picker: ^10.3.10
+  syncfusion_flutter_pdf: ^33.1.45
 
 dev_dependencies:
   flutter_test:

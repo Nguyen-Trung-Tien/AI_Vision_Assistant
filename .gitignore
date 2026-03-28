@@ -88,7 +88,7 @@ DerivedData/
 ai-worker/venv/
 ai-worker/runs/
 ai-worker/dataset/
-ai-worker/data_image/
+ai-worker/dataset_image/
 ai-worker/debug_frames/
 ai-worker/dataset_roboflow/
 ai-worker/_colab_bundle

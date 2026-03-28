@@ -34,6 +34,9 @@ class SosService {
     _isCounting = true;
     int remaining = countdownSeconds;
 
+    // Phản hồi rung 3 lần ngay khi vừa nhấn nút SOS
+    _accessibilityManager.triggerSOSVibration();
+
     _accessibilityManager.speak(
       AppLocalizations.t(
         'sos_countdown',
