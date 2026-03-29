@@ -22,18 +22,35 @@ CANONICAL_CLASSES = [
     "tien_10k",         # 14
     "tien_20k",         # 15
     "tien_50k",         # 16
-    "tien_100k",        # 17
-    "tien_200k",        # 18
-    "tien_500k",        # 19
-    "motorbike",        # 20
-    "bus",              # 21
-    "plastic_bottle",   # 22
-    "glass_bottle",     # 23
-    "pothole",          # 24
-    "open_manhole",     # 25
-    "traffic_light_red",    # 26
-    "traffic_light_yellow", # 27
-    "traffic_light_green",  # 28
+    "tien_100k",
+    "tien_200k",
+    "tien_500k",        # 17
+    "motorbike",        # 18
+    "bus",              # 19
+    "pothole",          # 20
+    "open_manhole",     # 21
+    "traffic_light_red",    # 22
+    "traffic_light_yellow", # 23
+    "traffic_light_green",  # 24
+    # New classes (separate "noise"/extra labels)
+    "crosswalk_line",          # 25
+    "crosswalk_marker",        # 26
+    "crosswalk_meta",          # 27
+    "flood",                   # 28
+    "off_street",              # 29
+    "obstacle",                # 30
+    "roadway",                 # 31
+    "alligator_crack",         # 32
+    "lateral_crack",           # 33
+    "longitudinal_crack",      # 34
+    "surface_defect",          # 35
+    "vehicle_generic",         # 36
+    "foam",                    # 37
+    "pastry_bag_plastic",      # 38
+    "straw",                   # 39
+    "traffic_light_rear",      # 40
+    "traffic_light_bottom_view",# 41
+    "traffic_light_side_view", # 42
 ]
 
 VND_MAP = {
@@ -58,14 +75,6 @@ VND_MAP = {
     # 100k
     "100k": "tien_100k", "100000": "tien_100k", "100_000": "tien_100k", "100000_vnd": "tien_100k", "100000v": "tien_100k", "100kvnd": "tien_100k",
     "100k_vnd": "tien_100k", "tien_100k": "tien_100k", "tien100k": "tien_100k", "100000vnđ": "tien_100k",
-    # 200k
-    "200k": "tien_200k", "200000": "tien_200k", "200_000": "tien_200k", "200000_vnd": "tien_200k", "200000v": "tien_200k", "200kvnd": "tien_200k",
-    "200k_vnd": "tien_200k", "tien_200k": "tien_200k", "tien200k": "tien_200k", "200000vnđ": "tien_200k",
-    # 500k
-    "500k": "tien_500k", "500000": "tien_500k", "500_000": "tien_500k", "500000_vnd": "tien_500k", "500000v": "tien_500k", "500kvnd": "tien_500k",
-    "500k_vnd": "tien_500k", "tien_500k": "tien_500k", "tien500k": "tien_500k", "500000vnđ": "tien_500k",
-    # Generic money
-    "money": "money", "tien": "money", "banknote": "money", "tien_vn": "money", "vnd": "money", "vnđ": "money",
     # Vehicles
     "motorbike": "motorbike", "motorcycle": "motorbike", "xe_may": "motorbike", "xe may": "motorbike", "xemay": "motorbike",
     "bus": "bus", "xe_khach": "bus", "xe khach": "bus", "coach": "bus", "xe_bus": "bus", "xe_buyt": "bus",
@@ -75,21 +84,26 @@ VND_MAP = {
     "male": "person", "nam": "person", "nguoi_nam": "person", "nguoi nam": "person", "man": "person", "boy": "person",
     "female": "person", "nu": "person", "nguoi_nu": "person", "nguoi nu": "person", "woman": "person", "girl": "person",
     "person": "person", "nguoi": "person", "human": "person",
-    # Bottles
-    "plastic_bottle": "plastic_bottle", "chai_nhua": "plastic_bottle", "chai nhua": "plastic_bottle",
-    "glass_bottle": "glass_bottle", "chai_thuy_tinh": "glass_bottle", "chai thuy tinh": "glass_bottle", "chai_thuỷ_tinh": "glass_bottle",
+    # Bottles (dropped: plastic_bottle, glass_bottle)
     # Hazards
     "pothole": "pothole", "o_ga": "pothole", "o_voi": "pothole", "o ga": "pothole", "o voi": "pothole", "ổ gà": "pothole", "ổ voi": "pothole",
     "open_manhole": "open_manhole", "nap_cong_mo": "open_manhole", "nap cong mo": "open_manhole", "nắp cống mở": "open_manhole", "nắp cống đang mở": "open_manhole",
     "manhole": "manhole", "nap_cong": "manhole", "nap cong": "manhole", "nắp cống": "manhole",
     # Default objects
     "chair": "chair", "ghe": "chair", "ghế": "chair",
+    "chair - v2 v1": "chair",
     "phone": "phone", "dien_thoai": "phone", "điện thoại": "phone", "smartphone": "phone",
+    "cell-phone": "phone", "-phone-": "phone",
     "water_bottle": "water_bottle", "chai_nuoc": "water_bottle", "chai nước": "water_bottle",
     "road": "road", "duong": "road", "đường": "road",
+    "street": "roadway",
     "sidewalk": "sidewalk", "vi_he": "sidewalk", "vỉa hè": "sidewalk",
+    "sidewalk_structure": "sidewalk", "walkable_path": "sidewalk",
     "stairs_down": "stairs_down", "cau_thang_xuong": "stairs_down",
     "stairs_up": "stairs_up", "cau_thang_len": "stairs_up",
+    "stairsdown": "stairs_down", "downstair": "stairs_down", "stairs down": "stairs_down",
+    "stairsup": "stairs_up", "upstair": "stairs_up", "stairs up": "stairs_up",
+    "stairs": "stairs_up",
     # Traffic Lights
     "traffic_light_red": "traffic_light_red", "đèn đỏ": "traffic_light_red", "den_do": "traffic_light_red", "red_light": "traffic_light_red", "đèn giao thông đỏ": "traffic_light_red", "red": "traffic_light_red",
     "traffic light red": "traffic_light_red", "traffic light red and yellow": "traffic_light_red",
@@ -100,6 +114,48 @@ VND_MAP = {
     "traffic_light_green": "traffic_light_green", "đèn xanh": "traffic_light_green", "den_xanh": "traffic_light_green", "green_light": "traffic_light_green", "đèn giao thông xanh": "traffic_light_green", "green": "traffic_light_green",
     "traffic light green": "traffic_light_green", "traffic light green turn left": "traffic_light_green", "traffic light green turn right": "traffic_light_green",
     "traffic light green and turn left": "traffic_light_green", "traffic light green go straight": "traffic_light_green", "traffic light red yellow and green": "traffic_light_green",
+
+    # Trash (plastic/glass removed)
+    "foam": "foam", "pastry_bag": "pastry_bag_plastic", "straw": "straw",
+
+    # Vehicles variants
+    "truckrotation": "truck",
+
+    # Crosswalk dataset junk labels -> separated classes
+    "-": "crosswalk_line",
+    "crosswalk identifier - v10 80-10-10 pt2": "crosswalk_marker",
+    "this dataset was exported via roboflow.com on december 12- 2023 at 12-06 pm gmt": "crosswalk_meta",
+
+    # Street segmentation extra labels
+    "flood": "flood",
+    "non street": "off_street",
+    "obstacle": "obstacle",
+    "ngap": "flood", "ngập": "flood", "ngap nuoc": "flood", "ngập nước": "flood", "lut": "flood", "lụt": "flood",
+    "ngoai duong": "off_street", "ngoài đường": "off_street",
+    "chuong ngai vat": "obstacle", "chướng ngại vật": "obstacle", "vat can": "obstacle", "vật cản": "obstacle",
+
+    # Cracks dataset labels
+    "alligator cracks": "alligator_crack",
+    "lateral cracks": "lateral_crack",
+    "longitudinal cracks": "longitudinal_crack",
+    "nut da ca sau": "alligator_crack", "nứt da cá sấu": "alligator_crack",
+    "nut ngang": "lateral_crack", "nứt ngang": "lateral_crack",
+    "nut doc": "longitudinal_crack", "nứt dọc": "longitudinal_crack",
+
+    # Sidewalk dataset extra labels
+    "surface_damage": "surface_defect",
+    "vehicle": "vehicle_generic",
+    "hu hong be mat": "surface_defect", "hư hỏng bề mặt": "surface_defect",
+    "phuong tien": "vehicle_generic", "phương tiện": "vehicle_generic",
+
+    # Traffic light view labels
+    "traffic light back": "traffic_light_rear",
+    "traffic light bottom view": "traffic_light_bottom_view",
+    "traffic light side view": "traffic_light_side_view",
+    "traffic light sdie view": "traffic_light_side_view",
+    "den giao thong mat sau": "traffic_light_rear", "đèn giao thông mặt sau": "traffic_light_rear",
+    "den giao thong nhin tu duoi": "traffic_light_bottom_view", "đèn giao thông nhìn từ dưới": "traffic_light_bottom_view",
+    "den giao thong nhin nghieng": "traffic_light_side_view", "đèn giao thông nhìn nghiêng": "traffic_light_side_view",
 }
 
 def map_label(old_label_name):
@@ -190,14 +246,15 @@ def merge_datasets(source_dir, target_dir):
             print(f"Copied {copied_files} valid images and labels for split '{split}' -> '{target_split}'")
 
     print("\n--- Updating target data.yaml ---")
-    with open(target_path / "data.yaml", "w") as f:
-        f.write(f"path: {target_path.absolute()}\n")
+    with open(target_path / "data.yaml", "w", encoding="utf-8") as f:
+        f.write("path: .\n")
         f.write("train: train/images\n")
         f.write("val: val/images\n")
         f.write("test: test/images\n\n")
+        f.write(f"nc: {len(CANONICAL_CLASSES)}\n")
         f.write("names:\n")
-        for i, name in enumerate(CANONICAL_CLASSES):
-            f.write(f"  {i}: {name}\n")
+        for name in CANONICAL_CLASSES:
+            f.write(f"  - {name}\n")
     
     print("Done! Target dataset is ready for training.")
 

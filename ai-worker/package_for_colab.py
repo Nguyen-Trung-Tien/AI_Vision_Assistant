@@ -90,8 +90,7 @@ def main() -> None:
     args = parser.parse_args()
 
     here = Path(__file__).resolve().parent
-    repo_root = here.parent
-    output_zip = Path(args.output) if args.output else repo_root / "colab_train_bundle.zip"
+    output_zip = Path(args.output) if args.output else here / "colab_train_bundle.zip"
 
     build_bundle(
         output_zip=output_zip,
