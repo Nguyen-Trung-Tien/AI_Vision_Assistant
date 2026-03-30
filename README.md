@@ -765,7 +765,7 @@ Dashboard quản trị cung cấp các trang:
 [![Email](https://img.shields.io/badge/Email-trungtiennguyen910%40gmail.com-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:trungtiennguyen910@gmail.com)
 [![GitHub](https://img.shields.io/badge/GitHub-Nguyen--Trung--Tien-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Nguyen-Trung-Tien)
 
-*Đồ án tốt nghiệp — Đại học Giao thông Vận tải TP. Hồ Chí Minh (UT)*
+*Đồ án tốt nghiệp — Đại học Giao thông Vận tải TP. Hồ Chí Minh (UTH)*
 
 </div>
 
