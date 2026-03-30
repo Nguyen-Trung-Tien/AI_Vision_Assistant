@@ -1,115 +1,430 @@
-﻿<div align="center">
+<div align="center">
 
 # 👁️ AI Vision Assistant
 
-**Hệ thống trợ lý thị giác cho người suy giảm thị lực bằng AI**
+### Hệ thống trợ lý thị giác thời gian thực cho người suy giảm thị lực
 
-![Flutter](https://img.shields.io/badge/Flutter-02569B?logo=flutter&logoColor=white)
-![NestJS](https://img.shields.io/badge/NestJS-E0234E?logo=nestjs&logoColor=white)
-![FastAPI](https://img.shields.io/badge/FastAPI-005571?logo=fastapi)
-![React](https://img.shields.io/badge/React-20232A?logo=react&logoColor=61DAFB)
-![RabbitMQ](https://img.shields.io/badge/RabbitMQ-FF6600?logo=rabbitmq&logoColor=white)
-![PostgreSQL](https://img.shields.io/badge/PostgreSQL-4169E1?logo=postgresql&logoColor=white)
+*Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo nguy hiểm, điều hướng GPS và phản hồi bằng giọng nói tiếng Việt*
+
+<br/>
+
+![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white&style=for-the-badge)
+![NestJS](https://img.shields.io/badge/NestJS-11-E0234E?logo=nestjs&logoColor=white&style=for-the-badge)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-005571?logo=fastapi&style=for-the-badge)
+![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white&style=for-the-badge)
+![React](https://img.shields.io/badge/React-19-20232A?logo=react&logoColor=61DAFB&style=for-the-badge)
+
+![RabbitMQ](https://img.shields.io/badge/RabbitMQ-3.x-FF6600?logo=rabbitmq&logoColor=white&style=for-the-badge)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white&style=for-the-badge)
+![Redis](https://img.shields.io/badge/Redis-7.x-DC382D?logo=redis&logoColor=white&style=for-the-badge)
+![YOLO](https://img.shields.io/badge/YOLOv11-Ultralytics-00FFFF?style=for-the-badge)
+![Gemini](https://img.shields.io/badge/Google_Gemini-Vision_AI-4285F4?logo=google&logoColor=white&style=for-the-badge)
+
+<br/>
+
+![Version](https://img.shields.io/badge/Version-1.2.0-blue?style=flat-square)
+![License](https://img.shields.io/badge/License-UNLICENSED-gray?style=flat-square)
+![Status](https://img.shields.io/badge/Status-In_Development-orange?style=flat-square)
 
 </div>
 
 ---
 
 > [!WARNING]
-> **TÌNH TRẠNG DỰ ÁN (Local, In Development)**
+> **⚠️ TRẠNG THÁI DỰ ÁN — Local Development (Đồ án tốt nghiệp)**
 >
-> - Hệ thống tối ưu cho chạy **local**; chưa triển khai cloud.
-> - Luồng AI đang xử lý **frame theo yêu cầu**; đang hướng tới stream liên tục 3–5 FPS.
-> - Một số tính năng cần Internet: điều hướng, tra cứu barcode, Visual Q&A.
-> - Không thay thế các hệ thống an toàn tuyệt đối trong môi trường nguy hiểm.
+> Dự án đang trong giai đoạn **phát triển và nghiên cứu**, chưa sẵn sàng cho production.
+
+> [!CAUTION]
+> **🔒 Bảo mật**
+> - File `.env` chứa API keys & mật khẩu — **KHÔNG commit lên public repo**. Luôn sử dụng `.env.example`.
+> - `ADMIN_DEFAULT_PASSWORD` và `JWT_SECRET` mặc định chỉ dùng cho dev — **bắt buộc đổi** trước khi deploy.
+> - `GEMINI_API_KEY` là secret — không hardcode vào source code.
+> - WebSocket hiện chấp nhận `origin: '*'` — cần restrict trong production.
+
+> [!WARNING]
+> **🎯 Độ chính xác AI**
+> - YOLO model (`yolo11n`) là phiên bản **nano** — ưu tiên tốc độ hơn độ chính xác.
+> - Nhận diện tiền VN phụ thuộc điều kiện ánh sáng, góc chụp, độ mới của tờ tiền.
+> - Ước lượng khoảng cách dựa trên **công thức xấp xỉ** (focal length giả định) — sai số ±30%.
+> - Hallucination Guard cảnh báo khi confidence < 85%, nhưng **không đảm bảo 100% chính xác**.
+> - Visual Q&A (Gemini) phụ thuộc API bên ngoài — có thể thay đổi/ngừng hoạt động.
+
+> [!IMPORTANT]
+> **⚡ Hiệu suất & Hạn chế**
+> - AI Worker xử lý **frame theo yêu cầu** (request-based) — chưa hỗ trợ stream liên tục.
+> - Mỗi client bị giới hạn **2 frames/giây** (rate limiting).
+> - Một số tính năng **bắt buộc Internet**: điều hướng GPS (OSRM), Visual Q&A (Gemini), tra cứu barcode.
+> - TFLite offline fallback cần model `.tflite` riêng — chưa tự động convert từ YOLO.
+> - Redis cache TTS chỉ hoạt động khi Redis server đang chạy.
+
+> [!NOTE]
+> **📋 Lưu ý sử dụng**
+> - Dự án mang tính **nghiên cứu/học thuật** — **KHÔNG** thay thế hệ thống an toàn chuyên dụng cho người khiếm thị.
+> - Cần test kỹ trên thiết bị thật (không chỉ emulator) để đánh giá trải nghiệm thực tế.
+> - Dữ liệu GPS/vị trí người dùng được gửi qua WebSocket — cân nhắc privacy khi deploy.
+
+---
+
+## 📰 Cập nhật mới nhất
+
+### 🗓️ Tháng 3/2026 — v1.2.0
+
+| Ngày | Cập nhật | Mô tả |
+|------|----------|-------|
+| **30/03** | 📝 README toàn diện | Viết lại hoàn toàn README với kiến trúc, API docs, hướng dẫn chi tiết |
+| **29/03** | 🚫 Loại bỏ mệnh giá nhỏ | Xóa 200đ và 500đ khỏi dataset & constants (không còn lưu hành) |
+| **28/03** | 🚦 Đèn giao thông | Thêm 3 class: `traffic_light_red`, `traffic_light_yellow`, `traffic_light_green` |
+| **28/03** | 📊 Mở rộng 29 classes | Thêm: motorbike, bus, plastic_bottle, glass_bottle, pothole, open_manhole, male, female |
+| **28/03** | 📖 Đọc tài liệu PDF | Thêm `document_reader_service.dart` hỗ trợ đọc file PDF bằng TTS |
+| **28/03** | 🐛 Fix pika dependency | Sửa lỗi `ModuleNotFoundError: No module named 'pika'` |
+| **27/03** | 🔤 Fix UTF-8 encoding | Sửa lỗi hiển thị ký tự tiếng Việt bị lỗi trong `constants.py` |
+| **27/03** | 🎓 YOLO Training pipeline | Hoàn thiện pipeline training: Roboflow → merge → Colab → deploy |
+
+### 🗓️ Tháng 2/2026 — v1.0.0 → v1.1.0
+
+| Ngày | Cập nhật | Mô tả |
+|------|----------|-------|
+| **27/02** | 🧹 Security hardening | Loại bỏ hardcoded secrets, thêm sanitize TTS, cải thiện bảo mật |
+| **27/02** | 🗺️ OpenStreetMap migration | Chuyển navigation sang OSM API + FlutterMap (thay thế Google Maps) |
+| **26/02** | 🤖 Visual Q&A launch | Tích hợp Gemini Vision API cho hỏi đáp bằng giọng nói qua ảnh |
+| **26/02** | 📊 Admin Dashboard v2 | Dashboard mới: SOS real-time, Heatmap, Feedback, Broadcast, User management |
+| **25/02** | 👥 User management | Thêm quản lý người dùng, sessions, broadcast TTS |
+| **25/02** | 🔐 JWT + Cookie auth | Hệ thống xác thực hoàn chỉnh: JWT token + cookie + WS guard |
+| **25/02** | 🚨 SOS & Danger alerts | Hệ thống SOS khẩn cấp + cảnh báo nguy hiểm real-time |
+| **25/02** | 🗣️ TTS Cache (Redis) | Cache audio TTS qua Redis, giảm latency phát giọng nói |
+| **25/02** | 🎤 Voice commands | Điều khiển app bằng giọng nói (Speech-to-Text) |
+
+### 🗓️ v0.x — Foundation
+
+- ✅ Khởi tạo cấu trúc monorepo: mobile_app + backend-gateway + ai-worker
+- ✅ YOLO detection pipeline + RabbitMQ message queue
+- ✅ OCR (Tesseract) + ML Kit (offline) barcode/text
+- ✅ Scene captioning với spatial awareness (trái/giữa/phải)
+- ✅ Nhận diện tiền Việt Nam (color validation + landmark features)
+- ✅ TFLite on-device inference fallback
+- ✅ Camera integration + accessibility (TTS + haptic)
+
+---
+
+## 📖 Mục lục
+
+- [Giới thiệu](#-giới-thiệu)
+- [Tính năng chính](#-tính-năng-chính)
+- [Kiến trúc hệ thống](#-kiến-trúc-hệ-thống)
+- [Luồng xử lý chính](#-luồng-xử-lý-chính)
+- [Các chế độ trên Mobile App](#-các-chế-độ-trên-mobile-app)
+- [Cấu trúc thư mục](#-cấu-trúc-thư-mục)
+- [Yêu cầu môi trường](#-yêu-cầu-môi-trường)
+- [Hướng dẫn cài đặt & chạy](#-hướng-dẫn-cài-đặt--chạy)
+- [Biến môi trường](#-biến-môi-trường)
+- [API Endpoints & WebSocket Events](#-api-endpoints--websocket-events)
+- [Dataset & Training YOLO](#-dataset--training-yolo)
+- [Admin Dashboard](#-admin-dashboard)
+- [Cập nhật mới nhất](#-cập-nhật-mới-nhất)
+- [Roadmap](#-roadmap)
+- [Tác giả & Liên hệ](#-tác-giả--liên-hệ)
 
 ---
 
 ## 🌟 Giới thiệu
 
-**AI Vision Assistant** là hệ thống trợ lý thị giác thời gian thực kết hợp **Mobile App**, **Gateway/API**, **AI Worker** và **Admin Dashboard**. Dự án tập trung vào:
+**AI Vision Assistant** là hệ thống trợ lý thị giác thời gian thực, được thiết kế để hỗ trợ **người suy giảm thị lực** sử dụng camera điện thoại để "nhìn" thế giới xung quanh. Hệ thống bao gồm 4 thành phần chính:
 
-- Nhận diện tiền Việt Nam và vật thể nguy hiểm trên đường.
-- Đọc văn bản/nhãn mác, mô tả cảnh.
-- Điều hướng an toàn.
-- Hỏi đáp trực quan bằng giọng nói.
-- SOS khẩn cấp.
-
----
-
-## 🧭 Kiến trúc tổng quan
-
-| Thành phần      | Công nghệ                    | Vai trò chính                                                  |
-| --------------- | ---------------------------- | -------------------------------------------------------------- |
-| **Mobile App**  | Flutter, FlutterMapX         | Chụp ảnh, điều hướng, TTS + rung, ML Kit offline, giao tiếp WS |
-| **Gateway/API** | NestJS, PostgreSQL, RabbitMQ | Xác thực, nhận frame WS, đẩy queue, lưu log/feedback/SOS       |
-| **AI Worker**   | Python, FastAPI, YOLO, OCR   | Inference YOLO, OCR, mô tả cảnh, TTS cache, Visual Q&A         |
-| **Dashboard**   | React, Vite, Tailwind        | Thống kê sự cố, heatmap nguy hiểm, SOS, review feedback        |
+| # | Thành phần | Công nghệ | Mô tả |
+|---|-----------|-----------|-------|
+| 1 | **📱 Mobile App** | Flutter, Camera, TTS, GPS | Ứng dụng cho người dùng cuối — chụp ảnh, nhận kết quả AI, phát giọng nói tiếng Việt |
+| 2 | **🔗 Backend Gateway** | NestJS, PostgreSQL, RabbitMQ | API server trung tâm — xác thực JWT, tiếp nhận WebSocket, quản lý message queue |
+| 3 | **🧠 AI Worker** | Python, FastAPI, YOLO, OCR, Gemini | Xử lý AI — nhận diện vật thể, tiền, mô tả cảnh, hỏi đáp Visual Q&A |
+| 4 | **📊 Admin Dashboard** | React 19, Vite, Tailwind CSS v4 | Bảng quản trị — thống kê, SOS, heatmap nguy hiểm, feedback AI, broadcast TTS |
 
 ---
 
-## ✅ Tính năng hiện có
+## ✅ Tính năng chính
 
-- **Nhận diện đa vật thể & tiền VN:** YOLO ; có **fallback offline** bằng TFLite (nếu có model cục bộ).
-- **Đọc văn bản & nhãn mác:** OCR (Tesseract) (ML Kit Text + Barcode).
-- **Mô tả cảnh & cảnh báo nguy hiểm:** định vị trái/giữa/phải, ước lượng khoảng cách tương đối.
-- **Visual Q&A:** hỏi đáp trực quan bằng giọng nói (Gemini qua AI Worker).
-- **Điều hướng thông minh:** GPS + la bàn + bản đồ OSM/OSRM.
-- **SOS khẩn cấp:** thao tác nhanh (giữ màn hình/phím cứng).
-- **Dashboard quản trị & feedback:** ghi nhận sự kiện, heatmap, review dữ liệu.
+### 🔍 Nhận diện AI
+
+| Tính năng | Mô tả | Xử lý |
+|-----------|-------|-------|
+| **Nhận diện vật thể** | 29 lớp đối tượng: xe cộ, người, đồ vật, cầu thang, ổ gà, nắp cống... | YOLO v11 (online) + TFLite (offline fallback) |
+| **Nhận diện tiền VN** | 11 mệnh giá: 1K → 500K VNĐ, kèm xác minh màu sắc HSV & đặc trưng landmark | YOLO + color validation + OCR |
+| **Đọc văn bản (OCR)** | Đọc nhãn mác, biển báo, tài liệu | Tesseract (server) + ML Kit (offline) |
+| **Mô tả cảnh** | Mô tả không gian: vị trí trái/giữa/phải, ước lượng khoảng cách, gợi ý lối đi | YOLO + spatial analysis |
+| **Visual Q&A** | Hỏi đáp bằng giọng nói về ảnh camera | Google Gemini Vision API |
+| **Đèn giao thông** | Nhận diện đèn đỏ/vàng/xanh, cảnh báo dừng/đi | YOLO (traffic_light_red/yellow/green) |
+
+### 🛡️ An toàn & Hỗ trợ
+
+| Tính năng | Mô tả |
+|-----------|-------|
+| **Cảnh báo nguy hiểm** | Phát hiện vật cản gần (xe, ổ gà, nắp cống, cầu thang) + cảnh báo khoảng cách, vị trí |
+| **SOS khẩn cấp** | Giữ màn hình/phím cứng → gửi SOS kèm GPS + ảnh đến admin dashboard |
+| **Điều hướng GPS** | GPS + la bàn + bản đồ OSM/OSRM → hướng dẫn đi bộ bằng giọng nói tiếng Việt |
+| **Flash tự động** | Cảm biến ánh sáng tự bật/tắt đèn flash camera |
+| **Rung phản hồi** | Haptic feedback theo loại sự kiện (nguy hiểm, xác nhận tiền, SOS) |
+
+### 🗣️ Text-to-Speech
+
+| Tính năng | Mô tả |
+|-----------|-------|
+| **TTS đa ngữ** | Hỗ trợ tiếng Việt (`vi`) và tiếng Anh (`en`) |
+| **Hallucination Guard** | Thêm cảnh báo "có thể là" / "hình ảnh mờ" khi confidence thấp |
+| **TTS Cache** | Redis cache audio → giảm latency cho các phát ngôn lặp lại |
+| **Sanitize markdown** | Loại bỏ ký tự markdown trước khi phát qua TTS |
 
 ---
 
-## 🔁 Luồng xử lý chính (Frame-by-frame)
+## 🧭 Kiến trúc hệ thống
 
-1. Mobile đăng nhập và mở WebSocket tới `backend-gateway`.
-2. Người dùng thao tác (double-tap, Q&A…) → gửi frame kèm `task_type`.
-3. Gateway đẩy task vào RabbitMQ (`ai_tasks_queue`).
-4. AI Worker xử lý (YOLO/OCR/Gemini) → đẩy kết quả vào `ai_results_queue`.
-5. Gateway lưu DB và trả kết quả về WS (kèm cảnh báo nếu cần).
-6. Mobile phát TTS và rung phản hồi.
+```
+┌─────────────────────────────────────────────────────────────────────┐
+│                        MOBILE APP (Flutter)                        │
+│  Camera → Frame capture → WebSocket → TTS / Vibration / GPS/Map   │
+└──────────────────────────────┬──────────────────────────────────────┘
+                               │ WebSocket (Socket.IO)
+                               ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│                     BACKEND GATEWAY (NestJS)                        │
+│                                                                      │
+│  ┌──────────┐ ┌────────────┐ ┌──────────┐ ┌──────────┐ ┌─────────┐ │
+│  │   Auth   │ │   Vision   │ │   SOS    │ │ Feedback │ │Broadcast│ │
+│  │ (JWT+WS) │ │ (WS+Queue) │ │ (Alerts) │ │ (Review) │ │  (TTS)  │ │
+│  └──────────┘ └─────┬──────┘ └──────────┘ └──────────┘ └─────────┘ │
+│                     │                                                │
+│              ┌──────┴──────┐         ┌───────────────┐              │
+│              │  RabbitMQ   │         │  PostgreSQL   │              │
+│              │ (Task Queue)│         │  (Data Store) │              │
+│              └──────┬──────┘         └───────────────┘              │
+└─────────────────────┼────────────────────────────────────────────────┘
+                      │ AMQP (ai_tasks_queue ↔ ai_results_queue)
+                      ▼
+┌──────────────────────────────────────────────────────────────────────┐
+│                      AI WORKER (Python/FastAPI)                      │
+│                                                                      │
+│  ┌──────────────┐ ┌──────────────┐ ┌─────────────┐ ┌─────────────┐ │
+│  │ YOLO v11     │ │ Money        │ │ Scene       │ │ Gemini      │ │
+│  │ (Detection)  │ │ Detector     │ │ Captioner   │ │ Vision Q&A  │ │
+│  └──────────────┘ └──────────────┘ └─────────────┘ └─────────────┘ │
+│  ┌──────────────┐ ┌──────────────┐ ┌─────────────┐ ┌─────────────┐ │
+│  │ OCR          │ │ Danger       │ │ TTS Cache   │ │ Stabilizer  │ │
+│  │ (Tesseract)  │ │ Detector     │ │ (Redis)     │ │ (Temporal)  │ │
+│  └──────────────┘ └──────────────┘ └─────────────┘ └─────────────┘ │
+└──────────────────────────────────────────────────────────────────────┘
+
+┌──────────────────────────────────────────────────────────────────────┐
+│                   ADMIN DASHBOARD (React + Vite)                     │
+│                                                                      │
+│  Dashboard │ SOS Alerts │ Heatmap │ Feedback │ Broadcast │ Users    │
+└──────────────────────────────────────────────────────────────────────┘
+```
 
 ---
 
-## 🧭 Các chế độ chính trên Mobile
+## 🔁 Luồng xử lý chính
 
-- **Mode 0 – Tổng hợp/nhận diện môi trường:** YOLO online, TFLite offline nếu có.
-- **Mode 1 – OCR online:** dùng Tesseract qua server.
-- **Mode 2 – OCR offline/nhanh:** ML Kit Text + Barcode.
-- **Mode 3 – Mô tả cảnh:** `CAPTION` + cảnh báo nguy hiểm.
-- **Mode 4 – Điều hướng:** GPS + la bàn + chỉ đường (OSRM/OSM).
-- **Visual Q&A:** nút riêng, hỏi đáp tự do bằng giọng nói.
+```mermaid
+sequenceDiagram
+    participant M as 📱 Mobile App
+    participant G as 🔗 Gateway (NestJS)
+    participant Q as 📨 RabbitMQ
+    participant W as 🧠 AI Worker
+    participant D as 🗄️ PostgreSQL
+
+    M->>G: 1. Đăng nhập (JWT)
+    G-->>M: Token xác thực
+    M->>G: 2. Kết nối WebSocket
+    M->>G: 3. Gửi frame + task_type (double-tap / Q&A)
+    G->>Q: 4. Đẩy task vào ai_tasks_queue
+    Q->>W: 5. Consumer nhận task
+    W->>W: 6. Xử lý AI (YOLO/OCR/Gemini)
+    W->>Q: 7. Đẩy kết quả vào ai_results_queue
+    Q->>G: 8. Gateway nhận kết quả
+    G->>D: 9. Lưu detection log
+    G-->>M: 10. Trả kết quả qua WebSocket
+    M->>M: 11. Phát TTS + rung phản hồi
+```
+
+### Chi tiết xử lý theo `task_type`
+
+| Task Type | Trigger | AI Service | Kết quả | TTS |
+|-----------|---------|------------|---------|-----|
+| `OCR` | Double-tap mode 0 | YOLO → Money Detector | Nhận diện tiền/vật thể + confidence + denomination | ✅ Server |
+| `TEXT_OCR` | Mode 1 | Tesseract OCR | Văn bản trích xuất | ✅ Server |
+| `CAPTION` | Mode 3 | YOLO → Scene Captioner + Danger Detector | Mô tả cảnh + cảnh báo nguy hiểm | ✅ Server |
+| `visual_qa` | Nút Q&A | Gemini Vision API | Câu trả lời tự nhiên | ✅ On-device |
+
+---
+
+## 📱 Các chế độ trên Mobile App
+
+| Chế độ | Tên | Mô tả | Online/Offline |
+|--------|-----|-------|----------------|
+| **Mode 0** | Nhận diện vật thể | YOLO online, TFLite offline nếu có model cục bộ | Both |
+| **Mode 1** | OCR Online | Đọc văn bản qua Tesseract trên server | Online |
+| **Mode 2** | OCR Offline | ML Kit Text Recognition + Barcode Scanner | Offline |
+| **Mode 3** | Mô tả cảnh | Mô tả không gian chi tiết + cảnh báo nguy hiểm | Online |
+| **Mode 4** | Điều hướng | GPS + la bàn + chỉ đường OSRM/OSM | Online |
+| **Visual Q&A** | Hỏi đáp | Hỏi đáp trực quan bằng giọng nói (Gemini AI) | Online |
+
+### Các thành phần Mobile App
+
+```
+mobile_app/lib/
+├── main.dart                          # Entry point
+├── screens/
+│   ├── splash_screen.dart             # Màn hình khởi động (animation logo)
+│   ├── onboarding_screen.dart         # Hướng dẫn sử dụng lần đầu
+│   ├── login_screen.dart              # Đăng nhập JWT
+│   ├── main_screen.dart               # Màn hình chính (camera + AI)
+│   ├── navigation_screen.dart         # Điều hướng bản đồ
+│   ├── settings_screen.dart           # Cài đặt (ngôn ngữ, khoảng cách, liên hệ SOS)
+│   └── history_screen.dart            # Lịch sử nhận diện
+├── services/
+│   ├── websocket_service.dart         # Socket.IO client
+│   ├── auth_service.dart              # Xác thực JWT
+│   ├── edge_ai_service.dart           # TFLite inference offline
+│   ├── tflite_service.dart            # TFLite model loading
+│   ├── ml_kit_service.dart            # ML Kit OCR + Barcode
+│   ├── navigation_service.dart        # GPS + OSRM routing
+│   ├── sos_service.dart               # SOS khẩn cấp
+│   ├── voice_command_service.dart     # Giọng nói điều khiển
+│   ├── feedback_service.dart          # Gửi phản hồi AI
+│   ├── light_sensor_service.dart      # Flash tự động
+│   ├── accessibility_manager.dart     # TTS + Vibration manager
+│   ├── document_reader_service.dart   # Đọc tài liệu PDF
+│   ├── settings_service.dart          # Lưu cài đặt local
+│   ├── history_service.dart           # Lưu lịch sử detection
+│   ├── power_button_service.dart      # Nút nguồn (SOS)
+│   └── volume_button_service.dart     # Nút âm lượng (chuyển mode)
+├── widgets/
+│   ├── mode_carousel.dart             # Carousel chuyển chế độ
+│   ├── status_overlay.dart            # Overlay trạng thái AI
+│   └── visual_qa_button.dart          # Nút Visual Q&A
+├── theme/                             # Dark theme config
+├── utils/                             # Tiện ích chung
+└── l10n/                              # Localization (vi/en)
+```
 
 ---
 
 ## 📁 Cấu trúc thư mục
 
-- `mobile_app` – Flutter app cho người dùng.
-- `backend-gateway` – NestJS Gateway + DB + RabbitMQ.
-- `ai-worker` – FastAPI + consumer + xử lý AI.
-- `admin-dashboard` – React dashboard quản trị.
+```
+Vision Assistant/
+├── 📱 mobile_app/                    # Flutter mobile application
+│   ├── lib/                          # Source code Dart
+│   ├── android/                      # Android native config
+│   ├── ios/                          # iOS native config
+│   ├── assets/models/                # TFLite models (offline)
+│   └── pubspec.yaml                  # Flutter dependencies
+│
+├── 🔗 backend-gateway/              # NestJS API Gateway
+│   ├── src/
+│   │   ├── auth/                     # JWT authentication + WS guard
+│   │   ├── vision/                   # WebSocket gateway + RabbitMQ queue
+│   │   ├── sos/                      # SOS alert management
+│   │   ├── feedback/                 # AI feedback collection
+│   │   ├── broadcast/                # TTS broadcast to users
+│   │   ├── stats/                    # Statistics & analytics
+│   │   └── users/                    # User management (admin/user roles)
+│   ├── docker-compose.yml            # RabbitMQ container
+│   └── package.json                  # Node.js dependencies
+│
+├── 🧠 ai-worker/                    # Python AI Processing Engine
+│   ├── services/
+│   │   ├── ai_service.py             # Façade module (backward compat API)
+│   │   ├── model_manager.py          # YOLO model loading & detection
+│   │   ├── money_detector.py         # VN currency recognition
+│   │   ├── scene_captioner.py        # Spatial scene description
+│   │   ├── danger_detector.py        # Danger alert system
+│   │   ├── text_ocr.py               # Tesseract OCR processing
+│   │   ├── gemini_service.py         # Google Gemini Vision Q&A
+│   │   ├── tts_cache.py              # Redis-based TTS cache
+│   │   ├── stabilizer.py             # Temporal result stabilization
+│   │   ├── image_utils.py            # Image decode, blur, color analysis
+│   │   ├── constants.py              # Labels, translations, color ranges
+│   │   └── translations.py           # Multi-language string templates
+│   ├── rabbitmq_consumer.py          # RabbitMQ consumer (main worker loop)
+│   ├── main.py                       # FastAPI server + consumer launcher
+│   ├── train_yolo.py                 # YOLO training script
+│   ├── merge_vnd_dataset.py          # Dataset merger (VN money + objects)
+│   ├── prepare_dataset_from_roboflow.py  # Roboflow dataset standardizer
+│   ├── package_for_colab.py          # Colab bundle packager
+│   ├── COLAB_TRAINING.md             # Training guide
+│   └── requirements.txt             # Python dependencies
+│
+├── 📊 admin-dashboard/              # React Admin Panel
+│   ├── src/
+│   │   ├── pages/
+│   │   │   ├── DashboardV2.jsx       # Tổng quan thống kê
+│   │   │   ├── SosPage.jsx           # Quản lý SOS alerts
+│   │   │   ├── HeatmapPage.jsx       # Heatmap vùng nguy hiểm
+│   │   │   ├── FeedbackPage.jsx      # Review feedback AI
+│   │   │   ├── BroadcastPage.jsx     # Broadcast TTS đến users
+│   │   │   ├── UsersPage.jsx         # Quản lý người dùng
+│   │   │   └── LoginV2.jsx           # Đăng nhập admin
+│   │   ├── components/               # Reusable UI components
+│   │   ├── services/                 # API service layer
+│   │   └── App.jsx                   # App shell + sidebar navigation
+│   └── package.json                  # Node.js dependencies
+│
+├── .gitignore                        # Git ignore rules
+└── README.md                         # ← You are here
+```
 
 ---
 
-## 🚀 Quick Start (Local)
+## 💻 Yêu cầu môi trường
 
-### Yêu cầu môi trường
+### Phần mềm bắt buộc
 
-- **Node.js**: 22+ (npm 10+)
-- **Python**: 3.10–3.11
-- **Flutter SDK**: mới nhất
-- **Docker Desktop**: dùng cho RabbitMQ
-- **PostgreSQL**: cổng `5433`
-- **Redis**: cổng `6379` (cache TTS)
+| Phần mềm | Phiên bản | Ghi chú |
+|-----------|-----------|---------|
+| **Node.js** | 22+ (npm 10+) | Backend Gateway + Admin Dashboard |
+| **Python** | 3.10 – 3.12 | AI Worker |
+| **Flutter SDK** | 3.x (mới nhất) | Mobile App |
+| **Docker Desktop** | Latest | Chạy RabbitMQ container |
+| **PostgreSQL** | 14+ | Database (cổng `5433`) |
+| **Redis** | 7+ | TTS cache (cổng `6379`) |
 
-### 1) RabbitMQ
+### Phần mềm tùy chọn
+
+| Phần mềm | Mục đích |
+|-----------|----------|
+| **Tesseract OCR** | OCR engine cho AI Worker |
+| **Android Studio** | Chạy Android emulator |
+| **Xcode** | Chạy iOS simulator (macOS only) |
+| **GPU (NVIDIA)** | Tăng tốc YOLO inference |
+
+---
+
+## 🚀 Hướng dẫn cài đặt & chạy
+
+### 1️⃣ RabbitMQ (Docker)
 
 ```bash
 cd backend-gateway
 docker compose up -d
 ```
 
-### 2) Backend Gateway
+> **Kiểm tra:** Truy cập http://localhost:15672 (guest/guest) để xem RabbitMQ Management UI.
+
+### 2️⃣ PostgreSQL
+
+Đảm bảo PostgreSQL đang chạy trên cổng `5433` với database `AI_Vision_Assistant`:
+
+```sql
+CREATE DATABASE "AI_Vision_Assistant";
+```
+
+> [!TIP]
+> `DB_SYNC=true` trong `.env` sẽ tự động tạo tables khi khởi động NestJS (chỉ dùng cho development).
+
+### 3️⃣ Redis
+
+Đảm bảo Redis chạy trên cổng `6379` (default config).
+
+### 4️⃣ Backend Gateway
 
 ```bash
 cd backend-gateway
@@ -117,24 +432,37 @@ npm install
 npm run start:dev
 ```
 
-### 3) AI Worker
+> **Server chạy tại:** http://localhost:3000
+> **WebSocket:** ws://localhost:3000
+
+### 5️⃣ AI Worker
 
 ```bash
 cd ai-worker
-python -m venv .venv
-# Windows: .\.venv\Scripts\activate
-# Mac/Linux: source .venv/bin/activate
 
+# Tạo virtual environment
+python -m venv .venv
+
+# Kích hoạt venv
+# Windows:
+.\.venv\Scripts\activate
+# macOS/Linux:
+source .venv/bin/activate
+
+# Cài đặt dependencies
 pip install -r requirements.txt
 
-# Chỉ chạy consumer
+# Option A: Chỉ chạy RabbitMQ consumer (đủ cho inference)
 python rabbitmq_consumer.py
 
-# Hoặc chạy FastAPI + consumer (phục vụ TTS audio_url)
+# Option B: Chạy FastAPI + consumer (thêm health check + static audio)
 python main.py
 ```
 
-### 4) Admin Dashboard
+> **FastAPI server (nếu dùng Option B):** http://localhost:8000
+> **Health check:** GET http://localhost:8000/health
+
+### 6️⃣ Admin Dashboard
 
 ```bash
 cd admin-dashboard
@@ -142,57 +470,309 @@ npm install
 npm run dev
 ```
 
-### 5) Mobile App
+> **Dashboard chạy tại:** http://localhost:4200
+
+### 7️⃣ Mobile App
 
 ```bash
 cd mobile_app
 flutter pub get
 
-# Android Emulator
+# Android Emulator (localhost maps to 10.0.2.2)
 flutter run --dart-define=BACKEND_URL=http://10.0.2.2:3000
 
-# Thiết bị thật (đổi IP LAN của máy dev)
+# Thiết bị Android thật (thay IP LAN)
 flutter run --dart-define=BACKEND_URL=http://192.168.1.X:3000
+
+# iOS Simulator
+flutter run --dart-define=BACKEND_URL=http://localhost:3000
 ```
 
----
-
-## 🔑 Biến môi trường (.env)
-
-Mỗi service có file `.env` mẫu. Lưu ý **không commit API keys** khi chia sẻ public.
-
-- `backend-gateway/.env`
-  - `PORT`, `DB_*`, `RABBITMQ_URL`, `JWT_SECRET`, `ADMIN_DEFAULT_PASSWORD`
-- `ai-worker/.env`
-  - `RABBITMQ_URL`, `REDIS_URL`, `GEMINI_API_KEY`
+> [!IMPORTANT]
+> Khi chạy trên thiết bị thật, hãy thay `192.168.1.X` bằng IP LAN thực của máy dev.
+> Đảm bảo thiết bị và máy dev cùng mạng WiFi.
 
 ---
 
-## 🧪 Dataset & Training YOLO
+## 🔑 Biến môi trường
 
-Các công cụ liên quan nằm trong `ai-worker/`:
+### `backend-gateway/.env`
 
-- `prepare_dataset_from_roboflow.py` – chuẩn hóa dataset Roboflow.
-- `merge_vnd_dataset.py` – gộp dataset tiền VN với dataset vật thể.
-- `package_for_colab.py` – đóng gói dataset cho Google Colab.
-- `COLAB_TRAINING.md` – hướng dẫn train với `yolo11n.pt`.
+```env
+PORT=3000
+NODE_ENV=development
+
+# Database (PostgreSQL)
+DB_HOST=127.0.0.1
+DB_PORT=5433
+DB_USER=postgres
+DB_PASS=your_db_password
+DB_NAME=AI_Vision_Assistant
+DB_SYNC=true                    # Auto-sync schema (dev only!)
+
+# Authentication
+JWT_SECRET=your-strong-jwt-secret-key
+
+# Message Queue
+RABBITMQ_URL=amqp://guest:guest@127.0.0.1:5672
+
+# Admin
+ADMIN_DEFAULT_PASSWORD=changeme  # ⚠️ Đổi trước khi deploy!
+```
+
+### `ai-worker/.env`
+
+```env
+# Message Queue
+RABBITMQ_URL=amqp://guest:guest@127.0.0.1:5672/
+
+# Cache
+REDIS_URL=redis://127.0.0.1:6379
+
+# AI
+GEMINI_API_KEY=your-gemini-api-key
+GEMINI_MODEL=gemini-3-flash-preview     # Optional: override model
+GEMINI_MAX_OUTPUT_TOKENS=256             # Optional: limit response length
+```
+
+> [!CAUTION]
+> **KHÔNG commit API keys & passwords** vào repository.
+> Sử dụng file `.env.example` làm template và thêm `.env` vào `.gitignore`.
 
 ---
 
-## 📌 Roadmap gần
+## 🌐 API Endpoints & WebSocket Events
 
-- Stream 3–5 FPS cho chế độ đi bộ.
-- Spatial audio (trái/phải) theo vị trí vật cản.
-- Monocular depth estimation chính xác hơn.
-- Layout analysis (đọc menu/sách).
-- Nhận diện khuôn mặt người quen.
+### REST API (`backend-gateway` — prefix: `/api`)
+
+| Method | Endpoint | Mô tả | Auth |
+|--------|----------|-------|------|
+| `POST` | `/api/auth/register` | Đăng ký tài khoản | ❌ |
+| `POST` | `/api/auth/login` | Đăng nhập (nhận JWT) | ❌ |
+| `POST` | `/api/auth/admin/login` | Đăng nhập admin | ❌ |
+| `GET` | `/api/stats/dashboard` | Thống kê dashboard | 🔒 Admin |
+| `GET` | `/api/sos` | Danh sách SOS alerts | 🔒 Admin |
+| `PATCH` | `/api/sos/:id/resolve` | Đánh dấu SOS đã xử lý | 🔒 Admin |
+| `GET` | `/api/feedback` | Danh sách feedback | 🔒 Admin |
+| `POST` | `/api/feedback` | Gửi feedback | 🔒 User |
+| `POST` | `/api/broadcast` | Broadcast TTS đến users | 🔒 Admin |
+| `GET` | `/api/broadcast` | Lịch sử broadcast | 🔒 Admin |
+
+### WebSocket Events (Socket.IO)
+
+| Event | Direction | Payload | Mô tả |
+|-------|-----------|---------|-------|
+| `frame_stream` | Client → Server | `{ frame, task_type, lang, warning_distance_m, latitude, longitude }` | Gửi frame để AI xử lý |
+| `stream_ack` | Server → Client | `{ status, timestamp }` | Xác nhận nhận frame |
+| `ai_result` | Server → Client | `{ text, confidence_score, audio_url, stable, danger_alerts }` | Kết quả AI |
+| `visual_qa` | Client → Server | `{ frame, question, lang }` | Gửi câu hỏi Visual Q&A |
+| `visual_qa_ack` | Server → Client | `{ status, timestamp }` | Xác nhận nhận Q&A |
+| `sos_alert` | Client → Server | `{ latitude, longitude, imageBase64? }` | Gửi SOS khẩn cấp |
+| `sos_ack` | Server → Client | `{ status, timestamp }` | Xác nhận SOS |
+| `sos_incoming` | Server → Admin | `{ sosId, userId, latitude, longitude, ... }` | Thông báo SOS đến admin |
+| `join_admin` | Client → Server | — | Admin join admin room |
+| `join_user` | Client → Server | — | User join user room (nhận broadcast) |
+| `broadcast_tts` | Server → Users | `{ message, audioUrl }` | Admin broadcast TTS |
+
+---
+
+## 🤖 Dataset & Training YOLO
+
+### Danh sách 29 lớp đối tượng
+
+```
+ 0: car               10: water_bottle       20: motorbike
+ 1: truck              11: tien_1k            21: bus
+ 2: chair              12: tien_2k            22: plastic_bottle
+ 3: manhole            13: tien_5k            23: glass_bottle
+ 4: person             14: tien_10k           24: pothole
+ 5: phone              15: tien_20k           25: open_manhole
+ 6: road               16: tien_50k           26: traffic_light_red
+ 7: sidewalk           17: tien_100k          27: traffic_light_yellow
+ 8: stairs_down        18: tien_200k          28: traffic_light_green
+ 9: stairs_up          19: tien_500k
+```
+
+### Công cụ chuẩn bị dataset
+
+| Script | Mục đích |
+|--------|----------|
+| `prepare_dataset_from_roboflow.py` | Chuẩn hóa dataset Roboflow → format YOLO |
+| `merge_vnd_dataset.py` | Gộp dataset tiền VN + vật thể → 29 classes |
+| `package_for_colab.py` | Đóng gói dataset → ZIP cho Google Colab |
+| `train_yolo.py` | Script training YOLO (finetune / scratch) |
+
+### Training trên Google Colab
+
+```bash
+# 1. Upload project lên Colab (hoặc git clone)
+# 2. Cài đặt dependencies
+!pip install -r requirements.txt
+
+# 3. Chuẩn bị dataset
+!python prepare_dataset_from_roboflow.py --source-root dataset_image --target dataset_roboflow --clean
+
+# 4. Train YOLO (fine-tune)
+!python train_yolo.py \
+  --mode finetune \
+  --dataset dataset_roboflow/data.yaml \
+  --epochs 80 --imgsz 640 \
+  --model yolo11n.pt \
+  --device 0 --batch 16 \
+  --run-name vision_assistant_model_v3
+
+# 5. Download best.pt
+```
+
+> [!NOTE]
+> Xem hướng dẫn chi tiết tại [`ai-worker/COLAB_TRAINING.md`](ai-worker/COLAB_TRAINING.md).
+
+---
+
+## 📊 Admin Dashboard
+
+Dashboard quản trị cung cấp các trang:
+
+| Trang | Chức năng |
+|-------|-----------|
+| **Dashboard** | Tổng quan: số detection, SOS, users online, biểu đồ thống kê |
+| **SOS Khẩn Cấp** | Danh sách cảnh báo SOS real-time, GPS, ảnh đính kèm, resolve |
+| **Heatmap** | Bản đồ nhiệt vùng nguy hiểm (Leaflet + heatmap layer) |
+| **Feedback AI** | Review phản hồi người dùng về kết quả AI (đúng/sai) |
+| **Broadcast** | Gửi thông báo TTS đến tất cả users đang online |
+| **Người dùng** | Quản lý tài khoản, danh sách sessions, thống kê cá nhân |
+
+### Tính năng nổi bật
+
+- **Real-time updates** qua Socket.IO
+- **Responsive design** — hoạt động trên mobile và desktop
+- **Dark theme** mặc định
+- **Charts** sử dụng Recharts (Line, Pie)
+- **Map** sử dụng React-Leaflet + leaflet.heat
+
+---
+
+## 📌 Roadmap
+
+### Đang phát triển
+
+- [ ] Stream liên tục 3–5 FPS cho chế độ đi bộ
+- [ ] Spatial audio (trái/phải) theo vị trí vật cản
+- [ ] Monocular depth estimation chính xác hơn
+- [ ] Nhận diện khuôn mặt người quen
+
+### Kế hoạch tương lai
+
+- [ ] Layout analysis (đọc menu/sách)
+- [ ] Nhận diện màu sắc quần áo/vật thể
+- [ ] Đọc tài liệu nâng cao (PDF, hình ảnh chứa text dài)
+- [ ] Cloud deployment (Docker Compose full stack)
+- [ ] CI/CD pipeline cho model training + deployment
+- [ ] Progressive Web App cho Admin Dashboard
+- [ ] Offline model auto-update (OTA)
+
+---
+
+## 🛠️ Tech Stack chi tiết
+
+<details>
+<summary><b>📱 Mobile App</b></summary>
+
+| Package | Phiên bản | Mục đích |
+|---------|-----------|----------|
+| `flutter` | SDK ^3.10 | Framework chính |
+| `camera` | ^0.11.4 | Camera capture |
+| `flutter_tts` | ^4.2.5 | Text-to-Speech |
+| `socket_io_client` | ^3.1.4 | WebSocket real-time |
+| `geolocator` | ^14.0.2 | GPS location |
+| `flutter_compass` | ^0.8.1 | La bàn điều hướng |
+| `flutter_map` | ^7.0.2 | Bản đồ OpenStreetMap |
+| `google_mlkit_text_recognition` | ^0.15.1 | OCR offline |
+| `google_mlkit_barcode_scanning` | ^0.14.2 | Barcode/QR offline |
+| `speech_to_text` | ^7.3.0 | Voice commands |
+| `tflite_flutter` | ^0.11.0 | On-device AI inference |
+| `vibration` | ^3.1.7 | Haptic feedback |
+| `permission_handler` | ^12.0.1 | Quản lý permissions |
+| `shared_preferences` | ^2.3.3 | Local storage |
+| `syncfusion_flutter_pdf` | ^33.1.45 | Đọc tài liệu PDF |
+| `flutter_contacts` | ^1.1.9 | Liên hệ SOS |
+
+</details>
+
+<details>
+<summary><b>🔗 Backend Gateway</b></summary>
+
+| Package | Phiên bản | Mục đích |
+|---------|-----------|----------|
+| `@nestjs/core` | ^11.0.1 | Framework chính |
+| `@nestjs/websockets` | ^11.1.14 | WebSocket server |
+| `@nestjs/platform-socket.io` | ^11.1.14 | Socket.IO adapter |
+| `@nestjs/typeorm` | ^11.0.0 | ORM (PostgreSQL) |
+| `@nestjs/jwt` | ^11.0.2 | JWT authentication |
+| `@nestjs/passport` | ^11.0.5 | Passport.js integration |
+| `@nestjs/microservices` | ^11.1.14 | RabbitMQ integration |
+| `amqp-connection-manager` | ^5.0.0 | AMQP connection pool |
+| `bcrypt` | ^6.0.0 | Password hashing |
+| `class-validator` | ^0.14.3 | DTO validation |
+| `pg` | ^8.18.0 | PostgreSQL driver |
+
+</details>
+
+<details>
+<summary><b>🧠 AI Worker</b></summary>
+
+| Package | Phiên bản | Mục đích |
+|---------|-----------|----------|
+| `fastapi` | ≥0.104.1 | HTTP server (health + static files) |
+| `uvicorn` | ≥0.24.0 | ASGI server |
+| `pika` | ≥1.3.2 | RabbitMQ client |
+| `redis` | ≥5.0.1 | TTS cache |
+| `ultralytics` | ≥8.0.0 | YOLO v11 inference |
+| `opencv-python` | ≥4.8.0 | Image processing |
+| `numpy` | ≥1.24.0 | Numerical operations |
+| `pytesseract` | ≥0.3.10 | OCR engine |
+| `google-genai` | ≥1.0.0 | Google Gemini Vision API |
+| `python-dotenv` | ≥1.0.0 | Environment variables |
+
+</details>
+
+<details>
+<summary><b>📊 Admin Dashboard</b></summary>
+
+| Package | Phiên bản | Mục đích |
+|---------|-----------|----------|
+| `react` | ^19.0.0 | UI framework |
+| `react-dom` | ^19.0.0 | React DOM renderer |
+| `vite` | ^6.0.0 | Build tool + dev server |
+| `tailwindcss` | ^4.0.0 | CSS framework |
+| `recharts` | ^2.15.0 | Charts (Line, Pie) |
+| `react-leaflet` | ^5.0.0 | Map component |
+| `leaflet` | ^1.9.4 | Map engine |
+| `leaflet.heat` | ^0.2.0 | Heatmap layer |
+| `socket.io-client` | ^4.8.3 | Real-time WebSocket |
+
+</details>
 
 ---
 
 ## 👨‍💻 Tác giả & Liên hệ
 
-- **Nguyễn Trung Tiến**
-- **Email:** 2251120447@ut.edu.vn || trungtiennguyen910@gmail.com
-- **GitHub:** @Nguyen-Trung-Tien
+<div align="center">
+
+**Nguyễn Trung Tiến**
+
+[![Email](https://img.shields.io/badge/Email-2251120447%40ut.edu.vn-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:2251120447@ut.edu.vn)
+[![Email](https://img.shields.io/badge/Email-trungtiennguyen910%40gmail.com-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:trungtiennguyen910@gmail.com)
+[![GitHub](https://img.shields.io/badge/GitHub-Nguyen--Trung--Tien-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Nguyen-Trung-Tien)
+
+*Đồ án tốt nghiệp — Đại học Giao thông Vận tải TP. Hồ Chí Minh (UT)*
+
+</div>
 
 ---
+
+<div align="center">
+
+**⭐ Nếu dự án hữu ích, hãy cho một star trên GitHub! ⭐**
+
+</div>
