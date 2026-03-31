@@ -6,6 +6,7 @@ import { User } from '../users/entities/user.entity';
 import { DetectionLog } from '../vision/entities/detection-log.entity';
 import { promises as fs } from 'node:fs';
 import path from 'node:path';
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 import archiver = require('archiver');
 import type { Response } from 'express';
 
@@ -39,7 +40,13 @@ export class FeedbackService {
 
     const cwd = process.cwd().toLowerCase();
     if (cwd.endsWith('backend-gateway')) {
-      return path.resolve(process.cwd(), '..', 'ai-worker', 'dataset', 'feedback');
+      return path.resolve(
+        process.cwd(),
+        '..',
+        'ai-worker',
+        'dataset',
+        'feedback',
+      );
     }
 
     return path.resolve(process.cwd(), 'ai-worker', 'dataset', 'feedback');
@@ -151,7 +158,7 @@ export class FeedbackService {
     archive.pipe(res);
 
     const classes = new Set<string>();
-    validRows.forEach(row => {
+    validRows.forEach((row) => {
       classes.add(
         this.sanitizeLabel(row.correct_label || row.detection?.result_text),
       );
@@ -159,29 +166,28 @@ export class FeedbackService {
     const classArray = Array.from(classes);
     const classMap = new Map<string, number>();
     classArray.forEach((name, index) => classMap.set(name, index));
-    
+
     let yamlContent = `train: images\nval: images\n\nnc: ${classArray.length}\nnames: [`;
-    yamlContent += classArray.map(c => `'${c}'`).join(', ') + `]\n`;
+    yamlContent += classArray.map((c) => `'${c}'`).join(', ') + `]\n`;
     archive.append(yamlContent, { name: 'data.yaml' });
 
     for (const row of validRows) {
       const clsName = this.sanitizeLabel(
         row.correct_label || row.detection?.result_text,
       );
-      const classId =
-        classMap.get(clsName) ?? classMap.get('unknown') ?? 0;
+      const classId = classMap.get(clsName) ?? classMap.get('unknown') ?? 0;
 
       try {
-        const imageBuffer = await fs.readFile(row.image_path!);
-        const ext = path.extname(row.image_path!) || '.jpg';
+        const imageBuffer = await fs.readFile(row.image_path);
+        const ext = path.extname(row.image_path) || '.jpg';
         const filename = `img_${row.id}${ext}`;
         const labelFilename = `img_${row.id}.txt`;
 
         archive.append(imageBuffer, { name: `images/${filename}` });
-        
+
         const labelContent = `${classId} 0.5 0.5 1.0 1.0\n`;
         archive.append(labelContent, { name: `labels/${labelFilename}` });
-      } catch (err) {
+      } catch {
         // ignore missing images
       }
     }

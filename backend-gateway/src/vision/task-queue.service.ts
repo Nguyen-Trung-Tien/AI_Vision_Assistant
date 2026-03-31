@@ -145,17 +145,18 @@ export class TaskQueueService {
         });
       }
     } finally {
-      if (!this.server) return;
       // Emit separate danger_alert events for immediate mobile handling
-      const dangerAlerts = result.danger_alerts || [];
-      for (const alert of dangerAlerts) {
-        this.server.to(result.clientId).emit('danger_alert', {
-          level: alert.distance < 1.0 ? 'CRITICAL' : 'HIGH',
-          label: alert.label,
-          message: alert.message,
-          distance: alert.distance,
-          position: alert.position,
-        });
+      if (this.server) {
+        const dangerAlerts = result.danger_alerts || [];
+        for (const alert of dangerAlerts) {
+          this.server.to(result.clientId).emit('danger_alert', {
+            level: alert.distance < 1.0 ? 'CRITICAL' : 'HIGH',
+            label: alert.label,
+            message: alert.message,
+            distance: alert.distance,
+            position: alert.position,
+          });
+        }
       }
     }
   }

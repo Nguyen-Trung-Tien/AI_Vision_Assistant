@@ -31,17 +31,14 @@ export class HeatmapService {
 
     if (type === 'danger') {
       qb.andWhere(
-        "log.action_type = 'OBJECT_DETECT' AND log.severity IN ('HIGH', 'CRITICAL')",
+        "log.action_type = 'CAPTION' AND log.severity IN ('HIGH', 'CRITICAL')",
       );
     }
 
     qb.groupBy('log.latitude, log.longitude');
 
-    const rows = (await qb.getRawMany()) as {
-      lat: string;
-      lng: string;
-      count: string;
-    }[];
+    const rows: { lat: string; lng: string; count: string }[] =
+      await qb.getRawMany();
 
     return rows.map((r) => ({
       lat: parseFloat(r.lat),
