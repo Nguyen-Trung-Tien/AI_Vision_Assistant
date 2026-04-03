@@ -178,43 +178,43 @@
 
 ```
 ┌─────────────────────────────────────────────────────────────────────┐
-│                        MOBILE APP (Flutter)                        │
-│  Camera → Frame capture → WebSocket → TTS / Vibration / GPS/Map   │
+│                        MOBILE APP (Flutter)                         │
+│  Camera → Frame capture → WebSocket → TTS / Vibration / GPS/Map     │
 └──────────────────────────────┬──────────────────────────────────────┘
                                │ WebSocket (Socket.IO)
                                ▼
 ┌──────────────────────────────────────────────────────────────────────┐
-│                     BACKEND GATEWAY (NestJS)                        │
+│                     BACKEND GATEWAY (NestJS)                         │
 │                                                                      │
-│  ┌──────────┐ ┌────────────┐ ┌──────────┐ ┌──────────┐ ┌─────────┐ │
-│  │   Auth   │ │   Vision   │ │   SOS    │ │ Feedback │ │Broadcast│ │
-│  │ (JWT+WS) │ │ (WS+Queue) │ │ (Alerts) │ │ (Review) │ │  (TTS)  │ │
-│  └──────────┘ └─────┬──────┘ └──────────┘ └──────────┘ └─────────┘ │
+│  ┌──────────┐ ┌────────────┐ ┌──────────┐ ┌──────────┐ ┌─────────┐   │
+│  │   Auth   │ │   Vision   │ │   SOS    │ │ Feedback │ │Broadcast│   │
+│  │ (JWT+WS) │ │ (WS+Queue) │ │ (Alerts) │ │ (Review) │ │  (TTS)  │   │
+│  └──────────┘ └─────┬──────┘ └──────────┘ └──────────┘ └─────────┘   │
 │                     │                                                │
-│              ┌──────┴──────┐         ┌───────────────┐              │
-│              │  RabbitMQ   │         │  PostgreSQL   │              │
-│              │ (Task Queue)│         │  (Data Store) │              │
-│              └──────┬──────┘         └───────────────┘              │
+│              ┌──────┴──────┐         ┌───────────────┐               │
+│              │  RabbitMQ   │         │  PostgreSQL   │               │
+│              │ (Task Queue)│         │  (Data Store) │               │
+│              └──────┬──────┘         └───────────────┘               │
 └─────────────────────┼────────────────────────────────────────────────┘
                       │ AMQP (ai_tasks_queue ↔ ai_results_queue)
                       ▼
 ┌──────────────────────────────────────────────────────────────────────┐
 │                      AI WORKER (Python/FastAPI)                      │
 │                                                                      │
-│  ┌──────────────┐ ┌──────────────┐ ┌─────────────┐ ┌─────────────┐ │
-│  │ YOLO v11     │ │ Money        │ │ Scene       │ │ Gemini      │ │
-│  │ (Detection)  │ │ Detector     │ │ Captioner   │ │ Vision Q&A  │ │
-│  └──────────────┘ └──────────────┘ └─────────────┘ └─────────────┘ │
-│  ┌──────────────┐ ┌──────────────┐ ┌─────────────┐ ┌─────────────┐ │
-│  │ OCR          │ │ Danger       │ │ TTS Cache   │ │ Stabilizer  │ │
-│  │ (Tesseract)  │ │ Detector     │ │ (Redis)     │ │ (Temporal)  │ │
-│  └──────────────┘ └──────────────┘ └─────────────┘ └─────────────┘ │
+│  ┌──────────────┐ ┌──────────────┐ ┌─────────────┐ ┌─────────────┐   │
+│  │ YOLO v11     │ │ Money        │ │ Scene       │ │ Gemini      │   │
+│  │ (Detection)  │ │ Detector     │ │ Captioner   │ │ Vision Q&A  │   │
+│  └──────────────┘ └──────────────┘ └─────────────┘ └─────────────┘   │
+│  ┌──────────────┐ ┌──────────────┐ ┌─────────────┐ ┌─────────────┐   │
+│  │ OCR          │ │ Danger       │ │ TTS Cache   │ │ Stabilizer  │   │
+│  │ (Tesseract)  │ │ Detector     │ │ (Redis)     │ │ (Temporal)  │   │
+│  └──────────────┘ └──────────────┘ └─────────────┘ └─────────────┘   │
 └──────────────────────────────────────────────────────────────────────┘
 
 ┌──────────────────────────────────────────────────────────────────────┐
 │                   ADMIN DASHBOARD (React + Vite)                     │
 │                                                                      │
-│  Dashboard │ SOS Alerts │ Heatmap │ Feedback │ Broadcast │ Users    │
+│   Dashboard │ SOS Alerts │ Heatmap │ Feedback │ Broadcast │ Users    │
 └──────────────────────────────────────────────────────────────────────┘
 ```
 
@@ -549,7 +549,7 @@ GEMINI_MAX_OUTPUT_TOKENS=256             # Optional: limit response length
 |--------|----------|-------|------|
 | `POST` | `/api/auth/register` | Đăng ký tài khoản | ❌ |
 | `POST` | `/api/auth/login` | Đăng nhập (nhận JWT) | ❌ |
-| `POST` | `/api/auth/admin/login` | Đăng nhập admin | ❌ |
+| `POST` | `/api/auth/admin/login` | Đăng nhập admin | 🔒 Admin |
 | `GET` | `/api/stats/dashboard` | Thống kê dashboard | 🔒 Admin |
 | `GET` | `/api/sos` | Danh sách SOS alerts | 🔒 Admin |
 | `PATCH` | `/api/sos/:id/resolve` | Đánh dấu SOS đã xử lý | 🔒 Admin |
