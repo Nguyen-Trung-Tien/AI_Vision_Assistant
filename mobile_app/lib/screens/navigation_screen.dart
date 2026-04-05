@@ -339,7 +339,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
         borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.08),
+            color: Colors.black.withValues(alpha: 0.08),
             blurRadius: 12,
             offset: const Offset(0, 6),
           ),
@@ -387,7 +387,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
         onPressed: _isNavigating ? null : _startVoiceSearch,
         style: ElevatedButton.styleFrom(
           backgroundColor:
-              _isNavigating ? colorScheme.surfaceVariant : colorScheme.primary,
+              _isNavigating ? colorScheme.surfaceContainerHighest : colorScheme.primary,
           foregroundColor:
               _isNavigating ? colorScheme.onSurfaceVariant : Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16),

@@ -89,6 +89,20 @@ class SettingsService {
     await _prefs?.setDouble('light_threshold_kb', value);
   }
 
+  // --- Walk Mode FPS Limit ---
+  int get fpsLimit => _prefs?.getInt('fps_limit') ?? 3;
+
+  Future<void> setFpsLimit(int value) async {
+    await _prefs?.setInt('fps_limit', value);
+  }
+
+  // --- Auto Battery Saving (FPS) ---
+  bool get autoFpsBatterySaving => _prefs?.getBool('auto_fps_battery_saving') ?? true;
+
+  Future<void> setAutoFpsBatterySaving(bool value) async {
+    await _prefs?.setBool('auto_fps_battery_saving', value);
+  }
+
   // --- Auth Token / User ---
   String get authToken => _prefs?.getString('auth_token') ?? '';
 

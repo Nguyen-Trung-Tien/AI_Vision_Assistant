@@ -7,6 +7,7 @@ import {
   OneToMany,
 } from 'typeorm';
 import { DetectionLog } from '../../vision/entities/detection-log.entity';
+import { EmergencyContact } from '../../emergency-contact/entities/emergency-contact.entity';
 
 @Entity('users')
 export class User {
@@ -30,6 +31,10 @@ export class User {
 
   @OneToMany(() => DetectionLog, (log) => log.user)
   detectionLogs: DetectionLog[];
+
+  @OneToMany(() => EmergencyContact, (contact) => contact.user)
+  emergencyContacts: EmergencyContact[];
+
 
   @CreateDateColumn()
   created_at: Date;

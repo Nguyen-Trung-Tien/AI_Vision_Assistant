@@ -3,12 +3,16 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { SosAlert } from './entities/sos-alert.entity';
 import { User } from '../users/entities/user.entity';
+import { SmsService } from '../sms/sms.service';
+import { EmergencyContactService } from '../emergency-contact/emergency-contact.service';
 
 @Injectable()
 export class SosService {
   constructor(
     @InjectRepository(SosAlert)
     private readonly sosRepo: Repository<SosAlert>,
+    private readonly smsService: SmsService,
+    private readonly emergencyContactService: EmergencyContactService,
   ) {}
 
   async createAlert(
@@ -24,7 +28,30 @@ export class SosService {
       image_url: imageUrl,
       status: 'pending',
     });
-    return this.sosRepo.save(alert);
+    
+    const savedAlert = await this.sosRepo.save(alert);
+
+    // Trigger SMS to emergency contacts asynchronously
+    if (userId) {
+      this.sendEmergencySms(userId, latitude, longitude).catch(err => {
+        console.error('Failed to send emergency SMS:', err);
+      });
+    }
+
+    return savedAlert;
+  }
+
+  private async sendEmergencySms(userId: string, lat: number, lng: number) {
+    const contacts = await this.emergencyContactService.findAllSosContactsByUserId(userId);
+    if (!contacts || contacts.length === 0) return;
+
+    // TODO: fetch user name if available in the future. For now use a generic placeholder.
+    const userName = 'Người dùng'; 
+    
+    // In production we should limit concurrent SMS sends or use a queue
+    for (const contact of contacts) {
+      await this.smsService.sendSOS(contact.phone, userName, lat, lng);
+    }
   }
 
   async findAll(page: number = 1, limit: number = 20) {

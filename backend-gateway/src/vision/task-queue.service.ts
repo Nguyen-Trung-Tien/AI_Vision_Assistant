@@ -5,6 +5,22 @@ import { Repository } from 'typeorm';
 import { Server } from 'socket.io';
 import { DetectionLog } from './entities/detection-log.entity';
 
+interface VisionTask {
+  clientId: string;
+  userId?: string;
+  taskType: string;
+  frameData: string;
+  lang?: string;
+  warningDistanceM?: number;
+  latitude?: number;
+  longitude?: number;
+  question?: string;
+  mode?: string;
+  priority?: number;
+  frameSeq?: number;
+  timestamp?: number;
+}
+
 export interface AIResultPayload {
   clientId: string;
   userId?: string;
@@ -29,37 +45,110 @@ export class TaskQueueService {
   private readonly logger = new Logger(TaskQueueService.name);
   private server: Server;
 
-  // Rate limiting: track last frame time per client
+  private taskQueue: VisionTask[] = [];
+  private readonly latestContinuousByClient = new Map<string, VisionTask>();
+
   private clientLastFrame: Map<string, number> = new Map();
-  private readonly MIN_FRAME_INTERVAL_MS = 500; // Max 2 frames/second per client
+  private lastGlobalContinuous = 0;
+
+  private readonly MIN_FRAME_INTERVAL_MS = 500;
 
   constructor(
     @Inject('AI_SERVICE') private client: ClientProxy,
     @InjectRepository(DetectionLog)
     private detectionLogRepo: Repository<DetectionLog>,
-  ) {}
+  ) {
+    setInterval(() => {
+      this.processNextTask();
+    }, 50);
+  }
 
   setServer(server: Server) {
     this.server = server;
   }
 
-  /**
-   * Kiểm tra rate limit cho client.
-   * Returns true nếu cho phép, false nếu bị throttle.
-   */
-  checkRateLimit(clientId: string): boolean {
+  enqueueTask(task: VisionTask) {
+    const normalizedTask: VisionTask = {
+      ...task,
+      mode: task.mode ?? (task.taskType === 'CONTINUOUS' ? 'continuous' : 'normal'),
+      priority: task.priority ?? this.resolvePriority(task.taskType),
+      timestamp: task.timestamp ?? Date.now(),
+    };
+
+    if (normalizedTask.mode === 'continuous' || normalizedTask.taskType === 'CONTINUOUS') {
+      this.latestContinuousByClient.set(normalizedTask.clientId, normalizedTask);
+      return;
+    }
+
+    this.taskQueue.push(normalizedTask);
+    this.sortQueueByPriority();
+  }
+
+  private sortQueueByPriority() {
+    this.taskQueue.sort((a, b) => {
+      const priorityDiff = (b.priority ?? 0) - (a.priority ?? 0);
+      if (priorityDiff !== 0) return priorityDiff;
+      return (a.timestamp ?? 0) - (b.timestamp ?? 0);
+    });
+  }
+
+  private resolvePriority(taskType: string): number {
+    if (taskType === 'SOS') return 10;
+    if (taskType === 'CONTINUOUS') return 1;
+    return 6;
+  }
+
+  processNextTask() {
+    let task: VisionTask | undefined;
+
+    if (this.taskQueue.length > 0) {
+      this.sortQueueByPriority();
+      task = this.taskQueue.shift();
+    } else if (this.latestContinuousByClient.size > 0) {
+      const [clientId, continuousTask] = this.latestContinuousByClient.entries().next().value as [
+        string,
+        VisionTask,
+      ];
+      this.latestContinuousByClient.delete(clientId);
+      task = continuousTask;
+    }
+
+    if (!task) return;
+
+    this.pushHeavyTask(
+      task.clientId,
+      task.userId,
+      task.taskType,
+      task.frameData,
+      task.lang,
+      task.warningDistanceM,
+      task.latitude,
+      task.longitude,
+      task.question,
+      task.mode,
+      task.priority,
+      task.frameSeq,
+      task.timestamp,
+    );
+  }
+
+  checkRateLimit(clientId: string, taskType: string): boolean {
     const now = Date.now();
     const lastFrame = this.clientLastFrame.get(clientId) || 0;
 
-    if (now - lastFrame < this.MIN_FRAME_INTERVAL_MS) {
-      return false; // Throttled
+    const interval = taskType === 'CONTINUOUS' ? 120 : this.MIN_FRAME_INTERVAL_MS;
+
+    if (now - lastFrame < interval) return false;
+
+    if (taskType === 'CONTINUOUS') {
+      if (now - this.lastGlobalContinuous < 60) return false;
+      this.lastGlobalContinuous = now;
     }
 
     this.clientLastFrame.set(clientId, now);
     return true;
   }
 
-  // Push heavy tasks to RabbitMQ
   pushHeavyTask(
     clientId: string,
     userId: string | undefined,
@@ -70,34 +159,35 @@ export class TaskQueueService {
     latitude?: number,
     longitude?: number,
     question?: string,
+    mode: string = 'normal',
+    priority = 5,
+    frameSeq?: number,
+    timestamp?: number,
   ) {
-    this.logger.log(
-      `Pushing task ${taskType} to RabbitMQ for client ${clientId} (userId: ${userId ?? 'anonymous'}, lang: ${lang})`,
-    );
-    // Emit event to rabbitmq queue 'ai_tasks_queue'
+    this.logger.log(`Push ${taskType} -> RabbitMQ (client ${clientId})`);
+
     this.client.emit('process_ai_task', {
       clientId,
       userId,
-      taskType,
+      taskType: taskType === 'CONTINUOUS' ? 'CAPTION' : taskType,
+      originalTaskType: taskType,
+      mode,
       frameData,
       lang,
       warningDistanceM,
       latitude,
       longitude,
       question,
-      timestamp: Date.now(),
+      timestamp: timestamp ?? Date.now(),
+      priority,
+      frameSeq,
     });
   }
 
-  // Receive AI result from RabbitMQ and relay to client via WebSocket
   async handleAIResult(result: AIResultPayload) {
-    this.logger.log(
-      `Received AI result for client ${result?.clientId} (userId: ${result?.userId ?? 'anonymous'})`,
-    );
-
-    // Persist to database
     try {
       const dangerAlerts = result.danger_alerts || [];
+
       const highestDangerDistance = dangerAlerts.reduce(
         (min, a) => Math.min(min, a.distance),
         Number.POSITIVE_INFINITY,
@@ -117,40 +207,24 @@ export class TaskQueueService {
               ? 'CRITICAL'
               : 'HIGH',
       });
-      const savedLog = await this.detectionLogRepo.save(log);
-      this.logger.log(`DetectionLog saved for client ${result.clientId}`);
 
-      // Relay to client via WebSocket
+      const savedLog = await this.detectionLogRepo.save(log);
+
       if (this.server) {
         this.server.to(result.clientId).emit('ai_result', {
           detectionId: savedLog.id,
           taskType: result.taskType || result.task_type,
-          task_type: result.taskType || result.task_type,
           text: result.text,
           audio_url: result.audio_url,
           stable: result.stable,
-          danger_alerts: result.danger_alerts || [],
+          danger_alerts: dangerAlerts,
         });
       }
-    } catch (err) {
-      this.logger.error(`Failed to save DetectionLog: ${err}`);
+
       if (this.server) {
-        this.server.to(result.clientId).emit('ai_result', {
-          taskType: result.taskType || result.task_type,
-          task_type: result.taskType || result.task_type,
-          text: result.text,
-          audio_url: result.audio_url,
-          stable: result.stable,
-          danger_alerts: result.danger_alerts || [],
-        });
-      }
-    } finally {
-      // Emit separate danger_alert events for immediate mobile handling
-      if (this.server) {
-        const dangerAlerts = result.danger_alerts || [];
         for (const alert of dangerAlerts) {
           this.server.to(result.clientId).emit('danger_alert', {
-            level: alert.distance < 1.0 ? 'CRITICAL' : 'HIGH',
+            level: alert.distance < 1 ? 'CRITICAL' : 'HIGH',
             label: alert.label,
             message: alert.message,
             distance: alert.distance,
@@ -158,11 +232,14 @@ export class TaskQueueService {
           });
         }
       }
+    } catch (err) {
+      this.logger.error(`handleAIResult error: ${err}`);
     }
   }
 
-  // Cleanup: remove stale client entries (called on disconnect)
   cleanupClient(clientId: string) {
     this.clientLastFrame.delete(clientId);
+    this.latestContinuousByClient.delete(clientId);
+    this.taskQueue = this.taskQueue.filter((task) => task.clientId !== clientId);
   }
 }

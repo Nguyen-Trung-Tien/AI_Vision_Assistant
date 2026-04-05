@@ -15,6 +15,9 @@ import { StatsModule } from './stats/stats.module';
 import { SosModule } from './sos/sos.module';
 import { FeedbackModule } from './feedback/feedback.module';
 import { BroadcastModule } from './broadcast/broadcast.module';
+import { EmergencyContact } from './emergency-contact/entities/emergency-contact.entity';
+import { EmergencyContactModule } from './emergency-contact/emergency-contact.module';
+import { SmsModule } from './sms/sms.module';
 
 @Module({
   imports: [
@@ -38,6 +41,7 @@ import { BroadcastModule } from './broadcast/broadcast.module';
           AiFeedback,
           Broadcast,
           UserSession,
+          EmergencyContact,
         ],
         synchronize: configService.get<string>('DB_SYNC', 'false') === 'true',
       }),
@@ -48,6 +52,8 @@ import { BroadcastModule } from './broadcast/broadcast.module';
     SosModule,
     FeedbackModule,
     BroadcastModule,
+    EmergencyContactModule,
+    SmsModule,
   ],
   controllers: [AppController],
   providers: [AppService],

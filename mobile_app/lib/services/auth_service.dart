@@ -1,5 +1,6 @@
 import 'dart:convert';
 import 'dart:io';
+import 'package:flutter/foundation.dart';
 
 class AuthResponse {
   final String accessToken;
@@ -60,16 +61,16 @@ class AuthService {
       request.headers.contentType = ContentType.json;
       request.add(utf8.encode(jsonEncode(body)));
 
-      print('=== API REQUEST DEBUG ===');
-      print('URL: $_baseUrl$path');
-      print('Body: $body');
+      debugPrint('=== API REQUEST DEBUG ===');
+      debugPrint('URL: $_baseUrl$path');
+      debugPrint('Body: $body');
 
       final response = await request.close();
       final raw = await response.transform(utf8.decoder).join();
 
-      print('=== API RESPONSE DEBUG ===');
-      print('Status: ${response.statusCode}');
-      print('Raw Response: $raw');
+      debugPrint('=== API RESPONSE DEBUG ===');
+      debugPrint('Status: ${response.statusCode}');
+      debugPrint('Raw Response: $raw');
 
       final decoded = raw.isEmpty
           ? <String, dynamic>{}
@@ -107,8 +108,8 @@ class AuthService {
 
       return decoded;
     } catch (e) {
-      print('=== API EXCEPTION ===');
-      print(e.toString());
+      debugPrint('=== API EXCEPTION ===');
+      debugPrint(e.toString());
       rethrow;
     } finally {
       client.close(force: true);

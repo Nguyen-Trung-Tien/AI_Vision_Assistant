@@ -5,6 +5,8 @@ import { SosService } from './sos.service';
 import { SosController } from './sos.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
+import { SmsModule } from '../sms/sms.module';
+import { EmergencyContactModule } from '../emergency-contact/emergency-contact.module';
 
 @Module({
   imports: [
@@ -17,6 +19,8 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
         signOptions: { expiresIn: '7d' },
       }),
     }),
+    SmsModule,
+    EmergencyContactModule,
   ],
   controllers: [SosController],
   providers: [SosService],

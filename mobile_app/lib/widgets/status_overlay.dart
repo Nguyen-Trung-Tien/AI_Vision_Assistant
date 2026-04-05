@@ -30,17 +30,17 @@ class StatusOverlay extends StatelessWidget {
           top: topPadding,
           left: 16,
           child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+            padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
             decoration: AppTheme.glassDecoration(
-              borderRadius: 20,
+              borderRadius: 14,
               opacity: 0.6,
             ),
             child: Row(
               mainAxisSize: MainAxisSize.min,
               children: [
                 Container(
-                  width: 10,
-                  height: 10,
+                  width: 8,
+                  height: 8,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
                     color: isConnected
@@ -63,7 +63,7 @@ class StatusOverlay extends StatelessWidget {
                   isConnected ? onlineText : offlineText,
                   style: AppTheme.bodySmall.copyWith(
                     color: AppTheme.whiteAlpha(0.9),
-                    fontSize: 12,
+                    fontSize: 11,
                   ),
                 ),
               ],
@@ -75,10 +75,10 @@ class StatusOverlay extends StatelessWidget {
             top: topPadding,
             right: 16,
             child: Container(
-              padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
+              padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
               decoration: BoxDecoration(
                 color: AppTheme.accentOrange.withValues(alpha: 0.9),
-                borderRadius: BorderRadius.circular(16),
+                borderRadius: BorderRadius.circular(14),
                 boxShadow: [
                   BoxShadow(
                     color: AppTheme.accentOrange.withValues(alpha: 0.4),
@@ -93,14 +93,14 @@ class StatusOverlay extends StatelessWidget {
                   Icon(
                     isNightMode ? Icons.nights_stay : Icons.flashlight_on,
                     color: Colors.black,
-                    size: 18,
+                    size: 16,
                   ),
                   const SizedBox(width: 6),
                   Text(
                     isNightMode ? nightText : flashText,
                     style: const TextStyle(
                       color: Colors.black,
-                      fontSize: 12,
+                      fontSize: 11,
                       fontWeight: FontWeight.bold,
                     ),
                   ),

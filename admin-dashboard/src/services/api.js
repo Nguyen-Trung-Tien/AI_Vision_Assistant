@@ -264,3 +264,11 @@ export async function lockUser(id) {
 export async function unlockUser(id) {
   return requestJson(`/api/users/${id}/unlock`, { method: "PATCH" });
 }
+
+export async function fetchUserEmergencyContacts(userId) {
+  try {
+    return (await requestJson(`/api/emergency-contacts/admin/user/${userId}`)) ?? [];
+  } catch {
+    return [];
+  }
+}

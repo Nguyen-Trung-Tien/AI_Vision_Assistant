@@ -28,6 +28,7 @@ class LightSensorService {
 
   void _checkExposure(CameraController controller) {
     if (!controller.value.isInitialized) return;
+    if (controller.value.isTakingPicture || controller.value.isStreamingImages) return;
 
     try {
       _evaluateBrightness(controller);

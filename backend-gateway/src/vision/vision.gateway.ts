@@ -59,23 +59,27 @@ export class VisionGateway
   ) {
     const userId = client.data?.user?.sub?.toString();
 
-    // Rate limiting: max 2 frames/second per client
-    if (!this.taskQueueService.checkRateLimit(client.id)) {
+    // Rate limiting handled per task type in TaskQueueService.
+    if (!this.taskQueueService.checkRateLimit(client.id, data.task_type || 'UNKNOWN')) {
       client.emit('stream_ack', { status: 'throttled', timestamp: Date.now() });
       return;
     }
 
     if (data.task_type) {
-      this.taskQueueService.pushHeavyTask(
-        client.id,
+      this.taskQueueService.enqueueTask({
+        clientId: client.id,
         userId,
-        data.task_type,
-        data.frame,
-        data.lang ?? 'vi',
-        data.warning_distance_m ?? 2.0,
-        data.latitude,
-        data.longitude,
-      );
+        taskType: data.task_type,
+        frameData: data.frame,
+        lang: data.lang ?? 'vi',
+        warningDistanceM: data.warning_distance_m ?? 2.0,
+        latitude: data.latitude,
+        longitude: data.longitude,
+        mode: data.mode,
+        priority: data.priority,
+        frameSeq: data.frame_seq,
+        timestamp: Date.now(),
+      });
     }
 
     client.emit('stream_ack', { status: 'received', timestamp: Date.now() });
@@ -91,17 +95,20 @@ export class VisionGateway
 
     // Check rate limit if needed, skip for now since it's user-triggered
 
-    this.taskQueueService.pushHeavyTask(
-      client.id,
+    this.taskQueueService.enqueueTask({
+      clientId: client.id,
       userId,
-      'visual_qa',
-      data.frame,
-      data.lang ?? 'vi',
-      2.0,
-      data.latitude,
-      data.longitude,
-      data.question,
-    );
+      taskType: 'visual_qa',
+      frameData: data.frame,
+      lang: data.lang ?? 'vi',
+      warningDistanceM: 2.0,
+      latitude: data.latitude,
+      longitude: data.longitude,
+      question: data.question,
+      mode: 'normal',
+      priority: 6,
+      timestamp: Date.now(),
+    });
 
     client.emit('visual_qa_ack', { status: 'received', timestamp: Date.now() });
   }

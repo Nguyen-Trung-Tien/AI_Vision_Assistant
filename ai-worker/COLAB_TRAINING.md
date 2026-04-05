@@ -96,6 +96,7 @@ Use this when your datasets are downloaded from `universe.roboflow.com`.
 ```
 
 Notes:
+
 - Script merges multiple Roboflow datasets and remaps labels to project classes.
 - Male/female labels are merged into `person` to keep total 29 classes.
 - Unknown/unwanted classes (for example `dog`, `cat`, `tree`) are skipped by design.
@@ -115,7 +116,7 @@ Notes:
 !python train_yolo.py \
   --mode finetune \
   --dataset dataset_roboflow/data.yaml \
-  --epochs 80 \
+  --epochs 100 \
   --imgsz 640 \
   --model yolo11n.pt \
   --device 0 \
@@ -130,7 +131,7 @@ If you want to start from scratch:
 !python train_yolo.py \
   --mode scratch \
   --dataset dataset_roboflow/data.yaml \
-  --epochs 80 \
+  --epochs 100 \
   --imgsz 640 \
   --model yolo11n.pt \
   --device 0 \

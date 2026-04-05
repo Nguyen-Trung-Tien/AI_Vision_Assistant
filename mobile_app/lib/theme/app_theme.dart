@@ -20,8 +20,6 @@ class AppTheme {
   static Color whiteAlpha(double alpha) => Colors.white.withValues(alpha: alpha);
 
   // ── Typography ─────────────────────────────────────────────────────────
-  static const String _fontFamily = 'Roboto';
-
   static TextStyle get headlineLarge => const TextStyle(
         color: Colors.white,
         fontSize: 28,

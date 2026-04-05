@@ -16,6 +16,7 @@ import Avatar from "../components/ui/Avatar";
 import { RoleBadge, LockedBadge } from "../components/ui/Badge";
 import AddUserModal from "../components/users/AddUserModal";
 import EditUserModal from "../components/users/EditUserModal";
+import UserEmergencyContactsModal from "../components/users/UserEmergencyContactsModal";
 
 // ── Main Page
 export default function UsersPage() {
@@ -32,6 +33,7 @@ export default function UsersPage() {
   // Modal states
   const [showAdd, setShowAdd] = useState(false);
   const [editUser, setEditUser] = useState(null);
+  const [contactsUser, setContactsUser] = useState(null);
   const [confirm, setConfirm] = useState(null); // { type, user }
   const [actionLoading, setActionLoading] = useState(false);
 
@@ -114,6 +116,12 @@ export default function UsersPage() {
             setEditUser(null);
             load();
           }}
+        />
+      )}
+      {contactsUser && (
+        <UserEmergencyContactsModal
+          user={contactsUser}
+          onClose={() => setContactsUser(null)}
         />
       )}
       <ConfirmDialog
@@ -279,6 +287,26 @@ export default function UsersPage() {
                         strokeLinejoin="round"
                         strokeWidth={2}
                         d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
+                      />
+                    </svg>
+                  </button>
+                  {/* Emergency Contacts */}
+                  <button
+                    onClick={() => setContactsUser(user)}
+                    title="Liên hệ khẩn cấp"
+                    className="p-1.5 rounded-lg hover:bg-cyan-500/10 text-white/40 hover:text-cyan-400 transition-colors"
+                  >
+                    <svg
+                      className="w-4 h-4"
+                      fill="none"
+                      stroke="currentColor"
+                      viewBox="0 0 24 24"
+                    >
+                      <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
                       />
                     </svg>
                   </button>

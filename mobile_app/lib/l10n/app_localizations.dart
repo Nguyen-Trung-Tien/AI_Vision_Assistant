@@ -1,4 +1,14 @@
 class AppLocalizations {
+  static const List<String> modeLabelKeys = [
+    'mode_0',
+    'mode_1',
+    'mode_2',
+    'mode_3',
+    'mode_4',
+    'mode_5',
+    'mode_6',
+  ];
+
   static final Map<String, Map<String, String>> _localizedStrings = {
     // --- General / UI ---
     'app_name': {'vi': 'AI Vision Assistant', 'en': 'AI Vision Assistant'},
@@ -78,25 +88,30 @@ class AppLocalizations {
       'vi': 'Chế độ nhận diện tổng hợp',
       'en': 'General recognition mode',
     },
-    'mode_1': {'vi': 'Đọc văn bản (Online)', 'en': 'Read Text (Online)'},
+    'mode_1': {'vi': 'Mô tả không gian', 'en': 'Scene Description'},
     'mode_1_spoken': {
-      'vi': 'Chế độ đọc văn bản (Online)',
-      'en': 'Online reading mode',
-    },
-    'mode_2': {'vi': 'Đọc chữ nhanh (Offline)', 'en': 'Quick Read (Offline)'},
-    'mode_2_spoken': {
-      'vi': 'Chế độ đọc chữ nhanh (Offline)',
-      'en': 'Offline quick reading mode',
-    },
-    'mode_3': {'vi': 'Mô tả không gian', 'en': 'Scene Description'},
-    'mode_3_spoken': {
       'vi': 'Chế độ mô tả không gian',
       'en': 'Scene description mode',
     },
-    'mode_4': {'vi': 'Chỉ hướng', 'en': 'Navigation'},
-    'mode_4_spoken': {'vi': 'Chế độ chỉ hướng', 'en': 'Navigation mode'},
-    'mode_5': {'vi': 'Đọc tệp', 'en': 'Read File'},
+    'mode_2': {'vi': 'Đi bộ (Thời gian thực)', 'en': 'Walking (Real-time)'},
+    'mode_2_spoken': {
+      'vi': 'Chế độ đi bộ thời gian thực',
+      'en': 'Real-time walking mode',
+    },
+    'mode_3': {'vi': 'Chỉ hướng', 'en': 'Navigation'},
+    'mode_3_spoken': {'vi': 'Chế độ chỉ hướng', 'en': 'Navigation mode'},
+    'mode_4': {'vi': 'Đọc văn bản (Online)', 'en': 'Read Text (Online)'},
+    'mode_4_spoken': {
+      'vi': 'Chế độ đọc văn bản (Online)',
+      'en': 'Online reading mode',
+    },
+    'mode_5': {'vi': 'Đọc chữ nhanh (Offline)', 'en': 'Quick Read (Offline)'},
     'mode_5_spoken': {
+      'vi': 'Chế độ đọc chữ nhanh (Offline)',
+      'en': 'Offline quick reading mode',
+    },
+    'mode_6': {'vi': 'Đọc tệp', 'en': 'Read File'},
+    'mode_6_spoken': {
       'vi': 'Chế độ đọc tệp từ bộ nhớ',
       'en': 'Local file reading mode',
     },

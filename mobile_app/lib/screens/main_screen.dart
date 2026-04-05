@@ -22,6 +22,7 @@ import 'package:mobile_app/services/tflite_service.dart';
 import 'package:mobile_app/services/voice_command_service.dart';
 import 'package:mobile_app/services/volume_button_service.dart';
 import 'package:mobile_app/services/websocket_service.dart';
+import 'package:mobile_app/services/continuous_stream_service.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
 import 'package:mobile_app/utils/text_utils.dart';
 import 'package:mobile_app/theme/app_theme.dart';
@@ -38,9 +39,11 @@ class MainScreen extends StatefulWidget {
   State<MainScreen> createState() => _MainScreenState();
 }
 
-class _MainScreenState extends State<MainScreen> {
+class _MainScreenState extends State<MainScreen>
+    with SingleTickerProviderStateMixin {
   late WebSocketService _wsService;
   late EdgeAIService _aiService;
+  late ContinuousStreamService _continuousStreamService;
   final DocumentReaderService _documentReaderService = DocumentReaderService();
   final AccessibilityManager _accessibilityManager = AccessibilityManager();
   final MlKitService _mlKitService = MlKitService();
@@ -65,7 +68,13 @@ class _MainScreenState extends State<MainScreen> {
 
   final PageController _pageController = PageController();
   int _currentModeIndex = 0;
+  bool _isWalkingModeEnabled = false;
+  int _walkingCurrentFps = 1;
+  String _walkingNearestObstacle = '-';
+  String _walkingSafeDirection = '-';
   bool _isScanningMLKit = false;
+  Future<void>? _stopImageStreamFuture;
+  late AnimationController _pulseController;
 
   final LightSensorService _lightSensor = LightSensorService();
   final TfliteService _tfliteService = TfliteService();
@@ -87,7 +96,10 @@ class _MainScreenState extends State<MainScreen> {
 
   String _sanitizeForTts(String text) {
     var cleaned = text;
-    cleaned = cleaned.replaceAll(RegExp(r'^\s{0,3}#{1,6}\s+', multiLine: true), '');
+    cleaned = cleaned.replaceAll(
+      RegExp(r'^\s{0,3}#{1,6}\s+', multiLine: true),
+      '',
+    );
     cleaned = cleaned.replaceAll(RegExp(r'^\s*[-*+]\s+', multiLine: true), '');
     cleaned = cleaned.replaceAll(RegExp(r'^\s*\d+\.\s+', multiLine: true), '');
     cleaned = cleaned.replaceAll('**', '');
@@ -103,12 +115,18 @@ class _MainScreenState extends State<MainScreen> {
   List<String> _getModes(String lang) {
     return [
       AppLocalizations.t('mode_0', lang),
-      AppLocalizations.t('mode_1', lang),
-      AppLocalizations.t('mode_2', lang),
-      AppLocalizations.t('mode_3', lang),
       AppLocalizations.t('mode_4', lang),
       AppLocalizations.t('mode_5', lang),
+      AppLocalizations.t('mode_1', lang),
+      AppLocalizations.t('mode_3', lang),
+      AppLocalizations.t('mode_6', lang),
     ];
+  }
+
+  String _modeSpokenKey(int index) {
+    const keys = ['mode_0', 'mode_4', 'mode_5', 'mode_1', 'mode_3', 'mode_6'];
+    if (index < 0 || index >= keys.length) return 'mode_0_spoken';
+    return '${keys[index]}_spoken';
   }
 
   @override
@@ -137,6 +155,24 @@ class _MainScreenState extends State<MainScreen> {
     _wsService.connect();
 
     _aiService = EdgeAIService(_wsService, _captureCurrentFrame);
+    _continuousStreamService = ContinuousStreamService(
+      _wsService,
+      onFpsChanged: (fps) {
+        if (!mounted) return;
+        setState(() => _walkingCurrentFps = fps);
+      },
+      onLowBatteryFpsActivated: () {
+        _accessibilityManager.speak(
+          _settings.language == 'vi'
+              ? 'Pin yếu, giảm xuống 2 khung hình mỗi giây'
+              : 'Low battery, reducing to 2 FPS',
+        );
+      },
+    );
+    _pulseController = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    );
     _aiService.onProcessingStateChanged = (isProcessing) {
       if (mounted) {
         setState(() => _isProcessing = isProcessing);
@@ -160,7 +196,16 @@ class _MainScreenState extends State<MainScreen> {
         }
         return;
       }
-      
+
+      final taskType =
+          result['taskType']?.toString() ??
+          result['task_type']?.toString() ??
+          '';
+      _continuousStreamService.onFrameResultReceived(taskType: taskType);
+      if (_isWalkingModeEnabled && taskType == 'CONTINUOUS') {
+        _updateWalkingOverlayFromResult(result);
+      }
+
       final detectionId = result['detectionId']?.toString();
       if (detectionId == null || detectionId.isEmpty) return;
       _showFeedbackPrompt(detectionId);
@@ -229,6 +274,8 @@ class _MainScreenState extends State<MainScreen> {
     _feedbackTimer?.cancel();
     _sosHoldProgressTimer?.cancel();
     _sosHoldCompleteTimer?.cancel();
+    _continuousStreamService.stop();
+    _pulseController.dispose();
     _cameraController?.dispose();
     _aiService.stop();
     _wsService.dispose();
@@ -301,9 +348,42 @@ class _MainScreenState extends State<MainScreen> {
     ])) {
       _goToMode(4);
       _openNavigationScreen();
-    } else if (TextUtils.containsAny(cmd, ['doc tep', 'mo file', 'doc file', 'mo tep', 'open file', 'read file'])) {
+    } else if (TextUtils.containsAny(cmd, [
+      'doc tep',
+      'mo file',
+      'doc file',
+      'mo tep',
+      'open file',
+      'read file',
+    ])) {
       _goToMode(5);
-    } else if (TextUtils.containsAny(cmd, ['tong hop', 'tien', 'general', 'money'])) {
+    } else if (TextUtils.containsAny(cmd, [
+      'bat che do di bo',
+      'bat di bo',
+      'enable walking mode',
+      'start walking mode',
+    ])) {
+      unawaited(_setWalkingMode(true));
+    } else if (TextUtils.containsAny(cmd, [
+      'tat che do di bo',
+      'tat di bo',
+      'disable walking mode',
+      'stop walking mode',
+    ])) {
+      unawaited(_setWalkingMode(false));
+    } else if (TextUtils.containsAny(cmd, [
+      'di bo',
+      'buoc di',
+      'walk',
+      'walking',
+    ])) {
+      unawaited(_setWalkingMode(!_isWalkingModeEnabled));
+    } else if (TextUtils.containsAny(cmd, [
+      'tong hop',
+      'tien',
+      'general',
+      'money',
+    ])) {
       _goToMode(0);
     } else {
       _accessibilityManager.speak(
@@ -378,16 +458,106 @@ class _MainScreenState extends State<MainScreen> {
     );
   }
 
+  Future<void> _setWalkingMode(bool enabled, {bool announce = true}) async {
+    if (_isWalkingModeEnabled == enabled) return;
+
+    if (enabled) {
+      _continuousStreamService.start();
+      _startContinuousImageStream();
+      _pulseController.repeat(reverse: true);
+      if (mounted) {
+        setState(() {
+          _isWalkingModeEnabled = true;
+          _walkingCurrentFps = _continuousStreamService.currentFps;
+          _walkingNearestObstacle = '-';
+          _walkingSafeDirection = '-';
+        });
+      }
+      if (announce) {
+        _accessibilityManager.speak(
+          _settings.language == 'vi'
+              ? 'Đã bật chế độ đi bộ'
+              : 'Walking mode enabled',
+        );
+      }
+      return;
+    }
+
+    _continuousStreamService.stop();
+    _pulseController.stop();
+    _pulseController.reset();
+    await _stopContinuousImageStream();
+    if (mounted) {
+      setState(() => _isWalkingModeEnabled = false);
+    }
+    if (announce) {
+      _accessibilityManager.speak(
+        _settings.language == 'vi'
+            ? 'Đã tắt chế độ đi bộ'
+            : 'Walking mode disabled',
+      );
+    }
+  }
+
+  void _updateWalkingOverlayFromResult(Map<String, dynamic> result) {
+    final dangerAlerts = (result['danger_alerts'] as List<dynamic>? ?? [])
+        .whereType<Map>()
+        .map((e) => Map<String, dynamic>.from(e))
+        .toList();
+
+    var nearestObstacle = '-';
+    var safeDirection = '-';
+
+    if (dangerAlerts.isNotEmpty) {
+      final nearest = dangerAlerts.first;
+      final label = nearest['label']?.toString() ?? '';
+      final distance = nearest['distance']?.toString() ?? '';
+      final position = nearest['position']?.toString() ?? '';
+      nearestObstacle = '$label ${position.toLowerCase()} ${distance}m'.trim();
+      safeDirection = _deriveSafeDirection(position);
+    } else {
+      final text = (result['text']?.toString() ?? '').toLowerCase();
+      if (text.contains('trái') || text.contains('left')) {
+        safeDirection = _settings.language == 'vi' ? 'Đi trái' : 'Go left';
+      } else if (text.contains('phải') || text.contains('right')) {
+        safeDirection = _settings.language == 'vi' ? 'Đi phải' : 'Go right';
+      } else if (text.contains('giữa') || text.contains('center')) {
+        safeDirection = _settings.language == 'vi' ? 'Đi thẳng' : 'Go straight';
+      }
+    }
+
+    if (!mounted) return;
+    setState(() {
+      _walkingNearestObstacle = nearestObstacle;
+      _walkingSafeDirection = safeDirection;
+    });
+  }
+
+  String _deriveSafeDirection(String positionText) {
+    final lowered = positionText.toLowerCase();
+    if (lowered.contains('\u0074\u0072\u00e1\u0069') ||
+        lowered.contains('left')) {
+      return _settings.language == 'vi' ? 'Đi phải' : 'Go right';
+    }
+    if (lowered.contains('\u0070\u0068\u1ea3\u0069') ||
+        lowered.contains('right')) {
+      return _settings.language == 'vi' ? 'Đi trái' : 'Go left';
+    }
+    return _settings.language == 'vi'
+        ? 'Đi chậm, giữ giữa'
+        : 'Slow down, keep center';
+  }
+
   void _onPageChanged(int index) {
     final lang = _settings.language;
     setState(() => _currentModeIndex = index);
     _accessibilityManager.triggerSuccessVibration();
     _accessibilityManager.speak(
-      AppLocalizations.t('mode_${index}_spoken', lang),
+      AppLocalizations.t(_modeSpokenKey(index), lang),
     );
 
-    // Khi chuyển sang tab khác với Navigation thì dừng điều hướng,
-    // nhưng không tự mở màn hình navigation khi chỉ vuốt qua tab.
+    // Khi chuyen sang tab khac voi Navigation thi dung dieu huong,
+    // nhung khong tu mo man hinh navigation khi chi vuot qua tab.
     if (index != 4) {
       _navigationService.stopNavigation();
     }
@@ -404,8 +574,11 @@ class _MainScreenState extends State<MainScreen> {
     });
   }
 
-  void _handleDoubleTap() {
+  Future<void> _handleDoubleTap() async {
     if (_isScanningMLKit || _isProcessing) return;
+    if (_isWalkingModeEnabled) {
+      await _setWalkingMode(false, announce: false);
+    }
 
     switch (_currentModeIndex) {
       case 0:
@@ -444,27 +617,33 @@ class _MainScreenState extends State<MainScreen> {
   Future<void> _pickAndReadFile() async {
     final lang = _settings.language;
     _accessibilityManager.speak(AppLocalizations.t('main_reading_file', lang));
-    
+
     try {
       final text = await _documentReaderService.pickAndExtractText();
       if (text == null) {
         // User canceled
         return;
       }
-      
+
       if (text.isEmpty) {
-        _accessibilityManager.speak(AppLocalizations.t('main_file_empty', lang));
+        _accessibilityManager.speak(
+          AppLocalizations.t('main_file_empty', lang),
+        );
         return;
       }
-      
+
       // Speak the text
       _accessibilityManager.speak(_sanitizeForTts(text));
     } catch (e) {
       debugPrint('Lỗi đọc file: $e');
       if (e.toString().contains('Unsupported format')) {
-        _accessibilityManager.speak(AppLocalizations.t('main_file_unsupported', lang));
+        _accessibilityManager.speak(
+          AppLocalizations.t('main_file_unsupported', lang),
+        );
       } else {
-        _accessibilityManager.speak(AppLocalizations.t('main_file_error', lang));
+        _accessibilityManager.speak(
+          AppLocalizations.t('main_file_error', lang),
+        );
       }
     }
   }
@@ -480,22 +659,22 @@ class _MainScreenState extends State<MainScreen> {
 
   Future<void> _stopVisualQA(BuildContext context) async {
     _voiceCommandService.stopListening();
-    
-    // We would need the recognized question here. 
+
+    // We would need the recognized question here.
     // Since _onCommandRecognized handles all voice input, we'd need a state variable to know we are in QA mode.
     // Let's implement a simpler approach: take a picture and send it with an empty question to just describe it
     // Or, we can just use the standard requestCaptioning here if the architecture is limiting.
-    
+
     final frameBytes = await _captureCurrentFrame();
     if (frameBytes != null) {
-        _accessibilityManager.speak("Đang phân tích hình ảnh...");
-        _wsService.sendVisualQA(
-           frame: frameBytes,
-           lang: _settings.language,
-           question: "Hãy mô tả chi tiết bức ảnh này."
-        );
+      _accessibilityManager.speak("Đang phân tích hình ảnh...");
+      _wsService.sendVisualQA(
+        frame: frameBytes,
+        lang: _settings.language,
+        question: "Hãy mô tả chi tiết bức ảnh này.",
+      );
     } else {
-        _accessibilityManager.speak("Không thể chụp ảnh.");
+      _accessibilityManager.speak("Không thể chụp ảnh.");
     }
   }
 
@@ -510,15 +689,13 @@ class _MainScreenState extends State<MainScreen> {
     _accessibilityManager.triggerSuccessVibration();
 
     try {
-      final file = await _cameraController!
-          .takePicture()
-          .timeout(_captureTimeout);
+      final file = await _cameraController!.takePicture().timeout(
+        _captureTimeout,
+      );
       await _mlKitService.processImageFile(file.path);
     } on TimeoutException catch (_) {
       debugPrint('[Camera] MLKit capture timeout');
-      _accessibilityManager.speak(
-        AppLocalizations.t('main_no_capture', lang),
-      );
+      _accessibilityManager.speak(AppLocalizations.t('main_no_capture', lang));
       _accessibilityManager.triggerErrorVibration();
       _restartCamera();
     } catch (e) {
@@ -586,7 +763,9 @@ class _MainScreenState extends State<MainScreen> {
     if (detectionId == null) return;
 
     final frame = _aiService.lastFrameForFeedback;
-    final imageBase64 = (!isCorrect && frame != null) ? base64Encode(frame) : null;
+    final imageBase64 = (!isCorrect && frame != null)
+        ? base64Encode(frame)
+        : null;
 
     try {
       await _feedbackService.submitFeedback(
@@ -611,13 +790,15 @@ class _MainScreenState extends State<MainScreen> {
     _sosHoldCompleteTimer?.cancel();
     if (!mounted) return;
 
-    // Phản hồi rung 3 lần ngay khi bắt đầu nhấn giữ (kéo dài ~1.7 giây) 
-    // để tạo cảm giác thực hiện cầu cứu
+    // Phan hoi rung 3 lan ngay khi bat dau nhan giu (keo dai ~1.7 giay)
+    // de tao cam giac thuc hien cau cuu
     _accessibilityManager.triggerSOSVibration();
 
     final startedAt = DateTime.now();
     setState(() => _sosHoldProgress = 0);
-    _sosHoldProgressTimer = Timer.periodic(const Duration(milliseconds: 100), (_) {
+    _sosHoldProgressTimer = Timer.periodic(const Duration(milliseconds: 100), (
+      _,
+    ) {
       final elapsed = DateTime.now().difference(startedAt).inMilliseconds;
       final progress = (elapsed / 3000).clamp(0, 1).toDouble();
       if (!mounted) return;
@@ -686,9 +867,28 @@ class _MainScreenState extends State<MainScreen> {
               _cameraController!.value.isInitialized)
             Positioned.fill(child: CameraPreview(_cameraController!)),
 
+          if (_isWalkingModeEnabled)
+            Positioned.fill(
+              child: AnimatedBuilder(
+                animation: _pulseController,
+                builder: (context, child) {
+                  return Container(
+                    decoration: BoxDecoration(
+                      border: Border.all(
+                        color: AppTheme.accentCyan.withValues(
+                          alpha: 0.1 + (_pulseController.value * 0.4),
+                        ),
+                        width: 4 * _pulseController.value,
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+
           Positioned.fill(
             child: GestureDetector(
-              onDoubleTap: _handleDoubleTap,
+              onDoubleTap: () => unawaited(_handleDoubleTap()),
               onLongPress: _handleLongPress,
               child: ModeCarousel(
                 pageController: _pageController,
@@ -698,6 +898,45 @@ class _MainScreenState extends State<MainScreen> {
               ),
             ),
           ),
+
+          if (_isWalkingModeEnabled)
+            Positioned(
+              top: MediaQuery.of(context).padding.top + 46,
+              left: 16,
+              child: Container(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 12,
+                  vertical: 6,
+                ),
+                decoration: AppTheme.glassDecoration(
+                  borderRadius: 12,
+                  opacity: 0.6,
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${_settings.language == 'vi' ? 'ĐI BỘ' : 'WALK'} - $_walkingCurrentFps FPS',
+                      style: const TextStyle(
+                        color: AppTheme.accentGreen,
+                        fontWeight: FontWeight.bold,
+                      ),
+                    ),
+                    Text(
+                      '${_settings.language == 'vi' ? 'Vật cản gần nhất' : 'Nearest'}: $_walkingNearestObstacle',
+                      style: const TextStyle(color: Colors.white, fontSize: 12),
+                    ),
+                    Text(
+                      '${_settings.language == 'vi' ? 'Hướng an toàn' : 'Safe'}: $_walkingSafeDirection',
+                      style: const TextStyle(
+                        color: AppTheme.accentCyan,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            ),
 
           StatusOverlay(
             isConnected: _isConnected,
@@ -779,22 +1018,22 @@ class _MainScreenState extends State<MainScreen> {
                             strokeWidth: 3,
                           ),
                         ),
-                      const SizedBox(height: 16),
-                      Text(
-                        _isScanningMLKit
-                            ? AppLocalizations.t(
-                                'main_scanning',
-                                _settings.language,
-                              )
-                            : AppLocalizations.t(
-                                'main_processing',
-                                _settings.language,
-                              ),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.w500,
-                        ),
+                        const SizedBox(height: 16),
+                        Text(
+                          _isScanningMLKit
+                              ? AppLocalizations.t(
+                                  'main_scanning',
+                                  _settings.language,
+                                )
+                              : AppLocalizations.t(
+                                  'main_processing',
+                                  _settings.language,
+                                ),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 18,
+                            fontWeight: FontWeight.w500,
+                          ),
                         ),
                       ],
                     ),
@@ -813,14 +1052,15 @@ class _MainScreenState extends State<MainScreen> {
                   horizontal: 16,
                   vertical: 14,
                 ),
-                decoration: AppTheme.glassDecoration(
-                  borderRadius: 18,
-                  opacity: 0.75,
-                ).copyWith(
-                  border: Border.all(
-                    color: AppTheme.accentPurple.withValues(alpha: 0.3),
-                  ),
-                ),
+                decoration:
+                    AppTheme.glassDecoration(
+                      borderRadius: 18,
+                      opacity: 0.75,
+                    ).copyWith(
+                      border: Border.all(
+                        color: AppTheme.accentPurple.withValues(alpha: 0.3),
+                      ),
+                    ),
                 child: Row(
                   children: [
                     Expanded(
@@ -849,6 +1089,79 @@ class _MainScreenState extends State<MainScreen> {
               ),
             ),
 
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 14,
+            right: 16,
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () => unawaited(_setWalkingMode(!_isWalkingModeEnabled)),
+                borderRadius: BorderRadius.circular(22),
+                child: Container(
+                  constraints: const BoxConstraints(minWidth: 156),
+                  padding: const EdgeInsets.symmetric(
+                    horizontal: 16,
+                    vertical: 11,
+                  ),
+                  decoration: BoxDecoration(
+                    color: _isWalkingModeEnabled
+                        ? AppTheme.accentGreen.withValues(alpha: 0.45)
+                        : Colors.black.withValues(alpha: 0.55),
+                    borderRadius: BorderRadius.circular(22),
+                    border: Border.all(
+                      color: _isWalkingModeEnabled
+                          ? AppTheme.accentGreen
+                          : AppTheme.accentPurple.withValues(alpha: 0.45),
+                      width: 1.6,
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: _isWalkingModeEnabled
+                            ? AppTheme.accentGreen.withValues(alpha: 0.3)
+                            : Colors.black.withValues(alpha: 0.22),
+                        blurRadius: 16,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  ),
+                  child: Row(
+                    mainAxisSize: MainAxisSize.min,
+                    children: [
+                      Container(
+                        width: 32,
+                        height: 32,
+                        decoration: BoxDecoration(
+                          color: Colors.white.withValues(alpha: 0.15),
+                          shape: BoxShape.circle,
+                        ),
+                        child: const Icon(
+                          Icons.directions_walk_rounded,
+                          color: Colors.white,
+                          size: 20,
+                        ),
+                      ),
+                      const SizedBox(width: 8),
+                      Text(
+                        _settings.language == 'vi'
+                            ? (_isWalkingModeEnabled
+                                  ? 'TẮT ĐI BỘ'
+                                  : 'BẬT ĐI BỘ')
+                            : (_isWalkingModeEnabled
+                                  ? 'STOP WALK'
+                                  : 'START WALK'),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontWeight: FontWeight.w700,
+                          fontSize: 13,
+                          letterSpacing: 0.2,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            ),
+          ),
 
           Positioned(
             bottom: 130,
@@ -858,28 +1171,28 @@ class _MainScreenState extends State<MainScreen> {
               child: InkWell(
                 onTap: _openSettings,
                 borderRadius: BorderRadius.circular(28),
-              child: Container(
-                padding: const EdgeInsets.all(14),
-                decoration: BoxDecoration(
-                  color: Colors.black.withValues(alpha: 0.5),
-                  shape: BoxShape.circle,
-                  border: Border.all(
-                    color: AppTheme.accentPurple.withValues(alpha: 0.4),
-                  ),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppTheme.accentPurple.withValues(alpha: 0.3),
-                      blurRadius: 14,
-                      spreadRadius: 1,
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.5),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: AppTheme.accentPurple.withValues(alpha: 0.4),
                     ),
-                  ],
+                    boxShadow: [
+                      BoxShadow(
+                        color: AppTheme.accentPurple.withValues(alpha: 0.3),
+                        blurRadius: 14,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.settings_rounded,
+                    color: AppTheme.accentCyan,
+                    size: 26,
+                  ),
                 ),
-                child: const Icon(
-                  Icons.settings_rounded,
-                  color: AppTheme.accentCyan,
-                  size: 26,
-                ),
-              ),
               ),
             ),
           ),
@@ -937,7 +1250,7 @@ class _MainScreenState extends State<MainScreen> {
               ),
             ),
           ),
-          
+
           Positioned(
             bottom: 130,
             left: MediaQuery.of(context).size.width / 2 - 38,
@@ -984,6 +1297,14 @@ class _MainScreenState extends State<MainScreen> {
       return null;
     }
 
+    if (controller.value.isStreamingImages) {
+      await _stopContinuousImageStream();
+      if (controller.value.isStreamingImages ||
+          controller.value.isTakingPicture) {
+        return null;
+      }
+    }
+
     try {
       _isCapturing = true;
       final image = await controller.takePicture().timeout(_captureTimeout);
@@ -998,6 +1319,43 @@ class _MainScreenState extends State<MainScreen> {
       if (mounted) {
         _isCapturing = false;
       }
+    }
+  }
+
+  void _startContinuousImageStream() {
+    final controller = _cameraController;
+    if (controller == null || !controller.value.isInitialized) return;
+    if (controller.value.isStreamingImages) return;
+
+    try {
+      controller.startImageStream((CameraImage image) {
+        if (_continuousStreamService.isStreaming) {
+          _continuousStreamService.onLatestCameraImage(image);
+        }
+      });
+    } catch (e) {
+      debugPrint('[Camera] Failed to startImageStream: $e');
+    }
+  }
+
+  Future<void> _stopContinuousImageStream() async {
+    final controller = _cameraController;
+    if (controller == null || !controller.value.isInitialized) return;
+    if (!controller.value.isStreamingImages) return;
+    if (_stopImageStreamFuture != null) {
+      await _stopImageStreamFuture;
+      return;
+    }
+
+    final completer = Completer<void>();
+    _stopImageStreamFuture = completer.future;
+    try {
+      await controller.stopImageStream();
+    } catch (e) {
+      debugPrint('[Camera] Failed to stopImageStream: $e');
+    } finally {
+      completer.complete();
+      _stopImageStreamFuture = null;
     }
   }
 
@@ -1034,8 +1392,6 @@ class _MainScreenState extends State<MainScreen> {
     }
   }
 }
-
-
 
 class _FeedbackChip extends StatelessWidget {
   final String label;
@@ -1075,3 +1431,4 @@ class _FeedbackChip extends StatelessWidget {
     );
   }
 }
+

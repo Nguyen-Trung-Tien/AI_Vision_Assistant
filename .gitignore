@@ -8,6 +8,7 @@ Desktop.ini
 *~
 .vscode/
 .idea/
+.stitch-skills-main/
 
 # ---- Environment / Secrets ----
 .env

@@ -33,4 +33,16 @@ export class FrameStreamDto {
   @IsOptional()
   @IsString()
   question?: string;
+
+  @IsOptional()
+  @IsString()
+  mode?: string;
+
+  @IsOptional()
+  @IsNumber()
+  priority?: number;
+
+  @IsOptional()
+  @IsNumber()
+  frame_seq?: number;
 }

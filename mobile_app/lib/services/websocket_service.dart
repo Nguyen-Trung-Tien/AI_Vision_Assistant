@@ -158,6 +158,9 @@ class WebSocketService {
     double warningDistanceM = 2.0,
     double? latitude,
     double? longitude,
+    String? mode,
+    int? priority,
+    int? frameSeq,
   }) {
     if (_socket == null || !_socket!.connected) {
       debugPrint('WS not connected, frame dropped');
@@ -176,6 +179,9 @@ class WebSocketService {
       'warning_distance_m': warningDistanceM,
       'latitude': latitude,
       'longitude': longitude,
+      'mode': mode,
+      'priority': priority,
+      'frame_seq': frameSeq,
     });
   }
 
