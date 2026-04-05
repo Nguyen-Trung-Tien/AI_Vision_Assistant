@@ -29,29 +29,6 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 </div>
 
 ---
-
-## Release Notes
-
-### 2026-04-05 - v1.3.0
-
-- Walking mode moved out of mode carousel into a dedicated on-screen toggle button to prevent mode-switch crash.
-- Continuous stream mode enabled for walking: `camera.startImageStream()` + smart throttle (send next frame only after previous result).
-- Adaptive FPS in walking mode:
-  - Moving: up to user FPS setting (1-5 FPS, default 3)
-  - Standing still > 5s: drop to 1 FPS
-  - Battery < 20% (optional): drop to 2 FPS + voice notification
-- Backend queue upgraded for throughput:
-  - Priority routing: `SOS` > `Manual capture` > `Continuous`
-  - Latest-only processing for continuous stream (drop stale frames)
-  - Pass-through metadata: `mode`, `priority`, `frame_seq`
-- AI worker optimization for continuous mode:
-  - Resize continuous frames to `320x320`
-  - Skip stale continuous frames from same client using `frame_seq`
-  - Short compact TTS in continuous mode and suppress repeated scene speech
-- Voice commands added for walking mode:
-  - "Bat che do di bo" / "Tat che do di bo"
-  - "Enable walking mode" / "Disable walking mode"
-
 ---
 
 > [!WARNING]
