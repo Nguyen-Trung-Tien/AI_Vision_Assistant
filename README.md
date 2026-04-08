@@ -151,8 +151,8 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 | Tính năng             | Mô tả                                                                        | Xử lý                                         |
 | --------------------- | ---------------------------------------------------------------------------- | --------------------------------------------- |
-| **Nhận diện vật thể** | 29 lớp đối tượng: xe cộ, người, đồ vật, cầu thang, ổ gà, nắp cống...         | YOLO v11 (online) + TFLite (offline fallback) |
-| **Nhận diện tiền VN** | 11 mệnh giá: 1K → 500K VNĐ, kèm xác minh màu sắc HSV & đặc trưng landmark    | YOLO + color validation + OCR                 |
+| **Nhận diện vật thể** | 18 lớp đối tượng: xe cộ, người, đồ vật, cầu thang, ổ gà, nắp cống...         | YOLO v11 (online) + TFLite (offline fallback) |
+| **Nhận diện tiền VN** | 9 mệnh giá: 1K → 500K VNĐ, kèm xác minh màu sắc HSV & đặc trưng landmark    | YOLO + color validation + OCR                 |
 | **Đọc văn bản (OCR)** | Đọc nhãn mác, biển báo, tài liệu                                             | Tesseract (server) + ML Kit (offline)         |
 | **Mô tả cảnh**        | Mô tả không gian: vị trí trái/giữa/phải, ước lượng khoảng cách, gợi ý lối đi | YOLO + spatial analysis                       |
 | **Visual Q&A**        | Hỏi đáp bằng giọng nói về ảnh camera                                         | Google Gemini Vision API                      |
@@ -269,6 +269,7 @@ sequenceDiagram
 | **Mode 2**     | OCR Offline       | ML Kit Text Recognition + Barcode Scanner       | Offline        |
 | **Mode 3**     | Mô tả cảnh        | Mô tả không gian chi tiết + cảnh báo nguy hiểm  | Online         |
 | **Mode 4**     | Điều hướng        | GPS + la bàn + chỉ đường OSRM/OSM               | Online         |
+| **Mode 5**     | Điều hướng        | Continuous Stream 3–5 FPS cho đi bộ             | Online         |
 | **Visual Q&A** | Hỏi đáp           | Hỏi đáp trực quan bằng giọng nói (Gemini AI)    | Online         |
 
 ### Các thành phần Mobile App
@@ -583,19 +584,19 @@ GEMINI_MAX_OUTPUT_TOKENS=256             # Optional: limit response length
 
 ## 🤖 Dataset & Training YOLO
 
-### Danh sách 29 lớp đối tượng
+### Danh sách 18 lớp đối tượng
 
 ```
- 0: car               10: water_bottle       20: motorbike
- 1: truck              11: tien_1k            21: bus
- 2: chair              12: tien_2k            22: plastic_bottle
- 3: manhole            13: tien_5k            23: glass_bottle
- 4: person             14: tien_10k           24: pothole
- 5: phone              15: tien_20k           25: open_manhole
- 6: road               16: tien_50k           26: traffic_light_red
- 7: sidewalk           17: tien_100k          27: traffic_light_yellow
- 8: stairs_down        18: tien_200k          28: traffic_light_green
- 9: stairs_up          19: tien_500k
+ 0: car/ truck/ bus          10: tien_50  
+ 1: motorbike                11: tien_100k                                         
+ 2: manhole/pothole          12: tien_200k        
+ 3: person                   13:tien_500k
+ 4: stairs                   14: traffic_light_green
+ 5: tien_1k                  15: traffic_light_red           
+ 6: tien_2k                                 
+ 7: tien_5k                    
+ 8: tien_10k
+ 9: tien_20k                  
 ```
 
 ### Công cụ chuẩn bị dataset
@@ -603,7 +604,7 @@ GEMINI_MAX_OUTPUT_TOKENS=256             # Optional: limit response length
 | Script                             | Mục đích                                   |
 | ---------------------------------- | ------------------------------------------ |
 | `prepare_dataset_from_roboflow.py` | Chuẩn hóa dataset Roboflow → format YOLO   |
-| `merge_vnd_dataset.py`             | Gộp dataset tiền VN + vật thể → 29 classes |
+| `merge_vnd_dataset.py`             | Gộp dataset tiền VN + vật thể → 18 classes |
 | `package_for_colab.py`             | Đóng gói dataset → ZIP cho Google Colab    |
 | `train_yolo.py`                    | Script training YOLO (finetune / scratch)  |
 
@@ -661,7 +662,7 @@ Dashboard quản trị cung cấp các trang:
 
 ### Đang phát triển
 
-- [x] Stream liên tục 3–5 FPS cho chế độ đi bộ (walking mode button + adaptive FPS + latest-only queue)
+- [ ] Stream liên tục 3–5 FPS cho chế độ đi bộ (walking mode button + adaptive FPS + latest-only queue)
 - [ ] Spatial audio (trái/phải) theo vị trí vật cản
 - [ ] Monocular depth estimation chính xác hơn
 - [ ] Nhận diện khuôn mặt người quen
