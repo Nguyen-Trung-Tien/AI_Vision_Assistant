@@ -1,17 +1,14 @@
-import { useEffect, useState } from "react";
 import { PieChart as RePieChart, Pie, Cell, Tooltip, ResponsiveContainer, Legend } from "recharts";
-import { fetchByType } from "../services/api";
+import { useByType } from "@/hooks/use-queries";
 
 const COLORS = ["#6C63FF", "#00D4FF", "#FF6B9D", "#00E676", "#FF9800", "#FF5252"];
 
 export default function PieChartV2() {
-  const [data, setData] = useState([]);
+  const { data: raw, isLoading } = useByType();
 
-  useEffect(() => {
-    fetchByType().then((res) => setData(res.map((r) => ({ id: r.type, name: r.type, value: r.count }))));
-  }, []);
+  const data = (raw ?? []).map((r) => ({ id: r.type, name: r.type, value: r.count }));
 
-  if (!data.length) {
+  if (isLoading || !data.length) {
     return (
       <div className="bg-bg-card rounded-2xl p-4 sm:p-6 border border-accent-purple/10 shadow-lg">
         <div className="flex flex-col items-center justify-center h-[280px] sm:h-[340px] text-white/50 text-sm">

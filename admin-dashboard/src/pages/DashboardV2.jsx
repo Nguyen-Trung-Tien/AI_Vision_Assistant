@@ -1,4 +1,3 @@
-import StatsCardsV2 from "../components/StatsCardsV2";
 import PieChartV2 from "../components/PieChartV2";
 import LineChartV2 from "../components/LineChartV2";
 import RecentLogsV2 from "../components/RecentLogsV2";
@@ -37,14 +36,15 @@ export default function DashboardV2({ onLogout }) {
       </div>
 
       <div className="mb-4 lg:mb-6">
-        <p className="text-xs text-white/40 truncate max-w-full" title={email || ""}>
+        <p
+          className="text-xs text-white/40 truncate max-w-full"
+          title={email || ""}
+        >
           {email ? `Tài khoản: ${email}` : "Chưa có tài khoản"}
         </p>
       </div>
 
       <RealtimeStatsBar />
-
-      <StatsCardsV2 />
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 mb-4 sm:mb-6">
         <PieChartV2 />

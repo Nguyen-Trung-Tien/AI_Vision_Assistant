@@ -1,4 +1,4 @@
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   AreaChart,
   Area,
@@ -9,12 +9,11 @@ import {
   ResponsiveContainer,
   Legend,
 } from "recharts";
-import { fetchByDay, fetchOverview } from "../services/api";
+import { useByDay, useOverview } from "@/hooks/use-queries";
 
-/** Auto-refresh mỗi REFRESH_INTERVAL ms */
+/** Auto-refresh interval — React Query refetchInterval handles this */
 const REFRESH_INTERVAL = 30_000;
 
-/** Custom tooltip cho biểu đồ */
 function CustomTooltip({ active, payload, label }) {
   if (!active || !payload?.length) return null;
   return (
@@ -30,56 +29,59 @@ function CustomTooltip({ active, payload, label }) {
 }
 
 export default function RealtimeStatsBar() {
-  const [data, setData] = useState([]);
-  const [overview, setOverview] = useState(null);
-  const [lastUpdated, setLastUpdated] = useState(null);
-  const [isRefreshing, setIsRefreshing] = useState(false);
   const [countdown, setCountdown] = useState(REFRESH_INTERVAL / 1000);
-  const intervalRef = useRef(null);
   const countdownRef = useRef(null);
 
-  const load = useCallback(async () => {
-    setIsRefreshing(true);
-    try {
-      const [byDay, ov] = await Promise.all([fetchByDay(14), fetchOverview()]);
-      setData(
-        byDay.map((r) => ({
-          date: new Date(r.date).toLocaleDateString("vi-VN", {
-            day: "2-digit",
-            month: "2-digit",
-          }),
-          "Lượt nhận diện": r.count,
-        })),
-      );
-      setOverview(ov);
-      setLastUpdated(new Date());
-    } catch (e) {
-      console.error("[RealtimeStatsBar] load error", e);
-    } finally {
-      setIsRefreshing(false);
-      setCountdown(REFRESH_INTERVAL / 1000);
-    }
-  }, []);
+  const {
+    data: rawByDay,
+    isLoading: loadingByDay,
+    isFetching: fetchingByDay,
+    dataUpdatedAt,
+    refetch: refetchByDay,
+  } = useByDay(14);
 
-  // Initial load + interval
+  const {
+    data: overview,
+    refetch: refetchOverview,
+  } = useOverview();
+
+  const isRefreshing = fetchingByDay;
+
+  const data = (rawByDay ?? []).map((r) => ({
+    date: new Date(r.date).toLocaleDateString("vi-VN", {
+      day: "2-digit",
+      month: "2-digit",
+    }),
+    "Lượt nhận diện": r.count,
+  }));
+
+  const lastUpdated = dataUpdatedAt ? new Date(dataUpdatedAt) : null;
+
+  const handleRefresh = () => {
+    refetchByDay();
+    refetchOverview();
+    setCountdown(REFRESH_INTERVAL / 1000);
+  };
+
+  // Countdown ticker
   useEffect(() => {
-    load();
-    intervalRef.current = setInterval(load, REFRESH_INTERVAL);
-
-    // Countdown ticker
     countdownRef.current = setInterval(() => {
-      setCountdown((c) => (c <= 1 ? REFRESH_INTERVAL / 1000 : c - 1));
+      setCountdown((c) => {
+        if (c <= 1) {
+          handleRefresh();
+          return REFRESH_INTERVAL / 1000;
+        }
+        return c - 1;
+      });
     }, 1000);
 
-    return () => {
-      clearInterval(intervalRef.current);
-      clearInterval(countdownRef.current);
-    };
-  }, [load]);
+    return () => clearInterval(countdownRef.current);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   return (
     <div className="bg-bg-card rounded-2xl p-4 sm:p-6 border border-accent-purple/10 shadow-lg hover:border-accent-purple/30 transition-all duration-300 mb-6">
-      {/* Header — stack trên mobile */}
+      {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4">
         <div className="min-w-0">
           <h3 className="text-xs font-semibold text-white/50 uppercase tracking-widest">
@@ -93,7 +95,7 @@ export default function RealtimeStatsBar() {
           )}
         </div>
         <button
-          onClick={load}
+          onClick={handleRefresh}
           disabled={isRefreshing}
           className="flex items-center justify-center gap-2 min-h-[44px] px-4 py-2.5 sm:py-1.5 rounded-xl border border-accent-purple/20 bg-bg-card text-white/70 text-xs font-medium hover:border-accent-purple/50 hover:text-white active:scale-[0.98] transition-all duration-200 disabled:opacity-40 shrink-0"
         >
@@ -107,7 +109,7 @@ export default function RealtimeStatsBar() {
         </button>
       </div>
 
-      {/* Mini stats row */}
+      {/* Mini stats */}
       {overview && (
         <div className="grid grid-cols-3 gap-2 sm:gap-4 mb-4 sm:mb-5">
           {[
@@ -147,7 +149,7 @@ export default function RealtimeStatsBar() {
       )}
 
       {/* Area chart */}
-      {data.length === 0 ? (
+      {loadingByDay || data.length === 0 ? (
         <div className="flex items-center justify-center h-[180px] sm:h-[220px] text-white/40 text-sm">
           {isRefreshing ? "Đang tải dữ liệu..." : "Không có dữ liệu"}
         </div>

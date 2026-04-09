@@ -1,26 +1,19 @@
-import { useEffect, useState } from "react";
 import { XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, Area, AreaChart } from "recharts";
-import { fetchByDay } from "../services/api";
+import { useByDay } from "@/hooks/use-queries";
 
 export default function LineChartV2() {
-  const [data, setData] = useState([]);
+  const { data: raw, isLoading } = useByDay(30);
 
-  useEffect(() => {
-    fetchByDay(30).then((res) => {
-      setData(
-        res.map((r) => ({
-          id: r.date,
-          date: new Date(r.date).toLocaleDateString("vi-VN", {
-            day: "2-digit",
-            month: "2-digit",
-          }),
-          count: r.count,
-        })),
-      );
-    });
-  }, []);
+  const data = (raw ?? []).map((r) => ({
+    id: r.date,
+    date: new Date(r.date).toLocaleDateString("vi-VN", {
+      day: "2-digit",
+      month: "2-digit",
+    }),
+    count: r.count,
+  }));
 
-  if (!data.length) {
+  if (isLoading || !data.length) {
     return (
       <div className="bg-bg-card rounded-2xl p-4 sm:p-6 border border-accent-purple/10 shadow-lg">
         <div className="flex flex-col items-center justify-center h-[280px] sm:h-[340px] text-white/50 text-sm">

@@ -1,5 +1,5 @@
-import { useEffect, useState } from "react";
-import { fetchLogs } from "../services/api";
+import { useState } from "react";
+import { useLogs } from "@/hooks/use-queries";
 
 const typeBadgeColors = {
   OCR: "bg-accent-cyan/15 text-accent-cyan",
@@ -8,25 +8,17 @@ const typeBadgeColors = {
 };
 
 export default function RecentLogsV2() {
-  const [logs, setLogs] = useState([]);
   const [page, setPage] = useState(1);
-  const [totalPages, setTotalPages] = useState(1);
-  const [loading, setLoading] = useState(true);
+  const { data: result, isLoading } = useLogs(page, 10);
 
-  useEffect(() => {
-    setLoading(true);
-    fetchLogs(page, 10).then((res) => {
-      setLogs(res.data || []);
-      setTotalPages(res.totalPages || 1);
-      setLoading(false);
-    });
-  }, [page]);
+  const logs = result?.data ?? [];
+  const totalPages = result?.totalPages ?? 1;
 
   return (
     <div className="bg-bg-card rounded-2xl p-4 sm:p-6 border border-accent-purple/10 shadow-lg hover:border-accent-purple/30 transition-all duration-300 mt-6">
       <h3 className="text-xs font-semibold text-white/50 uppercase tracking-widest mb-4">Lịch sử nhận diện gần đây</h3>
 
-      {loading ? (
+      {isLoading ? (
         <div className="py-8">
           <div className="flex items-center justify-center mb-4 text-white/40">
             <div className="loader-ring mr-3" />
