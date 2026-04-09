@@ -37,8 +37,30 @@ class SettingsService {
     await _prefs?.setDouble('tts_speed', value);
   }
 
-  // --- Default Mode Index (0-4) ---
-  int get defaultModeIndex => _prefs?.getInt('default_mode_index') ?? 0;
+  // --- Default Mode Index ---
+  // Mode order was updated:
+  // old: [0,4,5,1,3,6] -> new: [0,5,4,1,3,6]
+  int get defaultModeIndex {
+    final prefs = _prefs;
+    if (prefs == null) return 0;
+
+    final migrated = prefs.getBool('default_mode_order_v2') ?? false;
+    final current = prefs.getInt('default_mode_index') ?? 0;
+    if (migrated) return current;
+
+    const oldToNew = <int, int>{
+      0: 0, // mode_0
+      1: 2, // mode_4
+      2: 1, // mode_5
+      3: 3, // mode_1
+      4: 4, // mode_3
+      5: 5, // mode_6
+    };
+    final converted = oldToNew[current] ?? 0;
+    prefs.setInt('default_mode_index', converted);
+    prefs.setBool('default_mode_order_v2', true);
+    return converted;
+  }
 
   Future<void> setDefaultModeIndex(int value) async {
     await _prefs?.setInt('default_mode_index', value);
@@ -97,7 +119,8 @@ class SettingsService {
   }
 
   // --- Auto Battery Saving (FPS) ---
-  bool get autoFpsBatterySaving => _prefs?.getBool('auto_fps_battery_saving') ?? true;
+  bool get autoFpsBatterySaving =>
+      _prefs?.getBool('auto_fps_battery_saving') ?? true;
 
   Future<void> setAutoFpsBatterySaving(bool value) async {
     await _prefs?.setBool('auto_fps_battery_saving', value);

@@ -79,6 +79,7 @@ class _MainScreenState extends State<MainScreen>
   final LightSensorService _lightSensor = LightSensorService();
   final TfliteService _tfliteService = TfliteService();
   bool _isNightMode = false;
+  bool _hasShownOfflineModelLoadedMessage = false;
   String? _pendingFeedbackDetectionId;
   Timer? _feedbackTimer;
   double _sosHoldProgress = 0;
@@ -87,8 +88,8 @@ class _MainScreenState extends State<MainScreen>
 
   final List<IconData> _modeIcons = [
     Icons.auto_awesome,
-    Icons.text_fields,
     Icons.document_scanner,
+    Icons.text_fields,
     Icons.landscape,
     Icons.navigation,
     Icons.folder_open,
@@ -115,8 +116,8 @@ class _MainScreenState extends State<MainScreen>
   List<String> _getModes(String lang) {
     return [
       AppLocalizations.t('mode_0', lang),
-      AppLocalizations.t('mode_4', lang),
       AppLocalizations.t('mode_5', lang),
+      AppLocalizations.t('mode_4', lang),
       AppLocalizations.t('mode_1', lang),
       AppLocalizations.t('mode_3', lang),
       AppLocalizations.t('mode_6', lang),
@@ -124,7 +125,7 @@ class _MainScreenState extends State<MainScreen>
   }
 
   String _modeSpokenKey(int index) {
-    const keys = ['mode_0', 'mode_4', 'mode_5', 'mode_1', 'mode_3', 'mode_6'];
+    const keys = ['mode_0', 'mode_5', 'mode_4', 'mode_1', 'mode_3', 'mode_6'];
     if (index < 0 || index >= keys.length) return 'mode_0_spoken';
     return '${keys[index]}_spoken';
   }
@@ -140,6 +141,14 @@ class _MainScreenState extends State<MainScreen>
     _wsService.onConnectionStatus = (connected) {
       if (mounted) {
         setState(() => _isConnected = connected);
+      }
+      if (!connected && _isWalkingModeEnabled) {
+        unawaited(_setWalkingMode(false, announce: false));
+        _accessibilityManager.speak(
+          _settings.language == 'vi'
+              ? 'Mất kết nối mạng. Đã tắt chế độ đi bộ.'
+              : 'Connection lost. Walking mode has been disabled.',
+        );
       }
     };
     _wsService.onTtsBroadcast = (data) {
@@ -213,7 +222,7 @@ class _MainScreenState extends State<MainScreen>
 
     _aiService.start();
 
-    _tfliteService.loadModel();
+    unawaited(_ensureOfflineModelLoaded(notifyOnFreshLoad: true));
 
     _voiceCommandService = VoiceCommandService(
       onCommandRecognized: _onCommandRecognized,
@@ -266,6 +275,39 @@ class _MainScreenState extends State<MainScreen>
       onSosTriggered: () => _sosService.triggerEmergency(),
     );
     _volumeButtonService.startListening();
+  }
+
+  Future<bool> _ensureOfflineModelLoaded({
+    bool notifyOnFreshLoad = false,
+  }) async {
+    final wasLoaded = _tfliteService.isModelLoaded;
+    final loaded = wasLoaded || await _tfliteService.loadModel();
+    if (!mounted || !notifyOnFreshLoad || !loaded || wasLoaded) {
+      return loaded;
+    }
+    if (_hasShownOfflineModelLoadedMessage) return loaded;
+
+    _hasShownOfflineModelLoadedMessage = true;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      if (!mounted) return;
+      final isVi = _settings.language == 'vi';
+      final source = _tfliteService.loadedModelSource;
+      final sourceText = (source == null || source.isEmpty)
+          ? ''
+          : '\n${isVi ? 'Nguồn' : 'Source'}: $source';
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          behavior: SnackBarBehavior.floating,
+          duration: const Duration(seconds: 2),
+          content: Text(
+            isVi
+                ? 'Đã tải model offline thành công.$sourceText'
+                : 'Offline model loaded successfully.$sourceText',
+          ),
+        ),
+      );
+    });
+    return loaded;
   }
 
   @override
@@ -330,9 +372,9 @@ class _MainScreenState extends State<MainScreen>
       'read text',
       'online',
     ])) {
-      _goToMode(1);
-    } else if (TextUtils.containsAny(cmd, ['nhanh', 'offline', 'quick read'])) {
       _goToMode(2);
+    } else if (TextUtils.containsAny(cmd, ['nhanh', 'offline', 'quick read'])) {
+      _goToMode(1);
     } else if (TextUtils.containsAny(cmd, [
       'mo ta',
       'khong gian',
@@ -462,6 +504,17 @@ class _MainScreenState extends State<MainScreen>
     if (_isWalkingModeEnabled == enabled) return;
 
     if (enabled) {
+      if (!_isConnected) {
+        if (announce) {
+          _accessibilityManager.speak(
+            _settings.language == 'vi'
+                ? 'Chế độ đi bộ cần kết nối mạng.'
+                : 'Walking mode requires an internet connection.',
+          );
+          _accessibilityManager.triggerErrorVibration();
+        }
+        return;
+      }
       _continuousStreamService.start();
       _startContinuousImageStream();
       _pulseController.repeat(reverse: true);
@@ -582,17 +635,30 @@ class _MainScreenState extends State<MainScreen>
 
     switch (_currentModeIndex) {
       case 0:
-        if (!_isConnected && _tfliteService.isModelLoaded) {
-          _detectMoneyOffline();
-        } else {
+        // Money detection priority:
+        // 1) If connected to AI backend -> use AI worker first.
+        // 2) If offline -> use on-device TFLite model.
+        if (_isConnected) {
           _aiService.requestMoneyDetection();
+        } else {
+          final isReady = await _ensureOfflineModelLoaded(
+            notifyOnFreshLoad: true,
+          );
+          if (isReady) {
+            await _detectMoneyOffline();
+          } else {
+            _accessibilityManager.speak(
+              AppLocalizations.t('main_no_offline_model', _settings.language),
+            );
+            _accessibilityManager.triggerErrorVibration();
+          }
         }
         break;
       case 1:
-        _aiService.requestOnlineOCR();
+        _scanWithMLKit();
         break;
       case 2:
-        _scanWithMLKit();
+        _aiService.requestOnlineOCR();
         break;
       case 3:
         _aiService.requestCaptioning();
@@ -700,6 +766,12 @@ class _MainScreenState extends State<MainScreen>
       _restartCamera();
     } catch (e) {
       debugPrint('Lỗi khi quét ML Kit: $e');
+      _accessibilityManager.speak(
+        lang == 'vi'
+            ? 'Không thể quét offline. Vui lòng thử lại.'
+            : 'Unable to scan offline. Please try again.',
+      );
+      _accessibilityManager.triggerErrorVibration();
     } finally {
       if (mounted) {
         setState(() => _isScanningMLKit = false);
@@ -712,11 +784,17 @@ class _MainScreenState extends State<MainScreen>
       return;
     }
 
+    final modelReady = await _ensureOfflineModelLoaded();
+    if (!modelReady) {
+      _accessibilityManager.speak(
+        AppLocalizations.t('main_no_offline_model', _settings.language),
+      );
+      _accessibilityManager.triggerErrorVibration();
+      return;
+    }
+
     setState(() => _isProcessing = true);
     final lang = _settings.language;
-    _accessibilityManager.speak(
-      AppLocalizations.t('main_detecting_offline', lang),
-    );
     _accessibilityManager.triggerSuccessVibration();
 
     try {
@@ -1431,4 +1509,3 @@ class _FeedbackChip extends StatelessWidget {
     );
   }
 }
-

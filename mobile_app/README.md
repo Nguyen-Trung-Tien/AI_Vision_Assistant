@@ -4,10 +4,10 @@
 
 ---
 
-## Chức năng hiện có
+## Chức Năng Hiện Có
 
 - Nhận diện tiền online (YOLO) + fallback offline (TFLite nếu có model).
-- OCR online bằng Tesseract (TEXT_OCR).
+- OCR online bằng Tesseract (`TEXT_OCR`).
 - OCR offline/nhanh bằng ML Kit (Text + Barcode).
 - Mô tả cảnh + cảnh báo nguy hiểm theo vị trí trái/giữa/phải.
 - Điều hướng cơ bản (GPS + la bàn + OSRM).
@@ -16,17 +16,17 @@
 
 ---
 
-## 🧭 Các chế độ chính
+## Các Chế Độ Chính
 
-- **Mode 0 – Tổng hợp/Tiền:** `OCR` online, fallback offline nếu có TFLite.
-- **Mode 1 – Đọc văn bản online:** `TEXT_OCR` trên server.
-- **Mode 2 – Đọc nhanh offline:** ML Kit Text + Barcode.
-- **Mode 3 – Mô tả cảnh:** `CAPTION` + danger alerts.
-- **Mode 4 – Điều hướng:** GPS + la bàn + hướng dẫn đường.
+- **Mode 0 - Tổng hợp/Tiền:** `OCR` online, fallback offline nếu có TFLite.
+- **Mode 1 - Đọc văn bản online:** `TEXT_OCR` trên server.
+- **Mode 2 - Đọc nhanh offline:** ML Kit Text + Barcode.
+- **Mode 3 - Mô tả cảnh:** `CAPTION` + danger alerts.
+- **Mode 4 - Điều hướng:** GPS + la bàn + hướng dẫn đường.
 
 ---
 
-## Yêu cầu
+## Yêu Cầu
 
 - Flutter SDK mới nhất
 - Android Studio hoặc Xcode
@@ -35,26 +35,26 @@
 
 ---
 
-## ⚙️ Cài đặt & chạy
+## Cài Đặt Và Chạy
 
 ```bash
 cd mobile_app
 flutter pub get
 ```
 
-### Chạy trên Android Emulator
+### Chạy Trên Android Emulator
 
 ```bash
 flutter run --dart-define=BACKEND_URL=http://10.0.2.2:3000
 ```
 
-### Chạy trên máy thật
+### Chạy Trên Máy Thật
 
 ```bash
 flutter run --dart-define=BACKEND_URL=http://192.168.1.X:3000
 ```
 
-### Optional: WS_TOKEN khi muốn test nhanh
+### Optional: `WS_TOKEN` Khi Muốn Test Nhanh
 
 ```bash
 flutter run \
@@ -66,30 +66,31 @@ Ghi chú: bình thường app sẽ login và tự set token vào WebSocket, `WS_
 
 ---
 
-## 📦 Offline TFLite
+## Offline TFLite
 
 Thêm file model `.tflite` vào:
 
 ```
-mobile_app/assets/models/money_detector.tflite
+mobile_app/assets/models/best_float32.tflite (khuyến nghị)
+mobile_app/assets/models/best_float16.tflite (tùy chọn)
 ```
 
 Và chắc chắn `pubspec.yaml` đã include `assets/models/`.
 
 ---
 
-## 🌐 Phụ thuộc mạng
+## Phụ Thuộc Mạng
 
 Các tính năng sau cần Internet:
 
-- Điều hướng (OSRM, Nominatim).
-- Barcode lookup (OpenFoodFacts).
-- Visual Q&A (Gemini).
-- AI online (YOLO/OCR).
+- Điều hướng (OSRM, Nominatim)
+- Barcode lookup (OpenFoodFacts)
+- Visual Q&A (Gemini)
+- AI online (YOLO/OCR)
 
 ---
 
-## 🛠 Troubleshooting
+## Troubleshooting
 
 - **Không kết nối WebSocket:** kiểm tra login và `BACKEND_URL`.
 - **Không có offline model:** chưa đặt file `.tflite` vào `assets/models/`.

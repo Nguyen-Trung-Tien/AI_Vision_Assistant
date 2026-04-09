@@ -1,10 +1,13 @@
-import 'dart:async';
+﻿import 'dart:async';
+
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:mobile_app/services/accessibility_manager.dart';
 import 'package:mobile_app/services/settings_service.dart';
 
-/// Service phát hiện ánh sáng yếu từ camera exposure.
+/// Detect low light from periodic camera probe captures.
+///
+/// Important: this service must avoid competing with other capture flows.
 class LightSensorService {
   final AccessibilityManager _accessibility = AccessibilityManager();
   final SettingsService _settings = SettingsService();
@@ -14,39 +17,56 @@ class LightSensorService {
 
   bool _hasWarned = false;
   Timer? _checkTimer;
+  bool _isEvaluating = false;
+  DateTime _lastProbeAt = DateTime.fromMillisecondsSinceEpoch(0);
+  DateTime _nextAllowedProbeAt = DateTime.fromMillisecondsSinceEpoch(0);
+  DateTime _lastErrorLogAt = DateTime.fromMillisecondsSinceEpoch(0);
 
-  /// Callback khi trạng thái ánh sáng thay đổi
+  /// Callback when low-light state changes.
   Function(bool isLowLight)? onLightChanged;
 
-  /// Bắt đầu theo dõi ánh sáng từ camera controller
+  /// Start monitoring brightness from [controller].
   void startMonitoring(CameraController controller) {
     _checkTimer?.cancel();
-    _checkTimer = Timer.periodic(const Duration(seconds: 3), (_) {
-      _checkExposure(controller);
+    _checkTimer = Timer.periodic(const Duration(seconds: 3), (_) async {
+      await _checkExposure(controller);
     });
   }
 
-  void _checkExposure(CameraController controller) {
+  Future<void> _checkExposure(CameraController controller) async {
     if (!controller.value.isInitialized) return;
-    if (controller.value.isTakingPicture || controller.value.isStreamingImages) return;
+    if (_isEvaluating) return;
+    if (DateTime.now().isBefore(_nextAllowedProbeAt)) return;
 
+    // Do not probe while picture/video stream is busy.
+    if (controller.value.isTakingPicture || controller.value.isStreamingImages) {
+      return;
+    }
+
+    // Keep a conservative gap to reduce capture contention.
+    if (DateTime.now().difference(_lastProbeAt).inSeconds < 8) return;
+
+    _isEvaluating = true;
+    _lastProbeAt = DateTime.now();
     try {
-      _evaluateBrightness(controller);
+      await _evaluateBrightness(controller);
     } catch (e) {
       debugPrint('Light sensor error: $e');
+    } finally {
+      _isEvaluating = false;
     }
   }
 
   Future<void> _evaluateBrightness(CameraController controller) async {
     try {
-      // Chụp ảnh nhanh để đánh giá brightness
-      final image = await controller.takePicture();
+      final image = await controller.takePicture().timeout(
+        const Duration(seconds: 2),
+      );
       final bytes = await image.readAsBytes();
 
-      // Heuristic: file size nhỏ = ảnh tối (ít detail = nén tốt hơn)
-      // Threshold được đọc từ settings (cho phép người dùng tùy chỉnh)
+      // Heuristic: smaller JPEG size often means darker/less-detailed frame.
       final fileSizeKB = bytes.length / 1024;
-      final threshold = _settings.lightThresholdKB; // #13: đọc từ settings
+      final threshold = _settings.lightThresholdKB;
       final wasLowLight = _isLowLight;
 
       if (fileSizeKB < threshold) {
@@ -57,7 +77,8 @@ class LightSensorService {
       }
 
       debugPrint(
-        '[LightSensor] fileSize=${fileSizeKB.toStringAsFixed(1)}KB, threshold=${threshold}KB, lowLight=$_isLowLight',
+        '[LightSensor] fileSize=${fileSizeKB.toStringAsFixed(1)}KB, '
+        'threshold=${threshold}KB, lowLight=$_isLowLight',
       );
 
       if (_isLowLight != wasLowLight) {
@@ -70,7 +91,13 @@ class LightSensorService {
         _accessibility.triggerWarningVibration();
       }
     } catch (e) {
-      debugPrint('Brightness evaluation error: $e');
+      // CameraX may reject capture if another request is in-flight.
+      // Back off to avoid noisy retries/spam logs.
+      _nextAllowedProbeAt = DateTime.now().add(const Duration(seconds: 15));
+      if (DateTime.now().difference(_lastErrorLogAt).inSeconds >= 20) {
+        _lastErrorLogAt = DateTime.now();
+        debugPrint('Brightness evaluation error (throttled): $e');
+      }
     }
   }
 
@@ -78,5 +105,6 @@ class LightSensorService {
     _checkTimer?.cancel();
     _isLowLight = false;
     _hasWarned = false;
+    _isEvaluating = false;
   }
 }

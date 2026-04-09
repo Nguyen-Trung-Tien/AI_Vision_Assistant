@@ -15,6 +15,7 @@ from .constants import (
     DENOMINATION_FEATURES,
     LABEL_TRANSLATIONS,
     MONEY_LABELS,
+    canonicalize_label,
 )
 from .image_utils import decode_base64_image, get_dominant_color, is_blurry
 from .model_manager import ModelManager
@@ -24,7 +25,7 @@ from .translations import t
 
 def normalize_label(label: str) -> str:
     """Chuẩn hóa label: lowercase, thay thế dấu cách/gạch ngang."""
-    return label.strip().lower().replace("-", "_").replace(" ", "_")
+    return canonicalize_label(label)
 
 
 def extract_denomination(label: str) -> str | None:

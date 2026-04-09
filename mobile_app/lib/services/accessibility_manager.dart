@@ -9,26 +9,41 @@ class AccessibilityManager {
 
   final FlutterTts flutterTts = FlutterTts();
   final SettingsService _settings = SettingsService();
+  late final Future<void> _ttsInitFuture;
 
   AccessibilityManager._internal() {
-    _initTTS();
+    _ttsInitFuture = _initTTS();
   }
 
   Future<void> _initTTS() async {
-    final lang = _settings.language;
-    await flutterTts.setLanguage(lang == 'en' ? "en-US" : "vi-VN");
-    await flutterTts.setPitch(1.0);
-    await flutterTts.setSpeechRate(_settings.ttsSpeed);
+    try {
+      final lang = _settings.language;
+      await flutterTts.setLanguage(lang == 'en' ? "en-US" : "vi-VN");
+      await flutterTts.setPitch(1.0);
+      await flutterTts.setSpeechRate(_settings.ttsSpeed);
+      await flutterTts.setVolume(1.0);
+      await flutterTts.awaitSpeakCompletion(true);
+    } catch (_) {
+      // Keep app running even if TTS init fails on a specific device.
+    }
+  }
+
+  Future<void> _ensureTtsReady() async {
+    await _ttsInitFuture;
   }
 
   /// Call this after settings change to apply new TTS speed and language.
   Future<void> refreshTtsSpeed() async {
+    await _ensureTtsReady();
     final lang = _settings.language;
     await flutterTts.setLanguage(lang == 'en' ? "en-US" : "vi-VN");
     await flutterTts.setSpeechRate(_settings.ttsSpeed);
+    await flutterTts.setVolume(1.0);
   }
 
   Future<void> speak(String text) async {
+    if (text.trim().isEmpty) return;
+    await _ensureTtsReady();
     await flutterTts.speak(text);
   }
 
@@ -36,6 +51,8 @@ class AccessibilityManager {
     String text, {
     bool highPriority = false,
   }) async {
+    if (text.trim().isEmpty) return;
+    await _ensureTtsReady();
     if (highPriority) {
       await flutterTts.stop();
     }

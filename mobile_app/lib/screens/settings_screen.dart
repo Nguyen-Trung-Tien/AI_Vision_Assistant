@@ -28,8 +28,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   List<String> _getModeNames(String lang) {
     return [
       AppLocalizations.t('mode_0', lang),
-      AppLocalizations.t('mode_4', lang),
       AppLocalizations.t('mode_5', lang),
+      AppLocalizations.t('mode_4', lang),
       AppLocalizations.t('mode_1', lang),
       AppLocalizations.t('mode_3', lang),
       AppLocalizations.t('mode_6', lang),
@@ -39,8 +39,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
   String _modeSpokenByIndex(int index) {
     const spokenKeys = [
       'mode_0_spoken',
-      'mode_4_spoken',
       'mode_5_spoken',
+      'mode_4_spoken',
       'mode_1_spoken',
       'mode_3_spoken',
       'mode_6_spoken',
@@ -54,13 +54,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
     super.initState();
     _ttsSpeed = _settings.ttsSpeed;
     _language = _settings.language;
-    _defaultMode = _settings.defaultModeIndex.clamp(0, _getModeNames(_language).length - 1);
+    _defaultMode = _settings.defaultModeIndex.clamp(
+      0,
+      _getModeNames(_language).length - 1,
+    );
     _warningDistance = _settings.warningDistance;
     _lightThreshold = _settings.lightThresholdKB;
     _fpsLimit = _settings.fpsLimit;
     _autoFpsBatterySaving = _settings.autoFpsBatterySaving;
 
-    _accessibility.speak(AppLocalizations.t('settings_screen_spoken', _language));
+    _accessibility.speak(
+      AppLocalizations.t('settings_screen_spoken', _language),
+    );
   }
 
   @override
@@ -72,7 +77,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
       appBar: AppBar(
         backgroundColor: AppTheme.bgCard,
         elevation: 0,
-        title: Text(AppLocalizations.t('settings_title', _language), style: AppTheme.titleLarge),
+        title: Text(
+          AppLocalizations.t('settings_title', _language),
+          style: AppTheme.titleLarge,
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
           onPressed: () {
@@ -84,7 +92,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
       body: ListView(
         padding: const EdgeInsets.all(20),
         children: [
-          _buildSectionTitle(AppLocalizations.t('settings_emergency', _language)),
+          _buildSectionTitle(
+            AppLocalizations.t('settings_emergency', _language),
+          ),
           const SizedBox(height: 8),
           Container(
             padding: const EdgeInsets.all(16),
@@ -94,7 +104,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
               child: InkWell(
                 onTap: () {
                   _accessibility.speak('Mở quản lý liên hệ khẩn cấp');
-                  Navigator.push(context, MaterialPageRoute(builder: (_) => const EmergencyContactsScreen()));
+                  Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (_) => const EmergencyContactsScreen(),
+                    ),
+                  );
                 },
                 borderRadius: BorderRadius.circular(14),
                 child: Container(
@@ -104,9 +119,23 @@ class _SettingsScreenState extends State<SettingsScreen> {
                   child: Row(
                     mainAxisAlignment: MainAxisAlignment.center,
                     children: [
-                      const Icon(Icons.contacts_rounded, color: Colors.white, size: 22),
+                      const Icon(
+                        Icons.contacts_rounded,
+                        color: Colors.white,
+                        size: 22,
+                      ),
                       const SizedBox(width: 10),
-                      Text(AppLocalizations.t('settings_emergency_add_contact', _language), style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w600)),
+                      Text(
+                        AppLocalizations.t(
+                          'settings_emergency_add_contact',
+                          _language,
+                        ),
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 16,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ],
                   ),
                 ),
@@ -114,7 +143,9 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ),
           ),
           const SizedBox(height: 32),
-          _buildSectionTitle('${AppLocalizations.t('settings_tts_speed', _language)} ${(_ttsSpeed * 100).toInt()}%'),
+          _buildSectionTitle(
+            '${AppLocalizations.t('settings_tts_speed', _language)} ${(_ttsSpeed * 100).toInt()}%',
+          ),
           const SizedBox(height: 8),
           SliderTheme(
             data: SliderTheme.of(context).copyWith(
@@ -133,13 +164,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onChangeEnd: (value) async {
                 await _settings.setTtsSpeed(value);
                 await _accessibility.refreshTtsSpeed();
-                final msg = AppLocalizations.t('settings_tts_speed_spoken', _language);
+                final msg = AppLocalizations.t(
+                  'settings_tts_speed_spoken',
+                  _language,
+                );
                 _accessibility.speak('$msg ${(value * 100).toInt()}%');
               },
             ),
           ),
           const SizedBox(height: 32),
-          _buildSectionTitle(AppLocalizations.t('settings_default_mode', _language)),
+          _buildSectionTitle(
+            AppLocalizations.t('settings_default_mode', _language),
+          ),
           const SizedBox(height: 8),
           ...List.generate(modeNames.length, (index) {
             final isSelected = _defaultMode == index;
@@ -149,35 +185,77 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 onTap: () async {
                   setState(() => _defaultMode = index);
                   await _settings.setDefaultModeIndex(index);
-                  final msg = AppLocalizations.t('settings_default_mode_spoken', _language);
-                  _accessibility.speak('$msg ${AppLocalizations.t(_modeSpokenByIndex(index), _language)}');
+                  final msg = AppLocalizations.t(
+                    'settings_default_mode_spoken',
+                    _language,
+                  );
+                  _accessibility.speak(
+                    '$msg ${AppLocalizations.t(_modeSpokenByIndex(index), _language)}',
+                  );
                 },
                 child: Container(
-                  padding: const EdgeInsets.symmetric(vertical: 14, horizontal: 16),
-                  decoration: BoxDecoration(
-                    color: isSelected ? AppTheme.accentPurple.withValues(alpha: 0.25) : AppTheme.whiteAlpha(0.06),
-                    borderRadius: BorderRadius.circular(14),
-                    border: Border.all(color: isSelected ? AppTheme.accentPurple : Colors.transparent, width: 2),
+                  padding: const EdgeInsets.symmetric(
+                    vertical: 14,
+                    horizontal: 16,
                   ),
-                  child: Row(children: [
-                    Icon(isSelected ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded, color: isSelected ? AppTheme.accentCyan : AppTheme.whiteAlpha(0.5), size: 28),
-                    const SizedBox(width: 12),
-                    Expanded(child: Text(modeNames[index], style: TextStyle(color: isSelected ? Colors.white : Colors.white70, fontSize: 18, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal))),
-                  ]),
+                  decoration: BoxDecoration(
+                    color: isSelected
+                        ? AppTheme.accentPurple.withValues(alpha: 0.25)
+                        : AppTheme.whiteAlpha(0.06),
+                    borderRadius: BorderRadius.circular(14),
+                    border: Border.all(
+                      color: isSelected
+                          ? AppTheme.accentPurple
+                          : Colors.transparent,
+                      width: 2,
+                    ),
+                  ),
+                  child: Row(
+                    children: [
+                      Icon(
+                        isSelected
+                            ? Icons.radio_button_checked_rounded
+                            : Icons.radio_button_off_rounded,
+                        color: isSelected
+                            ? AppTheme.accentCyan
+                            : AppTheme.whiteAlpha(0.5),
+                        size: 28,
+                      ),
+                      const SizedBox(width: 12),
+                      Expanded(
+                        child: Text(
+                          modeNames[index],
+                          style: TextStyle(
+                            color: isSelected ? Colors.white : Colors.white70,
+                            fontSize: 18,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal,
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
                 ),
               ),
             );
           }),
           const SizedBox(height: 32),
-          _buildSectionTitle(AppLocalizations.t('settings_language', _language)),
+          _buildSectionTitle(
+            AppLocalizations.t('settings_language', _language),
+          ),
           const SizedBox(height: 8),
-          Row(children: [
-            _buildLangOption('vi', 'Tiếng Việt'),
-            const SizedBox(width: 12),
-            _buildLangOption('en', 'English'),
-          ]),
+          Row(
+            children: [
+              _buildLangOption('vi', 'Tiếng Việt'),
+              const SizedBox(width: 12),
+              _buildLangOption('en', 'English'),
+            ],
+          ),
           const SizedBox(height: 32),
-          _buildSectionTitle('${AppLocalizations.t('settings_warning_dist', _language)} ${_warningDistance.toStringAsFixed(1)}m'),
+          _buildSectionTitle(
+            '${AppLocalizations.t('settings_warning_dist', _language)} ${_warningDistance.toStringAsFixed(1)}m',
+          ),
           const SizedBox(height: 8),
           SliderTheme(
             data: SliderTheme.of(context).copyWith(
@@ -195,19 +273,36 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onChanged: (value) => setState(() => _warningDistance = value),
               onChangeEnd: (value) async {
                 await _settings.setWarningDistance(value);
-                final msg = AppLocalizations.t('settings_warning_dist_spoken', _language);
-                final unit = AppLocalizations.t('settings_warning_dist_unit', _language);
+                final msg = AppLocalizations.t(
+                  'settings_warning_dist_spoken',
+                  _language,
+                );
+                final unit = AppLocalizations.t(
+                  'settings_warning_dist_unit',
+                  _language,
+                );
                 _accessibility.speak('$msg ${value.toStringAsFixed(1)} $unit');
               },
             ),
           ),
           const SizedBox(height: 32),
-          _buildSectionTitle('${AppLocalizations.t('settings_light_threshold', _language)} ${_lightThreshold.toStringAsFixed(0)}KB'),
+          _buildSectionTitle(
+            '${AppLocalizations.t('settings_light_threshold', _language)} ${_lightThreshold.toStringAsFixed(0)}KB',
+          ),
           const SizedBox(height: 4),
-          Row(mainAxisAlignment: MainAxisAlignment.spaceBetween, children: [
-            Text(AppLocalizations.t('settings_light_low', _language), style: const TextStyle(color: Colors.amber, fontSize: 13)),
-            Text(AppLocalizations.t('settings_light_high', _language), style: const TextStyle(color: Colors.white54, fontSize: 13)),
-          ]),
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              Text(
+                AppLocalizations.t('settings_light_low', _language),
+                style: const TextStyle(color: Colors.amber, fontSize: 13),
+              ),
+              Text(
+                AppLocalizations.t('settings_light_high', _language),
+                style: const TextStyle(color: Colors.white54, fontSize: 13),
+              ),
+            ],
+          ),
           const SizedBox(height: 4),
           SliderTheme(
             data: SliderTheme.of(context).copyWith(
@@ -225,13 +320,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
               onChanged: (value) => setState(() => _lightThreshold = value),
               onChangeEnd: (value) async {
                 await _settings.setLightThresholdKB(value);
-                final msg = AppLocalizations.t('settings_light_threshold_spoken', _language);
+                final msg = AppLocalizations.t(
+                  'settings_light_threshold_spoken',
+                  _language,
+                );
                 _accessibility.speak('$msg ${value.toStringAsFixed(0)}KB');
               },
             ),
           ),
           const SizedBox(height: 32),
-          _buildSectionTitle('${_language == 'vi' ? 'Khung hình đi bộ:' : 'Walking FPS:'} $_fpsLimit FPS'),
+          _buildSectionTitle(
+            '${_language == 'vi' ? 'Khung hình đi bộ:' : 'Walking FPS:'} $_fpsLimit FPS',
+          ),
           const SizedBox(height: 8),
           SliderTheme(
             data: SliderTheme.of(context).copyWith(
@@ -256,15 +356,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
           ),
           const SizedBox(height: 16),
           SwitchListTile(
-            title: Text(_language == 'vi' ? 'Giảm cấu hình khi pin yếu' : 'Reduce FPS on low battery', style: const TextStyle(color: Colors.white, fontSize: 16)),
-            subtitle: Text(_language == 'vi' ? 'Tự động giảm còn 1 FPS khi pin < 20%' : 'Auto drop to 1 FPS when battery < 20%', style: const TextStyle(color: Colors.white54, fontSize: 14)),
+            title: Text(
+              _language == 'vi'
+                  ? 'Giảm cấu hình khi pin yếu'
+                  : 'Reduce FPS on low battery',
+              style: const TextStyle(color: Colors.white, fontSize: 16),
+            ),
+            subtitle: Text(
+              _language == 'vi'
+                  ? 'Tự động giảm còn 1 FPS khi pin < 20%'
+                  : 'Auto drop to 1 FPS when battery < 20%',
+              style: const TextStyle(color: Colors.white54, fontSize: 14),
+            ),
             value: _autoFpsBatterySaving,
             activeThumbColor: AppTheme.accentGreen,
             contentPadding: EdgeInsets.zero,
             onChanged: (bool value) async {
               setState(() => _autoFpsBatterySaving = value);
               await _settings.setAutoFpsBatterySaving(value);
-              _accessibility.speak(value ? 'Đã bật tiết kiệm pin' : 'Đã tắt tiết kiệm pin');
+              _accessibility.speak(
+                value ? 'Đã bật tiết kiệm pin' : 'Đã tắt tiết kiệm pin',
+              );
             },
           ),
           const SizedBox(height: 24),
@@ -273,17 +385,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
             child: OutlinedButton.icon(
               onPressed: () async {
                 await _settings.clearAuthSession();
-                _accessibility.speak(AppLocalizations.t('settings_logged_out', _language));
+                _accessibility.speak(
+                  AppLocalizations.t('settings_logged_out', _language),
+                );
                 if (!context.mounted) return;
-                Navigator.of(context).pushAndRemoveUntil(MaterialPageRoute(builder: (_) => const LoginScreen()), (route) => false);
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                  (route) => false,
+                );
               },
               icon: const Icon(Icons.logout_rounded),
               label: Text(AppLocalizations.t('settings_logout', _language)),
               style: OutlinedButton.styleFrom(
                 foregroundColor: AppTheme.accentRed,
-                side: BorderSide(color: AppTheme.accentRed.withValues(alpha: 0.6)),
+                side: BorderSide(
+                  color: AppTheme.accentRed.withValues(alpha: 0.6),
+                ),
                 padding: const EdgeInsets.symmetric(vertical: 14),
-                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(14)),
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(14),
+                ),
               ),
             ),
           ),
@@ -304,16 +425,33 @@ class _SettingsScreenState extends State<SettingsScreen> {
           setState(() => _language = langCode);
           await _settings.setLanguage(langCode);
           await _accessibility.refreshTtsSpeed();
-          _accessibility.speak(langCode == 'vi' ? 'Đã chuyển sang tiếng Việt' : 'Switched to English');
+          _accessibility.speak(
+            langCode == 'vi'
+                ? 'Đã chuyển sang tiếng Việt'
+                : 'Switched to English',
+          );
         },
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 14),
           decoration: BoxDecoration(
-            color: isSelected ? AppTheme.accentPurple.withValues(alpha: 0.25) : AppTheme.whiteAlpha(0.06),
+            color: isSelected
+                ? AppTheme.accentPurple.withValues(alpha: 0.25)
+                : AppTheme.whiteAlpha(0.06),
             borderRadius: BorderRadius.circular(14),
-            border: Border.all(color: isSelected ? AppTheme.accentPurple : Colors.transparent, width: 2),
+            border: Border.all(
+              color: isSelected ? AppTheme.accentPurple : Colors.transparent,
+              width: 2,
+            ),
           ),
-          child: Text(label, textAlign: TextAlign.center, style: TextStyle(color: isSelected ? Colors.white : Colors.white70, fontSize: 18, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal)),
+          child: Text(
+            label,
+            textAlign: TextAlign.center,
+            style: TextStyle(
+              color: isSelected ? Colors.white : Colors.white70,
+              fontSize: 18,
+              fontWeight: isSelected ? FontWeight.bold : FontWeight.normal,
+            ),
+          ),
         ),
       ),
     );

@@ -22,7 +22,7 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 <br/>
 
-![Version](https://img.shields.io/badge/Version-1.3.0-blue?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.4.0-blue?style=flat-square)
 ![License](https://img.shields.io/badge/License-UNLICENSED-gray?style=flat-square)
 ![Status](https://img.shields.io/badge/Status-In_Development-orange?style=flat-square)
 
@@ -72,6 +72,17 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 ---
 
 ## 📰 Cập nhật mới nhất
+
+### 🗓️ Tháng 4/2026 — v1.4.0
+
+| Ngày      | Cập nhật                        | Mô tả                                                                                   |
+| --------- | ------------------------------- | --------------------------------------------------------------------------------------- |
+| **08/04** | 🔧 Fix offline model            | Sửa lỗi mobile không nhận model TFLite offline đã có sẵn trên máy                       |
+| **06/04** | 📦 Kaggle dataset               | Chuẩn bị và upload dataset lên Kaggle cho training model                                 |
+| **05/04** | 🚶 Continuous Stream fix        | Sửa lỗi UI đồng bộ ModeCarousel khi chuyển Walking Mode                                 |
+| **04/04** | 🚨 Emergency Contact Network    | Tích hợp mạng lưới liên hệ khẩn cấp: tự động SMS + cuộc gọi khi SOS                    |
+| **04/04** | 🚶 Continuous Stream hoàn thiện | Walking Mode 3–5 FPS: adaptive FPS, latest-only queue, smart throttle, battery saving    |
+| **01/04** | 🛡️ System Integrity Audit       | Kiểm tra sức khỏe toàn bộ hệ thống, dọn dẹp code thừa                                   |
 
 ### 🗓️ Tháng 3/2026 — v1.2.0
 
@@ -151,7 +162,7 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 | Tính năng             | Mô tả                                                                        | Xử lý                                         |
 | --------------------- | ---------------------------------------------------------------------------- | --------------------------------------------- |
-| **Nhận diện vật thể** | 18 lớp đối tượng: xe cộ, người, đồ vật, cầu thang, ổ gà, nắp cống...         | YOLO v11 (online) + TFLite (offline fallback) |
+| **Nhận diện vật thể** | 20 lớp đối tượng: xe cộ, người, cầu thang, ổ gà, nắp cống, vạch qua đường... | YOLO v11 (online) + TFLite (offline fallback) |
 | **Nhận diện tiền VN** | 9 mệnh giá: 1K → 500K VNĐ, kèm xác minh màu sắc HSV & đặc trưng landmark    | YOLO + color validation + OCR                 |
 | **Đọc văn bản (OCR)** | Đọc nhãn mác, biển báo, tài liệu                                             | Tesseract (server) + ML Kit (offline)         |
 | **Mô tả cảnh**        | Mô tả không gian: vị trí trái/giữa/phải, ước lượng khoảng cách, gợi ý lối đi | YOLO + spatial analysis                       |
@@ -167,6 +178,8 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 | **Điều hướng GPS**     | GPS + la bàn + bản đồ OSM/OSRM → hướng dẫn đi bộ bằng giọng nói tiếng Việt           |
 | **Flash tự động**      | Cảm biến ánh sáng tự bật/tắt đèn flash camera                                        |
 | **Rung phản hồi**      | Haptic feedback theo loại sự kiện (nguy hiểm, xác nhận tiền, SOS)                    |
+| **Continuous Stream**  | Chế độ đi bộ 3–5 FPS: phân tích liên tục, adaptive FPS, tiết kiệm pin                |
+| **Liên hệ khẩn cấp**  | SMS + cuộc gọi tự động đến người thân khi SOS, CRUD danh bạ khẩn cấp                  |
 
 ### 🗣️ Text-to-Speech
 
@@ -269,7 +282,7 @@ sequenceDiagram
 | **Mode 2**     | OCR Offline       | ML Kit Text Recognition + Barcode Scanner       | Offline        |
 | **Mode 3**     | Mô tả cảnh        | Mô tả không gian chi tiết + cảnh báo nguy hiểm  | Online         |
 | **Mode 4**     | Điều hướng        | GPS + la bàn + chỉ đường OSRM/OSM               | Online         |
-| **Mode 5**     | Điều hướng        | Continuous Stream 3–5 FPS cho đi bộ             | Online         |
+| **Mode 5**     | Đi bộ (Walking)   | Continuous Stream 3–5 FPS, adaptive FPS, auto    | Online         |
 | **Visual Q&A** | Hỏi đáp           | Hỏi đáp trực quan bằng giọng nói (Gemini AI)    | Online         |
 
 ### Các thành phần Mobile App
@@ -284,6 +297,7 @@ mobile_app/lib/
 │   ├── main_screen.dart               # Màn hình chính (camera + AI)
 │   ├── navigation_screen.dart         # Điều hướng bản đồ
 │   ├── settings_screen.dart           # Cài đặt (ngôn ngữ, khoảng cách, liên hệ SOS)
+│   ├── emergency_contacts_screen.dart # Quản lý danh bạ khẩn cấp
 │   └── history_screen.dart            # Lịch sử nhận diện
 ├── services/
 │   ├── websocket_service.dart         # Socket.IO client
@@ -300,6 +314,8 @@ mobile_app/lib/
 │   ├── document_reader_service.dart   # Đọc tài liệu PDF
 │   ├── settings_service.dart          # Lưu cài đặt local
 │   ├── history_service.dart           # Lưu lịch sử detection
+│   ├── continuous_stream_service.dart # Stream liên tục 3–5 FPS (Walking Mode)
+│   ├── emergency_contact_service.dart # CRUD liên hệ khẩn cấp
 │   ├── power_button_service.dart      # Nút nguồn (SOS)
 │   └── volume_button_service.dart     # Nút âm lượng (chuyển mode)
 ├── widgets/
@@ -332,7 +348,9 @@ Vision Assistant/
 │   │   ├── feedback/                 # AI feedback collection
 │   │   ├── broadcast/                # TTS broadcast to users
 │   │   ├── stats/                    # Statistics & analytics
-│   │   └── users/                    # User management (admin/user roles)
+│   │   ├── users/                    # User management (admin/user roles)
+│   │   ├── emergency-contact/        # CRUD liên hệ khẩn cấp
+│   │   └── sms/                      # SMS service (gửi SMS khi SOS)
 │   ├── docker-compose.yml            # RabbitMQ container
 │   └── package.json                  # Node.js dependencies
 │
@@ -584,19 +602,21 @@ GEMINI_MAX_OUTPUT_TOKENS=256             # Optional: limit response length
 
 ## 🤖 Dataset & Training YOLO
 
-### Danh sách 18 lớp đối tượng
+### Danh sách 20 lớp đối tượng (canonical classes)
 
 ```
- 0: car/ truck/ bus          10: tien_50  
- 1: motorbike                11: tien_100k                                         
- 2: manhole/pothole          12: tien_200k        
- 3: person                   13:tien_500k
- 4: stairs                   14: traffic_light_green
- 5: tien_1k                  15: traffic_light_red           
- 6: tien_2k                                 
- 7: tien_5k                    
- 8: tien_10k
- 9: tien_20k                  
+ Tiền VN (9):                Vật thể & giao thông (11):
+  0: tien_1k                  9: xe_may (motorbike)
+  1: tien_2k                 10: cau_thang (stairs)
+  2: tien_5k                 11: o_ga (pothole)
+  3: tien_10k                12: ong_cong (manhole)
+  4: tien_20k                13: xe_lon (car/truck/bus)
+  5: tien_50k                14: nguoi (person/male/female)
+  6: tien_100k               15: den_do (traffic_light_red)
+  7: tien_200k               16: den_vang (traffic_light_yellow)
+  8: tien_500k               17: den_xanh (traffic_light_green)
+                             18: den_giao_thong (traffic_light)
+                             19: vach_qua_duong (crosswalk)
 ```
 
 ### Công cụ chuẩn bị dataset
@@ -660,19 +680,27 @@ Dashboard quản trị cung cấp các trang:
 
 ## 📌 Roadmap
 
+### Đã hoàn thành (v1.4.0)
+
+- [x] Stream liên tục 3–5 FPS cho chế độ đi bộ (walking mode + adaptive FPS + latest-only queue)
+- [x] Emergency Contact Network (SMS + cuộc gọi tự động khi SOS)
+- [x] Màn hình quản lý danh bạ khẩn cấp trên mobile
+- [x] System Integrity Audit & bug fixes
+
 ### Đang phát triển
 
-- [ ] Stream liên tục 3–5 FPS cho chế độ đi bộ (walking mode button + adaptive FPS + latest-only queue)
 - [ ] Spatial audio (trái/phải) theo vị trí vật cản
 - [ ] Monocular depth estimation chính xác hơn
 - [ ] Nhận diện khuôn mặt người quen
+- [ ] Smart OCR (biển báo, menu, hóa đơn) + QR/Barcode scanner
 
 ### Kế hoạch tương lai
 
+- [ ] Offline-First Mode (TFLite + auto-switch online/offline)
+- [ ] Admin Dashboard mở rộng (System Monitor, Analytics, RBAC, Activity Log)
+- [ ] Cloud deployment (Docker Compose full stack)
 - [ ] Layout analysis (đọc menu/sách)
 - [ ] Nhận diện màu sắc quần áo/vật thể
-- [ ] Đọc tài liệu nâng cao (PDF, hình ảnh chứa text dài)
-- [ ] Cloud deployment (Docker Compose full stack)
 - [ ] CI/CD pipeline cho model training + deployment
 - [ ] Progressive Web App cho Admin Dashboard
 - [ ] Offline model auto-update (OTA)
@@ -702,6 +730,7 @@ Dashboard quản trị cung cấp các trang:
 | `shared_preferences`            | ^2.3.3    | Local storage          |
 | `syncfusion_flutter_pdf`        | ^33.1.45  | Đọc tài liệu PDF       |
 | `flutter_contacts`              | ^1.1.9    | Liên hệ SOS            |
+| `battery_plus`                  | ^7.0.0    | Theo dõi pin (adaptive FPS) |
 
 </details>
 

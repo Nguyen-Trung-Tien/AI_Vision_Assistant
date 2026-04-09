@@ -1,11 +1,11 @@
 """
 TTS (Text-To-Speech) Cache Service.
-Sử dụng Redis để cache URL audio, tránh tạo lại TTS cho cùng nội dung.
-Fallback sang LRU in-memory cache (tối đa MAX_MEMORY_ITEMS entries) khi Redis không khả dụng.
+Uses Redis for persistent cache, with in-memory LRU fallback.
 """
 
 import hashlib
 import os
+import re
 import subprocess
 import threading
 from collections import OrderedDict
@@ -18,7 +18,7 @@ except ImportError:
 
 
 class _LRUCache:
-    """Thread-safe LRU cache dựa trên OrderedDict."""
+    """Thread-safe LRU cache based on OrderedDict."""
 
     def __init__(self, maxsize: int = 512):
         self._cache: OrderedDict[str, str] = OrderedDict()
@@ -29,7 +29,6 @@ class _LRUCache:
         with self._lock:
             if key not in self._cache:
                 return None
-            # Move to end (most recently used)
             self._cache.move_to_end(key)
             return self._cache[key]
 
@@ -39,7 +38,6 @@ class _LRUCache:
                 self._cache.move_to_end(key)
             self._cache[key] = value
             if len(self._cache) > self._maxsize:
-                # Evict oldest
                 evicted = next(iter(self._cache))
                 del self._cache[evicted]
 
@@ -54,37 +52,39 @@ class _LRUCache:
 class TTSCacheService:
     """
     Cache TTS audio URLs.
-    - Production: Redis cache
-    - Fallback:   LRU in-memory dict (tối đa 512 entries, evict oldest khi đầy)
+    - Primary: Redis
+    - Fallback: in-memory LRU
     """
 
     _redis_client = None
     _memory_cache: _LRUCache = _LRUCache(maxsize=512)
     _initialized = False
-    _cache_ttl: int = 86400  # 24 giờ
+    _cache_ttl: int = 86400
 
-    # Audio directory — configurable via env
     _audio_dir: str = os.getenv(
         "TTS_AUDIO_DIR",
         "/tmp/vision_audio" if os.name != "nt"
         else os.path.join(os.environ.get("TEMP", "C:\\temp"), "vision_audio"),
     )
 
-    # Map ngôn ngữ sang giọng edge-tts
     _VOICE_MAP: dict[str, str] = {
         "vi": "vi-VN-HoaiMyNeural",
         "en": "en-US-JennyNeural",
     }
 
+    _VOICE_FALLBACKS: dict[str, list[str]] = {
+        "vi": ["vi-VN-HoaiMyNeural", "vi-VN-NamMinhNeural", "en-US-JennyNeural"],
+        "en": ["en-US-JennyNeural", "en-US-GuyNeural", "vi-VN-HoaiMyNeural"],
+    }
+
     @classmethod
     def _init_redis(cls) -> None:
-        """Lazy-init Redis connection."""
         if cls._initialized:
             return
         cls._initialized = True
 
         if not _redis_available:
-            print("[TTS Cache] redis package not installed — using LRU memory cache")
+            print("[TTS Cache] redis package not installed - using LRU memory cache")
             return
 
         redis_url = os.getenv("REDIS_URL", "redis://127.0.0.1:6379")
@@ -95,60 +95,116 @@ class TTSCacheService:
             cls._redis_client.ping()
             print(f"[TTS Cache] Connected to Redis: {redis_url}")
         except Exception as exc:
-            print(f"[TTS Cache] Redis unavailable ({exc}) — using LRU memory cache")
+            print(f"[TTS Cache] Redis unavailable ({exc}) - using LRU memory cache")
             cls._redis_client = None
 
     @classmethod
     def _make_cache_key(cls, text: str, lang: str = "vi") -> str:
-        """Tạo cache key từ nội dung text và ngôn ngữ."""
         text_hash = hashlib.md5(text.encode("utf-8")).hexdigest()
         return f"tts_audio_{text_hash}_{lang}"
 
     @classmethod
-    def _generate_audio(cls, text: str, cache_key: str, lang: str = "vi") -> str:
-        """
-        Tạo file MP3 bằng edge-tts và trả về URL path tương đối.
+    def _normalize_tts_text(cls, text: str) -> str:
+        if not text:
+            return ""
 
-        URL format: /audio/<filename>.mp3
-        → Backend-gateway (hoặc `main.py` FastAPI) phải mount static dir
-          tại GET /audio/* → audio_dir.
-        """
+        cleaned = re.sub(r"\s+", " ", str(text)).strip()
+        cleaned = "".join(ch for ch in cleaned if ch.isprintable())
+
+        # Keep payload short to reduce service-side failures.
+        if len(cleaned) > 400:
+            cleaned = cleaned[:400].rstrip()
+        return cleaned
+
+    @classmethod
+    def _run_edge_tts(cls, text: str, voice: str, file_path: str) -> tuple[bool, str]:
+        cmd = [
+            "edge-tts",
+            "--voice", voice,
+            "--text", text,
+            "--write-media", file_path,
+        ]
+        try:
+            completed = subprocess.run(
+                cmd,
+                check=True,
+                timeout=30,
+                capture_output=True,
+                text=True,
+                encoding="utf-8",
+                errors="replace",
+            )
+            stderr_text = (completed.stderr or "").strip()
+            if os.path.exists(file_path) and os.path.getsize(file_path) > 0:
+                return True, stderr_text
+            return False, stderr_text or "edge-tts produced empty output"
+        except subprocess.TimeoutExpired:
+            return False, "edge-tts timed out"
+        except subprocess.CalledProcessError as exc:
+            stderr_text = (exc.stderr or "").strip() if getattr(exc, "stderr", None) else ""
+            return False, stderr_text or str(exc)
+        except Exception as exc:
+            return False, str(exc)
+
+    @classmethod
+    def _short_error(cls, error: str) -> str:
+        if not error:
+            return "unknown error"
+        first_line = next((line.strip() for line in error.splitlines() if line.strip()), "")
+        if len(first_line) > 220:
+            first_line = first_line[:220].rstrip() + "..."
+        return first_line or "unknown error"
+
+    @classmethod
+    def _generate_audio(cls, text: str, cache_key: str, lang: str = "vi") -> str:
         os.makedirs(cls._audio_dir, exist_ok=True)
 
         file_name = f"{cache_key}.mp3"
         file_path = os.path.join(cls._audio_dir, file_name)
 
         if not os.path.exists(file_path):
-            try:
-                voice = cls._VOICE_MAP.get(lang, "vi-VN-HoaiMyNeural")
-                cmd = [
-                    "edge-tts",
-                    "--voice", voice,
-                    "--text", text,
-                    "--write-media", file_path,
-                ]
-                subprocess.run(cmd, check=True, timeout=30)
-                print(f"[TTS Cache] Generated audio → {file_path}")
-            except subprocess.TimeoutExpired:
-                print("[TTS Cache] edge-tts timed out")
+            normalized_text = cls._normalize_tts_text(text)
+            if not normalized_text:
+                print("[TTS Cache] Empty text after normalization")
                 return ""
-            except Exception as exc:
-                print(f"[TTS Cache] edge-tts error: {exc}")
+
+            voices = cls._VOICE_FALLBACKS.get(lang, [cls._VOICE_MAP.get(lang, "vi-VN-HoaiMyNeural")])
+            voices = list(dict.fromkeys(voices))
+
+            last_error = ""
+            for voice in voices:
+                ok, error = cls._run_edge_tts(normalized_text, voice, file_path)
+                if ok:
+                    print(f"[TTS Cache] Generated audio via voice={voice} -> {file_path}")
+                    last_error = ""
+                    break
+                last_error = error
+                print(f"[TTS Cache] edge-tts failed voice={voice}: {cls._short_error(error)}")
+
+            if last_error:
+                short_text = normalized_text[:180].rstrip()
+                if short_text and short_text != normalized_text:
+                    ok, error = cls._run_edge_tts(short_text, voices[0], file_path)
+                    if ok:
+                        print(f"[TTS Cache] Generated audio after short-text retry -> {file_path}")
+                        last_error = ""
+                    else:
+                        last_error = error
+
+            if last_error:
                 return ""
 
         return f"/audio/{file_name}"
 
     @classmethod
     def get_audio_url(cls, text: str, lang: str = "vi") -> str:
-        """
-        Lấy audio URL cho text.
-        Cache Hit  → trả URL đã lưu.
-        Cache Miss → tạo mới, lưu cache, trả URL.
-        """
         cls._init_redis()
-        cache_key = cls._make_cache_key(text, lang)
+        normalized_text = cls._normalize_tts_text(text)
+        if not normalized_text:
+            return ""
 
-        # 1. Try Redis
+        cache_key = cls._make_cache_key(normalized_text, lang)
+
         if cls._redis_client is not None:
             try:
                 cached_url = cls._redis_client.get(cache_key)
@@ -158,36 +214,33 @@ class TTSCacheService:
             except Exception as exc:
                 print(f"[TTS Cache] Redis read error: {exc}")
 
-        # 2. Try LRU memory cache
         cached_url = cls._memory_cache.get(cache_key)
         if cached_url is not None:
             print(f"[TTS Cache] HIT (Memory LRU): {cache_key} | cache_size={len(cls._memory_cache)}")
             return cached_url
 
-        # 3. Cache Miss — generate
-        audio_url = cls._generate_audio(text, cache_key, lang)
+        audio_url = cls._generate_audio(normalized_text, cache_key, lang)
 
-        # Store in Redis
-        if cls._redis_client is not None:
-            try:
-                cls._redis_client.setex(cache_key, cls._cache_ttl, audio_url)
-                print(f"[TTS Cache] MISS → stored in Redis: {cache_key}")
-            except Exception as exc:
-                print(f"[TTS Cache] Redis write error: {exc}")
+        if audio_url:
+            if cls._redis_client is not None:
+                try:
+                    cls._redis_client.setex(cache_key, cls._cache_ttl, audio_url)
+                    print(f"[TTS Cache] MISS -> stored in Redis: {cache_key}")
+                except Exception as exc:
+                    print(f"[TTS Cache] Redis write error: {exc}")
 
-        # Always store in LRU memory as fallback
-        cls._memory_cache.set(cache_key, audio_url)
-        print(f"[TTS Cache] MISS → stored in LRU Memory: {cache_key} | cache_size={len(cls._memory_cache)}")
+            cls._memory_cache.set(cache_key, audio_url)
+            print(f"[TTS Cache] MISS -> stored in LRU Memory: {cache_key} | cache_size={len(cls._memory_cache)}")
+        else:
+            print(f"[TTS Cache] MISS -> audio generation failed: {cache_key}")
 
         return audio_url
 
     @classmethod
     def clear_cache(cls) -> None:
-        """Xóa toàn bộ memory cache."""
         cls._memory_cache.clear()
         print("[TTS Cache] LRU Memory cache cleared")
 
     @classmethod
     def get_audio_dir(cls) -> str:
-        """Trả về thư mục chứa file audio (để mount static server)."""
         return cls._audio_dir

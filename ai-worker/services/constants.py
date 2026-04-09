@@ -1,22 +1,93 @@
-"""
-Constants and reference dictionaries used by AI Vision Assistant.
-"""
+"""Constants and label normalization for AI Vision Assistant."""
+
+CANONICAL_CLASSES: list[str] = [
+    "tien_1k",
+    "tien_2k",
+    "tien_5k",
+    "tien_10k",
+    "tien_20k",
+    "tien_50k",
+    "tien_100k",
+    "tien_200k",
+    "tien_500k",
+    "xe_may",
+    "cau_thang",
+    "o_ga",
+    "ong_cong",
+    "xe_lon",
+    "nguoi",
+    "den_giao_thong",
+    "den_do",
+    "den_vang",
+    "den_xanh",
+    "vach_qua_duong",
+]
+
+# Legacy labels are mapped into canonical classes before app logic consumes detections.
+LEGACY_LABEL_ALIASES: dict[str, str] = {
+    "person": "nguoi",
+    "male": "nguoi",
+    "female": "nguoi",
+    "car": "xe_lon",
+    "truck": "xe_lon",
+    "bus": "xe_lon",
+    "motorbike": "xe_may",
+    "motorcycle": "xe_may",
+    "stairs_up": "cau_thang",
+    "stairs_down": "cau_thang",
+    "pothole": "o_ga",
+    "manhole": "ong_cong",
+    "open_manhole": "ong_cong",
+    "traffic_light": "den_giao_thong",
+    "traffic_light_red": "den_do",
+    "traffic_light_yellow": "den_vang",
+    "traffic_light_green": "den_xanh",
+    "red_light": "den_do",
+    "yellow_light": "den_vang",
+    "green_light": "den_xanh",
+    "red": "den_do",
+    "yellow": "den_vang",
+    "green": "den_xanh",
+    "den_do": "den_do",
+    "den_vang": "den_vang",
+    "den_xanh": "den_xanh",
+    "crosswalk": "vach_qua_duong",
+}
+
+
+def canonicalize_label(label: str) -> str:
+    normalized = label.strip().lower().replace("-", "_").replace(" ", "_")
+    if normalized in CANONICAL_CLASSES:
+        return normalized
+    return LEGACY_LABEL_ALIASES.get(normalized, normalized)
+
 
 # --- Money labels ---
 MONEY_LABELS: set[str] = {
-    "tien_vn", "money", "banknote", "currency", "cash",
-    "tien_200d", "tien_500d", "tien_1k", "tien_2k", "tien_5k",
-    "tien_10k", "tien_20k", "tien_50k", "tien_100k", "tien_200k", "tien_500k",
+    "tien_1k",
+    "tien_2k",
+    "tien_5k",
+    "tien_10k",
+    "tien_20k",
+    "tien_50k",
+    "tien_100k",
+    "tien_200k",
+    "tien_500k",
 }
 
 # --- Label translations (Vietnamese) ---
 LABEL_TRANSLATIONS: dict[str, str] = {
     "nguoi": "người",
-    "o_to": "ô tô",
     "xe_may": "xe máy",
-    "xe_khach_tai": "xe khách hoặc xe tải",
-    "tien_200d": "200 đồng",
-    "tien_500d": "500 đồng",
+    "xe_lon": "xe lớn",
+    "cau_thang": "cầu thang",
+    "o_ga": "ổ gà",
+    "ong_cong": "ống cống",
+    "den_giao_thong": "đèn giao thông",
+    "den_do": "đèn đỏ",
+    "den_vang": "đèn vàng",
+    "den_xanh": "đèn xanh",
+    "vach_qua_duong": "vạch qua đường",
     "tien_1k": "1 nghìn",
     "tien_2k": "2 nghìn",
     "tien_5k": "5 nghìn",
@@ -26,76 +97,24 @@ LABEL_TRANSLATIONS: dict[str, str] = {
     "tien_100k": "100 nghìn",
     "tien_200k": "200 nghìn",
     "tien_500k": "500 nghìn",
-    # Custom trained objects
-    "person": "người đi bộ",
-    "car": "ô tô",
-    "truck": "xe tải",
-    "motorbike": "xe máy",
-    "chair": "ghế",
-    "manhole": "nắp cống",
-    "phone": "điện thoại",
-    "road": "đường",
-    "sidewalk": "vỉa hè",
-    "stairs_down": "cầu thang đi xuống",
-    "stairs_up": "cầu thang đi lên",
-    "water_bottle": "chai nước",
-    "money": "tiền",
-    "male": "người nam",
-    "female": "người nữ",
-    "plastic_bottle": "chai nhựa",
-    "glass_bottle": "chai thủy tinh",
-    "pothole": "ổ gà hoặc ổ voi",
-    "open_manhole": "nắp cống đang mở",
-    "traffic_light_red": "đèn đỏ",
-    "traffic_light_yellow": "đèn vàng",
-    "traffic_light_green": "đèn xanh",
-    # COCO fallback objects
-    "bicycle": "xe đạp",
-    "motorcycle": "xe máy",
-    "bus": "xe buýt",
-    "traffic_light": "đèn giao thông",
-    "stop_sign": "biển báo dừng lại",
-    "tree": "cái cây",
-    "bench": "ghế dài",
 }
 
 # --- Average object heights (meters) for rough distance estimation ---
 OBJECT_REAL_HEIGHTS: dict[str, float] = {
-    "person": 1.7,
-    "car": 1.5,
-    "motorcycle": 1.1,
-    "motorbike": 1.1,
-    "bus": 3.0,
-    "truck": 2.5,
-    "traffic_light": 2.5,
-    "stop_sign": 2.0,
-    "bicycle": 1.0,
-    "chair": 0.9,
-    "manhole": 0.1,
-    "phone": 0.15,
-    "water_bottle": 0.25,
-    "stairs_down": 0.5,
-    "stairs_up": 0.5,
-    "money": 0.07,
-    "male": 1.7,
-    "female": 1.6,
-    "plastic_bottle": 0.25,
-    "glass_bottle": 0.25,
-    "pothole": 0.0,
-    "open_manhole": 0.0,
-    "traffic_light_red": 0.5,
-    "traffic_light_yellow": 0.5,
-    "traffic_light_green": 0.5,
+    "nguoi": 1.7,
+    "xe_may": 1.1,
+    "xe_lon": 2.6,
+    "den_giao_thong": 2.5,
+    "den_do": 2.5,
+    "den_vang": 2.5,
+    "den_xanh": 2.5,
+    "cau_thang": 0.5,
+    "ong_cong": 0.1,
+    "o_ga": 0.1,
 }
 
 # --- Money denomination aliases ---
 DENOMINATION_ALIASES: dict[str, set[str]] = {
-    "200": {
-        "200d", "200", "tien_200d", "tien200d", "hai_tram",
-    },
-    "500": {
-        "500d", "500", "tien_500d", "tien500d", "nam_tram",
-    },
     "1000": {
         "1k", "1_000", "1000", "1.000", "1,000",
         "tien_1k", "tien_1000", "tien1k",
@@ -137,12 +156,12 @@ DENOMINATION_ALIASES: dict[str, set[str]] = {
 # --- HSV ranges for VN polymer banknotes ---
 # OpenCV HSV: H: 0-180, S: 0-255, V: 0-255
 COLOR_RANGES: dict[str, dict[str, tuple[int, int]]] = {
-    "10000": {"h": (10, 30), "s": (50, 255)},    # Yellow-brown
-    "20000": {"h": (100, 130), "s": (50, 255)},  # Blue
-    "50000": {"h": (140, 175), "s": (40, 255)},  # Pink/Purple
-    "100000": {"h": (40, 90), "s": (40, 255)},   # Green
-    "200000": {"h": (0, 20), "s": (60, 255)},    # Red-Orange/Brown
-    "500000": {"h": (85, 105), "s": (60, 255)},  # Cyan
+    "10000": {"h": (10, 30), "s": (50, 255)},
+    "20000": {"h": (100, 130), "s": (50, 255)},
+    "50000": {"h": (140, 175), "s": (40, 255)},
+    "100000": {"h": (40, 90), "s": (40, 255)},
+    "200000": {"h": (0, 20), "s": (60, 255)},
+    "500000": {"h": (85, 105), "s": (60, 255)},
 }
 
 # --- Landmark cues printed on denominations ---
@@ -151,6 +170,6 @@ DENOMINATION_FEATURES: dict[str, str] = {
     "20000": "Chùa Cầu (Hội An)",
     "50000": "Nghinh Lương Đình - Phu Văn Lâu (Huế)",
     "100000": "Văn Miếu - Quốc Tử Giám",
-    "200000": "đỉnh Hương (vịnh Hạ Long)",
-    "500000": "ngôi nhà tranh của Bác Hồ ở Kim Liên",
+    "200000": "hòn Đỉnh Hương (vịnh Hạ Long)",
+    "500000": "nhà tranh của Bác Hồ ở Kim Liên",
 }
