@@ -23,8 +23,10 @@ import 'package:mobile_app/services/voice_command_service.dart';
 import 'package:mobile_app/services/volume_button_service.dart';
 import 'package:mobile_app/services/websocket_service.dart';
 import 'package:mobile_app/services/continuous_stream_service.dart';
+import 'package:mobile_app/services/spatial_audio_service.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
 import 'package:mobile_app/utils/text_utils.dart';
+import 'package:mobile_app/utils/spatial_utils.dart';
 import 'package:mobile_app/theme/app_theme.dart';
 import 'package:mobile_app/widgets/status_overlay.dart';
 import 'package:mobile_app/widgets/mode_carousel.dart';
@@ -54,6 +56,7 @@ class _MainScreenState extends State<MainScreen>
   final SettingsService _settings = SettingsService();
   late PowerButtonService _powerButtonService;
   late VolumeButtonService _volumeButtonService;
+  final SpatialAudioService _spatialAudioService = SpatialAudioService();
 
   CameraController? _cameraController;
   static const Duration _captureTimeout = Duration(seconds: 6);
@@ -195,6 +198,15 @@ class _MainScreenState extends State<MainScreen>
         _dangerTimer = Timer(const Duration(seconds: 4), () {
           if (mounted) setState(() => _dangerMessage = null);
         });
+
+        // Trigger Spatial Audio — extract position from message text
+        if (message.isNotEmpty) {
+          _spatialAudioService.playDirectionalAlert(
+            position: message,
+            level: level,
+            distance: _settings.warningDistance,
+          );
+        }
       }
     };
     _aiService.onAIResultReceived = (result) {
@@ -328,6 +340,7 @@ class _MainScreenState extends State<MainScreen>
     _navigationService.stopNavigation();
     _powerButtonService.stopListening();
     _volumeButtonService.stopListening();
+    _spatialAudioService.dispose();
     super.dispose();
   }
 
@@ -568,6 +581,16 @@ class _MainScreenState extends State<MainScreen>
       final position = nearest['position']?.toString() ?? '';
       nearestObstacle = '$label ${position.toLowerCase()} ${distance}m'.trim();
       safeDirection = _deriveSafeDirection(position);
+
+      // Trigger Spatial Audio for the nearest obstacle
+      final parsedDist = double.tryParse(distance.toString()) ?? 2.0;
+      final centerXRatio = nearest['center_x_ratio'];
+      _spatialAudioService.playDirectionalAlert(
+        position: position,
+        level: alertLevelFromDistance(parsedDist, label: label),
+        distance: parsedDist,
+        centerXRatio: centerXRatio is num ? centerXRatio.toDouble() : null,
+      );
     } else {
       final text = (result['text']?.toString() ?? '').toLowerCase();
       if (text.contains('trái') || text.contains('left')) {

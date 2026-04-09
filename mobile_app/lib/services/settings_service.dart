@@ -145,4 +145,26 @@ class SettingsService {
     await _prefs?.remove('auth_token');
     await _prefs?.remove('auth_email');
   }
+
+  // --- Spatial Audio ---
+  bool get spatialAudioEnabled =>
+      _prefs?.getBool('spatial_audio_enabled') ?? true;
+
+  Future<void> setSpatialAudioEnabled(bool value) async {
+    await _prefs?.setBool('spatial_audio_enabled', value);
+  }
+
+  double get spatialAudioVolume =>
+      _prefs?.getDouble('spatial_audio_volume') ?? 0.8;
+
+  Future<void> setSpatialAudioVolume(double value) async {
+    await _prefs?.setDouble('spatial_audio_volume', value);
+  }
+
+  bool get headphonesOnlyMode =>
+      _prefs?.getBool('headphones_only_mode') ?? true;
+
+  Future<void> setHeadphonesOnlyMode(bool value) async {
+    await _prefs?.setBool('headphones_only_mode', value);
+  }
 }

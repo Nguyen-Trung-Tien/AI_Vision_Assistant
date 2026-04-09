@@ -413,6 +413,31 @@ class AppLocalizations {
       'vi': 'Bạn đang trên đường {road}{area}',
       'en': 'You are on {road}{area}',
     },
+    // --- Spatial Audio ---
+    'settings_spatial_audio': {
+      'vi': '🔊 Âm thanh 3D (Spatial Audio)',
+      'en': '🔊 3D Spatial Audio',
+    },
+    'settings_spatial_audio_desc': {
+      'vi': 'Cảnh báo vật cản theo hướng tai trái/phải.',
+      'en': 'Obstacle alerts oriented to left/right ear.',
+    },
+    'settings_spatial_volume': {
+      'vi': 'Âm lượng cảnh báo 3D',
+      'en': '3D Alert Volume',
+    },
+    'settings_spatial_volume_spoken': {
+      'vi': 'Âm lượng cảnh báo ba đê:',
+      'en': 'Three-D alert volume:',
+    },
+    'settings_headphones_only': {
+      'vi': '🎧 Chỉ phát qua tai nghe',
+      'en': '🎧 Headphones only mode',
+    },
+    'settings_headphones_only_desc': {
+      'vi': 'Đảm bảo sự riêng tư và chính xác.',
+      'en': 'Ensures privacy and direction accuracy.',
+    },
   };
 
   /// Translate localized string based on lang code ('en' or 'vi')

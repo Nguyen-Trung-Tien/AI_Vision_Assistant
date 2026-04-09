@@ -140,6 +140,9 @@ def process_captioning(image_base64: str, client_id: str = "default", lang: str 
             else "right" if pos == t("position_right", lang)
             else "center"
         )
+        # Continuous pan ratio for spatial audio (0.0=left, 1.0=right)
+        x1, _, x2, _ = d["box"]
+        d["center_x_ratio"] = round((x1 + x2) / (2.0 * img_w), 4)
         significant_objects.append(translated)
 
         if translated not in spatial_groups[pos]:

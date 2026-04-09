@@ -47,6 +47,7 @@ def detect_dangers(detections: list[dict[str, Any]], threshold_m: float = 2.0, l
                         "distance": round(d_min, 1),
                         "position": pos_text,
                         "message": message,
+                        "center_x_ratio": obj.get("center_x_ratio"),
                     }
                 )
             continue
@@ -65,6 +66,7 @@ def detect_dangers(detections: list[dict[str, Any]], threshold_m: float = 2.0, l
                         position=pos_text.lower(),
                         distance=round(d_min, 1),
                     ),
+                    "center_x_ratio": obj.get("center_x_ratio"),
                 }
             )
 

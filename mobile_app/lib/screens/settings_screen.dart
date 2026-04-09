@@ -20,10 +20,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
   late double _ttsSpeed;
   late int _defaultMode;
   late String _language;
-  late double _warningDistance;
   late double _lightThreshold;
   late int _fpsLimit;
   late bool _autoFpsBatterySaving;
+  late bool _spatialAudioEnabled;
+  late double _spatialAudioVolume;
+  late bool _headphonesOnlyMode;
 
   List<String> _getModeNames(String lang) {
     return [
@@ -58,10 +60,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
       0,
       _getModeNames(_language).length - 1,
     );
-    _warningDistance = _settings.warningDistance;
     _lightThreshold = _settings.lightThresholdKB;
     _fpsLimit = _settings.fpsLimit;
     _autoFpsBatterySaving = _settings.autoFpsBatterySaving;
+    _spatialAudioEnabled = _settings.spatialAudioEnabled;
+    _spatialAudioVolume = _settings.spatialAudioVolume;
+    _headphonesOnlyMode = _settings.headphonesOnlyMode;
 
     _accessibility.speak(
       AppLocalizations.t('settings_screen_spoken', _language),
@@ -253,38 +257,82 @@ class _SettingsScreenState extends State<SettingsScreen> {
             ],
           ),
           const SizedBox(height: 32),
-          _buildSectionTitle(
-            '${AppLocalizations.t('settings_warning_dist', _language)} ${_warningDistance.toStringAsFixed(1)}m',
+          // --- Spatial Audio Section ---
+          Row(
+            mainAxisAlignment: MainAxisAlignment.spaceBetween,
+            children: [
+              _buildSectionTitle(
+                AppLocalizations.t('settings_spatial_audio', _language),
+              ),
+              Switch(
+                value: _spatialAudioEnabled,
+                activeThumbColor: AppTheme.accentCyan,
+                onChanged: (value) async {
+                  setState(() => _spatialAudioEnabled = value);
+                  await _settings.setSpatialAudioEnabled(value);
+                  _accessibility.speak(
+                    value ? 'Đã bật âm thanh 3D' : 'Đã tắt âm thanh 3D',
+                  );
+                },
+              ),
+            ],
           ),
-          const SizedBox(height: 8),
-          SliderTheme(
-            data: SliderTheme.of(context).copyWith(
-              activeTrackColor: AppTheme.accentRed,
-              inactiveTrackColor: AppTheme.whiteAlpha(0.2),
-              thumbColor: AppTheme.accentRed,
-              thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 14),
-              trackHeight: 6,
+          Text(
+            AppLocalizations.t('settings_spatial_audio_desc', _language),
+            style: const TextStyle(color: Colors.white54, fontSize: 13),
+          ),
+          if (_spatialAudioEnabled) ...[
+            const SizedBox(height: 16),
+            _buildSectionTitle(
+              '${AppLocalizations.t('settings_spatial_volume', _language)} ${(_spatialAudioVolume * 100).toInt()}%',
             ),
-            child: Slider(
-              value: _warningDistance,
-              min: 0.5,
-              max: 5.0,
-              divisions: 9,
-              onChanged: (value) => setState(() => _warningDistance = value),
-              onChangeEnd: (value) async {
-                await _settings.setWarningDistance(value);
-                final msg = AppLocalizations.t(
-                  'settings_warning_dist_spoken',
-                  _language,
+            const SizedBox(height: 8),
+            SliderTheme(
+              data: SliderTheme.of(context).copyWith(
+                activeTrackColor: AppTheme.accentCyan,
+                inactiveTrackColor: AppTheme.whiteAlpha(0.2),
+                thumbColor: AppTheme.accentCyan,
+                thumbShape: const RoundSliderThumbShape(enabledThumbRadius: 14),
+                trackHeight: 6,
+              ),
+              child: Slider(
+                value: _spatialAudioVolume,
+                min: 0.0,
+                max: 1.0,
+                divisions: 10,
+                onChanged: (value) => setState(() => _spatialAudioVolume = value),
+                onChangeEnd: (value) async {
+                  await _settings.setSpatialAudioVolume(value);
+                  final msg = AppLocalizations.t(
+                    'settings_spatial_volume_spoken',
+                    _language,
+                  );
+                  _accessibility.speak('$msg ${(value * 100).toInt()}%');
+                },
+              ),
+            ),
+            const SizedBox(height: 12),
+            SwitchListTile(
+              title: Text(
+                AppLocalizations.t('settings_headphones_only', _language),
+                style: const TextStyle(color: Colors.white, fontSize: 16),
+              ),
+              subtitle: Text(
+                AppLocalizations.t('settings_headphones_only_desc', _language),
+                style: const TextStyle(color: Colors.white54, fontSize: 13),
+              ),
+              value: _headphonesOnlyMode,
+              activeThumbColor: AppTheme.accentCyan,
+              contentPadding: EdgeInsets.zero,
+              onChanged: (value) async {
+                setState(() => _headphonesOnlyMode = value);
+                await _settings.setHeadphonesOnlyMode(value);
+                _accessibility.speak(
+                  value ? 'Đã bật chế độ tai nghe' : 'Đã tắt chế độ tai nghe',
                 );
-                final unit = AppLocalizations.t(
-                  'settings_warning_dist_unit',
-                  _language,
-                );
-                _accessibility.speak('$msg ${value.toStringAsFixed(1)} $unit');
               },
             ),
-          ),
+          ],
           const SizedBox(height: 32),
           _buildSectionTitle(
             '${AppLocalizations.t('settings_light_threshold', _language)} ${_lightThreshold.toStringAsFixed(0)}KB',
