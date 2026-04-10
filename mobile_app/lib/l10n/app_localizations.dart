@@ -415,7 +415,7 @@ class AppLocalizations {
     },
     // --- Spatial Audio ---
     'settings_spatial_audio': {
-      'vi': '🔊 Âm thanh 3D (Spatial Audio)',
+      'vi': '🔊 Âm thanh 3D',
       'en': '🔊 3D Spatial Audio',
     },
     'settings_spatial_audio_desc': {
