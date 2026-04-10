@@ -56,6 +56,7 @@ class EdgeAIService {
 
       final text = data['text']?.toString() ?? '';
       final isStable = data['stable'] == true;
+      final dangerAlerts = (data['danger_alerts'] as List<dynamic>? ?? const []);
       final taskType =
           data['taskType']?.toString() ??
           data['task_type']?.toString() ??
@@ -73,7 +74,12 @@ class EdgeAIService {
           .difference(_lastSpokenTime)
           .inMilliseconds;
 
-      if (text.isNotEmpty && text != _lastSpokenText) {
+      final shouldSkipSpeechForContinuousDanger =
+          taskType == 'CONTINUOUS' && dangerAlerts.isNotEmpty;
+
+      if (!shouldSkipSpeechForContinuousDanger &&
+          text.isNotEmpty &&
+          text != _lastSpokenText) {
         if (isStable || timeSinceLastSpeakMs >= 1500) {
           _accessibilityManager.speak(text);
           _lastSpokenText = text;

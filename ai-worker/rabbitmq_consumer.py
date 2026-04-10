@@ -19,7 +19,6 @@ from services.tts_cache import TTSCacheService
 # TTS/state cache for continuous stream
 continuous_tts_cache: dict[str, str] = {}
 last_processed_seq_by_client: dict[str, int] = {}
-latest_seen_seq_by_client: dict[str, int] = {}
 
 load_dotenv()
 
@@ -120,12 +119,6 @@ def _should_skip_stale_continuous(client_id: str, frame_seq: int) -> bool:
     if frame_seq <= 0:
         return False
 
-    latest_seen = latest_seen_seq_by_client.get(client_id, 0)
-    if frame_seq < latest_seen:
-        return True
-
-    latest_seen_seq_by_client[client_id] = frame_seq
-
     last_processed = last_processed_seq_by_client.get(client_id, 0)
     if frame_seq <= last_processed:
         return True
@@ -160,7 +153,6 @@ def on_message(channel, method, properties, body):
         )
 
         if original_task_type == 'CONTINUOUS' and _should_skip_stale_continuous(client_id, frame_seq):
-            print(f'[Skip] Stale continuous frame for {client_id}, seq={frame_seq}')
             channel.basic_ack(delivery_tag=method.delivery_tag)
             return
 
@@ -197,7 +189,7 @@ def on_message(channel, method, properties, body):
         danger_alerts = ai_result.get('danger_alerts', [])
         if danger_alerts:
             top_danger = danger_alerts[0]['message']
-            final_text = f'{top_danger} {final_text}'.strip()
+            final_text = top_danger
 
         audio_url = ''
         stable = ai_result.get('stable', False)
@@ -237,6 +229,7 @@ def on_message(channel, method, properties, body):
                 'clientId': client_id,
                 'userId': user_id,
                 'taskType': original_task_type,
+                'frameSeq': frame_seq,
                 'text': final_text,
                 'confidence_score': ai_result.get('confidence_score', 0.0),
                 'audio_url': audio_url,

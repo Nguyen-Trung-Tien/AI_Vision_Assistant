@@ -164,7 +164,9 @@ class _MainScreenState extends State<MainScreen>
         );
       }
     };
-    _wsService.connect();
+    if (_settings.authToken.isEmpty) {
+      _wsService.connect();
+    }
 
     _aiService = EdgeAIService(_wsService, _captureCurrentFrame);
     _continuousStreamService = ContinuousStreamService(
@@ -199,8 +201,8 @@ class _MainScreenState extends State<MainScreen>
           if (mounted) setState(() => _dangerMessage = null);
         });
 
-        // Trigger Spatial Audio — extract position from message text
-        if (message.isNotEmpty) {
+        // Walking mode already plays directional audio from structured AI result.
+        if (!_isWalkingModeEnabled && message.isNotEmpty) {
           _spatialAudioService.playDirectionalAlert(
             position: message,
             level: level,
@@ -222,7 +224,10 @@ class _MainScreenState extends State<MainScreen>
           result['taskType']?.toString() ??
           result['task_type']?.toString() ??
           '';
-      _continuousStreamService.onFrameResultReceived(taskType: taskType);
+      _continuousStreamService.onFrameResultReceived(
+        taskType: taskType,
+        frameSeq: (result['frameSeq'] as num?)?.toInt(),
+      );
       if (_isWalkingModeEnabled && taskType == 'CONTINUOUS') {
         _updateWalkingOverlayFromResult(result);
       }
@@ -528,8 +533,19 @@ class _MainScreenState extends State<MainScreen>
         }
         return;
       }
+      final streamStarted = await _startContinuousImageStream();
+      if (!streamStarted) {
+        if (announce) {
+          _accessibilityManager.speak(
+            _settings.language == 'vi'
+                ? 'Không thể khởi động camera cho chế độ đi bộ.'
+                : 'Could not start the camera stream for walking mode.',
+          );
+          _accessibilityManager.triggerErrorVibration();
+        }
+        return;
+      }
       _continuousStreamService.start();
-      _startContinuousImageStream();
       _pulseController.repeat(reverse: true);
       if (mounted) {
         setState(() {
@@ -1423,19 +1439,21 @@ class _MainScreenState extends State<MainScreen>
     }
   }
 
-  void _startContinuousImageStream() {
+  Future<bool> _startContinuousImageStream() async {
     final controller = _cameraController;
-    if (controller == null || !controller.value.isInitialized) return;
-    if (controller.value.isStreamingImages) return;
+    if (controller == null || !controller.value.isInitialized) return false;
+    if (controller.value.isStreamingImages) return true;
 
     try {
-      controller.startImageStream((CameraImage image) {
+      await controller.startImageStream((CameraImage image) {
         if (_continuousStreamService.isStreaming) {
           _continuousStreamService.onLatestCameraImage(image);
         }
       });
+      return true;
     } catch (e) {
       debugPrint('[Camera] Failed to startImageStream: $e');
+      return false;
     }
   }
 

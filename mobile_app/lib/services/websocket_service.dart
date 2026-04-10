@@ -19,6 +19,7 @@ class WebSocketService {
   Function(bool isConnected)? onConnectionStatus;
 
   bool _isConnected = false;
+  bool _isConnecting = false;
   bool _isDisposed = false;
   bool get isConnected => _isConnected;
 
@@ -30,7 +31,7 @@ class WebSocketService {
   /// Tự động kết nối WebSocket nếu chưa kết nối.
   void setAuthToken(String token) {
     _authToken = token;
-    if (!_isConnected && !_isDisposed) {
+    if (!_isConnected && !_isConnecting && !_isDisposed) {
       connect();
     }
   }
@@ -51,6 +52,7 @@ class WebSocketService {
     socket.onConnect((_) {
       debugPrint('Connected to Gateway WS');
       _isConnected = true;
+      _isConnecting = false;
       _reconnectAttempts = 0;
       _reconnectTimer?.cancel();
       socket.emit('join_user');
@@ -88,6 +90,7 @@ class WebSocketService {
     socket.onDisconnect((_) {
       debugPrint('Disconnected from Gateway WS');
       _isConnected = false;
+      _isConnecting = false;
       onConnectionStatus?.call(false);
       if (!_isDisposed) _scheduleReconnect();
     });
@@ -95,6 +98,7 @@ class WebSocketService {
     socket.onConnectError((error) {
       debugPrint('WS Connection Error: $error');
       _isConnected = false;
+      _isConnecting = false;
       onConnectionStatus?.call(false);
       if (!_isDisposed) _scheduleReconnect();
     });
@@ -106,6 +110,16 @@ class WebSocketService {
 
   void connect() {
     if (_isDisposed) return;
+    if (_isConnected || _isConnecting) return;
+    if (_socket != null) {
+      final socket = _socket!;
+      if (socket.connected) {
+        _isConnected = true;
+        return;
+      }
+      _socket?.dispose();
+      _socket = null;
+    }
 
     // Do not attempt connection without a token — WsJwtGuard will reject immediately.
     if (_authToken.isEmpty) {
@@ -122,6 +136,7 @@ class WebSocketService {
       defaultValue: 'http://10.0.2.2:3000',
     );
 
+    _isConnecting = true;
     _socket = _createSocket(baseUrl);
     _attachListeners(_socket!);
     _socket!.connect();
@@ -230,6 +245,7 @@ class WebSocketService {
 
   void dispose() {
     _isDisposed = true;
+    _isConnecting = false;
     _reconnectTimer?.cancel();
     _socket?.dispose();
     _socket = null;

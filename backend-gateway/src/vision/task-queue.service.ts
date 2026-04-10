@@ -26,6 +26,8 @@ export interface AIResultPayload {
   userId?: string;
   taskType?: string;
   task_type?: string;
+  frameSeq?: number;
+  frame_seq?: number;
   text?: string;
   confidence_score?: number;
   audio_url?: string;
@@ -47,11 +49,14 @@ export class TaskQueueService {
 
   private taskQueue: VisionTask[] = [];
   private readonly latestContinuousByClient = new Map<string, VisionTask>();
+  private readonly continuousInFlightClients = new Set<string>();
+  private readonly continuousInFlightSince = new Map<string, number>();
 
   private clientLastFrame: Map<string, number> = new Map();
-  private lastGlobalContinuous = 0;
+  private nonContinuousProcessedStreak = 0;
 
   private readonly MIN_FRAME_INTERVAL_MS = 500;
+  private readonly CONTINUOUS_IN_FLIGHT_TIMEOUT_MS = 2500;
 
   constructor(
     @Inject('AI_SERVICE') private client: ClientProxy,
@@ -99,18 +104,28 @@ export class TaskQueueService {
   }
 
   processNextTask() {
+    this.releaseExpiredContinuousInflight();
+
     let task: VisionTask | undefined;
 
-    if (this.taskQueue.length > 0) {
+    const hasQueuedTask = this.taskQueue.length > 0;
+    const hasContinuousTask = this.latestContinuousByClient.size > 0;
+
+    if (
+      hasQueuedTask &&
+      (!hasContinuousTask || this.nonContinuousProcessedStreak < 2)
+    ) {
       this.sortQueueByPriority();
       task = this.taskQueue.shift();
-    } else if (this.latestContinuousByClient.size > 0) {
-      const [clientId, continuousTask] = this.latestContinuousByClient.entries().next().value as [
-        string,
-        VisionTask,
-      ];
-      this.latestContinuousByClient.delete(clientId);
-      task = continuousTask;
+      this.nonContinuousProcessedStreak += 1;
+    } else if (hasContinuousTask) {
+      for (const [clientId, continuousTask] of this.latestContinuousByClient.entries()) {
+        if (this.continuousInFlightClients.has(clientId)) continue;
+        this.latestContinuousByClient.delete(clientId);
+        task = continuousTask;
+        this.nonContinuousProcessedStreak = 0;
+        break;
+      }
     }
 
     if (!task) return;
@@ -140,11 +155,6 @@ export class TaskQueueService {
 
     if (now - lastFrame < interval) return false;
 
-    if (taskType === 'CONTINUOUS') {
-      if (now - this.lastGlobalContinuous < 60) return false;
-      this.lastGlobalContinuous = now;
-    }
-
     this.clientLastFrame.set(clientId, now);
     return true;
   }
@@ -166,6 +176,11 @@ export class TaskQueueService {
   ) {
     this.logger.log(`Push ${taskType} -> RabbitMQ (client ${clientId})`);
 
+    if (taskType === 'CONTINUOUS') {
+      this.continuousInFlightClients.add(clientId);
+      this.continuousInFlightSince.set(clientId, Date.now());
+    }
+
     this.client.emit('process_ai_task', {
       clientId,
       userId,
@@ -186,6 +201,12 @@ export class TaskQueueService {
 
   async handleAIResult(result: AIResultPayload) {
     try {
+      const resultTaskType = result.taskType || result.task_type;
+      if (resultTaskType === 'CONTINUOUS') {
+        this.continuousInFlightClients.delete(result.clientId);
+        this.continuousInFlightSince.delete(result.clientId);
+      }
+
       const dangerAlerts = result.danger_alerts || [];
 
       const highestDangerDistance = dangerAlerts.reduce(
@@ -213,7 +234,8 @@ export class TaskQueueService {
       if (this.server) {
         this.server.to(result.clientId).emit('ai_result', {
           detectionId: savedLog.id,
-          taskType: result.taskType || result.task_type,
+          taskType: resultTaskType,
+          frameSeq: result.frameSeq || result.frame_seq,
           text: result.text,
           audio_url: result.audio_url,
           stable: result.stable,
@@ -240,6 +262,17 @@ export class TaskQueueService {
   cleanupClient(clientId: string) {
     this.clientLastFrame.delete(clientId);
     this.latestContinuousByClient.delete(clientId);
+    this.continuousInFlightClients.delete(clientId);
+    this.continuousInFlightSince.delete(clientId);
     this.taskQueue = this.taskQueue.filter((task) => task.clientId !== clientId);
+  }
+
+  private releaseExpiredContinuousInflight() {
+    const now = Date.now();
+    for (const [clientId, startedAt] of this.continuousInFlightSince.entries()) {
+      if (now - startedAt < this.CONTINUOUS_IN_FLIGHT_TIMEOUT_MS) continue;
+      this.continuousInFlightSince.delete(clientId);
+      this.continuousInFlightClients.delete(clientId);
+    }
   }
 }

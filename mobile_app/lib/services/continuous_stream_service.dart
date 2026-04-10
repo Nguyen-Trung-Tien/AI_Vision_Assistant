@@ -24,6 +24,10 @@ class ContinuousStreamService {
   bool _awaitingResult = false;
   bool _hasLowBatteryAnnouncement = false;
   int _frameSeq = 0;
+  int? _inFlightFrameSeq;
+  DateTime? _inFlightSentAt;
+  int _backendFpsCap = 5;
+  int _fastResponseStreak = 0;
 
   Position? _lastPosition;
   DateTime _lastPositionTime = DateTime.fromMillisecondsSinceEpoch(0);
@@ -43,9 +47,20 @@ class ContinuousStreamService {
     _latestCameraImage = image;
   }
 
-  void onFrameResultReceived({required String taskType}) {
+  void onFrameResultReceived({required String taskType, int? frameSeq}) {
     if (taskType != 'CONTINUOUS') return;
     _awaitingResult = false;
+    if (frameSeq != null && _inFlightFrameSeq != null && frameSeq != _inFlightFrameSeq) {
+      return;
+    }
+
+    final sentAt = _inFlightSentAt;
+    _inFlightFrameSeq = null;
+    _inFlightSentAt = null;
+    if (sentAt == null) return;
+
+    final latencyMs = DateTime.now().difference(sentAt).inMilliseconds;
+    _adaptToBackendLatency(latencyMs);
   }
 
   void start() {
@@ -54,7 +69,11 @@ class ContinuousStreamService {
     _awaitingResult = false;
     _latestCameraImage = null;
     _frameSeq = 0;
+    _inFlightFrameSeq = null;
+    _inFlightSentAt = null;
     _lastMotionTime = DateTime.now();
+    _backendFpsCap = 5;
+    _fastResponseStreak = 0;
     _setCurrentFps(1);
     _startTimer();
   }
@@ -64,6 +83,8 @@ class ContinuousStreamService {
     _streamTimer?.cancel();
     _streamTimer = null;
     _awaitingResult = false;
+    _inFlightFrameSeq = null;
+    _inFlightSentAt = null;
   }
 
   void _startTimer() {
@@ -78,6 +99,9 @@ class ContinuousStreamService {
     if (_awaitingResult &&
         DateTime.now().difference(_awaitingSince).inMilliseconds > 1500) {
       _awaitingResult = false;
+      _adaptToBackendLatency(1600);
+      _inFlightFrameSeq = null;
+      _inFlightSentAt = null;
     }
 
     if (!_isProcessingFrame && !_awaitingResult && _wsService.isConnected) {
@@ -126,6 +150,8 @@ class ContinuousStreamService {
     _awaitingResult = true;
     _awaitingSince = DateTime.now();
     _frameSeq += 1;
+    _inFlightFrameSeq = _frameSeq;
+    _inFlightSentAt = _awaitingSince;
 
     final base64Frame = base64Encode(bytes);
     final settings = SettingsService();
@@ -172,7 +198,30 @@ class ContinuousStreamService {
       _hasLowBatteryAnnouncement = false;
     }
 
+    nextFps = nextFps > _backendFpsCap ? _backendFpsCap : nextFps;
     _setCurrentFps(nextFps);
+  }
+
+  void _adaptToBackendLatency(int latencyMs) {
+    final settings = SettingsService();
+    final maxAllowed = settings.fpsLimit.clamp(1, 5);
+
+    if (latencyMs >= 1400) {
+      _backendFpsCap = (_backendFpsCap - 1).clamp(1, maxAllowed);
+      _fastResponseStreak = 0;
+      return;
+    }
+
+    if (latencyMs <= 700) {
+      _fastResponseStreak += 1;
+      if (_fastResponseStreak >= 2) {
+        _backendFpsCap = (_backendFpsCap + 1).clamp(1, maxAllowed);
+        _fastResponseStreak = 0;
+      }
+      return;
+    }
+
+    _fastResponseStreak = 0;
   }
 
   void _setCurrentFps(int value) {
