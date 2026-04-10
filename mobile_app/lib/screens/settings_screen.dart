@@ -300,7 +300,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 min: 0.0,
                 max: 1.0,
                 divisions: 10,
-                onChanged: (value) => setState(() => _spatialAudioVolume = value),
+                onChanged: (value) =>
+                    setState(() => _spatialAudioVolume = value),
                 onChangeEnd: (value) async {
                   await _settings.setSpatialAudioVolume(value);
                   final msg = AppLocalizations.t(
@@ -342,12 +343,12 @@ class _SettingsScreenState extends State<SettingsScreen> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               Text(
-                AppLocalizations.t('settings_light_low', _language),
-                style: const TextStyle(color: Colors.amber, fontSize: 13),
-              ),
-              Text(
                 AppLocalizations.t('settings_light_high', _language),
                 style: const TextStyle(color: Colors.white54, fontSize: 13),
+              ),
+              Text(
+                AppLocalizations.t('settings_light_low', _language),
+                style: const TextStyle(color: Colors.amber, fontSize: 13),
               ),
             ],
           ),
