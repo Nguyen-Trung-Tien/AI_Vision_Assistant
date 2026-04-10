@@ -1,8 +1,9 @@
-import { useEffect, useState, useRef, useCallback } from "react";
-import { fetchSosAlerts, acknowledgeSos, resolveSos } from "../services/api";
+import { useEffect, useState, useRef } from "react";
+import { useSosAlerts, useAcknowledgeSos, useResolveSos } from "@/hooks/use-queries";
 import { io } from "socket.io-client";
 import { useToast } from "../components/Toast";
 import ConfirmDialog from "../components/ConfirmDialog";
+import { TableSkeleton } from "../components/ui/Skeleton";
 
 const STATUS_COLORS = {
   pending: "bg-red-500/20 text-red-400 border-red-500/30",
@@ -12,26 +13,19 @@ const STATUS_COLORS = {
 
 export default function SosPage() {
   const toast = useToast();
-  const [alerts, setAlerts] = useState([]);
-  const [total, setTotal] = useState(0);
   const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(false);
   const [incoming, setIncoming] = useState(null);
   const [confirm, setConfirm] = useState(null); // { type:'ack'|'resolve', id, label }
-  const [actionLoading, setActionLoading] = useState(false);
-  const audioRef = useRef(null);
+  
+  const { data, isLoading, refetch } = useSosAlerts(page, 15);
+  const alerts = data?.data ?? [];
+  const total = data?.total ?? 0;
 
-  const load = useCallback(async (p = 1) => {
-    setLoading(true);
-    const res = await fetchSosAlerts(p, 15);
-    setAlerts(res.data ?? []);
-    setTotal(res.total ?? 0);
-    setPage(p);
-    setLoading(false);
-  }, []);
+  const ackMutation = useAcknowledgeSos();
+  const resolveMutation = useResolveSos();
+  const actionLoading = ackMutation.isPending || resolveMutation.isPending;
 
   useEffect(() => {
-    load();
     const socket = io("http://127.0.0.1:3000", {
       path: "/socket.io/",
       reconnectionDelayMax: 10000,
@@ -49,39 +43,35 @@ export default function SosPage() {
         osc.start();
         setTimeout(() => osc.stop(), 800);
       } catch {}
-      load();
+      refetch();
     });
     return () => socket.disconnect();
-  }, [load]);
+  }, [refetch]);
 
   const doAction = async () => {
     if (!confirm) return;
-    setActionLoading(true);
     try {
       if (confirm.type === "ack") {
-        await acknowledgeSos(confirm.id);
+        await ackMutation.mutateAsync({ id: confirm.id });
         toast.success("Đã xác nhận nhận SOS");
       } else {
-        await resolveSos(confirm.id, "Đã xử lý bởi admin");
+        await resolveMutation.mutateAsync({ id: confirm.id, note: "Đã xử lý bởi admin" });
         toast.success("Đã đánh dấu xử lý xong");
       }
       setIncoming(null);
-      await load(page);
     } catch {
       toast.error("Thao tác thất bại, vui lòng thử lại");
     }
-    setActionLoading(false);
     setConfirm(null);
   };
 
-  // Direct actions from incoming popup (no extra confirm needed for already visible popup)
+  // Direct actions from incoming popup
   const handleAckDirect = async (id) => {
     if (!id) return;
     try {
-      await acknowledgeSos(id);
+      await ackMutation.mutateAsync({ id });
       toast.success("Đã xác nhận nhận SOS");
       setIncoming(null);
-      load(page);
     } catch {
       toast.error("Thao tác thất bại");
     }
@@ -89,10 +79,9 @@ export default function SosPage() {
   const handleResolveDirect = async (id) => {
     if (!id) return;
     try {
-      await resolveSos(id, "Đã xử lý bởi admin");
+      await resolveMutation.mutateAsync({ id, note: "Đã xử lý bởi admin" });
       toast.success("Đã xử lý SOS thành công");
       setIncoming(null);
-      load(page);
     } catch {
       toast.error("Thao tác thất bại");
     }
@@ -171,50 +160,50 @@ export default function SosPage() {
       {/* Header — stack trên mobile */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 sm:mb-6">
         <div>
-          <h2 className="text-xl sm:text-2xl font-bold text-white">🚨 SOS Khẩn Cấp</h2>
-          <p className="text-white/40 text-sm mt-1">
+          <h2 className="text-xl sm:text-2xl font-black text-text-primary tracking-tight">🚨 SOS Khẩn Cấp</h2>
+          <p className="text-text-secondary text-sm font-medium mt-1">
             Danh sách cảnh báo ({total} tổng)
           </p>
         </div>
         <button
-          onClick={() => load(page)}
-          className="flex items-center justify-center min-h-[44px] px-4 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white/70 text-sm hover:bg-white/10 active:scale-[0.98] transition-all shrink-0"
+          onClick={() => refetch()}
+          className="flex items-center justify-center min-h-[44px] px-4 py-2.5 rounded-xl bg-bg-card border border-border-primary text-text-secondary text-sm font-bold hover:bg-text-primary/5 active:scale-[0.98] transition-all shrink-0"
         >
           🔄 Làm mới
         </button>
       </div>
 
       {/* Table */}
-      <div className="bg-white/5 rounded-2xl border border-white/10 overflow-hidden">
-        {loading ? (
-          <div className="py-16 flex items-center justify-center gap-2 text-white/40 text-sm">
-            <div className="loader-ring" /> Đang tải...
+      <div className="bg-bg-card rounded-2xl border border-border-primary overflow-hidden">
+        {isLoading ? (
+          <div className="p-4 sm:p-6">
+            <TableSkeleton rows={8} cols={6} />
           </div>
         ) : alerts.length === 0 ? (
-          <div className="text-center py-16 text-white/30">Chưa có SOS nào</div>
+          <div className="text-center py-16 text-text-secondary">Chưa có SOS nào</div>
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-white/10 text-white/50 text-xs uppercase">
+              <tr className="border-b border-border-primary text-text-secondary text-xs uppercase">
                 <th className="text-left p-4">ID</th>
                 <th className="text-left p-4">User</th>
                 <th className="text-left p-4">Tọa độ</th>
                 <th className="text-left p-4">Trạng thái</th>
                 <th className="text-left p-4">Thời gian</th>
-                <th className="text-left p-4">Thao tác</th>
+                <th className="text-left p-4 text-right">Thao tác</th>
               </tr>
             </thead>
             <tbody>
               {alerts.map((a) => (
                 <tr
                   key={a.id}
-                  className="border-b border-white/5 hover:bg-white/5 transition-colors"
+                  className="border-b border-border-primary hover:bg-text-primary/5 transition-colors"
                 >
-                  <td className="p-4 text-white/50 font-mono">#{a.id}</td>
-                  <td className="p-4 text-white/70">
+                  <td className="p-4 text-text-secondary font-mono">#{a.id}</td>
+                  <td className="p-4 text-text-primary">
                     {a.user?.email ?? a.userId ?? "—"}
                   </td>
-                  <td className="p-4 text-white/60 font-mono text-xs">
+                  <td className="p-4 text-text-secondary font-mono text-xs">
                     {a.latitude
                       ? `${a.latitude.toFixed(4)}, ${a.longitude.toFixed(4)}`
                       : "—"}
@@ -226,15 +215,15 @@ export default function SosPage() {
                       {a.status}
                     </span>
                   </td>
-                  <td className="p-4 text-white/40 text-xs">
+                  <td className="p-4 text-text-secondary text-xs">
                     {new Date(a.created_at).toLocaleString("vi-VN")}
                   </td>
                   <td className="p-4">
-                    <div className="flex gap-2">
+                    <div className="flex justify-end gap-2">
                       {a.status === "pending" && (
                         <button
                           onClick={() => setConfirm({ type: "ack", id: a.id })}
-                          className="px-3 py-1 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-300 text-xs hover:bg-yellow-500/20 transition-all"
+                          className="px-3 py-1 rounded-lg bg-yellow-500/10 border border-yellow-500/20 text-yellow-600 dark:text-yellow-300 text-xs hover:bg-yellow-500/20 transition-all"
                         >
                           Nhận
                         </button>
@@ -244,7 +233,7 @@ export default function SosPage() {
                           onClick={() =>
                             setConfirm({ type: "resolve", id: a.id })
                           }
-                          className="px-3 py-1 rounded-lg bg-green-500/10 border border-green-500/20 text-green-300 text-xs hover:bg-green-500/20 transition-all"
+                          className="px-3 py-1 rounded-lg bg-green-500/10 border border-green-500/20 text-green-600 dark:text-green-300 text-xs hover:bg-green-500/20 transition-all"
                         >
                           Xử lý
                         </button>
@@ -263,16 +252,16 @@ export default function SosPage() {
         <div className="flex justify-center gap-3">
           <button
             disabled={page <= 1}
-            onClick={() => load(page - 1)}
-            className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white/60 text-sm disabled:opacity-30 hover:bg-white/10 transition-all"
+            onClick={() => setPage(p => p - 1)}
+            className="px-4 py-2 rounded-xl bg-bg-card border border-border-primary text-text-secondary text-sm disabled:opacity-30 hover:bg-text-primary/5 transition-all"
           >
             ← Trước
           </button>
-          <span className="px-4 py-2 text-white/50 text-sm">Trang {page}</span>
+          <span className="px-4 py-2 text-text-secondary text-sm">Trang {page}</span>
           <button
             disabled={page * 15 >= total}
-            onClick={() => load(page + 1)}
-            className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white/60 text-sm disabled:opacity-30 hover:bg-white/10 transition-all"
+            onClick={() => setPage(p => p + 1)}
+            className="px-4 py-2 rounded-xl bg-bg-card border border-border-primary text-text-secondary text-sm disabled:opacity-30 hover:bg-text-primary/5 transition-all"
           >
             Sau →
           </button>

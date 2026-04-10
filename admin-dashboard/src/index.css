@@ -7,9 +7,12 @@
 @custom-variant dark (&:is(.dark *));
 
 @theme {
-  --color-bg-primary: #0a0a1a;
-  --color-bg-card: #16163a;
-  --color-bg-card-hover: #1e1e4a;
+  --color-bg-primary: var(--bg-primary);
+  --color-bg-card: var(--bg-card);
+  --color-bg-card-hover: var(--bg-card-hover);
+  --color-text-primary: var(--text-primary);
+  --color-text-secondary: var(--text-secondary);
+  --color-border-primary: var(--border-color);
   --color-accent-purple: #6c63ff;
   --color-accent-cyan: #00d4ff;
   --color-accent-pink: #ff6b9d;
@@ -19,8 +22,13 @@
   --font-family-inter: "Inter", sans-serif;
 }
 
-/* Mobile-first: safe area & touch targets */
 :root {
+  --bg-primary: #f8fafc;
+  --bg-card: #ffffff;
+  --bg-card-hover: #f1f5f9;
+  --text-primary: #0f172a; /* Slate 900 - Rất rõ nét */
+  --text-secondary: #475569; /* Slate 600 - Rõ ràng */
+  --border-color: rgba(0, 0, 0, 0.08);
   --safe-top: env(safe-area-inset-top, 0px);
   --safe-right: env(safe-area-inset-right, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
@@ -235,6 +243,12 @@ body {
 }
 
 .dark {
+  --bg-primary: #0a0a1a;
+  --bg-card: #16163a;
+  --bg-card-hover: #1e1e4a;
+  --text-primary: #ffffff;
+  --text-secondary: rgba(255, 255, 255, 0.45);
+  --border-color: rgba(255, 255, 255, 0.08);
   --background: oklch(0.145 0 0);
   --foreground: oklch(0.985 0 0);
   --card: oklch(0.205 0 0);

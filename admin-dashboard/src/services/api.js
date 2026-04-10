@@ -1,55 +1,31 @@
-const STATS_API_BASE = "/api/stats";
-const AUTH_API_BASE = "/api/auth";
-const EMAIL_KEY = "admin_email";
+import apiClient from "@/lib/api-client";
 
+const EMAIL_KEY = "admin_email";
+const AUTH_KEY = "admin_authenticated";
+
+/**
+ * Auth operations
+ */
 export function clearSession() {
   localStorage.removeItem(EMAIL_KEY);
-  localStorage.removeItem("admin_authenticated");
-  // Fire and forget logout to clear httpOnly cookie
-  fetch(`${AUTH_API_BASE}/logout`, {
-    method: "POST",
-    credentials: "include",
-  }).catch(() => {});
+  localStorage.removeItem(AUTH_KEY);
+  // Post logout to clear httpOnly cookies on the backend
+  return apiClient.post("/auth/logout").catch(() => {});
 }
 
 export function getStoredEmail() {
   return localStorage.getItem(EMAIL_KEY) ?? "";
 }
 
-async function requestJson(url, options = {}) {
-  const headers = {
-    "Content-Type": "application/json",
-    ...(options.headers ?? {}),
-  };
-
-  const response = await fetch(url, {
-    ...options,
-    headers,
-    credentials: "include", // Send & receive httpOnly cookies automatically
-  });
-  let payload = null;
-  try {
-    payload = await response.json();
-  } catch {
-    payload = null;
-  }
-
-  if (response.status === 401) {
-    clearSession();
-    throw new Error("ERROR");
-  }
-
-  if (!response.ok) {
-    throw new Error(payload?.message || "Request failed");
-  }
-
-  return payload;
+export function setSession(email) {
+  localStorage.setItem(AUTH_KEY, "true");
+  localStorage.setItem(EMAIL_KEY, email);
 }
 
 export async function loginAdmin(email, password) {
-  const payload = await requestJson(`${AUTH_API_BASE}/admin/login`, {
-    method: "POST",
-    body: JSON.stringify({ email, password }),
+  const payload = await apiClient.post("/auth/admin/login", {
+    email,
+    password,
   });
 
   const role = payload?.user?.role || "";
@@ -58,217 +34,163 @@ export async function loginAdmin(email, password) {
     throw new Error("Chỉ admin mới được đăng nhập dashboard");
   }
 
-  localStorage.setItem("admin_authenticated", "true");
-  localStorage.setItem(EMAIL_KEY, payload?.user?.email || email);
+  setSession(payload?.user?.email || email);
   return payload;
 }
 
 export async function registerAdmin(email, password) {
-  const payload = await requestJson(`${AUTH_API_BASE}/register`, {
-    method: "POST",
-    body: JSON.stringify({ email, password }),
-  });
-
-  // Note: auth controller might not set cookie on register (only on login)
-  // If we auto-login after register, need to adjust backend or call login.
-  return payload;
+  return apiClient.post("/auth/register", { email, password });
 }
 
+/**
+ * Statistics & Overview
+ */
 export async function fetchOverview() {
-  try {
-    return (
-      (await requestJson(`${STATS_API_BASE}/overview`)) ?? {
-        totalUsers: 0,
-        totalDetections: 0,
-        avgConfidence: 0,
-      }
-    );
-  } catch {
-    return { totalUsers: 0, totalDetections: 0, avgConfidence: 0 };
-  }
+  return apiClient.get("/stats/overview").catch(() => ({
+    totalUsers: 0,
+    totalDetections: 0,
+    avgConfidence: 0,
+  }));
 }
 
 export async function fetchByType() {
-  try {
-    return (await requestJson(`${STATS_API_BASE}/by-type`)) ?? [];
-  } catch {
-    return [];
-  }
+  return apiClient.get("/stats/by-type").catch(() => []);
 }
 
 export async function fetchByDay(days = 30) {
-  try {
-    return (await requestJson(`${STATS_API_BASE}/by-day?days=${days}`)) ?? [];
-  } catch {
-    return [];
-  }
+  return apiClient.get(`/stats/by-day?days=${days}`).catch(() => []);
 }
 
 export async function fetchLogs(page = 1, limit = 20) {
-  try {
-    return (
-      (await requestJson(
-        `${STATS_API_BASE}/logs?page=${page}&limit=${limit}`,
-      )) ?? {
-        data: [],
-        total: 0,
-        page: 1,
-        totalPages: 1,
-      }
-    );
-  } catch {
-    return { data: [], total: 0, page: 1, totalPages: 1 };
-  }
+  return apiClient.get(`/stats/logs?page=${page}&limit=${limit}`).catch(() => ({
+    data: [],
+    total: 0,
+    page: 1,
+    totalPages: 1,
+  }));
 }
 
-//  SOS
+/**
+ * SOS Alerts
+ */
 export async function fetchSosAlerts(page = 1, limit = 20) {
-  try {
-    return (
-      (await requestJson(`/api/sos?page=${page}&limit=${limit}`)) ?? {
-        data: [],
-        total: 0,
-      }
-    );
-  } catch {
-    return { data: [], total: 0 };
-  }
+  return apiClient.get(`/sos?page=${page}&limit=${limit}`).catch(() => ({
+    data: [],
+    total: 0,
+  }));
 }
+
 export async function resolveSos(id, note = "") {
-  return requestJson(`/api/sos/${id}/resolve`, {
-    method: "PATCH",
-    body: JSON.stringify({ note }),
-  });
+  return apiClient.patch(`/sos/${id}/resolve`, { note });
 }
+
 export async function acknowledgeSos(id) {
-  return requestJson(`/api/sos/${id}/acknowledge`, { method: "PATCH" });
+  return apiClient.patch(`/sos/${id}/acknowledge`);
 }
 
-//  FEEDBACK
+/**
+ * Feedback Management
+ */
 export async function fetchFeedback(page = 1, limit = 20, onlyWrong = false) {
-  try {
-    return (
-      (await requestJson(
-        `/api/feedback?page=${page}&limit=${limit}&onlyWrong=${onlyWrong}`,
-      )) ?? { data: [], total: 0 }
-    );
-  } catch {
-    return { data: [], total: 0 };
-  }
-}
-export async function fetchFeedbackStats() {
-  try {
-    return (
-      (await requestJson("/api/feedback/stats")) ?? {
-        total: 0,
-        correct: 0,
-        wrong: 0,
-        accuracy: 0,
-      }
-    );
-  } catch {
-    return { total: 0, correct: 0, wrong: 0, accuracy: 0 };
-  }
-}
-export async function reviewFeedback(id, correctLabel) {
-  return requestJson(`/api/feedback/${id}/review`, {
-    method: "PATCH",
-    body: JSON.stringify({ correctLabel }),
-  });
-}
-export async function exportFeedbackDataset() {
-  const response = await fetch("/api/feedback/export", {
-    credentials: "include",
-  });
-  if (!response.ok) throw new Error("Export failed");
-  return response.blob();
+  return apiClient
+    .get(`/feedback?page=${page}&limit=${limit}&onlyWrong=${onlyWrong}`)
+    .catch(() => ({ data: [], total: 0 }));
 }
 
-//  BROADCAST
-export async function fetchBroadcasts(page = 1, limit = 20) {
-  try {
-    return (
-      (await requestJson(`/api/broadcast?page=${page}&limit=${limit}`)) ?? {
-        data: [],
-        total: 0,
-      }
-    );
-  } catch {
-    return { data: [], total: 0 };
-  }
+export async function fetchFeedbackStats() {
+  return apiClient.get("/feedback/stats").catch(() => ({
+    total: 0,
+    correct: 0,
+    wrong: 0,
+    accuracy: 0,
+  }));
 }
+
+export async function reviewFeedback(id, correctLabel) {
+  return apiClient.patch(`/feedback/${id}/review`, { correctLabel });
+}
+
+export async function exportFeedbackDataset() {
+  // Use axios for blob handling
+  return apiClient.get("/feedback/export", { responseType: "blob" });
+}
+
+/**
+ * Broadcast & Notifications
+ */
+export async function fetchBroadcasts(page = 1, limit = 20) {
+  return apiClient
+    .get(`/broadcast?page=${page}&limit=${limit}`)
+    .catch(() => ({ data: [], total: 0 }));
+}
+
 export async function sendBroadcast(
   message,
   targetType = "all",
   targetIds = [],
   priority = "normal",
 ) {
-  return requestJson("/api/broadcast", {
-    method: "POST",
-    body: JSON.stringify({ message, targetType, targetIds, priority }),
+  return apiClient.post("/broadcast", {
+    message,
+    targetType,
+    targetIds,
+    priority,
   });
 }
 
-//  HEATMAP
+/**
+ * Heatmap Data
+ */
 export async function fetchHeatmap(type = "danger", days = 30) {
-  try {
-    return (
-      (await requestJson(
-        `/api/detections/heatmap?type=${type}&days=${days}`,
-      )) ?? []
-    );
-  } catch {
-    return [];
-  }
+  return apiClient
+    .get(`/detections/heatmap?type=${type}&days=${days}`)
+    .catch(() => []);
 }
 
-//  USERS
+/**
+ * User Management
+ */
 export async function fetchUsers(page = 1, limit = 20, search = "") {
-  try {
-    return (
-      (await requestJson(
-        `/api/users?page=${page}&limit=${limit}&search=${encodeURIComponent(search)}`,
-      )) ?? { data: [], total: 0, page: 1, totalPages: 1 }
-    );
-  } catch {
-    return { data: [], total: 0, page: 1, totalPages: 1 };
-  }
+  const query = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+  });
+  if (search) query.append("search", search);
+
+  return apiClient.get(`/users?${query.toString()}`).catch(() => ({
+    data: [],
+    total: 0,
+    page: 1,
+    totalPages: 1,
+  }));
 }
 
 export async function toggleUserRole(id) {
-  return requestJson(`/api/users/${id}/toggle-role`, { method: "PATCH" });
+  return apiClient.patch(`/users/${id}/toggle-role`);
 }
 
 export async function createUser(email, password, role = "USER") {
-  return requestJson("/api/users", {
-    method: "POST",
-    body: JSON.stringify({ email, password, role }),
-  });
+  return apiClient.post("/users", { email, password, role });
 }
 
 export async function updateUser(id, data) {
-  return requestJson(`/api/users/${id}`, {
-    method: "PATCH",
-    body: JSON.stringify(data),
-  });
+  return apiClient.patch(`/users/${id}`, data);
 }
 
 export async function deleteUser(id) {
-  return requestJson(`/api/users/${id}`, { method: "DELETE" });
+  return apiClient.delete(`/users/${id}`);
 }
 
 export async function lockUser(id) {
-  return requestJson(`/api/users/${id}/lock`, { method: "PATCH" });
+  return apiClient.patch(`/users/${id}/lock`);
 }
 
 export async function unlockUser(id) {
-  return requestJson(`/api/users/${id}/unlock`, { method: "PATCH" });
+  return apiClient.patch(`/users/${id}/unlock`);
 }
 
 export async function fetchUserEmergencyContacts(userId) {
-  try {
-    return (await requestJson(`/api/emergency-contacts/admin/user/${userId}`)) ?? [];
-  } catch {
-    return [];
-  }
+  return apiClient
+    .get(`/emergency-contacts/admin/user/${userId}`)
+    .catch(() => []);
 }

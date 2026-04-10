@@ -4,6 +4,22 @@ import { z } from "zod";
  * Shared Zod Schemas for consistent validation across the dashboard
  */
 
+// Schema for login
+export const loginSchema = z.object({
+  email: z.string().email("Email không hợp lệ").min(1, "Vui lòng nhập email"),
+  password: z.string().min(6, "Mật khẩu phải có ít nhất 6 ký tự"),
+});
+
+// Schema for register
+export const registerSchema = loginSchema
+  .extend({
+    confirmPassword: z.string().min(6, "Vui lòng xác nhận mật khẩu"),
+  })
+  .refine((data) => data.password === data.confirmPassword, {
+    message: "Mật khẩu xác nhận không khớp",
+    path: ["confirmPassword"],
+  });
+
 // Schema for AI Vision Image Upload
 export const visionUploadSchema = z.object({
   title: z.string().min(3, "Title must be at least 3 characters"),

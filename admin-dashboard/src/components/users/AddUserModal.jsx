@@ -48,7 +48,7 @@ export default function AddUserModal({ onClose, onSuccess }) {
         <>
           <button
             onClick={onClose}
-            className="flex-1 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 text-sm font-medium transition-colors"
+            className="flex-1 py-2.5 rounded-xl bg-text-primary/5 hover:bg-text-primary/10 text-text-secondary text-sm font-medium transition-colors"
           >
             Huỷ
           </button>

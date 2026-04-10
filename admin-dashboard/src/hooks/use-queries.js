@@ -21,6 +21,9 @@ import {
   deleteUser,
   lockUser,
   unlockUser,
+  fetchUserEmergencyContacts,
+  loginAdmin,
+  registerAdmin,
 } from "@/services/api";
 
 // ─── Query Keys ─────────────────────────────
@@ -37,7 +40,22 @@ export const queryKeys = {
   broadcasts: (page, limit) => ["broadcast", "list", page, limit],
   heatmap: (type, days) => ["heatmap", type, days],
   users: (page, limit, search) => ["users", "list", page, limit, search],
+  userEmergencyContacts: (userId) => ["users", "emergency-contacts", userId],
 };
+
+// ─── Auth ───────────────────────────────────
+
+export function useLogin() {
+  return useMutation({
+    mutationFn: ({ email, password }) => loginAdmin(email, password),
+  });
+}
+
+export function useRegister() {
+  return useMutation({
+    mutationFn: ({ email, password }) => registerAdmin(email, password),
+  });
+}
 
 // ─── Stats / Dashboard ──────────────────────
 
@@ -213,5 +231,13 @@ export function useUnlockUser() {
   return useMutation({
     mutationFn: ({ id }) => unlockUser(id),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["users"] }),
+  });
+}
+
+export function useUserEmergencyContacts(userId) {
+  return useQuery({
+    queryKey: queryKeys.userEmergencyContacts(userId),
+    queryFn: () => fetchUserEmergencyContacts(userId),
+    enabled: !!userId,
   });
 }

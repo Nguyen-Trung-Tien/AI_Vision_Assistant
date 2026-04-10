@@ -14,13 +14,13 @@ export default function ConfirmDialog({
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div
-        className="bg-bg-card border border-white/10 rounded-2xl p-6 w-full max-w-sm shadow-2xl"
+        className="bg-bg-card border border-border-primary rounded-2xl p-6 w-full max-w-sm shadow-2xl"
         style={{ animation: "fadeIn .15s ease" }}
       >
         {/* Icon */}
-        <div className="w-11 h-11 rounded-full bg-white/6 flex items-center justify-center mx-auto mb-4">
+        <div className="w-11 h-11 rounded-full bg-text-primary/5 flex items-center justify-center mx-auto mb-4">
           <svg
-            className="w-5 h-5 text-white/60"
+            className="w-5 h-5 text-text-secondary"
             fill="none"
             stroke="currentColor"
             viewBox="0 0 24 24"
@@ -34,25 +34,25 @@ export default function ConfirmDialog({
           </svg>
         </div>
 
-        <h3 className="text-white font-bold text-base text-center mb-2">
+        <h3 className="text-text-primary font-bold text-base text-center mb-2">
           {title}
         </h3>
-        <p className="text-white/45 text-sm text-center mb-6 leading-relaxed">
+        <div className="text-text-secondary text-sm text-center mb-6 leading-relaxed">
           {message}
-        </p>
+        </div>
 
         <div className="flex gap-3">
           <button
             onClick={onCancel}
             disabled={loading}
-            className="flex-1 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 text-sm font-medium transition-colors disabled:opacity-40"
+            className="flex-1 py-2.5 rounded-xl bg-text-primary/5 hover:bg-text-primary/10 text-text-secondary text-sm font-medium transition-colors disabled:opacity-40"
           >
             {cancelLabel}
           </button>
           <button
             onClick={onConfirm}
             disabled={loading}
-            className={`flex-1 py-2.5 rounded-xl text-white text-sm font-semibold transition-colors disabled:opacity-50 flex items-center justify-center gap-2 ${confirmClass}`}
+            className={`flex-1 py-2.5 rounded-xl text-white text-sm font-semibold transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 ${confirmClass}`}
           >
             {loading && (
               <span className="loader-ring" style={{ width: 14, height: 14 }} />

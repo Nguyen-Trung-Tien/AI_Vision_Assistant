@@ -28,15 +28,15 @@ export default function UserEmergencyContactsModal({ user, onClose }) {
         onClick={onClose}
         aria-hidden="true"
       />
-      <div className="relative w-full max-w-lg bg-[#1a1b2e] rounded-2xl border border-white/10 shadow-2xl p-6">
+      <div className="relative w-full max-w-lg bg-bg-card rounded-2xl border border-border-primary shadow-2xl p-6">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h3 className="text-xl font-bold text-white">Liên hệ khẩn cấp</h3>
-            <p className="text-sm text-white/50 mt-1">{user.email}</p>
+            <h3 className="text-xl font-bold text-text-primary">Liên hệ khẩn cấp</h3>
+            <p className="text-sm text-text-secondary mt-1">{user.email}</p>
           </div>
           <button
             onClick={onClose}
-            className="p-2 -mr-2 text-white/40 hover:text-white hover:bg-white/5 rounded-xl transition-colors"
+            className="p-2 -mr-2 text-text-secondary/40 hover:text-text-primary hover:bg-text-primary/5 rounded-xl transition-colors"
           >
             <svg
               className="w-5 h-5"
@@ -55,11 +55,11 @@ export default function UserEmergencyContactsModal({ user, onClose }) {
         </div>
 
         {loading ? (
-          <div className="py-12 flex justify-center text-white/40 text-sm">
-            Đang tải dữ liệu...
+          <div className="py-12 flex justify-center text-text-secondary/40 text-sm">
+            <div className="loader-ring mr-2" /> Đang tải dữ liệu...
           </div>
         ) : contacts.length === 0 ? (
-          <div className="py-12 text-center text-white/40 text-sm bg-white/5 rounded-xl border border-white/5">
+          <div className="py-12 text-center text-text-secondary/40 text-sm bg-text-primary/5 rounded-xl border border-border-primary">
             Không có người liên hệ khẩn cấp nào.
           </div>
         ) : (
@@ -67,22 +67,22 @@ export default function UserEmergencyContactsModal({ user, onClose }) {
             {contacts.map((contact) => (
               <div
                 key={contact.id}
-                className="p-4 rounded-xl bg-white/5 border border-white/10 flex items-center justify-between"
+                className="p-4 rounded-xl bg-text-primary/5 border border-border-primary flex items-center justify-between"
               >
                 <div>
-                  <h4 className="text-white font-medium truncate max-w-[200px]">
+                  <h4 className="text-text-primary font-bold truncate max-w-[200px]">
                     {contact.name || contact.phone}
                   </h4>
                   {contact.name && (
-                    <p className="text-white/50 text-sm mt-0.5">{contact.phone}</p>
+                    <p className="text-text-secondary text-sm mt-0.5">{contact.phone}</p>
                   )}
-                  <p className="text-xs text-white/30 mt-1">
-                    Thời gian tạo: {new Date(contact.created_at).toLocaleString("vi-VN")}
+                  <p className="text-[10px] text-text-secondary/40 uppercase font-bold tracking-wider mt-1">
+                    Tạo: {new Date(contact.created_at).toLocaleString("vi-VN")}
                   </p>
                 </div>
                 <div>
                   {contact.notify_sms ? (
-                    <span className="px-2.5 py-1 rounded-full bg-cyan-500/20 text-cyan-400 text-xs font-medium border border-cyan-500/20 flex items-center gap-1">
+                    <span className="px-2.5 py-1 rounded-full bg-cyan-500/10 text-cyan-600 dark:text-cyan-400 text-[10px] font-bold uppercase tracking-wider border border-cyan-500/20 flex items-center gap-1.5 shadow-sm">
                       <svg
                         className="w-3 h-3"
                         fill="none"
@@ -99,7 +99,7 @@ export default function UserEmergencyContactsModal({ user, onClose }) {
                       Gửi SMS
                     </span>
                   ) : (
-                    <span className="px-2.5 py-1 rounded-full bg-white/5 text-white/40 text-xs font-medium border border-white/10">
+                    <span className="px-2.5 py-1 rounded-full bg-text-primary/5 text-text-secondary/40 text-[10px] font-bold uppercase tracking-wider border border-border-primary">
                       Không gửi
                     </span>
                   )}

@@ -189,8 +189,8 @@ export default function UsersPage() {
       {/*  Header  */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <h2 className="text-2xl font-bold text-white">Quản lý người dùng</h2>
-          <p className="text-white/40 text-sm mt-0.5">
+          <h2 className="text-2xl font-bold text-text-primary">Quản lý người dùng</h2>
+          <p className="text-text-secondary text-sm mt-0.5">
             {total} tài khoản đã đăng ký
           </p>
         </div>
@@ -200,11 +200,11 @@ export default function UsersPage() {
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
               placeholder="Tìm email..."
-              className="bg-white/5 border border-white/10 rounded-xl px-4 py-2 text-sm text-white placeholder-white/30 focus:outline-none focus:border-purple-500/50 w-48"
+              className="bg-bg-card border border-border-primary rounded-xl px-4 py-2 text-sm text-text-primary placeholder-text-secondary/50 focus:outline-none focus:border-purple-500/50 w-48"
             />
             <button
               type="submit"
-              className="px-4 py-2 rounded-xl bg-white/8 hover:bg-white/12 text-white/70 text-sm font-medium transition-colors border border-white/10"
+              className="px-4 py-2 rounded-xl bg-text-primary/5 hover:bg-text-primary/10 text-text-secondary text-sm font-medium transition-colors border border-border-primary"
             >
               Tìm
             </button>
@@ -232,8 +232,8 @@ export default function UsersPage() {
       </div>
 
       {/*  Table  */}
-      <div className="rounded-2xl bg-white/4 border border-white/8 overflow-hidden">
-        <div className="grid grid-cols-[auto_1fr_auto_auto] gap-4 px-5 py-3 border-b border-white/8 text-xs font-semibold text-white/30 uppercase tracking-wider">
+      <div className="rounded-2xl bg-bg-card border border-border-primary overflow-hidden">
+        <div className="grid grid-cols-[auto_1fr_auto_auto] gap-4 px-5 py-3 border-b border-border-primary text-xs font-semibold text-text-secondary uppercase tracking-wider">
           <span>Avatar</span>
           <span>Email</span>
           <span className="text-center">Role</span>
@@ -241,26 +241,26 @@ export default function UsersPage() {
         </div>
 
         {loading ? (
-          <div className="py-16 flex items-center justify-center gap-2 text-white/40 text-sm">
+          <div className="py-16 flex items-center justify-center gap-2 text-text-secondary text-sm">
             <div className="loader-ring" /> Đang tải...
           </div>
         ) : users.length === 0 ? (
-          <div className="py-16 text-center text-white/30 text-sm">
+          <div className="py-16 text-center text-text-secondary text-sm">
             Không tìm thấy người dùng
           </div>
         ) : (
-          <div className="divide-y divide-white/5">
+          <div className="divide-y divide-border-primary">
             {users.map((user) => (
               <div
                 key={user.id}
-                className="grid grid-cols-[auto_1fr_auto_auto] gap-4 items-center px-5 py-3.5 hover:bg-white/3 transition-colors"
+                className="grid grid-cols-[auto_1fr_auto_auto] gap-4 items-center px-5 py-3.5 hover:bg-text-primary/5 transition-colors"
               >
                 <Avatar email={user.email} />
                 <div className="min-w-0">
-                  <p className="text-white text-sm font-medium truncate">
+                  <p className="text-text-primary text-sm font-medium truncate">
                     {user.email}
                   </p>
-                  <p className="text-white/30 text-xs mt-0.5">
+                  <p className="text-text-secondary text-xs mt-0.5">
                     Tham gia{" "}
                     {new Date(user.created_at).toLocaleDateString("vi-VN")}
                   </p>
@@ -274,7 +274,7 @@ export default function UsersPage() {
                   <button
                     onClick={() => setEditUser(user)}
                     title="Chỉnh sửa"
-                    className="p-1.5 rounded-lg hover:bg-white/8 text-white/40 hover:text-blue-400 transition-colors"
+                    className="p-1.5 rounded-lg hover:bg-text-primary/10 text-text-secondary hover:text-blue-500 transition-colors"
                   >
                     <svg
                       className="w-4 h-4"
@@ -294,7 +294,7 @@ export default function UsersPage() {
                   <button
                     onClick={() => setContactsUser(user)}
                     title="Liên hệ khẩn cấp"
-                    className="p-1.5 rounded-lg hover:bg-cyan-500/10 text-white/40 hover:text-cyan-400 transition-colors"
+                    className="p-1.5 rounded-lg hover:bg-cyan-500/10 text-text-secondary hover:text-cyan-500 transition-colors"
                   >
                     <svg
                       className="w-4 h-4"
@@ -316,7 +316,7 @@ export default function UsersPage() {
                     title={
                       user.role === "ADMIN" ? "Hạ xuống User" : "Nâng lên Admin"
                     }
-                    className="p-1.5 rounded-lg hover:bg-white/8 text-white/40 hover:text-purple-400 transition-colors"
+                    className="p-1.5 rounded-lg hover:bg-text-primary/10 text-text-secondary hover:text-purple-500 transition-colors"
                   >
                     <svg
                       className="w-4 h-4"
@@ -338,7 +338,7 @@ export default function UsersPage() {
                       <button
                         onClick={() => setConfirm({ type: "lock", user })}
                         title="Khoá tài khoản"
-                        className="p-1.5 rounded-lg hover:bg-orange-500/10 text-white/40 hover:text-orange-400 transition-colors"
+                        className="p-1.5 rounded-lg hover:bg-orange-500/10 text-text-secondary hover:text-orange-500 transition-colors"
                       >
                         <svg
                           className="w-4 h-4"
@@ -358,7 +358,7 @@ export default function UsersPage() {
                       <button
                         onClick={() => setConfirm({ type: "unlock", user })}
                         title="Mở khoá tài khoản"
-                        className="p-1.5 rounded-lg hover:bg-green-500/10 text-white/40 hover:text-green-400 transition-colors"
+                        className="p-1.5 rounded-lg hover:bg-green-500/10 text-text-secondary hover:text-green-500 transition-colors"
                       >
                         <svg
                           className="w-4 h-4"
@@ -380,7 +380,7 @@ export default function UsersPage() {
                     <button
                       onClick={() => setConfirm({ type: "delete", user })}
                       title="Xoá"
-                      className="p-1.5 rounded-lg hover:bg-red-500/10 text-white/40 hover:text-red-400 transition-colors"
+                      className="p-1.5 rounded-lg hover:bg-red-500/10 text-text-secondary hover:text-red-500 transition-colors"
                     >
                       <svg
                         className="w-4 h-4"
@@ -410,17 +410,17 @@ export default function UsersPage() {
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page <= 1}
-            className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white/60 text-sm disabled:opacity-30 transition-colors"
+            className="px-3 py-1.5 rounded-lg bg-bg-card border border-border-primary hover:bg-text-primary/5 text-text-secondary text-sm disabled:opacity-30 transition-colors"
           >
             ← Trước
           </button>
-          <span className="text-white/40 text-sm">
+          <span className="text-text-secondary text-sm">
             {page} / {totalPages}
           </span>
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page >= totalPages}
-            className="px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 text-white/60 text-sm disabled:opacity-30 transition-colors"
+            className="px-3 py-1.5 rounded-lg bg-bg-card border border-border-primary hover:bg-text-primary/5 text-text-secondary text-sm disabled:opacity-30 transition-colors"
           >
             Sau →
           </button>

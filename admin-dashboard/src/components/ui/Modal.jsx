@@ -1,7 +1,7 @@
 export function Field({ label, children }) {
   return (
     <div>
-      <label className="block text-white/40 text-xs mb-1.5 font-medium">
+      <label className="block text-text-secondary/60 text-[10px] uppercase font-bold tracking-widest mb-1.5">
         {label}
       </label>
       {children}
@@ -10,24 +10,24 @@ export function Field({ label, children }) {
 }
 
 export const INPUT_STYLES =
-  "w-full px-3 py-2.5 rounded-xl bg-white/5 border border-white/10 text-white text-sm placeholder-white/25 focus:outline-none focus:border-purple-500/50 transition-colors";
+  "w-full px-3 py-2.5 rounded-xl bg-text-primary/5 border border-border-primary text-text-primary text-sm placeholder-text-secondary/30 focus:outline-none focus:border-purple-500/50 transition-colors";
 
 export default function Modal({ title, icon, onClose, children, footer }) {
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div
-        className="bg-bg-card border border-white/10 rounded-2xl w-full max-w-md shadow-2xl flex flex-col"
+        className="bg-bg-card border border-border-primary rounded-2xl w-full max-w-md shadow-2xl flex flex-col"
         style={{ animation: "fadeIn .18s ease" }}
       >
         {/* Header */}
-        <div className="flex items-center justify-between px-6 py-4 border-b border-white/8">
+        <div className="flex items-center justify-between px-6 py-4 border-b border-border-primary">
           <div className="flex items-center gap-2.5">
             <span className="text-xl">{icon}</span>
-            <h3 className="text-white font-bold text-base">{title}</h3>
+            <h3 className="text-text-primary font-bold text-base">{title}</h3>
           </div>
           <button
             onClick={onClose}
-            className="text-white/30 hover:text-white/70 transition-colors p-1 rounded-lg hover:bg-white/8"
+            className="text-text-secondary/40 hover:text-text-primary transition-colors p-1 rounded-lg hover:bg-text-primary/5"
           >
             <svg
               className="w-4 h-4"
@@ -48,7 +48,7 @@ export default function Modal({ title, icon, onClose, children, footer }) {
         <div className="px-6 py-5 space-y-4">{children}</div>
         {/* Footer */}
         {footer && (
-          <div className="px-6 py-4 border-t border-white/8 flex gap-3">
+          <div className="px-6 py-4 border-t border-border-primary flex gap-3">
             {footer}
           </div>
         )}

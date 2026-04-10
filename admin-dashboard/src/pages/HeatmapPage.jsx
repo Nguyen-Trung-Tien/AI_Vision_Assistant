@@ -49,11 +49,11 @@ function HeatLayer({ points }) {
 }
 
 // ── Stat card ─────────────────────────────────────────────────────────────────
-function Stat({ label, value, color = "text-white" }) {
+function Stat({ label, value, color = "text-text-primary" }) {
   return (
-    <div className="bg-white/4 border border-white/8 rounded-xl px-4 py-3">
-      <p className="text-white/35 text-xs mb-0.5">{label}</p>
-      <p className={`text-lg font-bold ${color}`}>{value}</p>
+    <div className="bg-bg-card border border-border-primary rounded-xl px-4 py-3 shadow-sm">
+      <p className="text-text-secondary/40 text-[10px] uppercase font-bold tracking-widest mb-1">{label}</p>
+      <p className={`text-xl font-bold ${color}`}>{value}</p>
     </div>
   );
 }
@@ -92,14 +92,14 @@ export default function HeatmapPage() {
   const defaultCenter = [16.047, 108.206];
 
   return (
-    <div className="space-y-5">
+    <div className="space-y-6 animate-slide-in">
       {/* ── Header ──────────────────────────────────────────────── */}
       <div className="flex items-start justify-between flex-wrap gap-3">
         <div>
-          <h2 className="text-2xl font-bold text-white">
+          <h2 className="text-2xl font-bold text-text-primary">
             🗺 Heatmap Khu Vực Nguy Hiểm
           </h2>
-          <p className="text-white/40 text-sm mt-0.5">
+          <p className="text-text-secondary text-sm mt-0.5">
             {points.length} vị trí · {totalHits} lượt phát hiện · {days} ngày
             qua
           </p>
@@ -107,7 +107,7 @@ export default function HeatmapPage() {
         <button
           onClick={load}
           disabled={loading}
-          className="px-4 py-2 rounded-xl bg-white/5 border border-white/10 text-white/70 text-sm hover:bg-white/10 transition-all disabled:opacity-40 flex items-center gap-2"
+          className="px-4 py-2 rounded-xl bg-bg-card border border-border-primary text-text-secondary text-sm hover:bg-text-primary/5 transition-all disabled:opacity-40 flex items-center gap-2"
         >
           {loading && (
             <span className="loader-ring" style={{ width: 14, height: 14 }} />
@@ -117,34 +117,34 @@ export default function HeatmapPage() {
       </div>
 
       {/* ── Stats ───────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
         <Stat
           label="Vị trí ghi nhận"
           value={points.length}
-          color="text-white"
+          color="text-text-primary"
         />
         <Stat
           label="Tổng lượt phát hiện"
           value={totalHits}
-          color="text-orange-300"
+          color="text-orange-500"
         />
         <Stat
           label="Điểm nóng nhất"
           value={`${maxInt}x`}
-          color="text-red-400"
+          color="text-red-500"
         />
         <Stat
           label="Khoảng thời gian"
           value={`${days} ngày`}
-          color="text-purple-300"
+          color="text-purple-600 dark:text-purple-400"
         />
       </div>
 
       {/* ── Filters ─────────────────────────────────────────────── */}
-      <div className="flex flex-wrap gap-4">
+      <div className="flex flex-wrap gap-6">
         {/* Type */}
         <div>
-          <label className="block text-white/40 text-xs mb-2">
+          <label className="block text-text-secondary text-[10px] uppercase font-bold tracking-widest mb-3">
             Loại phát hiện
           </label>
           <div className="flex gap-2">
@@ -157,8 +157,8 @@ export default function HeatmapPage() {
                 onClick={() => setType(v)}
                 className={`px-4 py-2 rounded-xl border text-sm font-medium transition-all ${
                   type === v
-                    ? "bg-red-500/20 border-red-500/40 text-red-300"
-                    : "bg-white/5 border-white/10 text-white/50 hover:bg-white/10"
+                    ? "bg-red-500/10 border-red-500/40 text-red-600 dark:text-red-300"
+                    : "bg-bg-card border-border-primary text-text-secondary hover:bg-text-primary/5"
                 }`}
               >
                 {label}
@@ -169,7 +169,7 @@ export default function HeatmapPage() {
 
         {/* Days */}
         <div>
-          <label className="block text-white/40 text-xs mb-2">
+          <label className="block text-text-secondary text-[10px] uppercase font-bold tracking-widest mb-3">
             Khoảng thời gian
           </label>
           <div className="flex gap-2">
@@ -177,10 +177,10 @@ export default function HeatmapPage() {
               <button
                 key={d}
                 onClick={() => setDays(d)}
-                className={`px-3 py-2 rounded-xl border text-sm transition-all ${
+                className={`px-4 py-2 rounded-xl border text-sm transition-all ${
                   days === d
-                    ? "bg-purple-500/20 border-purple-500/40 text-purple-300"
-                    : "bg-white/5 border-white/10 text-white/50 hover:bg-white/10"
+                    ? "bg-purple-600/10 border-purple-500/40 text-purple-600 dark:text-purple-300"
+                    : "bg-bg-card border-border-primary text-text-secondary hover:bg-text-primary/5"
                 }`}
               >
                 {d}d
@@ -192,11 +192,11 @@ export default function HeatmapPage() {
 
       {/* ── Map ─────────────────────────────────────────────────── */}
       <div
-        className="rounded-2xl overflow-hidden border border-white/10"
+        className="rounded-2xl overflow-hidden border border-border-primary shadow-lg"
         style={{ height: 480 }}
       >
         {loading ? (
-          <div className="h-full flex items-center justify-center bg-white/4 text-white/40 text-sm gap-2">
+          <div className="h-full flex items-center justify-center bg-bg-card text-text-secondary text-sm gap-2">
             <div className="loader-ring" /> Đang tải dữ liệu...
           </div>
         ) : (
@@ -219,13 +219,13 @@ export default function HeatmapPage() {
       </div>
 
       {/* ── Legend + Top hotspots ─────────────────────────────── */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         {/* Legend */}
-        <div className="bg-white/4 border border-white/8 rounded-2xl p-5">
-          <h3 className="text-white/70 text-sm font-semibold mb-4">
+        <div className="bg-bg-card border border-border-primary rounded-2xl p-6 shadow-sm">
+          <h3 className="text-text-primary text-sm font-bold uppercase tracking-wider text-[10px] mb-5">
             Chú thích màu sắc
           </h3>
-          <div className="space-y-2.5">
+          <div className="space-y-3.5">
             {[
               { color: "bg-white", label: "Mật độ cực cao (đỉnh)" },
               { color: "bg-red-500", label: "Nguy hiểm cao" },
@@ -234,14 +234,14 @@ export default function HeatmapPage() {
             ].map(({ color, label }) => (
               <div key={label} className="flex items-center gap-3">
                 <div
-                  className={`w-4 h-4 rounded-full ${color} opacity-85 shrink-0`}
+                  className={`w-4 h-4 rounded-full ${color} opacity-85 shrink-0 border border-black/5`}
                 />
-                <span className="text-white/50 text-xs">{label}</span>
+                <span className="text-text-secondary text-xs">{label}</span>
               </div>
             ))}
           </div>
           <div
-            className="mt-4 h-3 rounded-full"
+            className="mt-6 h-2.5 rounded-full"
             style={{
               background:
                 "linear-gradient(to right, #3b82f6, #f59e0b, #ef4444, #ffffff)",
@@ -250,33 +250,33 @@ export default function HeatmapPage() {
         </div>
 
         {/* Top hotspots */}
-        <div className="bg-white/4 border border-white/8 rounded-2xl p-5">
-          <h3 className="text-white/70 text-sm font-semibold mb-4">
+        <div className="bg-bg-card border border-border-primary rounded-2xl p-6 shadow-sm">
+          <h3 className="text-text-primary text-sm font-bold uppercase tracking-wider text-[10px] mb-5">
             🔥 Top 5 điểm nóng
           </h3>
           {top5.length === 0 ? (
-            <p className="text-white/30 text-xs">
+            <p className="text-text-secondary text-xs">
               Chưa có dữ liệu GPS trong khoảng thời gian này
             </p>
           ) : (
-            <div className="space-y-3">
+            <div className="space-y-4">
               {top5.map((p, i) => (
-                <div key={i} className="flex items-center gap-3">
-                  <span className="text-white/25 text-xs w-4 shrink-0">
-                    #{i + 1}
+                <div key={i} className="flex items-center gap-4">
+                  <span className="text-text-secondary/25 text-[10px] font-bold w-4 shrink-0">
+                    {i + 1}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-white/60 text-xs font-mono truncate">
+                    <p className="text-text-primary text-xs font-mono truncate">
                       {p.lat.toFixed(5)}, {p.lng.toFixed(5)}
                     </p>
-                    <div className="mt-1 h-1.5 bg-white/10 rounded-full overflow-hidden">
+                    <div className="mt-1.5 h-1.5 bg-text-primary/5 rounded-full overflow-hidden">
                       <div
-                        className="h-full bg-gradient-to-r from-amber-500 to-red-500 rounded-full transition-all duration-500"
+                        className="h-full bg-gradient-to-r from-amber-500 to-red-500 rounded-full transition-all duration-700 ease-out"
                         style={{ width: `${(p.intensity / maxInt) * 100}%` }}
                       />
                     </div>
                   </div>
-                  <span className="text-red-400 text-xs font-semibold shrink-0">
+                  <span className="text-red-500 text-xs font-bold shrink-0 tabular-nums">
                     {p.intensity}x
                   </span>
                 </div>

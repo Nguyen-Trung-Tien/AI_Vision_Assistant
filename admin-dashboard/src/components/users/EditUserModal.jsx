@@ -35,7 +35,7 @@ export default function EditUserModal({ user, onClose, onSuccess }) {
         <>
           <button
             onClick={onClose}
-            className="flex-1 py-2.5 rounded-xl bg-white/5 hover:bg-white/10 text-white/60 text-sm font-medium transition-colors"
+            className="flex-1 py-2.5 rounded-xl bg-text-primary/5 hover:bg-text-primary/10 text-text-secondary text-sm font-medium transition-colors"
           >
             Huỷ
           </button>
@@ -53,11 +53,11 @@ export default function EditUserModal({ user, onClose, onSuccess }) {
       }
     >
       {/* User info banner */}
-      <div className="flex items-center gap-3 p-3 rounded-xl bg-white/4 border border-white/8">
+      <div className="flex items-center gap-3 p-3 rounded-xl bg-text-primary/5 border border-border-primary">
         <Avatar email={user.email} />
         <div>
-          <p className="text-white text-sm font-medium">{user.email}</p>
-          <p className="text-white/30 text-xs">
+          <p className="text-text-primary text-sm font-medium">{user.email}</p>
+          <p className="text-text-secondary text-xs">
             Tham gia {new Date(user.created_at).toLocaleDateString("vi-VN")}
           </p>
         </div>
