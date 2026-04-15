@@ -22,7 +22,7 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 <br/>
 
-![Version](https://img.shields.io/badge/Version-1.4.0-blue?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.4.1-blue?style=flat-square)
 ![License](https://img.shields.io/badge/License-UNLICENSED-gray?style=flat-square)
 ![Status](https://img.shields.io/badge/Status-In_Development-orange?style=flat-square)
 
@@ -77,6 +77,8 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 | Ngày      | Cập nhật                        | Mô tả                                                                                   |
 | --------- | ------------------------------- | --------------------------------------------------------------------------------------- |
+| **15/04** | 📺 Visual Feedback          | Hiển thị Bounding Boxes + Object Chips trên mobile, tăng độ nhạy AI (480x480)           |
+| **15/04** | 🔊 Spatial Audio 3D         | Tích hợp âm thanh 3D: xác định hướng vật cản qua tai nghe stereo                        |
 | **08/04** | 🔧 Fix offline model            | Sửa lỗi mobile không nhận model TFLite offline đã có sẵn trên máy                       |
 | **06/04** | 📦 Kaggle dataset               | Chuẩn bị và upload dataset lên Kaggle cho training model                                 |
 | **05/04** | 🚶 Continuous Stream fix        | Sửa lỗi UI đồng bộ ModeCarousel khi chuyển Walking Mode                                 |
@@ -180,6 +182,8 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 | **Rung phản hồi**      | Haptic feedback theo loại sự kiện (nguy hiểm, xác nhận tiền, SOS)                    |
 | **Continuous Stream**  | Chế độ đi bộ 3–5 FPS: phân tích liên tục, adaptive FPS, tiết kiệm pin                |
 | **Liên hệ khẩn cấp**  | SMS + cuộc gọi tự động đến người thân khi SOS, CRUD danh bạ khẩn cấp                  |
+| **Visual Feedback**    | Hiển thị khung bao (Bounding Boxes) + nhãn vật thể thời gian thực trên camera preview |
+| **Spatial Audio 3D**   | Cảnh báo vật cản theo hướng (Trái/Phải/Giữa) qua tai nghe stereo theo thời gian thực |
 
 ### 🗣️ Text-to-Speech
 
@@ -680,12 +684,14 @@ Dashboard quản trị cung cấp các trang:
 
 ## 📌 Roadmap
 
-### Đã hoàn thành (v1.4.0)
+### Đã hoàn thành (v1.4.1)
 
 - [x] Stream liên tục 3–5 FPS cho chế độ đi bộ (walking mode + adaptive FPS + latest-only queue)
 - [x] Emergency Contact Network (SMS + cuộc gọi tự động khi SOS)
 - [x] Màn hình quản lý danh bạ khẩn cấp trên mobile
-- [x] System Integrity Audit & bug fixes
+- [x] Spatial audio (trái/phải) theo vị trí vật cản 3D
+- [x] Visual Feedback (Bounding Boxes + Object Labels) trên camera preview
+- [x] Tối ưu AI Worker: tăng độ phân giải 480x480, hạ ngưỡng confidence 0.15
 
 ### Đang phát triển
 

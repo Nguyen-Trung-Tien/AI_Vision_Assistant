@@ -89,6 +89,11 @@ class _MainScreenState extends State<MainScreen>
   Timer? _sosHoldProgressTimer;
   Timer? _sosHoldCompleteTimer;
 
+  // Real-time Visual Feedback
+  List<Map<String, dynamic>> _currentDetections = [];
+  int? _lastFrameWidth;
+  int? _lastFrameHeight;
+
   final List<IconData> _modeIcons = [
     Icons.auto_awesome,
     Icons.document_scanner,
@@ -605,19 +610,44 @@ class _MainScreenState extends State<MainScreen>
         .map((e) => Map<String, dynamic>.from(e))
         .toList();
 
+    final boxes = (result['boxes'] as List<dynamic>? ?? []);
+    final rawDetections = (result['raw_detections'] as List<dynamic>? ?? [])
+        .whereType<Map>()
+        .map((e) => Map<String, dynamic>.from(e))
+        .toList();
+
+    // Update dimensions for Bounding Box scaling
+    final frameWidth = (result['frame_width'] as num?)?.toInt();
+    final frameHeight = (result['frame_height'] as num?)?.toInt();
+
     var nearestObstacle = '-';
     var safeDirection = '-';
+    String position = 'front';
+    String label = '';
+    double? distanceVal;
 
     if (dangerAlerts.isNotEmpty) {
       final nearest = dangerAlerts.first;
-      final label = nearest['label']?.toString() ?? '';
+      label = nearest['label']?.toString() ?? '';
       final distance = nearest['distance']?.toString() ?? '';
-      final position = nearest['position']?.toString() ?? '';
+      position = nearest['position']?.toString() ?? '';
       nearestObstacle = '$label ${position.toLowerCase()} ${distance}m'.trim();
-      safeDirection = _deriveSafeDirection(position);
+      distanceVal = double.tryParse(distance.toString());
+    } else if (rawDetections.isNotEmpty) {
+      // Fallback to nearest from raw detections if dangerAlerts is empty
+      final nearest = rawDetections.first;
+      label = nearest['label']?.toString() ?? '';
+      final distance = (nearest['distance'] as num?)?.toDouble();
+      distanceVal = distance;
+      nearestObstacle = '$label ${distance != null ? '${distance.toStringAsFixed(1)}m' : ''}'.trim();
+    }
 
-      // Trigger Spatial Audio for the nearest obstacle
-      final parsedDist = double.tryParse(distance.toString()) ?? 2.0;
+    safeDirection = _deriveSafeDirection(position);
+
+    // Trigger Spatial Audio for the nearest obstacle
+    if (dangerAlerts.isNotEmpty) {
+      final nearest = dangerAlerts.first;
+      final parsedDist = distanceVal ?? 2.0;
       final centerXRatio = nearest['center_x_ratio'];
       _spatialAudioService.playDirectionalAlert(
         position: position,
@@ -640,6 +670,9 @@ class _MainScreenState extends State<MainScreen>
     setState(() {
       _walkingNearestObstacle = nearestObstacle;
       _walkingSafeDirection = safeDirection;
+      _currentDetections = rawDetections;
+      _lastFrameWidth = frameWidth;
+      _lastFrameHeight = frameHeight;
     });
   }
 
@@ -1021,6 +1054,20 @@ class _MainScreenState extends State<MainScreen>
               ),
             ),
 
+          if (_isWalkingModeEnabled &&
+              _currentDetections.isNotEmpty &&
+              _lastFrameWidth != null &&
+              _lastFrameHeight != null)
+            Positioned.fill(
+              child: CustomPaint(
+                painter: DetectionPainter(
+                  detections: _currentDetections,
+                  frameWidth: _lastFrameWidth!,
+                  frameHeight: _lastFrameHeight!,
+                ),
+              ),
+            ),
+
           Positioned.fill(
             child: GestureDetector(
               onDoubleTap: () => unawaited(_handleDoubleTap()),
@@ -1073,6 +1120,60 @@ class _MainScreenState extends State<MainScreen>
               ),
             ),
 
+          if (_isWalkingModeEnabled && _currentDetections.isNotEmpty)
+            Positioned(
+              left: 16,
+              right: 16,
+              top: MediaQuery.of(context).padding.top + 120,
+              child: Wrap(
+                spacing: 8,
+                runSpacing: 8,
+                children: _currentDetections.map((d) {
+                  final label = d['label']?.toString() ?? 'Object';
+                  final distance = (d['distance'] as num?)?.toDouble();
+                  final color = _getDistanceColor(distance);
+                  
+                  return Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: color.withValues(alpha: 0.8),
+                      borderRadius: BorderRadius.circular(20),
+                      boxShadow: [
+                        BoxShadow(
+                          color: Colors.black.withValues(alpha: 0.2),
+                          blurRadius: 4,
+                          offset: const Offset(0, 2),
+                        ),
+                      ],
+                    ),
+                    child: Row(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Text(
+                          label.toUpperCase(),
+                          style: const TextStyle(
+                            color: Colors.white,
+                            fontSize: 10,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        if (distance != null) ...[
+                          const SizedBox(width: 4),
+                          Text(
+                            '${distance.toStringAsFixed(1)}m',
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                            ),
+                          ),
+                        ],
+                      ],
+                    ),
+                  );
+                }).toList(),
+              ),
+            ),
+
           StatusOverlay(
             isConnected: _isConnected,
             isFlashOn: _isFlashOn,
@@ -1083,49 +1184,13 @@ class _MainScreenState extends State<MainScreen>
             flashText: AppLocalizations.t('main_flash', _settings.language),
           ),
 
-          if (_dangerMessage != null)
+          // --- DETECTION & DANGER BANNER ---
+          if (_dangerMessage != null || (_isWalkingModeEnabled && _walkingNearestObstacle != '-'))
             Positioned(
-              top: MediaQuery.of(context).padding.top + 70,
+              top: MediaQuery.of(context).padding.top + 72,
               left: 16,
               right: 16,
-              child: Container(
-                padding: const EdgeInsets.symmetric(
-                  vertical: 16,
-                  horizontal: 20,
-                ),
-                decoration: BoxDecoration(
-                  color: AppTheme.accentRed.withValues(alpha: 0.95),
-                  borderRadius: BorderRadius.circular(20),
-                  border: Border.all(color: Colors.white70, width: 2),
-                  boxShadow: [
-                    BoxShadow(
-                      color: AppTheme.accentRed.withValues(alpha: 0.5),
-                      blurRadius: 20,
-                      spreadRadius: 4,
-                    ),
-                  ],
-                ),
-                child: Row(
-                  children: [
-                    const Icon(
-                      Icons.warning_amber_rounded,
-                      color: Colors.white,
-                      size: 36,
-                    ),
-                    const SizedBox(width: 12),
-                    Expanded(
-                      child: Text(
-                        _dangerMessage!.toUpperCase(),
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 18,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              child: _buildAlertBanner(),
             ),
 
           if (_isProcessing || _isScanningMLKit)
@@ -1527,6 +1592,133 @@ class _MainScreenState extends State<MainScreen>
     } finally {
       _isRestartingCamera = false;
     }
+  }
+
+  Color _getDistanceColor(double? distance) {
+    if (distance == null) return AppTheme.accentCyan;
+    if (distance < 2.0) return AppTheme.accentRed;
+    if (distance < 5.0) return AppTheme.accentOrange;
+    return AppTheme.accentGreen;
+  }
+
+  Widget _buildAlertBanner() {
+    final isDanger = _dangerMessage != null;
+    final displayMsg = _dangerMessage ?? _walkingNearestObstacle;
+
+    Color bannerColor = AppTheme.accentRed;
+    if (!isDanger && _currentDetections.isNotEmpty) {
+      final nearest = _currentDetections.first;
+      final dist = (nearest['distance'] as num?)?.toDouble();
+      bannerColor = _getDistanceColor(dist);
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
+      decoration: BoxDecoration(
+        color: bannerColor.withValues(alpha: 0.95),
+        borderRadius: BorderRadius.circular(20),
+        border: Border.all(color: Colors.white70, width: 2),
+        boxShadow: [
+          BoxShadow(
+            color: bannerColor.withValues(alpha: 0.5),
+            blurRadius: 20,
+            spreadRadius: 4,
+          ),
+        ],
+      ),
+      child: Row(
+        children: [
+          Icon(
+            isDanger ? Icons.warning_amber_rounded : Icons.info_outline_rounded,
+            color: Colors.white,
+            size: 32,
+          ),
+          const SizedBox(width: 12),
+          Expanded(
+            child: Text(
+              displayMsg!.toUpperCase(),
+              style: const TextStyle(
+                color: Colors.white,
+                fontSize: 18,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+}
+
+class DetectionPainter extends CustomPainter {
+  final List<Map<String, dynamic>> detections;
+  final int frameWidth;
+  final int frameHeight;
+
+  DetectionPainter({
+    required this.detections,
+    required this.frameWidth,
+    required this.frameHeight,
+  });
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    final double scaleX = size.width / frameWidth;
+    final double scaleY = size.height / frameHeight;
+
+    for (final d in detections) {
+      final box = d['box'] as List<dynamic>?;
+      if (box == null || box.length < 4) continue;
+
+      final label = d['label']?.toString() ?? '';
+      final distance = (d['distance'] as num?)?.toDouble();
+      final confidence = (d['confidence'] as num?)?.toDouble() ?? 0.0;
+
+      final double left = box[0] * scaleX;
+      final double top = box[1] * scaleY;
+      final double right = box[2] * scaleX;
+      final double bottom = box[3] * scaleY;
+
+      final color = _getDistanceColor(distance);
+      final paint = Paint()
+        ..color = color.withValues(alpha: 0.8)
+        ..style = PaintingStyle.stroke
+        ..strokeWidth = 2.5;
+
+      final rect = Rect.fromLTRB(left, top, right, bottom);
+      canvas.drawRRect(
+        RRect.fromRectAndRadius(rect, const Radius.circular(4)),
+        paint,
+      );
+
+      // Label background
+      final textPainter = TextPainter(
+        text: TextSpan(
+          text: '${label.toUpperCase()} ${distance?.toStringAsFixed(1) ?? ""}m'.trim(),
+          style: TextStyle(
+            color: Colors.white,
+            fontSize: 10,
+            fontWeight: FontWeight.bold,
+            backgroundColor: color.withValues(alpha: 0.8),
+          ),
+        ),
+        textDirection: TextDirection.ltr,
+      );
+      textPainter.layout();
+      textPainter.paint(canvas, Offset(left, top - textPainter.height));
+    }
+  }
+
+  Color _getDistanceColor(double? distance) {
+    if (distance == null) return AppTheme.accentCyan;
+    if (distance < 2.0) return AppTheme.accentRed;
+    if (distance < 5.0) return AppTheme.accentOrange;
+    return AppTheme.accentGreen;
+  }
+
+  @override
+  bool shouldRepaint(covariant DetectionPainter oldDelegate) {
+    return oldDelegate.detections != detections;
   }
 }
 

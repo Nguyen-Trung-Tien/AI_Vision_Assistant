@@ -12,15 +12,20 @@ DANGER_LABELS = {
     "cau_thang",
     "den_do",
     "den_xanh",
+    "bien_bao",
+    "cot_dien",
+    "thung_rac",
+    "cay_co",
+    "nguoi",
 }
 
 
-def detect_dangers(detections: list[dict[str, Any]], threshold_m: float = 2.0, lang: str = "vi") -> list[dict[str, Any]]:
+def detect_dangers(detections: list[dict[str, Any]], threshold_m: float = 5.0, lang: str = "vi") -> list[dict[str, Any]]:
     alerts = []
 
     for obj in detections:
         label = obj.get("label")
-        if not label or label not in DANGER_LABELS:
+        if not label:
             continue
 
         dist = obj.get("distance")
