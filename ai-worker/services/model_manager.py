@@ -1,5 +1,5 @@
-﻿"""
-YOLO model manager: lazy-load and object detection.
+"""
+YOLO model manager: lazy-load and object/money detection.
 """
 
 import os
@@ -20,38 +20,53 @@ except Exception:  # pragma: no cover
 class ModelManager:
     """Singleton-style manager for YOLO model loading."""
 
-    _model = None
+    _object_model = None
+    _money_model = None
 
     @classmethod
-    def model_candidates(cls) -> list[Path]:
-        """Ordered model paths (including mobile assets for offline usage)."""
+    def object_model_candidates(cls) -> list[Path]:
+        """Ordered model paths for object recognition."""
         service_dir = Path(__file__).resolve().parent
         ai_worker_dir = service_dir.parent
         repo_root = ai_worker_dir.parent
 
-        env_model = os.getenv("MODEL_PATH")
+        env_model = os.getenv("OBJECT_MODEL_PATH")
         env_candidates = [Path(env_model)] if env_model else []
 
         candidates = [
-            # Prefer native PyTorch checkpoints on server/worker.
+            ai_worker_dir / "models" / "model-object-recognition" / "best.pt",
+            ai_worker_dir / "models" / "model-object-recognition" / "last.pt",
+            # Fallback for old run folders
             ai_worker_dir / "runs" / "detect" / "vision_assistant_model_v3" / "weights" / "best.pt",
-            ai_worker_dir / "runs" / "detect" / "vision_assistant_model_v3" / "weights" / "last.pt",
-            ai_worker_dir / "runs" / "detect" / "vision_assistant_model_v2" / "weights" / "best.pt",
-            ai_worker_dir / "runs" / "detect" / "vision_assistant_model_v2" / "weights" / "last.pt",
-            ai_worker_dir / "runs" / "detect" / "vision_assistant_model5" / "weights" / "best.pt",
-            ai_worker_dir / "runs" / "detect" / "vision_assistant_model4" / "weights" / "best.pt",
-            ai_worker_dir / "runs" / "detect" / "vision_assistant_model3" / "weights" / "best.pt",
-            ai_worker_dir / "runs" / "detect" / "vision_assistant_model3" / "weights" / "last.pt",
-            ai_worker_dir / "runs" / "detect" / "vision_assistant_model2" / "weights" / "best.pt",
-            ai_worker_dir / "runs" / "detect" / "vision_assistant_model2" / "weights" / "last.pt",
             ai_worker_dir / "runs" / "detect" / "vision_assistant_model" / "weights" / "best.pt",
-            ai_worker_dir / "runs" / "detect" / "vision_assistant_model" / "weights" / "last.pt",
             ai_worker_dir / "yolo11n.pt",
-            # TFLite export for mobile only; keep as last-resort fallback.
             repo_root / "mobile_app" / "assets" / "models" / "best_float32.tflite",
         ]
 
-        # Keep env override first, remove duplicates while preserving order.
+        seen: set[Path] = set()
+        ordered: list[Path] = []
+        for path in env_candidates + candidates:
+            p = path.resolve() if not path.is_absolute() else path
+            if p in seen:
+                continue
+            seen.add(p)
+            ordered.append(p)
+        return ordered
+
+    @classmethod
+    def money_model_candidates(cls) -> list[Path]:
+        """Ordered model paths for money recognition."""
+        service_dir = Path(__file__).resolve().parent
+        ai_worker_dir = service_dir.parent
+
+        env_model = os.getenv("MONEY_MODEL_PATH")
+        env_candidates = [Path(env_model)] if env_model else []
+
+        candidates = [
+            ai_worker_dir / "models" / "model-money" / "best.pt",
+            ai_worker_dir / "models" / "model-money" / "last.pt",
+        ]
+
         seen: set[Path] = set()
         ordered: list[Path] = []
         for path in env_candidates + candidates:
@@ -76,38 +91,57 @@ class ModelManager:
         return True
 
     @classmethod
-    def load_model(cls):
-        """Lazy-load YOLO model from the first valid available checkpoint."""
-        if cls._model is not None:
-            return cls._model
+    def load_object_model(cls):
+        if cls._object_model is not None:
+            return cls._object_model
         if YOLO is None:
             raise RuntimeError("ultralytics is not installed")
 
         errors: list[str] = []
-        for candidate in cls.model_candidates():
+        for candidate in cls.object_model_candidates():
             if candidate.exists():
                 if not cls._can_load_candidate(candidate):
                     continue
                 try:
-                    print(f"[AI Worker] Loading model: {candidate}")
-                    cls._model = YOLO(str(candidate))
-                    return cls._model
+                    print(f"[AI Worker] Loading object model: {candidate}")
+                    cls._object_model = YOLO(str(candidate))
+                    return cls._object_model
                 except Exception as exc:
                     errors.append(f"{candidate}: {exc}")
-                    print(f"[AI Worker] Failed to load model {candidate}: {exc}")
+                    print(f"[AI Worker] Failed to load object model {candidate}: {exc}")
                     continue
 
         if errors:
-            raise RuntimeError("No loadable YOLO model found. Errors: " + " | ".join(errors))
-        raise FileNotFoundError("No YOLO model found for detection")
+            print("[AI Worker] No loadable YOLO object model found. Errors: " + " | ".join(errors))
+        return None
 
     @classmethod
-    def detect(cls, image: np.ndarray) -> list[dict[str, Any]]:
-        """
-        Run YOLO inference on an image.
-        Returns: list[{label, confidence, box}]
-        """
-        model = cls.load_model()
+    def load_money_model(cls):
+        if cls._money_model is not None:
+            return cls._money_model
+        if YOLO is None:
+            raise RuntimeError("ultralytics is not installed")
+
+        errors: list[str] = []
+        for candidate in cls.money_model_candidates():
+            if candidate.exists():
+                if not cls._can_load_candidate(candidate):
+                    continue
+                try:
+                    print(f"[AI Worker] Loading money model: {candidate}")
+                    cls._money_model = YOLO(str(candidate))
+                    return cls._money_model
+                except Exception as exc:
+                    errors.append(f"{candidate}: {exc}")
+                    print(f"[AI Worker] Failed to load money model {candidate}: {exc}")
+                    continue
+
+        if errors:
+            print("[AI Worker] Failed to load money model. Errors: " + " | ".join(errors))
+        return None
+
+    @classmethod
+    def _run_inference(cls, model, image: np.ndarray) -> list[dict[str, Any]]:
         # Lowered confidence from 0.25 to 0.15 for better real-world recall
         results = model.predict(source=image, verbose=False, conf=0.15)
         detections: list[dict[str, Any]] = []
@@ -135,3 +169,21 @@ class ModelManager:
                 }
             )
         return detections
+
+    @classmethod
+    def detect_object(cls, image: np.ndarray) -> list[dict[str, Any]]:
+        """Run YOLO inference for general objects."""
+        model = cls.load_object_model()
+        if model is None:
+            print("[AI Worker] Object model missing, skipping detection.")
+            return []
+        return cls._run_inference(model, image)
+        
+    @classmethod
+    def detect_money(cls, image: np.ndarray) -> list[dict[str, Any]]:
+        """Run YOLO inference for money."""
+        model = cls.load_money_model()
+        if model is None:
+            print("[AI Worker] Untrained model money: Missing weights at models/model-money/best.pt")
+            return []
+        return cls._run_inference(model, image)

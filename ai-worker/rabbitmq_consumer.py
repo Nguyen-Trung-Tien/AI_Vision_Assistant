@@ -7,6 +7,7 @@ import traceback
 
 import cv2
 import numpy as np
+
 import pika
 from dotenv import load_dotenv
 
@@ -15,6 +16,7 @@ from services.danger_detector import detect_dangers
 from services.gemini_service import GeminiService
 from services.translations import t, translate_label
 from services.tts_cache import TTSCacheService
+from services import smart_ocr
 
 # TTS/state cache for continuous stream
 continuous_tts_cache: dict[str, str] = {}
@@ -170,6 +172,9 @@ def on_message(channel, method, properties, body):
             ai_result = AIService.process_captioning(frame_data, client_id=client_id, lang=lang)
             detections = ai_result.get('raw_detections', [])
             ai_result['danger_alerts'] = detect_dangers(detections, threshold_m=warning_m, lang=lang)
+        elif task_type == 'SMART_OCR':
+            sub_mode = data.get('subMode', 'general')
+            ai_result = smart_ocr.process(frame_data, sub_mode=sub_mode, lang=lang)
         elif task_type == 'visual_qa':
             gemini_service = GeminiService()
             image_bytes = base64.b64decode(frame_data.split(',')[1] if ',' in frame_data else frame_data)

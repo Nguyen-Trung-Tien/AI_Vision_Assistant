@@ -92,6 +92,7 @@ DerivedData/
 # ---- AI Worker artifacts (models, datasets, runs, debug) ----
 ai-worker/venv/
 ai-worker/runs/
+ai-worker/models/
 ai-worker/dataset/
 ai-worker/dataset_image/
 ai-worker/debug_frames/

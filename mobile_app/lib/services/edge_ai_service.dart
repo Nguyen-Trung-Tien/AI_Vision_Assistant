@@ -146,7 +146,15 @@ class EdgeAIService {
     _sendFrameFromCamera(taskType: 'TEXT_OCR');
   }
 
-  Future<void> _sendFrameFromCamera({String? taskType}) async {
+  void requestSmartOCR(String subMode) {
+    final lang = SettingsService().language;
+    _accessibilityManager.triggerSuccessVibration();
+    _accessibilityManager.speak(AppLocalizations.t('ai_online_reading', lang));
+    _setProcessing(true);
+    _sendFrameFromCamera(taskType: 'SMART_OCR', subMode: subMode);
+  }
+
+  Future<void> _sendFrameFromCamera({String? taskType, String? subMode}) async {
     if (!_isRunning) {
       _setProcessing(false);
       return;
@@ -189,6 +197,7 @@ class EdgeAIService {
       warningDistanceM: settings.warningDistance,
       latitude: position?.latitude,
       longitude: position?.longitude,
+      subMode: subMode,
     );
 
     // Timeout: auto-reset processing state after 15 seconds

@@ -176,6 +176,7 @@ class WebSocketService {
     String? mode,
     int? priority,
     int? frameSeq,
+    String? subMode,
   }) {
     if (_socket == null || !_socket!.connected) {
       debugPrint('WS not connected, frame dropped');
@@ -184,7 +185,7 @@ class WebSocketService {
 
     debugPrint(
       'WS sendFrame: task=$taskType len=${base64Frame.length} lang=$lang '
-      'lat=${latitude ?? 'n/a'} lon=${longitude ?? 'n/a'}',
+      'lat=${latitude ?? 'n/a'} lon=${longitude ?? 'n/a'} subMode=$subMode',
     );
 
     _socket!.emit('frame_stream', {
@@ -197,6 +198,7 @@ class WebSocketService {
       'mode': mode,
       'priority': priority,
       'frame_seq': frameSeq,
+      'subMode': subMode,
     });
   }
 

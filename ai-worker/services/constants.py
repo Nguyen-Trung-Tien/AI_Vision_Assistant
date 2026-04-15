@@ -1,26 +1,32 @@
 """Constants and label normalization for AI Vision Assistant."""
 
 CANONICAL_CLASSES: list[str] = [
-    "tien_1k",
-    "tien_2k",
-    "tien_5k",
-    "tien_10k",
-    "tien_20k",
-    "tien_50k",
-    "tien_100k",
-    "tien_200k",
-    "tien_500k",
-    "xe_may",
-    "cau_thang",
-    "o_ga",
-    "ong_cong",
-    "xe_lon",
-    "nguoi",
-    "den_giao_thong",
+    # 15 Object Classes
+    "bien_bao",
+    "cot_dien",
     "den_do",
     "den_vang",
     "den_xanh",
+    "nap_cong",
+    "nguoi",
+    "o_ga",
+    "rao_chan",
+    "thung_rac",
     "vach_qua_duong",
+    "xe_dap",
+    "xe_lon",
+    "xe_may",
+    "cau_thang",
+    # 9 Money Classes
+    "1000",
+    "2000",
+    "5000",
+    "10000",
+    "20000",
+    "50000",
+    "100000",
+    "200000",
+    "500000",
 ]
 
 # Legacy labels are mapped into canonical classes before app logic consumes detections.
@@ -36,9 +42,10 @@ LEGACY_LABEL_ALIASES: dict[str, str] = {
     "stairs_up": "cau_thang",
     "stairs_down": "cau_thang",
     "pothole": "o_ga",
-    "manhole": "ong_cong",
-    "open_manhole": "ong_cong",
-    "traffic_light": "den_giao_thong",
+    "manhole": "nap_cong",
+    "open_manhole": "nap_cong",
+    "ong_cong": "nap_cong",
+    "traffic_light": "bien_bao",
     "traffic_light_red": "den_do",
     "traffic_light_yellow": "den_vang",
     "traffic_light_green": "den_xanh",
@@ -52,6 +59,15 @@ LEGACY_LABEL_ALIASES: dict[str, str] = {
     "den_vang": "den_vang",
     "den_xanh": "den_xanh",
     "crosswalk": "vach_qua_duong",
+    "tien_1k": "1000",
+    "tien_2k": "2000",
+    "tien_5k": "5000",
+    "tien_10k": "10000",
+    "tien_20k": "20000",
+    "tien_50k": "50000",
+    "tien_100k": "100000",
+    "tien_200k": "200000",
+    "tien_500k": "500000",
 }
 
 
@@ -64,39 +80,15 @@ def canonicalize_label(label: str) -> str:
 
 # --- Money labels ---
 MONEY_LABELS: set[str] = {
-    "tien_1k",
-    "tien_2k",
-    "tien_5k",
-    "tien_10k",
-    "tien_20k",
-    "tien_50k",
-    "tien_100k",
-    "tien_200k",
-    "tien_500k",
-}
-
-# --- Label translations (Vietnamese) ---
-LABEL_TRANSLATIONS: dict[str, str] = {
-    "nguoi": "người",
-    "xe_may": "xe máy",
-    "xe_lon": "xe lớn",
-    "cau_thang": "cầu thang",
-    "o_ga": "ổ gà",
-    "ong_cong": "ống cống",
-    "den_giao_thong": "đèn giao thông",
-    "den_do": "đèn đỏ",
-    "den_vang": "đèn vàng",
-    "den_xanh": "đèn xanh",
-    "vach_qua_duong": "vạch qua đường",
-    "tien_1k": "1 nghìn",
-    "tien_2k": "2 nghìn",
-    "tien_5k": "5 nghìn",
-    "tien_10k": "10 nghìn",
-    "tien_20k": "20 nghìn",
-    "tien_50k": "50 nghìn",
-    "tien_100k": "100 nghìn",
-    "tien_200k": "200 nghìn",
-    "tien_500k": "500 nghìn",
+    "1000",
+    "2000",
+    "5000",
+    "10000",
+    "20000",
+    "50000",
+    "100000",
+    "200000",
+    "500000",
 }
 
 # --- Average object heights (meters) for rough distance estimation ---
@@ -104,13 +96,17 @@ OBJECT_REAL_HEIGHTS: dict[str, float] = {
     "nguoi": 1.7,
     "xe_may": 1.1,
     "xe_lon": 2.6,
-    "den_giao_thong": 2.5,
+    "xe_dap": 1.0,
+    "bien_bao": 1.5,
+    "cot_dien": 5.0,
     "den_do": 2.5,
     "den_vang": 2.5,
     "den_xanh": 2.5,
     "cau_thang": 0.5,
-    "ong_cong": 0.1,
+    "nap_cong": 0.1,
     "o_ga": 0.1,
+    "rao_chan": 1.2,
+    "thung_rac": 0.8,
 }
 
 # --- Money denomination aliases ---
@@ -173,3 +169,10 @@ DENOMINATION_FEATURES: dict[str, str] = {
     "200000": "hòn Đỉnh Hương (vịnh Hạ Long)",
     "500000": "nhà tranh của Bác Hồ ở Kim Liên",
 }
+
+# --- Depth Estimation ---
+USE_DEPTH_ESTIMATION: bool = True
+# Polynomial coefficients to map inverse relative depth to absolute meters.
+# Set an empty list to use the dummy fallback logic, until proper calibration is done.
+DEPTH_CALIBRATION_POLY_COEFS: list[float] = []
+

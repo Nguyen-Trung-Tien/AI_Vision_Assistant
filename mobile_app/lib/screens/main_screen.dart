@@ -376,17 +376,35 @@ class _MainScreenState extends State<MainScreen>
       }
     }
 
-    if (TextUtils.containsAny(cmd, ['cai dat', 'settings'])) {
+    if (TextUtils.containsAny(cmd, ['cài đặt', 'settings'])) {
       _openSettings();
-    } else if (TextUtils.containsAny(cmd, ['lich su', 'history'])) {
+    } else if (TextUtils.containsAny(cmd, ['lịch sử', 'history'])) {
       _openHistory();
-    } else if (TextUtils.containsAny(cmd, ['den', 'flash', 'light'])) {
+    } else if (TextUtils.containsAny(cmd, ['đèn', 'flash', 'light'])) {
       _toggleFlash();
-    } else if (TextUtils.containsAny(cmd, ['tro giup', 'giup do', 'help'])) {
+    } else if (TextUtils.containsAny(cmd, ['trợ giúp', 'giúp đỡ', 'help'])) {
       _speakHelp();
     } else if (TextUtils.containsAny(cmd, [
-      'doc van ban',
-      'doc chu',
+      'đọc hóa đơn',
+      'hóa đơn',
+      'receipt',
+    ])) {
+      _aiService.requestSmartOCR('receipt');
+    } else if (TextUtils.containsAny(cmd, [
+      'đọc thực đơn',
+      'thực đơn',
+      'menu',
+    ])) {
+      _aiService.requestSmartOCR('menu');
+    } else if (TextUtils.containsAny(cmd, [
+      'đọc biển báo',
+      'biển báo',
+      'sign',
+    ])) {
+      _aiService.requestSmartOCR('sign');
+    } else if (TextUtils.containsAny(cmd, [
+      'đọc văn bản',
+      'đọc chữ',
       'read text',
       'online',
     ])) {
@@ -394,53 +412,53 @@ class _MainScreenState extends State<MainScreen>
     } else if (TextUtils.containsAny(cmd, ['nhanh', 'offline', 'quick read'])) {
       _goToMode(1);
     } else if (TextUtils.containsAny(cmd, [
-      'mo ta',
-      'khong gian',
+      'mô tả',
+      'không gian',
       'scene',
       'describe',
     ])) {
       _goToMode(3);
     } else if (TextUtils.containsAny(cmd, [
-      'dinh huong',
-      'dinh vi',
+      'định hướng',
+      'định vị',
       'navigate',
       'navigation',
     ])) {
       _goToMode(4);
       _openNavigationScreen();
     } else if (TextUtils.containsAny(cmd, [
-      'doc tep',
-      'mo file',
-      'doc file',
-      'mo tep',
+      'đọc tệp',
+      'mở file',
+      'đọc file',
+      'mở tệp',
       'open file',
       'read file',
     ])) {
       _goToMode(5);
     } else if (TextUtils.containsAny(cmd, [
-      'bat che do di bo',
-      'bat di bo',
+      'bật chế độ đi bộ',
+      'bật đi bộ',
       'enable walking mode',
       'start walking mode',
     ])) {
       unawaited(_setWalkingMode(true));
     } else if (TextUtils.containsAny(cmd, [
-      'tat che do di bo',
-      'tat di bo',
+      'tắt chế độ đi bộ',
+      'tắt đi bộ',
       'disable walking mode',
       'stop walking mode',
     ])) {
       unawaited(_setWalkingMode(false));
     } else if (TextUtils.containsAny(cmd, [
-      'di bo',
-      'buoc di',
+      'đi bộ',
+      'bước đi',
       'walk',
       'walking',
     ])) {
       unawaited(_setWalkingMode(!_isWalkingModeEnabled));
     } else if (TextUtils.containsAny(cmd, [
-      'tong hop',
-      'tien',
+      'tổng hợp',
+      'tiền',
       'general',
       'money',
     ])) {

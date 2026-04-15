@@ -4,11 +4,16 @@ Mô tả cảnh đường phố: vị trí vật thể, khoảng cách, lối đ
 
 import numpy as np
 
-from .constants import LABEL_TRANSLATIONS, OBJECT_REAL_HEIGHTS
+import time
+from .constants import OBJECT_REAL_HEIGHTS
+from .depth_estimator import DepthEstimator
 from .image_utils import decode_base64_image
 from .model_manager import ModelManager
 from .stabilizer import Stabilizer
 from .translations import t, translate_label
+
+_depth_cache = {}  # {client_id: {"timestamp": float, "depth_map": np.ndarray}}
+DEPTH_CACHE_TTL = 0.5  # Re-use depth map for 500ms to maintain optimal framerate
 
 
 def get_spatial_position(box: list[int], img_width: int, lang: str = "vi") -> str:
@@ -100,7 +105,7 @@ def process_captioning(image_base64: str, client_id: str = "default", lang: str 
     print(f"[AI Worker Caption] Scene frame: {img_w}x{img_h}", flush=True)
 
     try:
-        detections = ModelManager.detect(image)
+        detections = ModelManager.detect_object(image)
     except Exception as exc:
         print(f"[AI Worker Caption] Model error: {exc}", flush=True)
         return {"text": f"Lỗi model: {exc}", "confidence_score": 0.0}
@@ -109,6 +114,22 @@ def process_captioning(image_base64: str, client_id: str = "default", lang: str 
         print(f"[AI Worker Caption] Found {len(detections)} objects:", flush=True)
         for d in detections:
             print(f"  - {d['label']} ({d['confidence']:.2f})", flush=True)
+            
+    # Compute Depth Map if estimation enabled
+    depth_estimator = DepthEstimator.get_instance()
+    depth_map = None
+    if depth_estimator.enabled and detections:
+        now = time.time()
+        cached = _depth_cache.get(client_id)
+        if cached and (now - cached["timestamp"] < DEPTH_CACHE_TTL):
+            depth_map = cached["depth_map"]
+        else:
+            try:
+                depth_map = depth_estimator.estimate_depth(image)
+                if depth_map is not None:
+                    _depth_cache[client_id] = {"timestamp": now, "depth_map": depth_map}
+            except Exception as e:
+                print(f"[AI Worker Caption] Depth model execution error: {e}", flush=True)
 
     if not detections:
         result = {
@@ -149,7 +170,11 @@ def process_captioning(image_base64: str, client_id: str = "default", lang: str 
             spatial_groups[pos][translated] = []
 
         # Ước tính khoảng cách
-        dist = estimate_distance(label, abs(d["box"][3] - d["box"][1]), img_h)
+        if depth_map is not None:
+            dist = depth_estimator.get_distance_at_bbox(depth_map, d["box"])
+        else:
+            dist = estimate_distance(label, abs(d["box"][3] - d["box"][1]), img_h)
+            
         if dist is not None:
             d["distance"] = dist
             

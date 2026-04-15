@@ -17,10 +17,10 @@ from .constants import (
     COLOR_RANGES,
     DENOMINATION_ALIASES,
     DENOMINATION_FEATURES,
-    LABEL_TRANSLATIONS,
     MONEY_LABELS,
     OBJECT_REAL_HEIGHTS,
 )
+from .translations import LABEL_TRANSLATIONS_MULTI
 from .image_utils import decode_base64_image, get_dominant_color, is_blurry
 from .model_manager import ModelManager
 from .money_detector import (
@@ -49,7 +49,7 @@ class AIService:
 
     # --- Class-level data attributes (backward compat) ---
     _money_labels = MONEY_LABELS
-    _label_translations = LABEL_TRANSLATIONS
+    _label_translations = LABEL_TRANSLATIONS_MULTI["vi"]
     _object_real_heights = OBJECT_REAL_HEIGHTS
     _denomination_aliases = DENOMINATION_ALIASES
     _color_ranges = COLOR_RANGES
@@ -82,5 +82,7 @@ class AIService:
     _estimate_distance = staticmethod(estimate_distance)
     _find_clear_paths = staticmethod(find_clear_paths)
     _stabilize_caption = staticmethod(Stabilizer.stabilize_caption)
-    _load_model = staticmethod(ModelManager.load_model)
-    _detect = staticmethod(ModelManager.detect)
+    _load_model = staticmethod(ModelManager.load_object_model)
+    _detect = staticmethod(ModelManager.detect_object)
+    _load_money_model = staticmethod(ModelManager.load_money_model)
+    _detect_money = staticmethod(ModelManager.detect_money)

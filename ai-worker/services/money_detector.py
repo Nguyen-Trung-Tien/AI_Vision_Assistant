@@ -13,14 +13,13 @@ from .constants import (
     COLOR_RANGES,
     DENOMINATION_ALIASES,
     DENOMINATION_FEATURES,
-    LABEL_TRANSLATIONS,
     MONEY_LABELS,
     canonicalize_label,
 )
 from .image_utils import decode_base64_image, get_dominant_color, is_blurry
 from .model_manager import ModelManager
 from .stabilizer import Stabilizer
-from .translations import t
+from .translations import t, translate_label
 
 
 def normalize_label(label: str) -> str:
@@ -112,9 +111,9 @@ def process_ocr(image_base64: str, client_id: str = "default", lang: str = "vi")
         }
 
     try:
-        detections = ModelManager.detect(image)
+        detections = ModelManager.detect_money(image)
     except Exception as exc:
-        print(f"[AI Worker OCR] Model error: {exc}")
+        print(f"[AI Worker OCR] Model error: {exc}", flush=True)
         return {
             "text": f"Lỗi model: {exc}",
             "confidence_score": 0.0,
@@ -180,7 +179,9 @@ def process_ocr(image_base64: str, client_id: str = "default", lang: str = "vi")
                 # For English we might want just "50000 VND"
                 display_text = f"{denomination} VND" if denomination else label
             else:
-                display_text = LABEL_TRANSLATIONS.get(label, f"{denomination} đồng")
+                display_text = translate_label(label, lang)
+                if display_text == label and denomination:
+                    display_text = f"{denomination} đồng" if lang == "vi" else f"{denomination} VND"
 
             # Thêm đặc trưng landmark
             feature = DENOMINATION_FEATURES.get(denomination)

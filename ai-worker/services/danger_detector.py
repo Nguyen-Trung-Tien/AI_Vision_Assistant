@@ -7,7 +7,7 @@ from .translations import t, translate_label
 DANGER_LABELS = {
     "xe_lon",
     "xe_may",
-    "ong_cong",
+    "nap_cong",
     "o_ga",
     "cau_thang",
     "den_do",
