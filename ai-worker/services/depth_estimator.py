@@ -1,5 +1,6 @@
 import cv2
 import numpy as np
+import onnxruntime as ort
 from pathlib import Path
 
 from .constants import DEPTH_CALIBRATION_POLY_COEFS, USE_DEPTH_ESTIMATION
@@ -25,12 +26,16 @@ class DepthEstimator:
             return
             
         try:
-            self.model = cv2.dnn.readNetFromONNX(str(model_path))
+            # Re-check onnxruntime availability
+            self.session = ort.InferenceSession(
+                str(model_path), 
+                providers=['CPUExecutionProvider']
+            )
             # MiDaS small optimal resolution
             self.input_size = (256, 256)
-            print("[DepthEstimator] ONNX Model loaded successfully.")
+            print("[DepthEstimator] ONNX Runtime Session loaded successfully.")
         except Exception as e:
-            print(f"[DepthEstimator] Failed to load ONNX model: {e}")
+            print(f"[DepthEstimator] Failed to load ONNX model via ORT: {e}")
             self.enabled = False
 
     @classmethod
@@ -65,8 +70,9 @@ class DepthEstimator:
         blob[0, 2, :, :] /= 0.225
         
         # 3. Forward pass
-        self.model.setInput(blob)
-        depth_map = self.model.forward()
+        input_name = self.session.get_inputs()[0].name
+        output_name = self.session.get_outputs()[0].name
+        depth_map = self.session.run([output_name], {input_name: blob})[0]
         
         # 4. Post-process
         depth_map = depth_map[0, :, :] 

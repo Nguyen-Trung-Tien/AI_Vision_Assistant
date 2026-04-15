@@ -7,7 +7,7 @@ import numpy as np
 import time
 from .constants import OBJECT_REAL_HEIGHTS
 from .depth_estimator import DepthEstimator
-from .image_utils import decode_base64_image
+from .image_utils import decode_base64_image, is_blurry
 from .model_manager import ModelManager
 from .stabilizer import Stabilizer
 from .translations import t, translate_label
@@ -52,7 +52,7 @@ def find_clear_paths(detections: list[dict], img_width: int, lang: str = "vi") -
     # Lấy dải X của tất cả vật thể gần (conf cao)
     occupied_intervals = []
     for d in detections:
-        if d["confidence"] > 0.4:
+        if d["confidence"] > 0.25:
             x1, _, x2, _ = d["box"]
             occupied_intervals.append((x1, x2))
 
@@ -148,8 +148,14 @@ def process_captioning(image_base64: str, client_id: str = "default", lang: str 
     }
 
     significant_objects = []
+    
+    # Pre-check for blur
+    if is_blurry(image, threshold=35.0):
+        # We still continue detection, but we'll prepend a warning if total count is low
+        pass
+
     for d in detections:
-        if d["confidence"] < 0.35:  # Ngưỡng tối thiểu cho captioning
+        if d["confidence"] < 0.20:  # Ngưỡng tối thiểu cho captioning mới (giảm từ 0.35)
             continue
 
         label = d["label"]
@@ -232,6 +238,10 @@ def process_captioning(image_base64: str, client_id: str = "default", lang: str 
         base_text = t("crowded", lang) + base_text
     elif total_objects == 0:
         base_text = t("empty_area", lang)
+
+    # Thêm cảnh báo mờ nếu cần
+    if is_blurry(image, threshold=35.0):
+        base_text = t("blurry", lang) + ". " + base_text
 
     conf = round(max(d["confidence"] for d in detections), 2)
 
