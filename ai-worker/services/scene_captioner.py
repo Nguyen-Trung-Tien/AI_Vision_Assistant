@@ -52,7 +52,7 @@ def find_clear_paths(detections: list[dict], img_width: int, lang: str = "vi") -
     # Lấy dải X của tất cả vật thể gần (conf cao)
     occupied_intervals = []
     for d in detections:
-        if d["confidence"] > 0.25:
+        if d["confidence"] > 0.10:
             x1, _, x2, _ = d["box"]
             occupied_intervals.append((x1, x2))
 
@@ -155,7 +155,7 @@ def process_captioning(image_base64: str, client_id: str = "default", lang: str 
         pass
 
     for d in detections:
-        if d["confidence"] < 0.20:  # Ngưỡng tối thiểu cho captioning mới (giảm từ 0.35)
+        if d["confidence"] < 0.15:  # Ngưỡng tối thiểu cực nhạy (yêu cầu từ user)
             continue
 
         label = d["label"]

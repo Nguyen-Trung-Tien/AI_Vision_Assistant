@@ -54,8 +54,8 @@ def _resize_continuous_frame(frame_data: str) -> str:
     if img is None:
         return frame_data
 
-    resized = cv2.resize(img, (320, 320), interpolation=cv2.INTER_AREA)
-    ok, buffer = cv2.imencode('.jpg', resized, [int(cv2.IMWRITE_JPEG_QUALITY), 70])
+    resized = cv2.resize(img, (480, 480), interpolation=cv2.INTER_AREA)
+    ok, buffer = cv2.imencode('.jpg', resized, [int(cv2.IMWRITE_JPEG_QUALITY), 95])
     if not ok:
         return frame_data
     return base64.b64encode(buffer).decode('utf-8')
@@ -79,11 +79,11 @@ def _build_compact_continuous_text(ai_result: dict, danger_alerts: list, lang: s
     signature_parts = []
 
     sorted_detections = sorted(
-        [d for d in detections if float(d.get('confidence', 0)) >= 0.20],
+        [d for d in detections if float(d.get('confidence', 0)) >= 0.15],
         key=lambda d: float(d.get('distance', 999)),
     )
 
-    for det in sorted_detections[:2]:
+    for det in sorted_detections[:5]:
         label_raw = det.get('label', '')
         label = translate_label(label_raw, lang)
         pos_raw = det.get('position', 'center')
@@ -190,6 +190,14 @@ def on_message(channel, method, properties, body):
             channel.basic_ack(delivery_tag=method.delivery_tag)
             return
 
+        # Logging for debugging accuracy
+        if original_task_type == 'CONTINUOUS':
+            raw_dets = ai_result.get('raw_detections', [])
+            task_seq = data.get('seq') or data.get('sequence') or '?'
+            print(f"[DEBUG Continuous] Seq={task_seq}: Found {len(raw_dets)} objects (Threshold 0.10)", flush=True)
+            for d in raw_dets[:3]:
+                print(f"  - {d.get('label')}: {d.get('confidence', 0):.2f} at {d.get('distance', '?')}m", flush=True)
+
         final_text = ai_result.get('text', '') or ''
         danger_alerts = ai_result.get('danger_alerts', [])
         if danger_alerts:
@@ -211,13 +219,19 @@ def on_message(channel, method, properties, body):
                 last_signature = continuous_tts_cache.get(client_id, '')
 
                 # Priority behavior: danger > new objects > general scene
-                if compact_signature == last_signature and not danger_alerts:
+                if danger_alerts:
+                    # Always prioritize danger
+                    tts_text = compact_text
+                    final_text = compact_text
+                elif compact_signature == last_signature:
+                    # Skip repeated scene
                     tts_text = ''
                     stable = True
                 else:
                     continuous_tts_cache[client_id] = compact_signature
-                    tts_text = compact_text
-                    final_text = compact_text or final_text
+                    # USE FULL TEXT instead of compact for "Full Detail" as requested
+                    tts_text = final_text 
+                    final_text = final_text
 
             if tts_text:
                 audio_url = TTSCacheService.get_audio_url(tts_text, lang=lang)
