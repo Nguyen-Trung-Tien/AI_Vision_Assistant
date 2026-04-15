@@ -15,9 +15,10 @@ import type { Response } from 'express';
 import type { Request as ExpressRequest } from 'express';
 import { FeedbackService } from './feedback.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { JwtUser } from '../common/interfaces/jwt-user.interface';
 
 interface AuthRequest extends ExpressRequest {
-  user: { sub: string };
+  user: JwtUser;
 }
 
 @Controller('feedback')
@@ -26,8 +27,7 @@ export class FeedbackController {
   constructor(private readonly feedbackService: FeedbackService) {}
 
   private ensureAdmin(req: ExpressRequest) {
-    const user = req.user as { role?: string } | undefined;
-    if (user?.role !== 'ADMIN') {
+    if (req.user?.role !== 'ADMIN') {
       throw new ForbiddenException('Admin access required');
     }
   }
@@ -69,7 +69,7 @@ export class FeedbackController {
   ) {
     return this.feedbackService.create(
       body.detectionId,
-      req.user.sub,
+      req.user.userId,
       body.isCorrect,
       body.correctLabel,
       body.imageBase64,
@@ -83,6 +83,6 @@ export class FeedbackController {
     @Body() body: { correctLabel: string },
   ) {
     this.ensureAdmin(req);
-    return this.feedbackService.review(id, req.user.sub, body.correctLabel);
+    return this.feedbackService.review(id, req.user.userId, body.correctLabel);
   }
 }

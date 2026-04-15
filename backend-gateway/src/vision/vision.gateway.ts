@@ -27,7 +27,7 @@ export class VisionGateway
   implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit
 {
   @WebSocketServer()
-  server: Server;
+  server!: Server;
 
   private readonly logger = new Logger(VisionGateway.name);
 
@@ -60,7 +60,12 @@ export class VisionGateway
     const userId = client.data?.user?.sub?.toString();
 
     // Rate limiting handled per task type in TaskQueueService.
-    if (!this.taskQueueService.checkRateLimit(client.id, data.task_type || 'UNKNOWN')) {
+    if (
+      !this.taskQueueService.checkRateLimit(
+        client.id,
+        data.task_type || 'UNKNOWN',
+      )
+    ) {
       client.emit('stream_ack', { status: 'throttled', timestamp: Date.now() });
       return;
     }

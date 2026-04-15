@@ -11,7 +11,8 @@ class EmergencyContactsScreen extends StatefulWidget {
   const EmergencyContactsScreen({super.key});
 
   @override
-  State<EmergencyContactsScreen> createState() => _EmergencyContactsScreenState();
+  State<EmergencyContactsScreen> createState() =>
+      _EmergencyContactsScreenState();
 }
 
 class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
@@ -190,7 +191,10 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text('Gửi SMS khi có SOS', style: TextStyle(color: Colors.white)),
+              const Text(
+                'Gửi SMS khi có SOS',
+                style: TextStyle(color: Colors.white),
+              ),
               Switch(
                 value: contact.notifySms,
                 activeThumbColor: AppTheme.accentCyan,
@@ -311,8 +315,13 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
     if (await FlutterContacts.requestPermission(readonly: true)) {
       final contact = await FlutterContacts.openExternalPick();
       if (contact != null && contact.phones.isNotEmpty) {
-        final num = contact.phones.first.number.replaceAll(RegExp(r'[^0-9+]'), '');
-        final name = contact.displayName.trim().isEmpty ? num : contact.displayName.trim();
+        final num = contact.phones.first.number.replaceAll(
+          RegExp(r'[^0-9+]'),
+          '',
+        );
+        final name = contact.displayName.trim().isEmpty
+            ? num
+            : contact.displayName.trim();
 
         setState(() => _isLoading = true);
         final added = await _contactService.addContact(

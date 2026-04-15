@@ -1,14 +1,20 @@
-import { IsBoolean, IsOptional, IsString, Length, Matches } from 'class-validator';
+import {
+  IsBoolean,
+  IsOptional,
+  IsString,
+  Length,
+  Matches,
+} from 'class-validator';
 
 export class CreateEmergencyContactDto {
   @IsString()
   @Length(1, 120)
-  name: string;
+  name!: string;
 
   @IsString()
   @Length(3, 32)
   @Matches(/^[0-9+\-\s().]+$/, { message: 'phone format is invalid' })
-  phone: string;
+  phone!: string;
 
   @IsOptional()
   @IsString()

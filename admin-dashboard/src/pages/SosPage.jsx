@@ -1,5 +1,9 @@
 import { useEffect, useState, useRef } from "react";
-import { useSosAlerts, useAcknowledgeSos, useResolveSos } from "@/hooks/use-queries";
+import {
+  useSosAlerts,
+  useAcknowledgeSos,
+  useResolveSos,
+} from "@/hooks/use-queries";
 import { io } from "socket.io-client";
 import { useToast } from "../components/Toast";
 import ConfirmDialog from "../components/ConfirmDialog";
@@ -16,7 +20,7 @@ export default function SosPage() {
   const [page, setPage] = useState(1);
   const [incoming, setIncoming] = useState(null);
   const [confirm, setConfirm] = useState(null); // { type:'ack'|'resolve', id, label }
-  
+
   const { data, isLoading, refetch } = useSosAlerts(page, 15);
   const alerts = data?.data ?? [];
   const total = data?.total ?? 0;
@@ -55,7 +59,10 @@ export default function SosPage() {
         await ackMutation.mutateAsync({ id: confirm.id });
         toast.success("Đã xác nhận nhận SOS");
       } else {
-        await resolveMutation.mutateAsync({ id: confirm.id, note: "Đã xử lý bởi admin" });
+        await resolveMutation.mutateAsync({
+          id: confirm.id,
+          note: "Đã xử lý bởi admin",
+        });
         toast.success("Đã đánh dấu xử lý xong");
       }
       setIncoming(null);
@@ -125,13 +132,19 @@ export default function SosPage() {
             <h2 className="text-xl sm:text-2xl font-bold text-red-300 mb-2">
               SOS KHẨN CẤP!
             </h2>
-            <p className="text-white/80 mb-1 text-sm truncate" title={incoming.userId ?? "Unknown"}>
+            <p
+              className="text-white/80 mb-1 text-sm truncate"
+              title={incoming.userId ?? "Unknown"}
+            >
               User: {incoming.userId ?? "Unknown"}
             </p>
             <p className="text-white/80 mb-1 text-xs sm:text-sm break-all">
-              📍 {incoming.latitude?.toFixed(5)}, {incoming.longitude?.toFixed(5)}
+              📍 {incoming.latitude?.toFixed(5)},{" "}
+              {incoming.longitude?.toFixed(5)}
             </p>
-            <p className="text-white/50 text-xs mb-4 sm:mb-6">{incoming.timestamp}</p>
+            <p className="text-white/50 text-xs mb-4 sm:mb-6">
+              {incoming.timestamp}
+            </p>
             {incoming.imageBase64 && (
               <img
                 src={`data:image/jpeg;base64,${incoming.imageBase64}`}
@@ -147,7 +160,9 @@ export default function SosPage() {
                 Đã nhận
               </button>
               <button
-                onClick={() => handleResolveDirect(incoming.sosId ?? incoming.id)}
+                onClick={() =>
+                  handleResolveDirect(incoming.sosId ?? incoming.id)
+                }
                 className="min-h-[48px] px-5 py-2.5 rounded-xl bg-green-500/20 border border-green-500/40 text-green-300 text-sm font-medium hover:bg-green-500/30 active:scale-[0.98] transition-all"
               >
                 Đã xử lý
@@ -160,7 +175,9 @@ export default function SosPage() {
       {/* Header — stack trên mobile */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 sm:mb-6">
         <div>
-          <h2 className="text-xl sm:text-2xl font-black text-text-primary tracking-tight">🚨 SOS Khẩn Cấp</h2>
+          <h2 className="text-xl sm:text-2xl font-black text-text-primary tracking-tight">
+            🚨 SOS Khẩn Cấp
+          </h2>
           <p className="text-text-secondary text-sm font-medium mt-1">
             Danh sách cảnh báo ({total} tổng)
           </p>
@@ -180,7 +197,9 @@ export default function SosPage() {
             <TableSkeleton rows={8} cols={6} />
           </div>
         ) : alerts.length === 0 ? (
-          <div className="text-center py-16 text-text-secondary">Chưa có SOS nào</div>
+          <div className="text-center py-16 text-text-secondary">
+            Chưa có SOS nào
+          </div>
         ) : (
           <table className="w-full text-sm">
             <thead>
@@ -252,15 +271,17 @@ export default function SosPage() {
         <div className="flex justify-center gap-3">
           <button
             disabled={page <= 1}
-            onClick={() => setPage(p => p - 1)}
+            onClick={() => setPage((p) => p - 1)}
             className="px-4 py-2 rounded-xl bg-bg-card border border-border-primary text-text-secondary text-sm disabled:opacity-30 hover:bg-text-primary/5 transition-all"
           >
             ← Trước
           </button>
-          <span className="px-4 py-2 text-text-secondary text-sm">Trang {page}</span>
+          <span className="px-4 py-2 text-text-secondary text-sm">
+            Trang {page}
+          </span>
           <button
             disabled={page * 15 >= total}
-            onClick={() => setPage(p => p + 1)}
+            onClick={() => setPage((p) => p + 1)}
             className="px-4 py-2 rounded-xl bg-bg-card border border-border-primary text-text-secondary text-sm disabled:opacity-30 hover:bg-text-primary/5 transition-all"
           >
             Sau →

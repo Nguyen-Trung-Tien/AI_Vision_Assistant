@@ -6,7 +6,7 @@ import { Server } from 'socket.io';
 
 @Injectable()
 export class BroadcastService {
-  private server: Server;
+  private server!: Server;
 
   constructor(
     @InjectRepository(Broadcast)

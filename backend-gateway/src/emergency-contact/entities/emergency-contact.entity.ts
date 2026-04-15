@@ -12,36 +12,38 @@ import { User } from '../../users/entities/user.entity';
 @Entity('emergency_contacts')
 export class EmergencyContact {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
-  @ManyToOne(() => User, (user) => user.emergencyContacts, { onDelete: 'CASCADE' })
+  @ManyToOne(() => User, (user) => user.emergencyContacts, {
+    onDelete: 'CASCADE',
+  })
   @JoinColumn({ name: 'user_id' })
-  user: User;
+  user!: User;
 
   @Column({ name: 'user_id' })
-  user_id: string;
+  user_id!: string;
 
   @Column()
-  name: string;
+  name!: string;
 
   @Column()
-  phone: string;
+  phone!: string;
 
   @Column({ nullable: true })
-  relationship: string;
+  relationship!: string;
 
   @Column({ default: false })
-  is_primary: boolean;
+  is_primary!: boolean;
 
   @Column({ default: true })
-  notify_sms: boolean;
+  notify_sms!: boolean;
 
   @Column({ default: false })
-  notify_call: boolean;
+  notify_call!: boolean;
 
   @CreateDateColumn()
-  created_at: Date;
+  created_at!: Date;
 
   @UpdateDateColumn()
-  updated_at: Date;
+  updated_at!: Date;
 }

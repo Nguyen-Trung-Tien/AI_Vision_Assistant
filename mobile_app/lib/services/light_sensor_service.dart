@@ -39,7 +39,8 @@ class LightSensorService {
     if (DateTime.now().isBefore(_nextAllowedProbeAt)) return;
 
     // Do not probe while picture/video stream is busy.
-    if (controller.value.isTakingPicture || controller.value.isStreamingImages) {
+    if (controller.value.isTakingPicture ||
+        controller.value.isStreamingImages) {
       return;
     }
 

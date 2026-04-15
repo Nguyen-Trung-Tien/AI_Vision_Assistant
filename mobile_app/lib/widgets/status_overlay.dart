@@ -48,10 +48,11 @@ class StatusOverlay extends StatelessWidget {
                         : AppTheme.accentRed,
                     boxShadow: [
                       BoxShadow(
-                        color: (isConnected
-                                ? AppTheme.accentGreen
-                                : AppTheme.accentRed)
-                            .withValues(alpha: 0.6),
+                        color:
+                            (isConnected
+                                    ? AppTheme.accentGreen
+                                    : AppTheme.accentRed)
+                                .withValues(alpha: 0.6),
                         blurRadius: 6,
                         spreadRadius: 1,
                       ),

@@ -2,11 +2,15 @@ import 'package:flutter/foundation.dart';
 import 'package:image/image.dart' as imglib;
 
 class ImageUtils {
-  static Future<Uint8List?> convertMapToJpeg(Map<String, dynamic> imageData) async {
+  static Future<Uint8List?> convertMapToJpeg(
+    Map<String, dynamic> imageData,
+  ) async {
     try {
-      if (imageData['formatGroup'] == 0) { // yuv420
+      if (imageData['formatGroup'] == 0) {
+        // yuv420
         return _convertYUV420MapToJpeg(imageData);
-      } else if (imageData['formatGroup'] == 1) { // bgra8888
+      } else if (imageData['formatGroup'] == 1) {
+        // bgra8888
         return _convertBGRA8888MapToJpeg(imageData);
       }
     } catch (e) {
@@ -29,7 +33,11 @@ class ImageUtils {
       final uBytes = planes[1]['bytes'] as Uint8List;
       final vBytes = planes[2]['bytes'] as Uint8List;
 
-      final image = imglib.Image(width: width, height: height, format: imglib.Format.uint8);
+      final image = imglib.Image(
+        width: width,
+        height: height,
+        format: imglib.Format.uint8,
+      );
 
       for (int w = 0; w < width; w++) {
         for (int h = 0; h < height; h++) {
@@ -43,7 +51,7 @@ class ImageUtils {
           image.setPixelRgba(w, h, y, u, v, 255);
         }
       }
-      
+
       return imglib.encodeJpg(image, quality: 60);
     } catch (e) {
       debugPrint('YUV conversion error: $e');

@@ -56,7 +56,8 @@ class EdgeAIService {
 
       final text = data['text']?.toString() ?? '';
       final isStable = data['stable'] == true;
-      final dangerAlerts = (data['danger_alerts'] as List<dynamic>? ?? const []);
+      final dangerAlerts =
+          (data['danger_alerts'] as List<dynamic>? ?? const []);
       final taskType =
           data['taskType']?.toString() ??
           data['task_type']?.toString() ??

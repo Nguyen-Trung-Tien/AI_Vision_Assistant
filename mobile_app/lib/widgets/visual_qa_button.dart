@@ -17,7 +17,8 @@ class VisualQAButton extends StatefulWidget {
   State<VisualQAButton> createState() => _VisualQAButtonState();
 }
 
-class _VisualQAButtonState extends State<VisualQAButton> with SingleTickerProviderStateMixin {
+class _VisualQAButtonState extends State<VisualQAButton>
+    with SingleTickerProviderStateMixin {
   bool _isRecording = false;
   late AnimationController _pulseController;
   late Animation<double> _pulseAnimation;
@@ -84,10 +85,7 @@ class _VisualQAButtonState extends State<VisualQAButton> with SingleTickerProvid
                     : const LinearGradient(
                         begin: Alignment.topLeft,
                         end: Alignment.bottomRight,
-                        colors: [
-                          AppTheme.accentPurple,
-                          AppTheme.accentCyan,
-                        ],
+                        colors: [AppTheme.accentPurple, AppTheme.accentCyan],
                       ),
                 color: _isRecording ? AppTheme.accentPink : null,
                 border: Border.all(color: Colors.white70, width: 2),
@@ -97,20 +95,20 @@ class _VisualQAButtonState extends State<VisualQAButton> with SingleTickerProvid
                           color: AppTheme.accentPink.withValues(alpha: 0.7),
                           blurRadius: 20,
                           spreadRadius: 8,
-                        )
+                        ),
                       ]
                     : [
                         BoxShadow(
                           color: AppTheme.accentPurple.withValues(alpha: 0.5),
                           blurRadius: 12,
                           spreadRadius: 2,
-                        )
+                        ),
                       ],
               ),
               child: Stack(
                 alignment: Alignment.center,
                 children: [
-                   Icon(
+                  Icon(
                     _isRecording ? Icons.mic : Icons.lightbulb,
                     color: Colors.white,
                     size: 32,

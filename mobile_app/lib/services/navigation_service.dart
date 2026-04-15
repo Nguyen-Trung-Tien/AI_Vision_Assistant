@@ -68,9 +68,7 @@ class NavigationService {
       return recognizedText;
     }
 
-    _accessibilityManager.speak(
-      "Không nghe rõ địa điểm, vui lòng thử lại.",
-    );
+    _accessibilityManager.speak("Không nghe rõ địa điểm, vui lòng thử lại.");
     return null;
   }
 
@@ -100,8 +98,8 @@ class NavigationService {
       final candidate = searchData.first as Map<String, dynamic>;
       final targetLat = double.tryParse(candidate['lat']?.toString() ?? '');
       final targetLng = double.tryParse(candidate['lon']?.toString() ?? '');
-      final targetName = candidate['display_name']?.toString() ??
-          destinationQuery;
+      final targetName =
+          candidate['display_name']?.toString() ?? destinationQuery;
 
       if (targetLat == null || targetLng == null) {
         _accessibilityManager.speak("Không tìm thấy địa điểm này.");
@@ -172,9 +170,7 @@ class NavigationService {
       };
     } catch (e) {
       debugPrint("Error getting directions: $e");
-      _accessibilityManager.speak(
-        "Đã có lỗi xảy ra khi lấy lộ trình.",
-      );
+      _accessibilityManager.speak("Đã có lỗi xảy ra khi lấy lộ trình.");
     }
     return null;
   }

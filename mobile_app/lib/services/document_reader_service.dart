@@ -5,7 +5,9 @@ import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart
 import 'package:archive/archive_io.dart';
 
 class DocumentReaderService {
-  final TextRecognizer _textRecognizer = TextRecognizer(script: TextRecognitionScript.latin);
+  final TextRecognizer _textRecognizer = TextRecognizer(
+    script: TextRecognitionScript.latin,
+  );
 
   Future<String?> pickAndExtractText() async {
     try {
@@ -54,7 +56,10 @@ class DocumentReaderService {
           final data = file.content as List<int>;
           final xmlString = String.fromCharCodes(data);
           // Very basic XML tag stripping
-          final stripped = xmlString.replaceAll(RegExp(r'<[^>]*>'), ' ').replaceAll(RegExp(r'\s+'), ' ').trim();
+          final stripped = xmlString
+              .replaceAll(RegExp(r'<[^>]*>'), ' ')
+              .replaceAll(RegExp(r'\s+'), ' ')
+              .trim();
           return stripped;
         }
       }

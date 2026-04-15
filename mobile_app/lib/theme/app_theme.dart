@@ -17,50 +17,43 @@ class AppTheme {
   static const Color accentOrange = Color(0xFFFF9800);
   static const Color accentRed = Color(0xFFFF5252);
 
-  static Color whiteAlpha(double alpha) => Colors.white.withValues(alpha: alpha);
+  static Color whiteAlpha(double alpha) =>
+      Colors.white.withValues(alpha: alpha);
 
   // ── Typography ─────────────────────────────────────────────────────────
   static TextStyle get headlineLarge => const TextStyle(
-        color: Colors.white,
-        fontSize: 28,
-        fontWeight: FontWeight.bold,
-        letterSpacing: 0.5,
-      );
+    color: Colors.white,
+    fontSize: 28,
+    fontWeight: FontWeight.bold,
+    letterSpacing: 0.5,
+  );
 
   static TextStyle get headlineMedium => const TextStyle(
-        color: Colors.white,
-        fontSize: 22,
-        fontWeight: FontWeight.w600,
-      );
+    color: Colors.white,
+    fontSize: 22,
+    fontWeight: FontWeight.w600,
+  );
 
   static TextStyle get titleLarge => const TextStyle(
-        color: Colors.white,
-        fontSize: 18,
-        fontWeight: FontWeight.w600,
-      );
+    color: Colors.white,
+    fontSize: 18,
+    fontWeight: FontWeight.w600,
+  );
 
-  static TextStyle get bodyLarge => TextStyle(
-        color: whiteAlpha(0.9),
-        fontSize: 16,
-        height: 1.4,
-      );
+  static TextStyle get bodyLarge =>
+      TextStyle(color: whiteAlpha(0.9), fontSize: 16, height: 1.4);
 
-  static TextStyle get bodyMedium => TextStyle(
-        color: whiteAlpha(0.8),
-        fontSize: 14,
-        height: 1.4,
-      );
+  static TextStyle get bodyMedium =>
+      TextStyle(color: whiteAlpha(0.8), fontSize: 14, height: 1.4);
 
-  static TextStyle get bodySmall => TextStyle(
-        color: whiteAlpha(0.6),
-        fontSize: 12,
-      );
+  static TextStyle get bodySmall =>
+      TextStyle(color: whiteAlpha(0.6), fontSize: 12);
 
   static TextStyle get labelChip => TextStyle(
-        color: whiteAlpha(0.85),
-        fontSize: 13,
-        fontWeight: FontWeight.w500,
-      );
+    color: whiteAlpha(0.85),
+    fontSize: 13,
+    fontWeight: FontWeight.w500,
+  );
 
   // ── Decoration helpers ─────────────────────────────────────────────────
   static BoxDecoration cardDecoration({
@@ -183,22 +176,20 @@ class AppTheme {
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(14),
           ),
-          textStyle: const TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-          ),
+          textStyle: const TextStyle(fontSize: 16, fontWeight: FontWeight.w600),
         ),
       ),
       textButtonTheme: TextButtonThemeData(
-        style: TextButton.styleFrom(
-          foregroundColor: whiteAlpha(0.8),
-        ),
+        style: TextButton.styleFrom(foregroundColor: whiteAlpha(0.8)),
       ),
       inputDecorationTheme: InputDecorationTheme(
         filled: true,
         fillColor: whiteAlpha(0.08),
         border: OutlineInputBorder(borderRadius: BorderRadius.circular(14)),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
+        contentPadding: const EdgeInsets.symmetric(
+          horizontal: 20,
+          vertical: 16,
+        ),
       ),
       sliderTheme: SliderThemeData(
         activeTrackColor: accentPurple,

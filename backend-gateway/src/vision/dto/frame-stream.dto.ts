@@ -8,7 +8,7 @@ import {
 
 export class FrameStreamDto {
   @IsString()
-  frame: string;
+  frame!: string;
 
   @IsOptional()
   @IsString()

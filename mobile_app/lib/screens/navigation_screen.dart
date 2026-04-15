@@ -83,9 +83,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
 
   Future<void> _startVoiceSearch() async {
     if (_currentPosition == null) {
-      _accessibilityManager.speak(
-        "Đang tìm vị trí hiện tại, vui lòng đợi...",
-      );
+      _accessibilityManager.speak("Đang tìm vị trí hiện tại, vui lòng đợi...");
       return;
     }
 
@@ -300,8 +298,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
   }
 
   Widget _buildStatusRow(ColorScheme colorScheme) {
-    final statusText =
-        _isNavigating ? 'Đang điều hướng' : 'Chưa điều hướng';
+    final statusText = _isNavigating ? 'Đang điều hướng' : 'Chưa điều hướng';
     final statusColor = _isNavigating ? Colors.green : colorScheme.outline;
     return Row(
       children: [
@@ -309,10 +306,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
         const SizedBox(width: 8),
         Text(
           statusText,
-          style: TextStyle(
-            fontWeight: FontWeight.w600,
-            color: statusColor,
-          ),
+          style: TextStyle(fontWeight: FontWeight.w600, color: statusColor),
         ),
         const Spacer(),
         if (_currentPosition != null)
@@ -320,10 +314,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
             children: [
               Icon(Icons.gps_fixed, size: 18, color: colorScheme.primary),
               const SizedBox(width: 6),
-              Text(
-                'GPS ổn định',
-                style: TextStyle(color: colorScheme.primary),
-              ),
+              Text('GPS ổn định', style: TextStyle(color: colorScheme.primary)),
             ],
           ),
       ],
@@ -351,10 +342,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
         child: Text(
           _currentInstruction,
           key: ValueKey(_currentInstruction),
-          style: const TextStyle(
-            fontSize: 20,
-            fontWeight: FontWeight.bold,
-          ),
+          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
           textAlign: TextAlign.center,
         ),
       ),
@@ -386,10 +374,12 @@ class _NavigationScreenState extends State<NavigationScreen> {
       child: ElevatedButton.icon(
         onPressed: _isNavigating ? null : _startVoiceSearch,
         style: ElevatedButton.styleFrom(
-          backgroundColor:
-              _isNavigating ? colorScheme.surfaceContainerHighest : colorScheme.primary,
-          foregroundColor:
-              _isNavigating ? colorScheme.onSurfaceVariant : Colors.white,
+          backgroundColor: _isNavigating
+              ? colorScheme.surfaceContainerHighest
+              : colorScheme.primary,
+          foregroundColor: _isNavigating
+              ? colorScheme.onSurfaceVariant
+              : Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -416,11 +406,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
           ),
           width: 36,
           height: 36,
-          child: Icon(
-            Icons.my_location,
-            color: colorScheme.primary,
-            size: 30,
-          ),
+          child: Icon(Icons.my_location, color: colorScheme.primary, size: 30),
         ),
       );
     }
@@ -430,11 +416,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
           point: _destination!,
           width: 40,
           height: 40,
-          child: const Icon(
-            Icons.flag,
-            color: Colors.red,
-            size: 32,
-          ),
+          child: const Icon(Icons.flag, color: Colors.red, size: 32),
         ),
       );
     }

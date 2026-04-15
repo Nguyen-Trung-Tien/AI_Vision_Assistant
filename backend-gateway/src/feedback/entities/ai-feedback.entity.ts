@@ -12,41 +12,41 @@ import { DetectionLog } from '../../vision/entities/detection-log.entity';
 @Entity('ai_feedbacks')
 export class AiFeedback {
   @PrimaryGeneratedColumn('increment', { type: 'bigint' })
-  id: string;
+  id!: string;
 
   @ManyToOne(() => DetectionLog, { onDelete: 'CASCADE' })
   @JoinColumn({ name: 'detection_id' })
-  detection: DetectionLog;
+  detection!: DetectionLog;
 
   @Column({ name: 'detection_id' })
-  detectionId: string;
+  detectionId!: string;
 
   @ManyToOne(() => User, { nullable: true, onDelete: 'SET NULL' })
   @JoinColumn({ name: 'user_id' })
-  user: User | null;
+  user!: User | null;
 
   @Column({ name: 'user_id', nullable: true })
-  userId: string | null;
+  userId!: string | null;
 
   @Column({ type: 'boolean' })
-  is_correct: boolean;
+  is_correct!: boolean;
 
   @Column({ length: 255, nullable: true })
-  correct_label: string;
+  correct_label!: string;
 
   @Column({ type: 'text', nullable: true })
-  image_path: string;
+  image_path!: string;
 
   @Column({ length: 20, default: 'pending' })
-  review_status: string; // pending, reviewed, exported
+  review_status!: string; // pending, reviewed, exported
 
   @ManyToOne(() => User, { nullable: true })
   @JoinColumn({ name: 'reviewed_by' })
-  reviewedBy: User | null;
+  reviewedBy!: User | null;
 
   @CreateDateColumn()
-  created_at: Date;
+  created_at!: Date;
 
   @Column({ type: 'timestamptz', nullable: true })
-  reviewed_at: Date;
+  reviewed_at!: Date;
 }

@@ -178,9 +178,7 @@ class TfliteService {
         }
       }
 
-      final modelDir = Directory(
-        '${dir.path}${Platform.pathSeparator}models',
-      );
+      final modelDir = Directory('${dir.path}${Platform.pathSeparator}models');
       if (!await modelDir.exists()) continue;
 
       try {
@@ -294,7 +292,9 @@ class TfliteService {
         }
       }
 
-      debugPrint('[TFLite] Inference done. Max prob: $maxProb at index $maxIndex');
+      debugPrint(
+        '[TFLite] Inference done. Max prob: $maxProb at index $maxIndex',
+      );
 
       if (maxProb > 0.35) {
         final label = _labels[maxIndex];
@@ -334,8 +334,9 @@ class TfliteService {
       for (int anchor = 0; anchor < anchors; anchor++) {
         for (int c = 0; c < _labels.length; c++) {
           if (classStart + c >= channels) continue;
-          final score = (((output[0] as List)[classStart + c] as List)[anchor] as num)
-              .toDouble();
+          final score =
+              (((output[0] as List)[classStart + c] as List)[anchor] as num)
+                  .toDouble();
           if (score > probs[c]) probs[c] = score;
         }
       }

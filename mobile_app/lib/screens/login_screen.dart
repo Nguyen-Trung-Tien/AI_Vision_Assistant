@@ -88,10 +88,13 @@ class _LoginScreenState extends State<LoginScreen> {
       );
       final message = e is HttpException
           ? e.message
-          : e.toString().replaceFirst(RegExp(r'^Exception:\s*'), '').replaceFirst(RegExp(r'^HttpException:\s*'), '');
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text(message)),
-      );
+          : e
+                .toString()
+                .replaceFirst(RegExp(r'^Exception:\s*'), '')
+                .replaceFirst(RegExp(r'^HttpException:\s*'), '');
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text(message)));
     } finally {
       if (mounted) {
         setState(() => _isSubmitting = false);
@@ -108,11 +111,7 @@ class _LoginScreenState extends State<LoginScreen> {
           gradient: LinearGradient(
             begin: Alignment.topLeft,
             end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF0A0A1A),
-              Color(0xFF111128),
-              Color(0xFF16163A),
-            ],
+            colors: [Color(0xFF0A0A1A), Color(0xFF111128), Color(0xFF16163A)],
           ),
         ),
         child: SafeArea(
@@ -166,7 +165,10 @@ class _LoginScreenState extends State<LoginScreen> {
                             keyboardType: TextInputType.emailAddress,
                             style: const TextStyle(color: Colors.white),
                             decoration: AppTheme.inputDecoration(
-                              AppLocalizations.t('login_email', _settings.language),
+                              AppLocalizations.t(
+                                'login_email',
+                                _settings.language,
+                              ),
                             ),
                             validator: (value) {
                               final v = (value ?? '').trim();
@@ -191,10 +193,15 @@ class _LoginScreenState extends State<LoginScreen> {
                             obscureText: !_showPassword,
                             style: const TextStyle(color: Colors.white),
                             decoration: AppTheme.inputDecoration(
-                              AppLocalizations.t('login_password', _settings.language),
+                              AppLocalizations.t(
+                                'login_password',
+                                _settings.language,
+                              ),
                               suffixIcon: IconButton(
                                 onPressed: () {
-                                  setState(() => _showPassword = !_showPassword);
+                                  setState(
+                                    () => _showPassword = !_showPassword,
+                                  );
                                 },
                                 icon: Icon(
                                   _showPassword
@@ -229,7 +236,8 @@ class _LoginScreenState extends State<LoginScreen> {
                                 suffixIcon: IconButton(
                                   onPressed: () {
                                     setState(() {
-                                      _showConfirmPassword = !_showConfirmPassword;
+                                      _showConfirmPassword =
+                                          !_showConfirmPassword;
                                     });
                                   },
                                   icon: Icon(
@@ -259,10 +267,14 @@ class _LoginScreenState extends State<LoginScreen> {
                               borderRadius: BorderRadius.circular(14),
                               child: Container(
                                 width: double.infinity,
-                                padding: const EdgeInsets.symmetric(vertical: 16),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 16,
+                                ),
                                 decoration: _isSubmitting
                                     ? BoxDecoration(
-                                        color: AppTheme.accentPurple.withValues(alpha: 0.5),
+                                        color: AppTheme.accentPurple.withValues(
+                                          alpha: 0.5,
+                                        ),
                                         borderRadius: BorderRadius.circular(14),
                                       )
                                     : AppTheme.gradientButtonDecoration(),

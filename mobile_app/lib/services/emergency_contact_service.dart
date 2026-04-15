@@ -68,7 +68,7 @@ class EmergencyContactService {
 
   Future<bool> updateContact(EmergencyContact contact) async {
     if (contact.id == null) return false;
-    
+
     try {
       final headers = await _getHeaders();
       final response = await http.put(

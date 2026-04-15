@@ -13,9 +13,10 @@ import {
 import type { Request as ExpressRequest } from 'express';
 import { SosService } from './sos.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { JwtUser } from '../common/interfaces/jwt-user.interface';
 
 interface AuthRequest extends ExpressRequest {
-  user: { sub: string };
+  user: JwtUser;
 }
 
 @Controller('sos')
@@ -24,8 +25,7 @@ export class SosController {
   constructor(private readonly sosService: SosService) {}
 
   private ensureAdmin(req: ExpressRequest) {
-    const user = req.user as { role?: string } | undefined;
-    if (user?.role !== 'ADMIN') {
+    if (req.user?.role !== 'ADMIN') {
       throw new ForbiddenException('Admin access required');
     }
   }
@@ -41,7 +41,7 @@ export class SosController {
     @Body() body: { latitude: number; longitude: number; imageUrl?: string },
   ) {
     return this.sosService.createAlert(
-      req.user.sub,
+      req.user.userId,
       body.latitude,
       body.longitude,
       body.imageUrl,
@@ -55,7 +55,7 @@ export class SosController {
     @Body() body: { note?: string },
   ) {
     this.ensureAdmin(req);
-    return this.sosService.resolve(id, req.user.sub, body.note);
+    return this.sosService.resolve(id, req.user.userId, body.note);
   }
 
   @Patch(':id/acknowledge')

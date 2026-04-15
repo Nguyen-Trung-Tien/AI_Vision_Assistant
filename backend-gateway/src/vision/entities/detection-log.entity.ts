@@ -11,36 +11,36 @@ import { User } from '../../users/entities/user.entity';
 @Entity('detection_logs')
 export class DetectionLog {
   @PrimaryGeneratedColumn('increment', { type: 'bigint' })
-  id: string;
+  id!: string;
 
   @ManyToOne(() => User, (user) => user.detectionLogs, { nullable: true })
   @JoinColumn({ name: 'user_id' })
-  user: User | null;
+  user!: User | null;
 
   @Column({ name: 'user_id', nullable: true })
-  userId: string | null;
+  userId!: string | null;
 
   @Column({ length: 50 })
-  action_type: string; // OCR, OBJECT_DETECT, CAPTIONING
+  action_type!: string; // OCR, OBJECT_DETECT, CAPTIONING
 
   @Column({ type: 'text', nullable: true })
-  result_text: string;
+  result_text!: string;
 
   @Column({ type: 'float', nullable: true })
-  confidence_score: number;
+  confidence_score!: number;
 
   @Column({ type: 'float', nullable: true })
-  latitude: number;
+  latitude!: number;
 
   @Column({ type: 'float', nullable: true })
-  longitude: number;
+  longitude!: number;
 
   @Column({ type: 'text', nullable: true })
-  image_url: string;
+  image_url!: string;
 
   @Column({ length: 20, nullable: true })
-  severity: string;
+  severity!: string;
 
   @CreateDateColumn()
-  created_at: Date;
+  created_at!: Date;
 }

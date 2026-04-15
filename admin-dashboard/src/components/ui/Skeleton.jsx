@@ -30,10 +30,10 @@ export function ChartSkeleton() {
   return (
     <div className="w-full h-[300px] flex items-end gap-2 px-2 pb-8">
       {[...Array(12)].map((_, i) => (
-        <Skeleton 
-          key={i} 
-          className="w-full rounded-t-lg" 
-          style={{ height: `${Math.floor(Math.random() * 60) + 20}%` }} 
+        <Skeleton
+          key={i}
+          className="w-full rounded-t-lg"
+          style={{ height: `${Math.floor(Math.random() * 60) + 20}%` }}
         />
       ))}
     </div>

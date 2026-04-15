@@ -2,12 +2,16 @@ import 'dart:convert';
 import 'package:http/http.dart' as http;
 
 class ProductLookupService {
-  static const String _baseUrl = 'https://world.openfoodfacts.org/api/v0/product';
+  static const String _baseUrl =
+      'https://world.openfoodfacts.org/api/v0/product';
 
   /// Tra cứu thông tin Barcode.
   /// Trả về chuỗi tổng hợp thông tin sản phẩm (gồm tên, danh mục, v.v.)
   /// Nếu không tìm thấy, trả về null.
-  static Future<String?> lookupBarcode(String barcode, {String lang = "vi"}) async {
+  static Future<String?> lookupBarcode(
+    String barcode, {
+    String lang = "vi",
+  }) async {
     try {
       final url = Uri.parse('$_baseUrl/$barcode.json');
       final response = await http.get(url).timeout(const Duration(seconds: 4));
@@ -16,20 +20,23 @@ class ProductLookupService {
         final data = json.decode(response.body);
         if (data['status'] == 1 && data['product'] != null) {
           final product = data['product'];
-          
+
           // Lấy tên sản phẩm
-          String? name = product['product_name_$lang'] 
-              ?? product['product_name'] 
-              ?? product['generic_name'];
-          
+          String? name =
+              product['product_name_$lang'] ??
+              product['product_name'] ??
+              product['generic_name'];
+
           if (name == null || name.isEmpty) return null;
 
           // Lấy thương hiệu
           String? brand = product['brands'];
-          
+
           // Tổng hợp chuỗi
           String result = name;
-          if (brand != null && brand.isNotEmpty && !name.toLowerCase().contains(brand.toLowerCase())) {
+          if (brand != null &&
+              brand.isNotEmpty &&
+              !name.toLowerCase().contains(brand.toLowerCase())) {
             result += ' của hãng $brand';
           }
 

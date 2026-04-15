@@ -12,9 +12,10 @@ import type { Request as ExpressRequest } from 'express';
 import { BroadcastService } from './broadcast.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UsersService } from '../users/users.service';
+import { JwtUser } from '../common/interfaces/jwt-user.interface';
 
 interface AuthRequest extends ExpressRequest {
-  user: { sub: string };
+  user: JwtUser;
 }
 
 @Controller('broadcast')
@@ -26,8 +27,7 @@ export class BroadcastController {
   ) {}
 
   private ensureAdmin(req: ExpressRequest) {
-    const user = req.user as { role?: string } | undefined;
-    if (user?.role !== 'ADMIN') {
+    if (req.user?.role !== 'ADMIN') {
       throw new ForbiddenException('Admin access required');
     }
   }
@@ -70,7 +70,7 @@ export class BroadcastController {
     }
 
     return this.broadcastService.sendBroadcast(
-      req.user.sub,
+      req.user.userId,
       body.message,
       body.targetType ?? 'all',
       resolvedTargetIds,

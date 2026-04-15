@@ -28,15 +28,13 @@ class ModeCarousel extends StatelessWidget {
           child: Container(
             margin: const EdgeInsets.symmetric(horizontal: 28),
             padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
-            decoration: AppTheme.glassDecoration(
-              borderRadius: 24,
-              opacity: 0.5,
-            ).copyWith(
-              border: Border.all(
-                color: AppTheme.accentPurple.withValues(alpha: 0.25),
-                width: 1.5,
-              ),
-            ),
+            decoration: AppTheme.glassDecoration(borderRadius: 24, opacity: 0.5)
+                .copyWith(
+                  border: Border.all(
+                    color: AppTheme.accentPurple.withValues(alpha: 0.25),
+                    width: 1.5,
+                  ),
+                ),
             child: Column(
               mainAxisSize: MainAxisSize.min,
               children: [

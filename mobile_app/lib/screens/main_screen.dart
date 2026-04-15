@@ -639,7 +639,9 @@ class _MainScreenState extends State<MainScreen>
       label = nearest['label']?.toString() ?? '';
       final distance = (nearest['distance'] as num?)?.toDouble();
       distanceVal = distance;
-      nearestObstacle = '$label ${distance != null ? '${distance.toStringAsFixed(1)}m' : ''}'.trim();
+      nearestObstacle =
+          '$label ${distance != null ? '${distance.toStringAsFixed(1)}m' : ''}'
+              .trim();
     }
 
     safeDirection = _deriveSafeDirection(position);
@@ -1132,9 +1134,12 @@ class _MainScreenState extends State<MainScreen>
                   final label = d['label']?.toString() ?? 'Object';
                   final distance = (d['distance'] as num?)?.toDouble();
                   final color = _getDistanceColor(distance);
-                  
+
                   return Container(
-                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+                    padding: const EdgeInsets.symmetric(
+                      horizontal: 10,
+                      vertical: 4,
+                    ),
                     decoration: BoxDecoration(
                       color: color.withValues(alpha: 0.8),
                       borderRadius: BorderRadius.circular(20),
@@ -1185,7 +1190,8 @@ class _MainScreenState extends State<MainScreen>
           ),
 
           // --- DETECTION & DANGER BANNER ---
-          if (_dangerMessage != null || (_isWalkingModeEnabled && _walkingNearestObstacle != '-'))
+          if (_dangerMessage != null ||
+              (_isWalkingModeEnabled && _walkingNearestObstacle != '-'))
             Positioned(
               top: MediaQuery.of(context).padding.top + 72,
               left: 16,
@@ -1694,7 +1700,8 @@ class DetectionPainter extends CustomPainter {
       // Label background
       final textPainter = TextPainter(
         text: TextSpan(
-          text: '${label.toUpperCase()} ${distance?.toStringAsFixed(1) ?? ""}m'.trim(),
+          text: '${label.toUpperCase()} ${distance?.toStringAsFixed(1) ?? ""}m'
+              .trim(),
           style: TextStyle(
             color: Colors.white,
             fontSize: 10,

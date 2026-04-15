@@ -36,7 +36,7 @@ export const VisionUpload = () => {
     (acceptedFiles) => {
       setValue("files", [...files, ...acceptedFiles], { shouldValidate: true });
     },
-    [files, setValue]
+    [files, setValue],
   );
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
@@ -53,14 +53,14 @@ export const VisionUpload = () => {
   const onSubmit = async (data) => {
     try {
       console.log("Submitting AI Vision Job:", data);
-      
+
       // Simulate API Call
       const formData = new FormData();
       formData.append("title", data.title);
       data.files.forEach((file) => formData.append("images", file));
-      
+
       // await apiClient.post('/vision/analyze', formData);
-      
+
       await new Promise((resolve) => setTimeout(resolve, 1500)); // Mock delay
       alert("AI Vision analysis started successfully!");
       reset();
@@ -84,7 +84,9 @@ export const VisionUpload = () => {
 
       <form onSubmit={handleSubmit(onSubmit)} className="space-y-6">
         <div>
-          <label className="block text-sm font-medium mb-1.5 opacity-80">Task Title</label>
+          <label className="block text-sm font-medium mb-1.5 opacity-80">
+            Task Title
+          </label>
           <input
             {...register("title")}
             placeholder="e.g., Street Obstacle Detection"
@@ -102,18 +104,28 @@ export const VisionUpload = () => {
         <div
           {...getRootProps()}
           className={`relative border-2 border-dashed rounded-xl p-8 transition-all cursor-pointer text-center ${
-            isDragActive ? "border-primary bg-primary/5 scale-[1.01]" : "border-border bg-background/50"
+            isDragActive
+              ? "border-primary bg-primary/5 scale-[1.01]"
+              : "border-border bg-background/50"
           }`}
         >
           <input {...getInputProps()} />
           <div className="flex flex-col items-center gap-2">
-            <div className={`p-4 rounded-full transition-colors ${isDragActive ? "bg-primary/20" : "bg-muted"}`}>
-              <FileImage className={`w-8 h-8 ${isDragActive ? "text-primary" : "text-muted-foreground"}`} />
+            <div
+              className={`p-4 rounded-full transition-colors ${isDragActive ? "bg-primary/20" : "bg-muted"}`}
+            >
+              <FileImage
+                className={`w-8 h-8 ${isDragActive ? "text-primary" : "text-muted-foreground"}`}
+              />
             </div>
             <p className="text-sm font-medium text-muted-foreground">
-              {isDragActive ? "Drop images here" : "Drag & drop images here, or click to browse"}
+              {isDragActive
+                ? "Drop images here"
+                : "Drag & drop images here, or click to browse"}
             </p>
-            <p className="text-xs opacity-50">Support: JPG, PNG, WEBP (Max 5MB per file)</p>
+            <p className="text-xs opacity-50">
+              Support: JPG, PNG, WEBP (Max 5MB per file)
+            </p>
           </div>
         </div>
 
@@ -147,7 +159,7 @@ export const VisionUpload = () => {
             </motion.div>
           )}
         </AnimatePresence>
-        
+
         {errors.files && (
           <p className="text-xs text-destructive flex items-center gap-1">
             <AlertCircle className="w-3 h-3" /> {errors.files.message}
@@ -157,7 +169,8 @@ export const VisionUpload = () => {
         <Button type="submit" className="w-full" disabled={isSubmitting}>
           {isSubmitting ? (
             <span className="flex items-center gap-2">
-              <CheckCircle2 className="w-4 h-4 animate-spin-slow" /> Analyzing...
+              <CheckCircle2 className="w-4 h-4 animate-spin-slow" />{" "}
+              Analyzing...
             </span>
           ) : (
             "Start AI Analysis"

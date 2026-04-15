@@ -45,7 +45,7 @@ export interface AIResultPayload {
 @Injectable()
 export class TaskQueueService {
   private readonly logger = new Logger(TaskQueueService.name);
-  private server: Server;
+  private server!: Server;
 
   private taskQueue: VisionTask[] = [];
   private readonly latestContinuousByClient = new Map<string, VisionTask>();
@@ -75,13 +75,20 @@ export class TaskQueueService {
   enqueueTask(task: VisionTask) {
     const normalizedTask: VisionTask = {
       ...task,
-      mode: task.mode ?? (task.taskType === 'CONTINUOUS' ? 'continuous' : 'normal'),
+      mode:
+        task.mode ?? (task.taskType === 'CONTINUOUS' ? 'continuous' : 'normal'),
       priority: task.priority ?? this.resolvePriority(task.taskType),
       timestamp: task.timestamp ?? Date.now(),
     };
 
-    if (normalizedTask.mode === 'continuous' || normalizedTask.taskType === 'CONTINUOUS') {
-      this.latestContinuousByClient.set(normalizedTask.clientId, normalizedTask);
+    if (
+      normalizedTask.mode === 'continuous' ||
+      normalizedTask.taskType === 'CONTINUOUS'
+    ) {
+      this.latestContinuousByClient.set(
+        normalizedTask.clientId,
+        normalizedTask,
+      );
       return;
     }
 
@@ -119,7 +126,10 @@ export class TaskQueueService {
       task = this.taskQueue.shift();
       this.nonContinuousProcessedStreak += 1;
     } else if (hasContinuousTask) {
-      for (const [clientId, continuousTask] of this.latestContinuousByClient.entries()) {
+      for (const [
+        clientId,
+        continuousTask,
+      ] of this.latestContinuousByClient.entries()) {
         if (this.continuousInFlightClients.has(clientId)) continue;
         this.latestContinuousByClient.delete(clientId);
         task = continuousTask;
@@ -151,7 +161,8 @@ export class TaskQueueService {
     const now = Date.now();
     const lastFrame = this.clientLastFrame.get(clientId) || 0;
 
-    const interval = taskType === 'CONTINUOUS' ? 120 : this.MIN_FRAME_INTERVAL_MS;
+    const interval =
+      taskType === 'CONTINUOUS' ? 120 : this.MIN_FRAME_INTERVAL_MS;
 
     if (now - lastFrame < interval) return false;
 
@@ -264,12 +275,17 @@ export class TaskQueueService {
     this.latestContinuousByClient.delete(clientId);
     this.continuousInFlightClients.delete(clientId);
     this.continuousInFlightSince.delete(clientId);
-    this.taskQueue = this.taskQueue.filter((task) => task.clientId !== clientId);
+    this.taskQueue = this.taskQueue.filter(
+      (task) => task.clientId !== clientId,
+    );
   }
 
   private releaseExpiredContinuousInflight() {
     const now = Date.now();
-    for (const [clientId, startedAt] of this.continuousInFlightSince.entries()) {
+    for (const [
+      clientId,
+      startedAt,
+    ] of this.continuousInFlightSince.entries()) {
       if (now - startedAt < this.CONTINUOUS_IN_FLIGHT_TIMEOUT_MS) continue;
       this.continuousInFlightSince.delete(clientId);
       this.continuousInFlightClients.delete(clientId);

@@ -50,7 +50,9 @@ class ContinuousStreamService {
   void onFrameResultReceived({required String taskType, int? frameSeq}) {
     if (taskType != 'CONTINUOUS') return;
     _awaitingResult = false;
-    if (frameSeq != null && _inFlightFrameSeq != null && frameSeq != _inFlightFrameSeq) {
+    if (frameSeq != null &&
+        _inFlightFrameSeq != null &&
+        frameSeq != _inFlightFrameSeq) {
       return;
     }
 
