@@ -79,7 +79,7 @@ def _build_compact_continuous_text(ai_result: dict, danger_alerts: list, lang: s
     signature_parts = []
 
     sorted_detections = sorted(
-        [d for d in detections if float(d.get('confidence', 0)) >= 0.35],
+        [d for d in detections if float(d.get('confidence', 0)) >= 0.20],
         key=lambda d: float(d.get('distance', 999)),
     )
 
