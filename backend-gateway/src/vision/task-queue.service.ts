@@ -4,6 +4,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { Server } from 'socket.io';
 import { DetectionLog } from './entities/detection-log.entity';
+import { FaceService } from '../face/face.service';
 
 interface VisionTask {
   clientId: string;
@@ -18,6 +19,8 @@ interface VisionTask {
   mode?: string;
   priority?: number;
   frameSeq?: number;
+  isFrontCamera?: boolean;
+  subMode?: string;
   timestamp?: number;
 }
 
@@ -40,6 +43,9 @@ export interface AIResultPayload {
     message: string;
     position: string;
   }[];
+  encoding?: number[];
+  name?: string;
+  knownFaces?: { name: string; embedding: number[] }[];
 }
 
 @Injectable()
@@ -62,6 +68,7 @@ export class TaskQueueService {
     @Inject('AI_SERVICE') private client: ClientProxy,
     @InjectRepository(DetectionLog)
     private detectionLogRepo: Repository<DetectionLog>,
+    private faceService: FaceService,
   ) {
     setInterval(() => {
       this.processNextTask();
@@ -153,6 +160,8 @@ export class TaskQueueService {
       task.mode,
       task.priority,
       task.frameSeq,
+      task.isFrontCamera,
+      task.subMode,
       task.timestamp,
     );
   }
@@ -170,7 +179,7 @@ export class TaskQueueService {
     return true;
   }
 
-  pushHeavyTask(
+  async pushHeavyTask(
     clientId: string,
     userId: string | undefined,
     taskType: string,
@@ -183,9 +192,21 @@ export class TaskQueueService {
     mode: string = 'normal',
     priority = 5,
     frameSeq?: number,
+    isFrontCamera?: boolean,
+    subMode?: string,
     timestamp?: number,
   ) {
     this.logger.log(`Push ${taskType} -> RabbitMQ (client ${clientId})`);
+    
+    let knownFaces: { name: string; embedding: number[] }[] = [];
+    if (
+      (taskType === 'FACE_RECOGNITION' ||
+        (taskType === 'CONTINUOUS' && subMode === 'recognition')) &&
+      userId
+    ) {
+      const faces = await this.faceService.listFaces(userId);
+      knownFaces = faces.map((f) => ({ name: f.name, embedding: f.encoding }));
+    }
 
     if (taskType === 'CONTINUOUS') {
       this.continuousInFlightClients.add(clientId);
@@ -207,6 +228,9 @@ export class TaskQueueService {
       timestamp: timestamp ?? Date.now(),
       priority,
       frameSeq,
+      isFrontCamera,
+      subMode,
+      knownFaces, // Added for AI Worker
     });
   }
 
@@ -216,6 +240,44 @@ export class TaskQueueService {
       if (resultTaskType === 'CONTINUOUS') {
         this.continuousInFlightClients.delete(result.clientId);
         this.continuousInFlightSince.delete(result.clientId);
+      }
+
+      // Handle custom TaskType: GET_FACE_ENCODING result (Face Registration)
+      if (resultTaskType === 'GET_FACE_ENCODING') {
+        const name = (result as any).name || 'Unknown Face';
+        
+        if (result.encoding && result.userId) {
+          this.logger.log(`AI found face encoding for user ${result.userId} (Name: ${name}). Saving to DB...`);
+          try {
+            await this.faceService.saveEncoding(result.userId, name, result.encoding);
+            this.logger.log(`Successfully saved face registration for ${name}`);
+            
+            if (this.server) {
+               // Notify the user via the clientId room
+               this.server.to(result.clientId).emit('face_registered', {
+                 success: true,
+                 name: name
+               });
+            }
+          } catch (error) {
+            this.logger.error(`Failed to save face encoding to DB: ${error.message}`);
+            if (this.server) {
+              this.server.to(result.clientId).emit('face_registered', {
+                success: false,
+                message: 'Internal server error saving face'
+              });
+            }
+          }
+        } else {
+          this.logger.warn(`AI Worker could not detect a face for registration (User: ${result.userId}, Name: ${name})`);
+          if (this.server) {
+            this.server.to(result.clientId).emit('face_registered', {
+              success: false,
+              message: result.text || 'Không tìm thấy khuôn mặt trong ảnh'
+            });
+          }
+        }
+        return;
       }
 
       const dangerAlerts = result.danger_alerts || [];

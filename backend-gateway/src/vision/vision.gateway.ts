@@ -83,6 +83,8 @@ export class VisionGateway
         mode: data.mode,
         priority: data.priority,
         frameSeq: data.frame_seq,
+        isFrontCamera: data.is_front_camera,
+        subMode: data.sub_mode,
         timestamp: Date.now(),
       });
     }
@@ -112,6 +114,7 @@ export class VisionGateway
       question: data.question,
       mode: 'normal',
       priority: 6,
+      isFrontCamera: data.is_front_camera,
       timestamp: Date.now(),
     });
 

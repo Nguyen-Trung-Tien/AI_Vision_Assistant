@@ -167,4 +167,12 @@ class SettingsService {
   Future<void> setHeadphonesOnlyMode(bool value) async {
     await _prefs?.setBool('headphones_only_mode', value);
   }
+
+  // --- Face Recognition ---
+  bool get faceRecognitionEnabled =>
+      _prefs?.getBool('face_recognition_enabled') ?? true;
+
+  Future<void> setFaceRecognitionEnabled(bool value) async {
+    await _prefs?.setBool('face_recognition_enabled', value);
+  }
 }

@@ -22,13 +22,14 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 <br/>
 
-![Version](https://img.shields.io/badge/Version-1.4.1-blue?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.5.0-blue?style=flat-square)
 ![License](https://img.shields.io/badge/License-UNLICENSED-gray?style=flat-square)
 ![Status](https://img.shields.io/badge/Status-In_Development-orange?style=flat-square)
 
 </div>
 
 ---
+
 ---
 
 > [!WARNING]
@@ -49,7 +50,7 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 >
 > - YOLO model (`yolo11n`) là phiên bản **nano** — ưu tiên tốc độ hơn độ chính xác.
 > - Nhận diện tiền VN phụ thuộc điều kiện ánh sáng, góc chụp, độ mới của tờ tiền.
-> - Ước lượng khoảng cách dựa trên **công thức xấp xỉ** (focal length giả định) — sai số ±30%.
+> - Ước lượng khoảng cách dựa trên **MiDaS Small (Depth Estimation)** và công thức hình học — sai số ±20%.
 > - Hallucination Guard cảnh báo khi confidence < 85%, nhưng **không đảm bảo 100% chính xác**.
 > - Visual Q&A (Gemini) phụ thuộc API bên ngoài — có thể thay đổi/ngừng hoạt động.
 
@@ -58,9 +59,9 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 >
 > - AI Worker hỗ trợ **continuous stream cho walking mode** (latest-only queue + smart throttle).
 > - Continuous stream được tối ưu ở mức **1-5 FPS** tùy chuyển động và pin.
-> - Một số tính năng **bắt buộc Internet**: điều hướng GPS (OSRM), Visual Q&A (Gemini), tra cứu barcode.
+> - Một số tính năng **bắt buộc Internet**: điều hướng GPS (OSRM), Visual Q&A (Gemini), Smart OCR.
+> - Face Recognition sử dụng InsightFace (Buffalo_L) — cần GPU để đạt performance tốt nhất.
 > - TFLite offline fallback cần model `.tflite` riêng — chưa tự động convert từ YOLO.
-> - Redis cache TTS chỉ hoạt động khi Redis server đang chạy.
 
 > [!NOTE]
 > **📋 Lưu ý sử dụng**
@@ -73,18 +74,31 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 ## 📰 Cập nhật mới nhất
 
+### 🗓️ Tháng 4/2026 — v1.5.0 (Current)
+
+| Ngày      | Cập nhật                        | Mô tả                                                                                       |
+| --------- | ------------------------------- | ------------------------------------------------------------------------------------------- |
+| **17/04** | 🧠 Face Recognition (Alpha)     | Nhận diện người quen sử dụng InsightFace: phát hiện tên người đứng trước camera             |
+| **17/04** | 📏 MiDaS Depth Estimation       | Tích hợp mô hình MiDaS Small cho ước lượng chiều sâu đơn mục, tăng độ chính xác khoảng cách |
+| **17/04** | 📄 Smart OCR (Gemini Vision)    | Chế độ đọc thông minh: phân tích biển báo, thực đơn (menu), hóa đơn bằng Gemini AI          |
+| **15/04** | 📺 Visual Feedback              | Hiển thị Bounding Boxes + Object Chips trên mobile, tăng độ nhạy AI (480x480)               |
+| **15/04** | 🔊 Spatial Audio 3D             | Tích hợp âm thanh 3D: xác định hướng vật cản qua tai nghe stereo                            |
+| **08/04** | 🔧 Fix offline model            | Sửa lỗi mobile không nhận model TFLite offline đã có sẵn trên máy                           |
+| **04/04** | 🚨 Emergency Contact Network    | Tích hợp mạng lưới liên hệ khẩn cấp: tự động SMS + cuộc gọi khi SOS                         |
+| **04/04** | 🚶 Continuous Stream hoàn thiện | Walking Mode 3–5 FPS: adaptive FPS, latest-only queue, smart throttle, battery saving       |
+
 ### 🗓️ Tháng 4/2026 — v1.4.0
 
-| Ngày      | Cập nhật                        | Mô tả                                                                                   |
-| --------- | ------------------------------- | --------------------------------------------------------------------------------------- |
-| **15/04** | 📺 Visual Feedback          | Hiển thị Bounding Boxes + Object Chips trên mobile, tăng độ nhạy AI (480x480)           |
-| **15/04** | 🔊 Spatial Audio 3D         | Tích hợp âm thanh 3D: xác định hướng vật cản qua tai nghe stereo                        |
-| **08/04** | 🔧 Fix offline model            | Sửa lỗi mobile không nhận model TFLite offline đã có sẵn trên máy                       |
-| **06/04** | 📦 Kaggle dataset               | Chuẩn bị và upload dataset lên Kaggle cho training model                                 |
-| **05/04** | 🚶 Continuous Stream fix        | Sửa lỗi UI đồng bộ ModeCarousel khi chuyển Walking Mode                                 |
-| **04/04** | 🚨 Emergency Contact Network    | Tích hợp mạng lưới liên hệ khẩn cấp: tự động SMS + cuộc gọi khi SOS                    |
-| **04/04** | 🚶 Continuous Stream hoàn thiện | Walking Mode 3–5 FPS: adaptive FPS, latest-only queue, smart throttle, battery saving    |
-| **01/04** | 🛡️ System Integrity Audit       | Kiểm tra sức khỏe toàn bộ hệ thống, dọn dẹp code thừa                                   |
+| Ngày      | Cập nhật                        | Mô tả                                                                                 |
+| --------- | ------------------------------- | ------------------------------------------------------------------------------------- |
+| **15/04** | 📺 Visual Feedback              | Hiển thị Bounding Boxes + Object Chips trên mobile, tăng độ nhạy AI (480x480)         |
+| **15/04** | 🔊 Spatial Audio 3D             | Tích hợp âm thanh 3D: xác định hướng vật cản qua tai nghe stereo                      |
+| **08/04** | 🔧 Fix offline model            | Sửa lỗi mobile không nhận model TFLite offline đã có sẵn trên máy                     |
+| **06/04** | 📦 Kaggle dataset               | Chuẩn bị và upload dataset lên Kaggle cho training model                              |
+| **05/04** | 🚶 Continuous Stream fix        | Sửa lỗi UI đồng bộ ModeCarousel khi chuyển Walking Mode                               |
+| **04/04** | 🚨 Emergency Contact Network    | Tích hợp mạng lưới liên hệ khẩn cấp: tự động SMS + cuộc gọi khi SOS                   |
+| **04/04** | 🚶 Continuous Stream hoàn thiện | Walking Mode 3–5 FPS: adaptive FPS, latest-only queue, smart throttle, battery saving |
+| **01/04** | 🛡️ System Integrity Audit       | Kiểm tra sức khỏe toàn bộ hệ thống, dọn dẹp code thừa                                 |
 
 ### 🗓️ Tháng 3/2026 — v1.2.0
 
@@ -162,28 +176,28 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 ### 🔍 Nhận diện AI
 
-| Tính năng             | Mô tả                                                                        | Xử lý                                         |
-| --------------------- | ---------------------------------------------------------------------------- | --------------------------------------------- |
-| **Nhận diện vật thể** | 20 lớp đối tượng: xe cộ, người, cầu thang, ổ gà, nắp cống, vạch qua đường... | YOLO v11 (online) + TFLite (offline fallback) |
-| **Nhận diện tiền VN** | 9 mệnh giá: 1K → 500K VNĐ, kèm xác minh màu sắc HSV & đặc trưng landmark    | YOLO + color validation + OCR                 |
-| **Đọc văn bản (OCR)** | Đọc nhãn mác, biển báo, tài liệu                                             | Tesseract (server) + ML Kit (offline)         |
-| **Mô tả cảnh**        | Mô tả không gian: vị trí trái/giữa/phải, ước lượng khoảng cách, gợi ý lối đi | YOLO + spatial analysis                       |
-| **Visual Q&A**        | Hỏi đáp bằng giọng nói về ảnh camera                                         | Google Gemini Vision API                      |
-| **Đèn giao thông**    | Nhận diện đèn đỏ/vàng/xanh, cảnh báo dừng/đi                                 | YOLO (traffic_light_red/yellow/green)         |
+| Tính năng               | Mô tả                                                                        | Xử lý                                         |
+| ----------------------- | ---------------------------------------------------------------------------- | --------------------------------------------- |
+| **Nhận diện vật thể**   | 20 lớp đối tượng: xe cộ, người, cầu thang, ổ gà, nắp cống, vạch qua đường... | YOLO v11 (online) + TFLite (offline fallback) |
+| **Nhận diện tiền VN**   | 9 mệnh giá: 1K → 500K VNĐ, kèm xác minh màu sắc HSV & đặc trưng landmark     | YOLO + color validation + OCR                 |
+| **Đọc văn bản (OCR)**   | Đọc nhãn mác, biển báo, tài liệu (General/Smart Mode)                        | Tesseract + Gemini Vision (Smart OCR)         |
+| **Mô tả cảnh**          | Mô tả không gian: vị trí trái/giữa/phải, ước lượng khoảng cách, gợi ý lối đi | YOLO + spatial analysis + MiDaS Depth         |
+| **Visual Q&A**          | Hỏi đáp bằng giọng nói về ảnh camera                                         | Google Gemini Vision API                      |
+| **Nhận diện khuôn mặt** | Nhận diện người quen, bạn bè đã đăng ký                                      | InsightFace (Buffalo_L)                       |
 
 ### 🛡️ An toàn & Hỗ trợ
 
-| Tính năng              | Mô tả                                                                                |
-| ---------------------- | ------------------------------------------------------------------------------------ |
-| **Cảnh báo nguy hiểm** | Phát hiện vật cản gần (xe, ổ gà, nắp cống, cầu thang) + cảnh báo khoảng cách, vị trí |
-| **SOS khẩn cấp**       | Giữ màn hình/phím cứng → gửi SOS kèm GPS + ảnh đến admin dashboard                   |
-| **Điều hướng GPS**     | GPS + la bàn + bản đồ OSM/OSRM → hướng dẫn đi bộ bằng giọng nói tiếng Việt           |
-| **Flash tự động**      | Cảm biến ánh sáng tự bật/tắt đèn flash camera                                        |
-| **Rung phản hồi**      | Haptic feedback theo loại sự kiện (nguy hiểm, xác nhận tiền, SOS)                    |
-| **Continuous Stream**  | Chế độ đi bộ 3–5 FPS: phân tích liên tục, adaptive FPS, tiết kiệm pin                |
-| **Liên hệ khẩn cấp**  | SMS + cuộc gọi tự động đến người thân khi SOS, CRUD danh bạ khẩn cấp                  |
+| Tính năng              | Mô tả                                                                                 |
+| ---------------------- | ------------------------------------------------------------------------------------- |
+| **Cảnh báo nguy hiểm** | Phát hiện vật cản gần (xe, ổ gà, nắp cống, cầu thang) + cảnh báo khoảng cách, vị trí  |
+| **SOS khẩn cấp**       | Giữ màn hình/phím cứng → gửi SOS kèm GPS + ảnh đến admin dashboard                    |
+| **Điều hướng GPS**     | GPS + la bàn + bản đồ OSM/OSRM → hướng dẫn đi bộ bằng giọng nói tiếng Việt            |
+| **Flash tự động**      | Cảm biến ánh sáng tự bật/tắt đèn flash camera                                         |
+| **Rung phản hồi**      | Haptic feedback theo loại sự kiện (nguy hiểm, xác nhận tiền, SOS)                     |
+| **Continuous Stream**  | Chế độ đi bộ 3–5 FPS: phân tích liên tục, adaptive FPS, tiết kiệm pin                 |
+| **Liên hệ khẩn cấp**   | SMS + cuộc gọi tự động đến người thân khi SOS, CRUD danh bạ khẩn cấp                  |
 | **Visual Feedback**    | Hiển thị khung bao (Bounding Boxes) + nhãn vật thể thời gian thực trên camera preview |
-| **Spatial Audio 3D**   | Cảnh báo vật cản theo hướng (Trái/Phải/Giữa) qua tai nghe stereo theo thời gian thực |
+| **Spatial Audio 3D**   | Cảnh báo vật cản theo hướng (Trái/Phải/Giữa) qua tai nghe stereo theo thời gian thực  |
 
 ### 🗣️ Text-to-Speech
 
@@ -228,8 +242,8 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 │  │ (Detection)  │ │ Detector     │ │ Captioner   │ │ Vision Q&A  │   │
 │  └──────────────┘ └──────────────┘ └─────────────┘ └─────────────┘   │
 │  ┌──────────────┐ ┌──────────────┐ ┌─────────────┐ ┌─────────────┐   │
-│  │ OCR          │ │ Danger       │ │ TTS Cache   │ │ Stabilizer  │   │
-│  │ (Tesseract)  │ │ Detector     │ │ (Redis)     │ │ (Temporal)  │   │
+│  │ Smart OCR    │ │ Face         │ │ Depth       │ │ Stabilizer  │   │
+│  │ (Gemini)     │ │ Recognition  │ │ Estimator   │ │ (Temporal)  │   │
 │  └──────────────┘ └──────────────┘ └─────────────┘ └─────────────┘   │
 └──────────────────────────────────────────────────────────────────────┘
 
@@ -279,15 +293,15 @@ sequenceDiagram
 
 ## 📱 Các chế độ trên Mobile App
 
-| Chế độ         | Tên               | Mô tả                                           | Online/Offline |
-| -------------- | ----------------- | ----------------------------------------------- | -------------- |
-| **Mode 0**     | Nhận diện vật thể | YOLO online, TFLite offline nếu có model cục bộ | Both           |
-| **Mode 1**     | OCR Online        | Đọc văn bản qua Tesseract trên server           | Online         |
-| **Mode 2**     | OCR Offline       | ML Kit Text Recognition + Barcode Scanner       | Offline        |
-| **Mode 3**     | Mô tả cảnh        | Mô tả không gian chi tiết + cảnh báo nguy hiểm  | Online         |
-| **Mode 4**     | Điều hướng        | GPS + la bàn + chỉ đường OSRM/OSM               | Online         |
-| **Mode 5**     | Đi bộ (Walking)   | Continuous Stream 3–5 FPS, adaptive FPS, auto    | Online         |
-| **Visual Q&A** | Hỏi đáp           | Hỏi đáp trực quan bằng giọng nói (Gemini AI)    | Online         |
+| Chế độ         | Tên               | Mô tả                                                    | Online/Offline |
+| -------------- | ----------------- | -------------------------------------------------------- | -------------- |
+| **Mode 0**     | Nhận diện vật thể | YOLO online, TFLite offline nếu có model cục bộ          | Both           |
+| **Mode 1**     | OCR Online        | Đọc văn bản qua Tesseract (General) / Gemini (Smart OCR) | Online         |
+| **Mode 2**     | OCR Offline       | ML Kit Text Recognition + Barcode Scanner                | Offline        |
+| **Mode 3**     | Mô tả cảnh        | Mô tả không gian + MiDaS Depth + cảnh báo nguy hiểm      | Online         |
+| **Mode 4**     | Điều hướng        | GPS + la bàn + chỉ đường OSRM/OSM                        | Online         |
+| **Mode 5**     | Đi bộ (Walking)   | Continuous Stream 3–5 FPS, tích hợp Face Recognition     | Online         |
+| **Visual Q&A** | Hỏi đáp           | Hỏi đáp trực quan bằng giọng nói (Gemini AI)             | Online         |
 
 ### Các thành phần Mobile App
 
@@ -588,19 +602,19 @@ GEMINI_MAX_OUTPUT_TOKENS=256             # Optional: limit response length
 
 ### WebSocket Events (Socket.IO)
 
-| Event           | Direction       | Payload                                                               | Mô tả                                |
-| --------------- | --------------- | --------------------------------------------------------------------- | ------------------------------------ |
+| Event           | Direction       | Payload                                                                                          | Mô tả                                |
+| --------------- | --------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------ |
 | `frame_stream`  | Client → Server | `{ frame, task_type, lang, warning_distance_m, latitude, longitude, mode, priority, frame_seq }` | Gửi frame để AI xử lý                |
-| `stream_ack`    | Server → Client | `{ status, timestamp }`                                               | Xác nhận nhận frame                  |
-| `ai_result`     | Server → Client | `{ text, confidence_score, audio_url, stable, danger_alerts }`        | Kết quả AI                           |
-| `visual_qa`     | Client → Server | `{ frame, question, lang }`                                           | Gửi câu hỏi Visual Q&A               |
-| `visual_qa_ack` | Server → Client | `{ status, timestamp }`                                               | Xác nhận nhận Q&A                    |
-| `sos_alert`     | Client → Server | `{ latitude, longitude, imageBase64? }`                               | Gửi SOS khẩn cấp                     |
-| `sos_ack`       | Server → Client | `{ status, timestamp }`                                               | Xác nhận SOS                         |
-| `sos_incoming`  | Server → Admin  | `{ sosId, userId, latitude, longitude, ... }`                         | Thông báo SOS đến admin              |
-| `join_admin`    | Client → Server | —                                                                     | Admin join admin room                |
-| `join_user`     | Client → Server | —                                                                     | User join user room (nhận broadcast) |
-| `broadcast_tts` | Server → Users  | `{ message, audioUrl }`                                               | Admin broadcast TTS                  |
+| `stream_ack`    | Server → Client | `{ status, timestamp }`                                                                          | Xác nhận nhận frame                  |
+| `ai_result`     | Server → Client | `{ text, confidence_score, audio_url, stable, danger_alerts }`                                   | Kết quả AI                           |
+| `visual_qa`     | Client → Server | `{ frame, question, lang }`                                                                      | Gửi câu hỏi Visual Q&A               |
+| `visual_qa_ack` | Server → Client | `{ status, timestamp }`                                                                          | Xác nhận nhận Q&A                    |
+| `sos_alert`     | Client → Server | `{ latitude, longitude, imageBase64? }`                                                          | Gửi SOS khẩn cấp                     |
+| `sos_ack`       | Server → Client | `{ status, timestamp }`                                                                          | Xác nhận SOS                         |
+| `sos_incoming`  | Server → Admin  | `{ sosId, userId, latitude, longitude, ... }`                                                    | Thông báo SOS đến admin              |
+| `join_admin`    | Client → Server | —                                                                                                | Admin join admin room                |
+| `join_user`     | Client → Server | —                                                                                                | User join user room (nhận broadcast) |
+| `broadcast_tts` | Server → Users  | `{ message, audioUrl }`                                                                          | Admin broadcast TTS                  |
 
 ---
 
@@ -684,21 +698,22 @@ Dashboard quản trị cung cấp các trang:
 
 ## 📌 Roadmap
 
-### Đã hoàn thành (v1.4.1)
+### Đã hoàn thành (v2.0.0)
 
-- [x] Stream liên tục 3–5 FPS cho chế độ đi bộ (walking mode + adaptive FPS + latest-only queue)
+- [x] Nhận diện khuôn mặt người quen (Face Recognition với InsightFace)
+- [x] Ước lượng chiều sâu đơn mục (Monocular Depth Estimation với MiDaS)
+- [x] Chế độ OCR thông minh (Smart OCR: biển báo, menu, hóa đơn qua Gemini)
+- [x] Stream liên tục 3–5 FPS cho chế độ đi bộ (walking mode + adaptive FPS)
 - [x] Emergency Contact Network (SMS + cuộc gọi tự động khi SOS)
-- [x] Màn hình quản lý danh bạ khẩn cấp trên mobile
 - [x] Spatial audio (trái/phải) theo vị trí vật cản 3D
-- [x] Visual Feedback (Bounding Boxes + Object Labels) trên camera preview
-- [x] Tối ưu AI Worker: tăng độ phân giải 480x480, hạ ngưỡng confidence 0.15
+- [x] Visual Feedback (Bounding Boxes + Object Labels) trên preview
 
 ### Đang phát triển
 
-- [ ] Spatial audio (trái/phải) theo vị trí vật cản
-- [ ] Monocular depth estimation chính xác hơn
-- [ ] Nhận diện khuôn mặt người quen
-- [ ] Smart OCR (biển báo, menu, hóa đơn) + QR/Barcode scanner
+- [ ] Smart OCR nâng cao (dịch thuật trực tiếp nội dung biển báo)
+- [ ] Tối ưu hóa depth estimation cho các loại địa hình phức tạp
+- [ ] Nhận diện hành vi nguy hiểm (xe phóng nhanh, vật rơi)
+- [ ] Offline-First Mode hoàn chỉnh (auto-switch online/offline)
 
 ### Kế hoạch tương lai
 
@@ -718,24 +733,24 @@ Dashboard quản trị cung cấp các trang:
 <details>
 <summary><b>📱 Mobile App</b></summary>
 
-| Package                         | Phiên bản | Mục đích               |
-| ------------------------------- | --------- | ---------------------- |
-| `flutter`                       | SDK ^3.10 | Framework chính        |
-| `camera`                        | ^0.11.4   | Camera capture         |
-| `flutter_tts`                   | ^4.2.5    | Text-to-Speech         |
-| `socket_io_client`              | ^3.1.4    | WebSocket real-time    |
-| `geolocator`                    | ^14.0.2   | GPS location           |
-| `flutter_compass`               | ^0.8.1    | La bàn điều hướng      |
-| `flutter_map`                   | ^7.0.2    | Bản đồ OpenStreetMap   |
-| `google_mlkit_text_recognition` | ^0.15.1   | OCR offline            |
-| `google_mlkit_barcode_scanning` | ^0.14.2   | Barcode/QR offline     |
-| `speech_to_text`                | ^7.3.0    | Voice commands         |
-| `tflite_flutter`                | ^0.11.0   | On-device AI inference |
-| `vibration`                     | ^3.1.7    | Haptic feedback        |
-| `permission_handler`            | ^12.0.1   | Quản lý permissions    |
-| `shared_preferences`            | ^2.3.3    | Local storage          |
-| `syncfusion_flutter_pdf`        | ^33.1.45  | Đọc tài liệu PDF       |
-| `flutter_contacts`              | ^1.1.9    | Liên hệ SOS            |
+| Package                         | Phiên bản | Mục đích                    |
+| ------------------------------- | --------- | --------------------------- |
+| `flutter`                       | SDK ^3.10 | Framework chính             |
+| `camera`                        | ^0.11.4   | Camera capture              |
+| `flutter_tts`                   | ^4.2.5    | Text-to-Speech              |
+| `socket_io_client`              | ^3.1.4    | WebSocket real-time         |
+| `geolocator`                    | ^14.0.2   | GPS location                |
+| `flutter_compass`               | ^0.8.1    | La bàn điều hướng           |
+| `flutter_map`                   | ^7.0.2    | Bản đồ OpenStreetMap        |
+| `google_mlkit_text_recognition` | ^0.15.1   | OCR offline                 |
+| `google_mlkit_barcode_scanning` | ^0.14.2   | Barcode/QR offline          |
+| `speech_to_text`                | ^7.3.0    | Voice commands              |
+| `tflite_flutter`                | ^0.11.0   | On-device AI inference      |
+| `vibration`                     | ^3.1.7    | Haptic feedback             |
+| `permission_handler`            | ^12.0.1   | Quản lý permissions         |
+| `shared_preferences`            | ^2.3.3    | Local storage               |
+| `syncfusion_flutter_pdf`        | ^33.1.45  | Đọc tài liệu PDF            |
+| `flutter_contacts`              | ^1.1.9    | Liên hệ SOS                 |
 | `battery_plus`                  | ^7.0.0    | Theo dõi pin (adaptive FPS) |
 
 </details>

@@ -115,6 +115,11 @@ class AppLocalizations {
       'vi': 'Chế độ đọc tệp từ bộ nhớ',
       'en': 'Local file reading mode',
     },
+    'mode_7': {'vi': 'Nhận diện người', 'en': 'Person Recognition'},
+    'mode_7_spoken': {
+      'vi': 'Chế độ nhận diện người quen',
+      'en': 'Person recognition mode',
+    },
 
     // --- Main Screen UI ---
     'main_offline': {'vi': 'Offline', 'en': 'Offline'},
@@ -413,6 +418,21 @@ class AppLocalizations {
       'vi': 'Bạn đang trên đường {road}{area}',
       'en': 'You are on {road}{area}',
     },
+    'nav_status_navigating': {'vi': 'Đang điều hướng', 'en': 'Navigating'},
+    'nav_status_not_navigating': {'vi': 'Chưa điều hướng', 'en': 'Not navigating'},
+    'nav_gps_stable': {'vi': 'GPS ổn định', 'en': 'GPS Stable'},
+    'nav_mic_instruction': {'vi': 'Bấm vào mic để nói điểm đến', 'en': 'Tap mic to say destination'},
+    'nav_listening': {'vi': 'Đang nghe...', 'en': 'Listening...'},
+    'nav_searching': {'vi': 'Đang tìm đường đến {dest}', 'en': 'Finding route to {dest}'},
+    'nav_route_not_found': {'vi': 'Không tìm thấy đường.', 'en': 'Route not found.'},
+    'nav_arrived': {'vi': 'Đã đến nơi', 'en': 'Arrived'},
+    'nav_speak_destination': {'vi': 'Nói điểm đến', 'en': 'Say destination'},
+    'nav_locating': {'vi': 'Đang tìm vị trí hiện tại, vui lòng đợi...', 'en': 'Locating your current position, please wait...'},
+    'nav_route_found': {'vi': 'Đã tìm thấy tuyến đường. Bắt đầu di chuyển: ', 'en': 'Route found. Start moving: '},
+    'nav_coming_up': {'vi': 'Sắp tới, ', 'en': 'Coming up, '},
+    'nav_arrived_msg': {'vi': 'Bạn đã đến nơi.', 'en': 'You have arrived.'},
+    'nav_stopped_msg': {'vi': 'Đã dừng điều hướng.', 'en': 'Navigation stopped.'},
+    'nav_stop_tooltip': {'vi': 'Dừng', 'en': 'Stop'},
     // --- Spatial Audio ---
     'settings_spatial_audio': {
       'vi': '🔊 Âm thanh 3D',

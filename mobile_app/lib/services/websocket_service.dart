@@ -16,6 +16,7 @@ class WebSocketService {
   Function(Map<String, dynamic>)? onAIResult;
   Function(Map<String, dynamic>)? onStreamAck;
   Function(Map<String, dynamic>)? onTtsBroadcast;
+  Function(Map<String, dynamic>)? onFaceRegistered;
   Function(bool isConnected)? onConnectionStatus;
 
   bool _isConnected = false;
@@ -84,6 +85,12 @@ class WebSocketService {
     socket.on('tts_broadcast', (data) {
       if (onTtsBroadcast != null) {
         onTtsBroadcast!(Map<String, dynamic>.from(data as Map));
+      }
+    });
+
+    socket.on('face_registered', (data) {
+      if (onFaceRegistered != null) {
+        onFaceRegistered!(Map<String, dynamic>.from(data as Map));
       }
     });
 
@@ -177,6 +184,7 @@ class WebSocketService {
     int? priority,
     int? frameSeq,
     String? subMode,
+    bool isFrontCamera = false,
   }) {
     if (_socket == null || !_socket!.connected) {
       debugPrint('WS not connected, frame dropped');
@@ -185,7 +193,8 @@ class WebSocketService {
 
     debugPrint(
       'WS sendFrame: task=$taskType len=${base64Frame.length} lang=$lang '
-      'lat=${latitude ?? 'n/a'} lon=${longitude ?? 'n/a'} subMode=$subMode',
+      'lat=${latitude ?? 'n/a'} lon=${longitude ?? 'n/a'} subMode=$subMode '
+      'isFront=$isFrontCamera',
     );
 
     _socket!.emit('frame_stream', {
@@ -198,7 +207,8 @@ class WebSocketService {
       'mode': mode,
       'priority': priority,
       'frame_seq': frameSeq,
-      'subMode': subMode,
+      'sub_mode': subMode, // Note: Python worker usually uses sub_mode or subMode, but DTO uses sub_mode
+      'is_front_camera': isFrontCamera,
     });
   }
 
@@ -227,6 +237,7 @@ class WebSocketService {
     required String question,
     double? latitude,
     double? longitude,
+    bool isFrontCamera = false,
   }) {
     if (_socket == null || !_socket!.connected) {
       debugPrint('WS not connected, Visual QA dropped');
@@ -242,6 +253,7 @@ class WebSocketService {
       'question': question,
       'latitude': latitude,
       'longitude': longitude,
+      'is_front_camera': isFrontCamera,
     });
   }
 

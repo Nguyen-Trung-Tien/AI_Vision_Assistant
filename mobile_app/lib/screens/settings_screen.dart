@@ -26,6 +26,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
   late bool _spatialAudioEnabled;
   late double _spatialAudioVolume;
   late bool _headphonesOnlyMode;
+  late bool _faceRecognitionEnabled;
 
   List<String> _getModeNames(String lang) {
     return [
@@ -66,6 +67,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
     _spatialAudioEnabled = _settings.spatialAudioEnabled;
     _spatialAudioVolume = _settings.spatialAudioVolume;
     _headphonesOnlyMode = _settings.headphonesOnlyMode;
+    _faceRecognitionEnabled = _settings.faceRecognitionEnabled;
 
     _accessibility.speak(
       AppLocalizations.t('settings_screen_spoken', _language),
@@ -261,8 +263,10 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              _buildSectionTitle(
-                AppLocalizations.t('settings_spatial_audio', _language),
+              Expanded(
+                child: _buildSectionTitle(
+                  AppLocalizations.t('settings_spatial_audio', _language),
+                ),
               ),
               Switch(
                 value: _spatialAudioEnabled,
@@ -333,6 +337,31 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 );
               },
             ),
+            const SizedBox(height: 12),
+            SwitchListTile(
+              title: Text(
+                _language == 'vi' ? 'Nhận diện khuôn mặt' : 'Face Recognition',
+                style: const TextStyle(color: Colors.white, fontSize: 16),
+              ),
+              subtitle: Text(
+                _language == 'vi'
+                    ? 'Thông báo tên người thân khi được nhận diện'
+                    : 'Announce names of known people',
+                style: const TextStyle(color: Colors.white54, fontSize: 13),
+              ),
+              value: _faceRecognitionEnabled,
+              activeThumbColor: AppTheme.accentCyan,
+              contentPadding: EdgeInsets.zero,
+              onChanged: (value) async {
+                setState(() => _faceRecognitionEnabled = value);
+                await _settings.setFaceRecognitionEnabled(value);
+                _accessibility.speak(
+                  value
+                      ? (_language == 'vi' ? 'Đã bật nhận diện' : 'Face recognition enabled')
+                      : (_language == 'vi' ? 'Đã tắt nhận diện' : 'Face recognition disabled'),
+                );
+              },
+            ),
           ],
           const SizedBox(height: 32),
           _buildSectionTitle(
@@ -342,13 +371,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              Text(
-                AppLocalizations.t('settings_light_high', _language),
-                style: const TextStyle(color: Colors.white54, fontSize: 13),
+              Expanded(
+                child: Text(
+                  AppLocalizations.t('settings_light_high', _language),
+                  style: const TextStyle(color: Colors.white54, fontSize: 13),
+                ),
               ),
-              Text(
-                AppLocalizations.t('settings_light_low', _language),
-                style: const TextStyle(color: Colors.amber, fontSize: 13),
+              Expanded(
+                child: Text(
+                  AppLocalizations.t('settings_light_low', _language),
+                  textAlign: TextAlign.right,
+                  style: const TextStyle(color: Colors.amber, fontSize: 13),
+                ),
               ),
             ],
           ),

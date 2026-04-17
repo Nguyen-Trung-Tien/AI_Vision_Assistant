@@ -2,6 +2,7 @@ import 'dart:convert';
 
 import 'package:flutter/foundation.dart';
 import 'package:google_mlkit_barcode_scanning/google_mlkit_barcode_scanning.dart';
+import 'package:google_mlkit_face_detection/google_mlkit_face_detection.dart';
 import 'package:google_mlkit_text_recognition/google_mlkit_text_recognition.dart';
 import 'package:http/http.dart' as http;
 import 'package:mobile_app/services/accessibility_manager.dart';
@@ -13,6 +14,12 @@ class MlKitService {
     script: TextRecognitionScript.latin,
   );
   final BarcodeScanner _barcodeScanner = BarcodeScanner();
+  final FaceDetector _faceDetector = FaceDetector(
+    options: FaceDetectorOptions(
+      enableContours: false,
+      enableClassification: false,
+    ),
+  );
   final AccessibilityManager _accessibilityManager = AccessibilityManager();
   final HistoryService _historyService = HistoryService();
   SharedPreferences? _prefs;
@@ -23,6 +30,7 @@ class MlKitService {
   void dispose() {
     _textRecognizer.close();
     _barcodeScanner.close();
+    _faceDetector.close();
   }
 
   Future<void> processImageFile(String imagePath) async {
@@ -74,6 +82,16 @@ class MlKitService {
     } finally {
       await Future.delayed(const Duration(seconds: 2));
       _isProcessing = false;
+    }
+  }
+
+  Future<List<Face>> detectFaces(String imagePath) async {
+    try {
+      final inputImage = InputImage.fromFilePath(imagePath);
+      return await _faceDetector.processImage(inputImage);
+    } catch (e) {
+      debugPrint('Error detecting faces: $e');
+      return [];
     }
   }
 

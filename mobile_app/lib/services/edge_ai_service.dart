@@ -155,6 +155,16 @@ class EdgeAIService {
     _sendFrameFromCamera(taskType: 'SMART_OCR', subMode: subMode);
   }
 
+  void requestFaceRecognition() {
+    final lang = SettingsService().language;
+    _accessibilityManager.triggerSuccessVibration();
+    _accessibilityManager.speak(
+      lang == 'vi' ? 'Đang nhận diện khuôn mặt...' : 'Recognizing faces...',
+    );
+    _setProcessing(true);
+    _sendFrameFromCamera(taskType: 'FACE_RECOGNITION');
+  }
+
   Future<void> _sendFrameFromCamera({String? taskType, String? subMode}) async {
     if (!_isRunning) {
       _setProcessing(false);

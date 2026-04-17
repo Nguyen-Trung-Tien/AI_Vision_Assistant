@@ -21,7 +21,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
   final SettingsService _settings = SettingsService();
 
   bool _isNavigating = false;
-  String _currentInstruction = "Bấm vào mic để nói điểm đến";
+  String _currentInstruction = "";
   List<dynamic> _steps = [];
   int _currentStepIndex = 0;
 
@@ -36,20 +36,30 @@ class _NavigationScreenState extends State<NavigationScreen> {
   @override
   void initState() {
     super.initState();
+    _currentInstruction = AppLocalizations.t('nav_mic_instruction', _settings.language);
     _initLocation();
   }
 
   Future<void> _initLocation() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
-    if (!serviceEnabled) return;
+    if (!serviceEnabled) {
+      _accessibilityManager.speak(AppLocalizations.t('nav_gps_disabled', _settings.language));
+      return;
+    }
 
     LocationPermission permission = await Geolocator.checkPermission();
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
-      if (permission == LocationPermission.denied) return;
+      if (permission == LocationPermission.denied) {
+        _accessibilityManager.speak(AppLocalizations.t('nav_permission_denied', _settings.language));
+        return;
+      }
     }
 
-    if (permission == LocationPermission.deniedForever) return;
+    if (permission == LocationPermission.deniedForever) {
+      _accessibilityManager.speak(AppLocalizations.t('nav_permission_forever', _settings.language));
+      return;
+    }
 
     _positionSub =
         Geolocator.getPositionStream(
@@ -82,19 +92,20 @@ class _NavigationScreenState extends State<NavigationScreen> {
   }
 
   Future<void> _startVoiceSearch() async {
+    final lang = _settings.language;
     if (_currentPosition == null) {
-      _accessibilityManager.speak("Đang tìm vị trí hiện tại, vui lòng đợi...");
+      _accessibilityManager.speak(lang == 'vi' ? "Đang tìm vị trí hiện tại, vui lòng đợi..." : "Locating your current position, please wait...");
       return;
     }
 
     setState(() {
-      _currentInstruction = "Đang nghe...";
+      _currentInstruction = AppLocalizations.t('nav_listening', lang);
     });
 
     final destination = await _navService.listenForDestination();
     if (destination != null) {
       setState(() {
-        _currentInstruction = "Đang tìm đường đến $destination";
+        _currentInstruction = AppLocalizations.t('nav_searching', lang).replaceAll('{dest}', destination);
       });
 
       final directions = await _navService.getDirections(
@@ -117,16 +128,16 @@ class _NavigationScreenState extends State<NavigationScreen> {
         });
 
         _accessibilityManager.speak(
-          "Đã tìm thấy tuyến đường. Bắt đầu di chuyển: $_currentInstruction",
+          (lang == 'vi' ? "Đã tìm thấy tuyến đường. Bắt đầu di chuyển: " : "Route found. Start moving: ") + _currentInstruction,
         );
       } else {
         setState(() {
-          _currentInstruction = "Không tìm thấy đường.";
+          _currentInstruction = AppLocalizations.t('nav_route_not_found', lang);
         });
       }
     } else {
       setState(() {
-        _currentInstruction = "Bấm vào mic để nói điểm đến";
+        _currentInstruction = AppLocalizations.t('nav_mic_instruction', lang);
       });
     }
   }
@@ -180,7 +191,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
         setState(() {
           _currentInstruction = nextStepText;
         });
-        _accessibilityManager.speak("Sắp tới, $nextStepText");
+        _accessibilityManager.speak((_settings.language == 'vi' ? "Sắp tới, " : "Coming up, ") + nextStepText);
       } else {
         _finishNavigation();
       }
@@ -190,20 +201,20 @@ class _NavigationScreenState extends State<NavigationScreen> {
   void _finishNavigation() {
     setState(() {
       _isNavigating = false;
-      _currentInstruction = "Đã đến nơi";
+      _currentInstruction = AppLocalizations.t('nav_arrived', _settings.language);
       _steps.clear();
     });
-    _accessibilityManager.speak("Bạn đã đến nơi.");
+    _accessibilityManager.speak(_settings.language == 'vi' ? "Bạn đã đến nơi." : "You have arrived.");
   }
 
   void _stopNavigationManually() {
     setState(() {
       _isNavigating = false;
-      _currentInstruction = "Bấm vào mic để nói điểm đến";
+      _currentInstruction = AppLocalizations.t('nav_mic_instruction', _settings.language);
       _steps.clear();
       _destination = null;
     });
-    _accessibilityManager.speak("Đã dừng điều hướng.");
+    _accessibilityManager.speak(_settings.language == 'vi' ? "Đã dừng điều hướng." : "Navigation stopped.");
   }
 
   @override
@@ -218,13 +229,13 @@ class _NavigationScreenState extends State<NavigationScreen> {
     final colorScheme = Theme.of(context).colorScheme;
     return Scaffold(
       appBar: AppBar(
-        title: Text(AppLocalizations.t('mode_4', lang)),
+        title: Text(AppLocalizations.t('mode_3', lang)),
         actions: [
           if (_isNavigating)
             IconButton(
               icon: const Icon(Icons.stop, color: Colors.red),
               onPressed: _stopNavigationManually,
-              tooltip: 'Dừng',
+              tooltip: lang == 'vi' ? 'Dừng' : 'Stop',
             ),
         ],
       ),
@@ -298,25 +309,36 @@ class _NavigationScreenState extends State<NavigationScreen> {
   }
 
   Widget _buildStatusRow(ColorScheme colorScheme) {
-    final statusText = _isNavigating ? 'Đang điều hướng' : 'Chưa điều hướng';
+    final lang = _settings.language;
+    final statusText = _isNavigating 
+        ? AppLocalizations.t('nav_status_navigating', lang) 
+        : AppLocalizations.t('nav_status_not_navigating', lang);
     final statusColor = _isNavigating ? Colors.green : colorScheme.outline;
     return Row(
       children: [
         Icon(Icons.navigation, color: statusColor),
         const SizedBox(width: 8),
-        Text(
-          statusText,
-          style: TextStyle(fontWeight: FontWeight.w600, color: statusColor),
+        Expanded(
+          child: Text(
+            statusText,
+            style: TextStyle(fontWeight: FontWeight.w600, color: statusColor),
+            overflow: TextOverflow.ellipsis,
+          ),
         ),
-        const Spacer(),
-        if (_currentPosition != null)
+        if (_currentPosition != null) ...[
+          const SizedBox(width: 8),
           Row(
+            mainAxisSize: MainAxisSize.min,
             children: [
               Icon(Icons.gps_fixed, size: 18, color: colorScheme.primary),
               const SizedBox(width: 6),
-              Text('GPS ổn định', style: TextStyle(color: colorScheme.primary)),
+              Text(
+                AppLocalizations.t('nav_gps_stable', lang),
+                style: TextStyle(color: colorScheme.primary, fontSize: 12),
+              ),
             ],
           ),
+        ],
       ],
     );
   }
@@ -324,6 +346,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
   Widget _buildInstructionCard(ColorScheme colorScheme) {
     return Container(
       width: double.infinity,
+      constraints: const BoxConstraints(minHeight: 80, maxHeight: 120),
       padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 14),
       decoration: BoxDecoration(
         color: colorScheme.surface,
@@ -337,13 +360,17 @@ class _NavigationScreenState extends State<NavigationScreen> {
         ],
         border: Border.all(color: colorScheme.outlineVariant),
       ),
-      child: AnimatedSwitcher(
-        duration: const Duration(milliseconds: 250),
-        child: Text(
-          _currentInstruction,
-          key: ValueKey(_currentInstruction),
-          style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-          textAlign: TextAlign.center,
+      child: Center(
+        child: AnimatedSwitcher(
+          duration: const Duration(milliseconds: 250),
+          child: SingleChildScrollView(
+            child: Text(
+              _currentInstruction,
+              key: ValueKey(_currentInstruction),
+              style: const TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+              textAlign: TextAlign.center,
+            ),
+          ),
         ),
       ),
     );
@@ -369,6 +396,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
   }
 
   Widget _buildMicButton(ColorScheme colorScheme) {
+    final lang = _settings.language;
     return SizedBox(
       width: double.infinity,
       child: ElevatedButton.icon(
@@ -388,7 +416,9 @@ class _NavigationScreenState extends State<NavigationScreen> {
         ),
         icon: const Icon(Icons.mic, size: 28),
         label: Text(
-          _isNavigating ? 'Đang điều hướng' : 'Nói điểm đến',
+          _isNavigating 
+              ? AppLocalizations.t('nav_status_navigating', lang) 
+              : AppLocalizations.t('nav_speak_destination', lang),
           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
         ),
       ),

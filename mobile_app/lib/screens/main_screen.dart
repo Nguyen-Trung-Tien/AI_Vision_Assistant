@@ -5,6 +5,7 @@ import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
 import 'package:geolocator/geolocator.dart';
+import 'package:mobile_app/screens/face_register_screen.dart';
 import 'package:mobile_app/screens/history_screen.dart';
 import 'package:mobile_app/screens/settings_screen.dart';
 import 'package:mobile_app/services/accessibility_manager.dart';
@@ -65,6 +66,7 @@ class _MainScreenState extends State<MainScreen>
   bool _isConnected = false;
   bool _isProcessing = false;
   bool _isRestartingCamera = false;
+  bool _isFrontCamera = false;
 
   String? _dangerMessage;
   Timer? _dangerTimer;
@@ -96,11 +98,12 @@ class _MainScreenState extends State<MainScreen>
 
   final List<IconData> _modeIcons = [
     Icons.auto_awesome,
-    Icons.document_scanner,
-    Icons.text_fields,
     Icons.landscape,
+    Icons.face_retouching_natural_rounded,
     Icons.navigation,
+    Icons.text_fields,
     Icons.folder_open,
+    Icons.document_scanner,
   ];
 
   String _sanitizeForTts(String text) {
@@ -123,17 +126,18 @@ class _MainScreenState extends State<MainScreen>
   // Replace with a getter
   List<String> _getModes(String lang) {
     return [
-      AppLocalizations.t('mode_0', lang),
-      AppLocalizations.t('mode_5', lang),
-      AppLocalizations.t('mode_4', lang),
-      AppLocalizations.t('mode_1', lang),
-      AppLocalizations.t('mode_3', lang),
-      AppLocalizations.t('mode_6', lang),
+      AppLocalizations.t('mode_0', lang), // Chung
+      AppLocalizations.t('mode_1', lang), // Mô tả
+      AppLocalizations.t('mode_7', lang), // Người quen
+      AppLocalizations.t('mode_3', lang), // Định hướng
+      AppLocalizations.t('mode_4', lang), // Văn bản (Online)
+      AppLocalizations.t('mode_6', lang), // Tệp
+      AppLocalizations.t('mode_5', lang), // Nhanh (Offline)
     ];
   }
 
   String _modeSpokenKey(int index) {
-    const keys = ['mode_0', 'mode_5', 'mode_4', 'mode_1', 'mode_3', 'mode_6'];
+    const keys = ['mode_0', 'mode_1', 'mode_7', 'mode_3', 'mode_4', 'mode_6', 'mode_5'];
     if (index < 0 || index >= keys.length) return 'mode_0_spoken';
     return '${keys[index]}_spoken';
   }
@@ -262,8 +266,18 @@ class _MainScreenState extends State<MainScreen>
     }
 
     if (widget.cameras != null && widget.cameras!.isNotEmpty) {
+      final cameras = widget.cameras!;
+      final targetDirection = _isFrontCamera
+          ? CameraLensDirection.front
+          : CameraLensDirection.back;
+
+      final camera = cameras.firstWhere(
+        (camera) => camera.lensDirection == targetDirection,
+        orElse: () => cameras.first,
+      );
+
       _cameraController = CameraController(
-        widget.cameras!.first,
+        camera,
         ResolutionPreset.medium,
         enableAudio: false,
       );
@@ -303,6 +317,14 @@ class _MainScreenState extends State<MainScreen>
     bool notifyOnFreshLoad = false,
   }) async {
     final wasLoaded = _tfliteService.isModelLoaded;
+    if (!wasLoaded && notifyOnFreshLoad) {
+      _accessibilityManager.speak(
+        _settings.language == 'vi'
+            ? 'Đang nạp mô hình từ máy, xin chờ...'
+            : 'Loading on-device model, please wait...',
+      );
+    }
+    
     final loaded = wasLoaded || await _tfliteService.loadModel();
     if (!mounted || !notifyOnFreshLoad || !loaded || wasLoaded) {
       return loaded;
@@ -413,23 +435,23 @@ class _MainScreenState extends State<MainScreen>
       'read text',
       'online',
     ])) {
-      _goToMode(2);
+      _goToMode(4);
     } else if (TextUtils.containsAny(cmd, ['nhanh', 'offline', 'quick read'])) {
-      _goToMode(1);
+      _goToMode(6);
     } else if (TextUtils.containsAny(cmd, [
       'mô tả',
       'không gian',
       'scene',
       'describe',
     ])) {
-      _goToMode(3);
+      _goToMode(1);
     } else if (TextUtils.containsAny(cmd, [
       'định hướng',
       'định vị',
       'navigate',
       'navigation',
     ])) {
-      _goToMode(4);
+      _goToMode(3);
       _openNavigationScreen();
     } else if (TextUtils.containsAny(cmd, [
       'đọc tệp',
@@ -468,6 +490,21 @@ class _MainScreenState extends State<MainScreen>
       'money',
     ])) {
       _goToMode(0);
+    } else if (TextUtils.containsAny(cmd, [
+      'nhận diện người',
+      'người quen',
+      'face recognition',
+      'identify person',
+    ])) {
+      _goToMode(2);
+    } else if (TextUtils.containsAny(cmd, [
+      'đổi camera',
+      'chuyển camera',
+      'đổi cam',
+      'switch camera',
+      'flip camera',
+    ])) {
+      _toggleCamera();
     } else {
       _accessibilityManager.speak(
         AppLocalizations.t('main_unknown_command', _settings.language),
@@ -568,7 +605,10 @@ class _MainScreenState extends State<MainScreen>
         }
         return;
       }
-      _continuousStreamService.start();
+      _continuousStreamService.start(
+        isFrontCamera: _isFrontCamera,
+        subMode: _currentModeIndex == 2 ? 'recognition' : null,
+      );
       _pulseController.repeat(reverse: true);
       if (mounted) {
         setState(() {
@@ -703,8 +743,15 @@ class _MainScreenState extends State<MainScreen>
 
     // Khi chuyen sang tab khac voi Navigation thi dung dieu huong,
     // nhung khong tu mo man hinh navigation khi chi vuot qua tab.
-    if (index != 4) {
+    if (index != 3) {
       _navigationService.stopNavigation();
+    }
+
+    // Sync subMode with stream service on tab change
+    if (_isWalkingModeEnabled) {
+      _continuousStreamService.updateCameraState(
+        subMode: index == 2 ? 'recognition' : null,
+      );
     }
   }
 
@@ -727,43 +774,40 @@ class _MainScreenState extends State<MainScreen>
 
     switch (_currentModeIndex) {
       case 0:
-        // Money detection priority:
-        // 1) If connected to AI backend -> use AI worker first.
-        // 2) If offline -> use on-device TFLite model.
-        if (_isConnected) {
-          _aiService.requestMoneyDetection();
-        } else {
-          final isReady = await _ensureOfflineModelLoaded(
-            notifyOnFreshLoad: true,
-          );
-          if (isReady) {
-            await _detectMoneyOffline();
-          } else {
-            _accessibilityManager.speak(
-              AppLocalizations.t('main_no_offline_model', _settings.language),
-            );
-            _accessibilityManager.triggerErrorVibration();
-          }
-        }
+        _aiService.requestMoneyDetection();
         break;
       case 1:
-        _scanWithMLKit();
-        break;
-      case 2:
-        _aiService.requestOnlineOCR();
-        break;
-      case 3:
         _aiService.requestCaptioning();
         break;
-      case 4:
+      case 2:
+        _aiService.requestFaceRecognition();
+        break;
+      case 3:
         _accessibilityManager.speak(
           AppLocalizations.t('main_navigating', _settings.language),
         );
         _navigationService.startNavigation();
         _openNavigationScreen();
         break;
+      case 4:
+        _aiService.requestOnlineOCR();
+        break;
       case 5:
         _pickAndReadFile();
+        break;
+      case 6:
+        // Offline Money detection
+        final isReady = await _ensureOfflineModelLoaded(
+          notifyOnFreshLoad: true,
+        );
+        if (isReady) {
+          await _detectMoneyOffline();
+        } else {
+          _accessibilityManager.speak(
+            AppLocalizations.t('main_no_offline_model', _settings.language),
+          );
+          _accessibilityManager.triggerErrorVibration();
+        }
         break;
     }
   }
@@ -888,6 +932,9 @@ class _MainScreenState extends State<MainScreen>
     setState(() => _isProcessing = true);
     final lang = _settings.language;
     _accessibilityManager.triggerSuccessVibration();
+    _accessibilityManager.speak(
+      lang == 'vi' ? 'Đang nhận diện offline...' : 'Processing offline...',
+    );
 
     try {
       final bytes = await _captureCurrentFrame();
@@ -1154,12 +1201,15 @@ class _MainScreenState extends State<MainScreen>
                     child: Row(
                       mainAxisSize: MainAxisSize.min,
                       children: [
-                        Text(
-                          label.toUpperCase(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
+                        Flexible(
+                          child: Text(
+                            label.toUpperCase(),
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                            ),
+                            overflow: TextOverflow.ellipsis,
                           ),
                         ),
                         if (distance != null) ...[
@@ -1183,6 +1233,8 @@ class _MainScreenState extends State<MainScreen>
             isConnected: _isConnected,
             isFlashOn: _isFlashOn,
             isNightMode: _isNightMode,
+            isFrontCamera: _isFrontCamera,
+            onToggleCamera: _toggleCamera,
             onlineText: AppLocalizations.t('main_online', _settings.language),
             offlineText: AppLocalizations.t('main_offline', _settings.language),
             nightText: AppLocalizations.t('main_night', _settings.language),
@@ -1295,6 +1347,7 @@ class _MainScreenState extends State<MainScreen>
               ),
             ),
 
+
           Positioned(
             top: MediaQuery.of(context).padding.top + 14,
             right: 16,
@@ -1363,6 +1416,83 @@ class _MainScreenState extends State<MainScreen>
                         ),
                       ),
                     ],
+                  ),
+                ),
+              ),
+            ),
+          ),
+
+          Positioned(
+            bottom: 210,
+            right: 16,
+            child: Material(
+              color: Colors.transparent,
+              child: InkWell(
+                onTap: () async {
+                  _accessibilityManager.speak(
+                    _settings.language == 'vi'
+                        ? 'Mở màn hình đăng ký khuôn mặt. Tạm dừng camera chính.'
+                        : 'Opening face registration. Pausing main camera.',
+                  );
+
+                  // Fix Crash: Dispose camera before navigating
+                  final wasWalking = _isWalkingModeEnabled;
+                  if (wasWalking) {
+                    await _setWalkingMode(false, announce: false);
+                  }
+                  
+                  // Wait for any pending stream stops
+                  if (_stopImageStreamFuture != null) {
+                    await _stopImageStreamFuture;
+                  }
+
+                  await _cameraController?.dispose();
+                  _cameraController = null;
+
+                  // Small delay to ensure hardware release before registration screen opens
+                  await Future.delayed(const Duration(milliseconds: 300));
+
+                  if (!mounted) return;
+                  await Navigator.push(
+                    context,
+                    MaterialPageRoute(
+                      builder: (context) => FaceRegisterScreen(
+                        wsService: _wsService,
+                        cameras: widget.cameras,
+                      ),
+                    ),
+                  );
+
+                  // Give OS time to fully release camera from previous screen
+                  await Future.delayed(const Duration(milliseconds: 500));
+
+                  // Restore camera when coming back
+                  await _restartCamera();
+                  if (wasWalking && mounted) {
+                    await _setWalkingMode(true);
+                  }
+                },
+                borderRadius: BorderRadius.circular(28),
+                child: Container(
+                  padding: const EdgeInsets.all(14),
+                  decoration: BoxDecoration(
+                    color: Colors.black.withValues(alpha: 0.5),
+                    shape: BoxShape.circle,
+                    border: Border.all(
+                      color: Colors.teal.withValues(alpha: 0.4),
+                    ),
+                    boxShadow: [
+                      BoxShadow(
+                        color: Colors.teal.withValues(alpha: 0.3),
+                        blurRadius: 14,
+                        spreadRadius: 1,
+                      ),
+                    ],
+                  ),
+                  child: const Icon(
+                    Icons.person_add_alt_1_rounded,
+                    color: Colors.tealAccent,
+                    size: 26,
                   ),
                 ),
               ),
@@ -1567,37 +1697,95 @@ class _MainScreenState extends State<MainScreen>
     }
   }
 
-  Future<void> _restartCamera() async {
+  Future<void> _restartCamera(
+      {bool? useFront, int retries = 3, int delayMs = 500}) async {
     if (_isRestartingCamera) return;
     final cams = widget.cameras;
     if (cams == null || cams.isEmpty) return;
 
+    if (useFront != null) _isFrontCamera = useFront;
+
     _isRestartingCamera = true;
     try {
       _lightSensor.stop();
-      final oldController = _cameraController;
-      _cameraController = null;
-      await oldController?.dispose();
 
-      final controller = CameraController(
-        cams.first,
-        ResolutionPreset.medium,
-        enableAudio: false,
-      );
-      await controller.initialize();
+      for (int i = 0; i < retries; i++) {
+        try {
+          final oldController = _cameraController;
+          _cameraController = null;
+          await oldController?.dispose();
 
-      if (!mounted) {
-        await controller.dispose();
-        return;
+          final targetDirection = _isFrontCamera
+              ? CameraLensDirection.front
+              : CameraLensDirection.back;
+
+          final camera = cams.firstWhere(
+            (camera) => camera.lensDirection == targetDirection,
+            orElse: () => cams.first,
+          );
+
+          final controller = CameraController(
+            camera,
+            ResolutionPreset.medium,
+            enableAudio: false,
+          );
+          await controller.initialize();
+
+          _cameraController = controller;
+          _lightSensor.startMonitoring(_cameraController!);
+
+          // Success - break out of retry loop
+          break;
+        } catch (e) {
+          debugPrint('Camera init attempt ${i + 1} failed: $e');
+          if (i == retries - 1) rethrow;
+          await Future.delayed(Duration(milliseconds: delayMs));
+        }
       }
-
-      setState(() => _cameraController = controller);
-      _lightSensor.startMonitoring(controller);
     } catch (e) {
-      debugPrint('[Camera] Restart failed: $e');
+      debugPrint('Error restarting camera after $retries attempts: $e');
+      _accessibilityManager.speak(
+        _settings.language == 'vi'
+            ? 'Lỗi khởi động camera. Vui lòng thử lại.'
+            : 'Camera error. Please try again.',
+      );
     } finally {
-      _isRestartingCamera = false;
+      if (mounted) {
+        setState(() => _isRestartingCamera = false);
+      }
     }
+  }
+
+  Future<void> _toggleCamera() async {
+    final wasWalking = _isWalkingModeEnabled;
+    final lang = _settings.language;
+
+    _accessibilityManager.speak(
+      lang == 'vi' ? 'Đang chuyển camera...' : 'Switching camera...',
+    );
+
+    if (wasWalking) {
+      await _setWalkingMode(false, announce: false);
+    }
+
+    setState(() => _isFrontCamera = !_isFrontCamera);
+
+    await _restartCamera();
+
+    if (wasWalking) {
+      // Small delay to ensure camera is fully ready for stream
+      await Future.delayed(const Duration(milliseconds: 500));
+      await _setWalkingMode(true, announce: false);
+    }
+
+    final msg = _isFrontCamera
+        ? (lang == 'vi'
+            ? 'Đã chuyển sang camera trước'
+            : 'Switched to front camera')
+        : (lang == 'vi'
+            ? 'Đã chuyển sang camera sau'
+            : 'Switched to back camera');
+    _accessibilityManager.speak(msg);
   }
 
   Color _getDistanceColor(double? distance) {

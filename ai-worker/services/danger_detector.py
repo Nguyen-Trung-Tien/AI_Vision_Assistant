@@ -12,7 +12,7 @@ DANGER_LABELS = {
     "cau_thang",
     "den_do",
     "den_xanh",
-    "bien_bao",
+    "vat_can",
     "cot_dien",
     "thung_rac",
     "cay_co",

@@ -7,7 +7,10 @@ import 'package:flutter/foundation.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:mobile_app/services/settings_service.dart';
 import 'package:mobile_app/services/websocket_service.dart';
+import 'package:mobile_app/services/ml_kit_service.dart';
 import 'package:mobile_app/utils/image_utils.dart';
+import 'package:path_provider/path_provider.dart';
+import 'dart:io';
 
 class ContinuousStreamService {
   final WebSocketService _wsService;
@@ -23,6 +26,8 @@ class ContinuousStreamService {
   bool _isProcessingFrame = false;
   bool _awaitingResult = false;
   bool _hasLowBatteryAnnouncement = false;
+  bool _isFrontCamera = false;
+  String? _subMode;
   int _frameSeq = 0;
   int? _inFlightFrameSeq;
   DateTime? _inFlightSentAt;
@@ -33,6 +38,10 @@ class ContinuousStreamService {
   DateTime _lastPositionTime = DateTime.fromMillisecondsSinceEpoch(0);
   DateTime _lastMotionTime = DateTime.now();
   DateTime _awaitingSince = DateTime.fromMillisecondsSinceEpoch(0);
+  
+  final MlKitService _mlKitService = MlKitService();
+  DateTime _lastFaceRecognitionTime = DateTime.fromMillisecondsSinceEpoch(0);
+  bool _faceDetectionInFlight = false;
 
   ContinuousStreamService(
     this._wsService, {
@@ -65,7 +74,7 @@ class ContinuousStreamService {
     _adaptToBackendLatency(latencyMs);
   }
 
-  void start() {
+  void start({bool isFrontCamera = false, String? subMode}) {
     if (_isStreaming) return;
     _isStreaming = true;
     _awaitingResult = false;
@@ -76,8 +85,15 @@ class ContinuousStreamService {
     _lastMotionTime = DateTime.now();
     _backendFpsCap = 5;
     _fastResponseStreak = 0;
+    _isFrontCamera = isFrontCamera;
+    _subMode = subMode;
     _setCurrentFps(1);
     _startTimer();
+  }
+
+  void updateCameraState({bool? isFrontCamera, String? subMode}) {
+    if (isFrontCamera != null) _isFrontCamera = isFrontCamera;
+    _subMode = subMode;
   }
 
   void stop() {
@@ -169,7 +185,45 @@ class ContinuousStreamService {
       mode: 'continuous',
       priority: 1,
       frameSeq: _frameSeq,
+      isFrontCamera: _isFrontCamera,
+      subMode: _subMode,
     );
+
+    // Optional: Face Recognition Interleaving
+    _triggerFaceRecognitionIfNeeded(bytes);
+  }
+
+  Future<void> _triggerFaceRecognitionIfNeeded(Uint8List bytes) async {
+    final settings = SettingsService();
+    if (!settings.faceRecognitionEnabled || _faceDetectionInFlight) return;
+
+    final now = DateTime.now();
+    if (now.difference(_lastFaceRecognitionTime).inSeconds < 10) return;
+
+    _faceDetectionInFlight = true;
+    try {
+      final tempDir = await getTemporaryDirectory();
+      final tempFile = File('${tempDir.path}/face_recog_frame.jpg');
+      await tempFile.writeAsBytes(bytes);
+
+      final faces = await _mlKitService.detectFaces(tempFile.path);
+      if (faces.isNotEmpty) {
+        debugPrint('[ContinuousStream] Face detected locally, sending for Recognition');
+        _lastFaceRecognitionTime = now;
+        _wsService.sendFrame(
+          base64Encode(bytes),
+          taskType: 'FACE_RECOGNITION',
+          lang: settings.language,
+          mode: 'normal', // Higher priority, not continuous
+          priority: 8,
+          isFrontCamera: _isFrontCamera,
+        );
+      }
+    } catch (e) {
+      debugPrint('[ContinuousStream] Face detection error: $e');
+    } finally {
+      _faceDetectionInFlight = false;
+    }
   }
 
   Future<void> _updateFpsBasedOnMotion() async {

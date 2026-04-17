@@ -4,6 +4,7 @@ import {
   IsOptional,
   IsLatitude,
   IsLongitude,
+  IsBoolean,
 } from 'class-validator';
 
 export class FrameStreamDto {
@@ -45,4 +46,12 @@ export class FrameStreamDto {
   @IsOptional()
   @IsNumber()
   frame_seq?: number;
+
+  @IsOptional()
+  @IsBoolean()
+  is_front_camera?: boolean;
+
+  @IsOptional()
+  @IsString()
+  sub_mode?: string;
 }

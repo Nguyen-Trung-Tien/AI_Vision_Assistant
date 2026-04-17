@@ -9,6 +9,8 @@ class StatusOverlay extends StatelessWidget {
   final String offlineText;
   final String nightText;
   final String flashText;
+  final VoidCallback? onToggleCamera;
+  final bool isFrontCamera;
 
   const StatusOverlay({
     super.key,
@@ -19,6 +21,8 @@ class StatusOverlay extends StatelessWidget {
     required this.offlineText,
     required this.nightText,
     required this.flashText,
+    this.onToggleCamera,
+    this.isFrontCamera = false,
   });
 
   @override
@@ -67,6 +71,30 @@ class StatusOverlay extends StatelessWidget {
                     fontSize: 11,
                   ),
                 ),
+                if (onToggleCamera != null) ...[
+                  const SizedBox(width: 12),
+                  Container(
+                    width: 1,
+                    height: 16,
+                    color: AppTheme.whiteAlpha(0.2),
+                  ),
+                  const SizedBox(width: 4),
+                  Material(
+                    color: Colors.transparent,
+                    child: InkWell(
+                      onTap: onToggleCamera,
+                      borderRadius: BorderRadius.circular(20),
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        child: Icon(
+                          isFrontCamera ? Icons.camera_rear : Icons.camera_front,
+                          color: AppTheme.accentCyan,
+                          size: 28, // Increase size as requested
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
               ],
             ),
           ),

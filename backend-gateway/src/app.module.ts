@@ -18,6 +18,8 @@ import { BroadcastModule } from './broadcast/broadcast.module';
 import { EmergencyContact } from './emergency-contact/entities/emergency-contact.entity';
 import { EmergencyContactModule } from './emergency-contact/emergency-contact.module';
 import { SmsModule } from './sms/sms.module';
+import { FaceModule } from './face/face.module';
+import { FaceRegistration } from './face/entities/face-registration.entity';
 
 @Module({
   imports: [
@@ -42,6 +44,7 @@ import { SmsModule } from './sms/sms.module';
           Broadcast,
           UserSession,
           EmergencyContact,
+          FaceRegistration,
         ],
         synchronize: configService.get<string>('DB_SYNC', 'false') === 'true',
       }),
@@ -54,6 +57,7 @@ import { SmsModule } from './sms/sms.module';
     BroadcastModule,
     EmergencyContactModule,
     SmsModule,
+    FaceModule,
   ],
   controllers: [AppController],
   providers: [AppService],

@@ -2,7 +2,7 @@
 
 CANONICAL_CLASSES: list[str] = [
     # 15 Object Classes
-    "bien_bao",
+    "vat_can",
     "cot_dien",
     "den_do",
     "den_vang",
@@ -45,7 +45,6 @@ LEGACY_LABEL_ALIASES: dict[str, str] = {
     "manhole": "nap_cong",
     "open_manhole": "nap_cong",
     "ong_cong": "nap_cong",
-    "traffic_light": "bien_bao",
     "traffic_light_red": "den_do",
     "traffic_light_yellow": "den_vang",
     "traffic_light_green": "den_xanh",
@@ -97,7 +96,7 @@ OBJECT_REAL_HEIGHTS: dict[str, float] = {
     "xe_may": 1.1,
     "xe_lon": 2.6,
     "xe_dap": 1.0,
-    "bien_bao": 1.5,
+    "vat_can": 1.5,
     "cot_dien": 5.0,
     "den_do": 2.5,
     "den_vang": 2.5,

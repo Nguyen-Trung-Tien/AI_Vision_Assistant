@@ -191,9 +191,11 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Text(
-                'Gửi SMS khi có SOS',
-                style: TextStyle(color: Colors.white),
+              const Expanded(
+                child: Text(
+                  'Gửi SMS khi có SOS',
+                  style: TextStyle(color: Colors.white),
+                ),
               ),
               Switch(
                 value: contact.notifySms,

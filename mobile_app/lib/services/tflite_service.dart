@@ -1,4 +1,4 @@
-﻿import 'dart:convert';
+import 'dart:convert';
 import 'dart:io';
 
 import 'package:flutter/foundation.dart';
@@ -21,21 +21,23 @@ class TfliteService {
   String? _loadedModelAsset;
   String? get loadedModelSource => _loadedModelAsset;
 
-  /// Danh sách nhãn mệnh giá output của model.
-  static const List<String> _labels = [
-    'tien_1k',
-    'tien_2k',
-    'tien_5k',
-    'tien_10k',
-    'tien_20k',
-    'tien_50k',
-    'tien_100k',
-    'tien_200k',
-    'tien_500k',
+  /// Danh sách 24 nhãn chuẩn của hệ thống (15 objects + 9 money).
+  static const List<String> _unifiedLabels = [
+    'vat_can', 'cot_dien', 'den_do', 'den_vang', 'den_xanh',
+    'nap_cong', 'nguoi', 'o_ga', 'rao_chan', 'thung_rac',
+    'vach_qua_duong', 'xe_dap', 'xe_lon', 'xe_may', 'cau_thang',
+    'tien_1k', 'tien_2k', 'tien_5k', 'tien_10k', 'tien_20k',
+    'tien_50k', 'tien_100k', 'tien_200k', 'tien_500k',
+  ];
+
+  /// Danh sách 9 nhãn khi dùng model chỉ có tiền (Money only).
+  static const List<String> _moneyOnlyLabels = [
+    'tien_1k', 'tien_2k', 'tien_5k', 'tien_10k', 'tien_20k',
+    'tien_50k', 'tien_100k', 'tien_200k', 'tien_500k',
   ];
 
   /// Map nhãn model -> text hiển thị.
-  static const Map<String, String> _denominationMap = {
+  static const Map<String, String> _labelMap = {
     'tien_1k': '1.000 đồng',
     'tien_2k': '2.000 đồng',
     'tien_5k': '5.000 đồng',
@@ -45,6 +47,21 @@ class TfliteService {
     'tien_100k': '100.000 đồng',
     'tien_200k': '200.000 đồng',
     'tien_500k': '500.000 đồng',
+    'vat_can': 'vật cản',
+    'cot_dien': 'cột điện',
+    'den_do': 'đèn đỏ',
+    'den_vang': 'đèn vàng',
+    'den_xanh': 'đèn xanh',
+    'nap_cong': 'nắp cống',
+    'nguoi': 'người',
+    'o_ga': 'ổ gà',
+    'rao_chan': 'rào chắn',
+    'thung_rac': 'thùng rác',
+    'vach_qua_duong': 'vạch qua đường',
+    'xe_dap': 'xe đạp',
+    'xe_lon': 'xe lớn',
+    'xe_may': 'xe máy',
+    'cau_thang': 'cầu thang',
   };
 
   /// Load model từ assets hoặc local storage.
@@ -88,10 +105,9 @@ class TfliteService {
       debugPrint(
         '[TFLite] Model loaded from $_loadedModelAsset. Output shape: $outputShape',
       );
-      if (outputShape.last != _labels.length) {
+      if (outputShape.length == 2 && outputShape.last != _unifiedLabels.length && outputShape.last != _moneyOnlyLabels.length) {
         debugPrint(
           '[TFLite] WARNING: Model output size (${outputShape.last}) '
-          'does not match label count (${_labels.length}). '
           'Results may be incorrect if this is not a classification model.',
         );
       }
@@ -159,7 +175,23 @@ class TfliteService {
     } catch (_) {}
     try {
       final ext = await getExternalStorageDirectory();
-      if (ext != null) dirs.add(ext);
+      if (ext != null) {
+        dirs.add(ext);
+        // Try to add the public Download folder
+        final androidIndex = ext.path.indexOf('Android');
+        if (androidIndex != -1) {
+          final downloadPath = '${ext.path.substring(0, androidIndex)}Download';
+          final downloadDir = Directory(downloadPath);
+          if (await downloadDir.exists()) {
+            dirs.add(downloadDir);
+          }
+          final docPath = '${ext.path.substring(0, androidIndex)}Documents';
+          final docDir = Directory(docPath);
+          if (await docDir.exists()) {
+            dirs.add(docDir);
+          }
+        }
+      }
     } catch (_) {}
 
     final discovered = <String>{};
@@ -271,16 +303,35 @@ class TfliteService {
       debugPrint('[TFLite] Running interpreter...');
       _interpreter!.run(input, output);
 
+      List<String> currentLabels = _moneyOnlyLabels;
+      if (outputShape.length == 3) {
+        final first = outputShape[1];
+        final second = outputShape[2];
+        final channels = first < 1000 ? first : second;
+        final numClasses = channels - 4;
+        if (numClasses == 24) {
+          currentLabels = _unifiedLabels;
+        } else if (numClasses == 9) {
+          currentLabels = _moneyOnlyLabels;
+        } else if (numClasses == 15) {
+          currentLabels = _unifiedLabels.sublist(0, 15);
+        } else if (numClasses > 0 && numClasses <= _unifiedLabels.length) {
+          currentLabels = _unifiedLabels.sublist(0, numClasses);
+        } else {
+          currentLabels = _unifiedLabels;
+        }
+      }
+
       List<double>? probabilities;
       if (outputShape.length == 2) {
         final scores = (output[0] as List).map((e) => (e as num).toDouble());
-        probabilities = _fitScoresToLabels(scores.toList());
+        probabilities = _fitScoresToLabels(scores.toList(), currentLabels);
       } else {
-        probabilities = _parseYoloLikeOutput(output, outputShape);
+        probabilities = _parseYoloLikeOutput(output, outputShape, currentLabels);
       }
 
-      if (probabilities == null || probabilities.length != _labels.length) {
-        return 'Lỗi: Model không tương thích với chế độ nhận diện tiền offline.';
+      if (probabilities == null || probabilities.length != currentLabels.length) {
+        return 'Lỗi: Model không tương thích với chế độ nhận diện offline.';
       }
 
       double maxProb = probabilities[0];
@@ -293,46 +344,46 @@ class TfliteService {
       }
 
       debugPrint(
-        '[TFLite] Inference done. Max prob: $maxProb at index $maxIndex',
+        '[TFLite] Inference done. Max prob: $maxProb at index $maxIndex (Label: ${currentLabels[maxIndex]})',
       );
 
       if (maxProb > 0.35) {
-        final label = _labels[maxIndex];
+        final label = currentLabels[maxIndex];
         return labelToDenomination(label);
       }
-      return 'Không nhận diện rõ mệnh giá.';
+      return 'Không nhận diện rõ đối tượng.';
     } catch (e) {
       debugPrint('[TFLite] Inference error: $e');
       return 'Lỗi nhận diện offline: $e';
     }
   }
 
-  List<double>? _fitScoresToLabels(List<double> rawScores) {
-    if (rawScores.length == _labels.length) {
+  List<double>? _fitScoresToLabels(List<double> rawScores, List<String> currentLabels) {
+    if (rawScores.length == currentLabels.length) {
       return rawScores;
     }
 
-    if (rawScores.length > _labels.length) {
-      return rawScores.sublist(0, _labels.length);
+    if (rawScores.length > currentLabels.length) {
+      return rawScores.sublist(0, currentLabels.length);
     }
     return null;
   }
 
-  List<double>? _parseYoloLikeOutput(dynamic output, List<int> shape) {
+  List<double>? _parseYoloLikeOutput(dynamic output, List<int> shape, List<String> currentLabels) {
     if (shape.length != 3 || shape[0] != 1) return null;
 
     const classStart = 4;
-    final expected = classStart + _labels.length;
+    final expected = classStart + currentLabels.length;
     final first = shape[1];
     final second = shape[2];
 
-    // Format A: [1, channels, anchors], ví dụ [1, 13, 8400].
+    // Format A: [1, channels, anchors], ví dụ [1, 28, 8400].
     if (first >= expected) {
       final channels = first;
       final anchors = second;
-      final probs = List<double>.filled(_labels.length, 0);
+      final probs = List<double>.filled(currentLabels.length, 0);
       for (int anchor = 0; anchor < anchors; anchor++) {
-        for (int c = 0; c < _labels.length; c++) {
+        for (int c = 0; c < currentLabels.length; c++) {
           if (classStart + c >= channels) continue;
           final score =
               (((output[0] as List)[classStart + c] as List)[anchor] as num)
@@ -347,10 +398,10 @@ class TfliteService {
     if (second >= expected) {
       final anchors = first;
       final channels = second;
-      final probs = List<double>.filled(_labels.length, 0);
+      final probs = List<double>.filled(currentLabels.length, 0);
       for (int anchor = 0; anchor < anchors; anchor++) {
         final row = ((output[0] as List)[anchor] as List);
-        for (int c = 0; c < _labels.length; c++) {
+        for (int c = 0; c < currentLabels.length; c++) {
           if (classStart + c >= channels) continue;
           final score = (row[classStart + c] as num).toDouble();
           if (score > probs[c]) probs[c] = score;
@@ -372,9 +423,9 @@ class TfliteService {
     return t.contains('uint8') || t.contains('u_int8') || t.contains('byte');
   }
 
-  /// Map label sang tên mệnh giá.
+  /// Map label sang tên hiển thị (mệnh giá hoặc vật thể).
   static String labelToDenomination(String label) {
-    return _denominationMap[label] ?? label;
+    return _labelMap[label] ?? label;
   }
 
   void dispose() {

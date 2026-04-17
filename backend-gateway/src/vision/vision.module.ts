@@ -11,6 +11,7 @@ import { WsJwtGuard } from '../auth/guards/ws-jwt.guard';
 import { VisionController } from './vision.controller';
 import { SosModule } from '../sos/sos.module';
 import { BroadcastModule } from '../broadcast/broadcast.module';
+import { FaceModule } from '../face/face.module';
 
 @Module({
   imports: [
@@ -48,6 +49,7 @@ import { BroadcastModule } from '../broadcast/broadcast.module';
     ]),
     SosModule,
     BroadcastModule,
+    FaceModule,
   ],
   controllers: [VisionController],
   providers: [VisionGateway, TaskQueueService, HeatmapService, WsJwtGuard],

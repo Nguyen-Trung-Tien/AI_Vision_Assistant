@@ -196,75 +196,83 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: [
                     // Dots
-                    Row(
-                      children: List.generate(
-                        _getSteps(_settings.language).length,
-                        (index) => AnimatedContainer(
-                          duration: const Duration(milliseconds: 200),
-                          margin: const EdgeInsets.only(right: 8),
-                          width: _currentPage == index ? 28 : 10,
-                          height: 10,
-                          decoration: BoxDecoration(
-                            color: _currentPage == index
-                                ? AppTheme.accentPurple
-                                : AppTheme.whiteAlpha(0.24),
-                            borderRadius: BorderRadius.circular(5),
+                    Flexible(
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: List.generate(
+                          _getSteps(_settings.language).length,
+                          (index) => AnimatedContainer(
+                            duration: const Duration(milliseconds: 200),
+                            margin: const EdgeInsets.only(right: 8),
+                            width: _currentPage == index ? 28 : 10,
+                            height: 10,
+                            decoration: BoxDecoration(
+                              color: _currentPage == index
+                                  ? AppTheme.accentPurple
+                                  : AppTheme.whiteAlpha(0.24),
+                              borderRadius: BorderRadius.circular(5),
+                            ),
                           ),
                         ),
                       ),
                     ),
-
+                    const SizedBox(width: 16),
                     // Next / Start button
-                    GestureDetector(
-                      onTap: () {
-                        if (_currentPage ==
-                            _getSteps(_settings.language).length - 1) {
-                          _finishOnboarding();
-                        } else {
-                          _pageController.nextPage(
-                            duration: const Duration(milliseconds: 300),
-                            curve: Curves.easeInOut,
-                          );
-                        }
-                      },
-                      child: Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 28,
-                          vertical: 14,
-                        ),
-                        decoration: BoxDecoration(
-                          gradient: const LinearGradient(
-                            colors: [
-                              AppTheme.accentPurple,
-                              AppTheme.accentCyan,
+                    Flexible(
+                      child: GestureDetector(
+                        onTap: () {
+                          if (_currentPage ==
+                              _getSteps(_settings.language).length - 1) {
+                            _finishOnboarding();
+                          } else {
+                            _pageController.nextPage(
+                              duration: const Duration(milliseconds: 300),
+                              curve: Curves.easeInOut,
+                            );
+                          }
+                        },
+                        child: Container(
+                          padding: const EdgeInsets.symmetric(
+                            horizontal: 24,
+                            vertical: 14,
+                          ),
+                          decoration: BoxDecoration(
+                            gradient: const LinearGradient(
+                              colors: [
+                                AppTheme.accentPurple,
+                                AppTheme.accentCyan,
+                              ],
+                            ),
+                            borderRadius: BorderRadius.circular(30),
+                            boxShadow: [
+                              BoxShadow(
+                                color: AppTheme.accentPurple.withValues(
+                                  alpha: 0.4,
+                                ),
+                                blurRadius: 15,
+                                offset: const Offset(0, 5),
+                              ),
                             ],
                           ),
-                          borderRadius: BorderRadius.circular(30),
-                          boxShadow: [
-                            BoxShadow(
-                              color: AppTheme.accentPurple.withValues(
-                                alpha: 0.4,
-                              ),
-                              blurRadius: 15,
-                              offset: const Offset(0, 5),
+                          child: Text(
+                            _currentPage ==
+                                    _getSteps(_settings.language).length - 1
+                                ? AppLocalizations.t(
+                                    'onboarding_start',
+                                    _settings.language,
+                                  )
+                                : AppLocalizations.t(
+                                    'onboarding_next',
+                                    _settings.language,
+                                  ),
+                            textAlign: TextAlign.center,
+                            maxLines: 1,
+                            overflow: TextOverflow.ellipsis,
+                            style: const TextStyle(
+                              color: Colors.white,
+                              fontSize: 18,
+                              fontWeight: FontWeight.bold,
                             ),
-                          ],
-                        ),
-                        child: Text(
-                          _currentPage ==
-                                  _getSteps(_settings.language).length - 1
-                              ? AppLocalizations.t(
-                                  'onboarding_start',
-                                  _settings.language,
-                                )
-                              : AppLocalizations.t(
-                                  'onboarding_next',
-                                  _settings.language,
-                                ),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.bold,
                           ),
                         ),
                       ),
