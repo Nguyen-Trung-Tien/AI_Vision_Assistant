@@ -698,7 +698,7 @@ Dashboard quản trị cung cấp các trang:
 
 ## 📌 Roadmap
 
-### Đã hoàn thành (v2.0.0)
+### Đã hoàn thành (v1.5.0)
 
 - [x] Nhận diện khuôn mặt người quen (Face Recognition với InsightFace)
 - [x] Ước lượng chiều sâu đơn mục (Monocular Depth Estimation với MiDaS)
