@@ -207,11 +207,12 @@ class _FaceRegisterScreenState extends State<FaceRegisterScreen> {
         return;
       }
 
+      // Local check success
+      _accessibilityManager.triggerSuccessVibration();
+      _accessibilityManager.speak('Đã phát hiện khuôn mặt. Đang tải ảnh lên máy chủ.');
+
       if (mounted) {
         setState(() => _registrationStep = 'Đang gửi lên máy chủ...');
-        _accessibilityManager.speak(
-          'Bước 3: Đang gửi khuôn mặt lên máy chủ AI.',
-        );
       }
 
       // Convert to base64
@@ -224,7 +225,7 @@ class _FaceRegisterScreenState extends State<FaceRegisterScreen> {
       if (mounted) {
         setState(() => _registrationStep = 'Đang chờ AI phản hồi...');
         _accessibilityManager.speak(
-          'Bước 4: Đã gửi thành công. Đang chờ AI xử lý và mã hóa.',
+          'Tải ảnh lên thành công. Vui lòng chờ máy chủ xác nhận đăng ký.',
         );
 
         ScaffoldMessenger.of(context).showSnackBar(

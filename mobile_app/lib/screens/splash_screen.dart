@@ -4,6 +4,7 @@ import 'package:mobile_app/theme/app_theme.dart';
 import 'package:mobile_app/services/accessibility_manager.dart';
 import 'package:mobile_app/services/settings_service.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
+import 'package:permission_handler/permission_handler.dart';
 
 class SplashScreen extends StatefulWidget {
   final Widget nextScreen;
@@ -76,33 +77,61 @@ class _SplashScreenState extends State<SplashScreen>
       if (mounted) _textController.forward();
     });
 
-    // Voice onboarding
-    Future.delayed(const Duration(milliseconds: 800), () {
-      if (!mounted) return;
-      final String lang = _settings.language;
-      if (_settings.isFirstLaunch) {
-        _accessibility.speak(AppLocalizations.t('splash_welcome_tts', lang));
-        _settings.setFirstLaunchDone();
-      } else {
-        _accessibility.speak(AppLocalizations.t('splash_ready_tts', lang));
-      }
-    });
+    // Voice onboarding and Permission request
+    _initApp();
+  }
 
-    // Navigate after splash
-    Future.delayed(const Duration(milliseconds: 3500), () {
-      if (mounted) {
-        Navigator.of(context).pushReplacement(
-          PageRouteBuilder(
-            pageBuilder: (context, animation1, animation2) => widget.nextScreen,
-            transitionsBuilder:
-                (context, animation, secondaryAnimation, child) {
-                  return FadeTransition(opacity: animation, child: child);
-                },
-            transitionDuration: const Duration(milliseconds: 800),
-          ),
+  Future<void> _initApp() async {
+    // 1. Voice welcome
+    await Future.delayed(const Duration(milliseconds: 800));
+    if (!mounted) return;
+    
+    final String lang = _settings.language;
+    if (_settings.isFirstLaunch) {
+      _accessibility.speak(AppLocalizations.t('splash_welcome_tts', lang));
+      // No setFirstLaunchDone here yet, wait for permissions
+    } else {
+      _accessibility.speak(AppLocalizations.t('splash_ready_tts', lang));
+    }
+
+    // 2. Request Permissions (Camera, Mic, Location)
+    // We request them in parallel but wait for all
+    try {
+      if (_settings.isFirstLaunch) {
+        _accessibility.speak(
+          lang == 'vi' 
+            ? 'Ứng dụng cần quyền truy cập Camera, Micro và Vị trí để hoạt động. Vui lòng nhấn Cho phép khi có yêu cầu.'
+            : 'The app needs Camera, Microphone, and Location access. Please tap Allow when prompted.'
         );
       }
-    });
+
+      await [
+        Permission.camera,
+        Permission.microphone,
+        Permission.location,
+      ].request();
+      
+      if (_settings.isFirstLaunch) {
+        _settings.setFirstLaunchDone();
+      }
+    } catch (e) {
+      debugPrint('Error requesting permissions: $e');
+    }
+
+    // 3. Navigate after a reasonable delay to let animations finish
+    await Future.delayed(const Duration(milliseconds: 1500));
+    if (mounted) {
+      Navigator.of(context).pushReplacement(
+        PageRouteBuilder(
+          pageBuilder: (context, animation1, animation2) => widget.nextScreen,
+          transitionsBuilder:
+              (context, animation, secondaryAnimation, child) {
+                return FadeTransition(opacity: animation, child: child);
+              },
+          transitionDuration: const Duration(milliseconds: 800),
+        ),
+      );
+    }
   }
 
   @override

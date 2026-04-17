@@ -13,7 +13,7 @@ class DocumentReaderService {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
-        allowedExtensions: ['pdf', 'doc', 'docx', 'jpg', 'jpeg', 'png'],
+        allowedExtensions: ['pdf', 'doc', 'docx', 'txt', 'jpg', 'jpeg', 'png'],
       );
 
       if (result == null || result.files.single.path == null) {
@@ -26,8 +26,10 @@ class DocumentReaderService {
 
       if (extension == 'pdf') {
         return await _extractFromPdf(path);
-      } else if (extension == 'docx') {
+      } else if (extension == 'docx' || extension == 'doc') {
         return await _extractFromDocx(path);
+      } else if (extension == 'txt') {
+        return await _extractFromTextFile(path);
       } else if (['jpg', 'jpeg', 'png'].contains(extension)) {
         return await _extractFromImage(path);
       } else {
@@ -36,6 +38,11 @@ class DocumentReaderService {
     } catch (e) {
       throw Exception('Error: $e');
     }
+  }
+
+  Future<String> _extractFromTextFile(String path) async {
+    final file = File(path);
+    return await file.readAsString();
   }
 
   Future<String> _extractFromPdf(String path) async {

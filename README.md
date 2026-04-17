@@ -78,9 +78,10 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 | Ngày      | Cập nhật                        | Mô tả                                                                                       |
 | --------- | ------------------------------- | ------------------------------------------------------------------------------------------- |
-| **17/04** | 🧠 Face Recognition (Alpha)     | Nhận diện người quen sử dụng InsightFace: phát hiện tên người đứng trước camera             |
+| **17/04** | 🧠 Face Registration (Alpha)     | Nhận diện người quen sử dụng InsightFace: phát hiện tên người đứng trước camera; thêm phản hồi giọng nói & rung khi đăng ký thành công |
 | **17/04** | 📏 MiDaS Depth Estimation       | Tích hợp mô hình MiDaS Small cho ước lượng chiều sâu đơn mục, tăng độ chính xác khoảng cách |
 | **17/04** | 📄 Smart OCR (Gemini Vision)    | Chế độ đọc thông minh: phân tích biển báo, thực đơn (menu), hóa đơn bằng Gemini AI          |
+| **17/04** | 🔧 Fix OCR & File Reader        | Sửa lỗi OCR Offline (ML Kit), đồng bộ giọng nói chuyển mode, hỗ trợ đọc tệp .txt và tối ưu hóa trích xuất PDF |
 | **15/04** | 📺 Visual Feedback              | Hiển thị Bounding Boxes + Object Chips trên mobile, tăng độ nhạy AI (480x480)               |
 | **15/04** | 🔊 Spatial Audio 3D             | Tích hợp âm thanh 3D: xác định hướng vật cản qua tai nghe stereo                            |
 | **08/04** | 🔧 Fix offline model            | Sửa lỗi mobile không nhận model TFLite offline đã có sẵn trên máy                           |

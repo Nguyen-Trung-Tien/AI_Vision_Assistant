@@ -233,6 +233,15 @@ class _MainScreenState extends State<MainScreen>
           result['taskType']?.toString() ??
           result['task_type']?.toString() ??
           '';
+
+      // Speak result for double-tap tasks (non-continuous)
+      if (taskType != 'CONTINUOUS') {
+        final text = result['text']?.toString() ?? '';
+        if (text.isNotEmpty) {
+          _accessibilityManager.speak(_sanitizeForTts(text));
+        }
+      }
+
       _continuousStreamService.onFrameResultReceived(
         taskType: taskType,
         frameSeq: (result['frameSeq'] as num?)?.toInt(),
@@ -796,18 +805,8 @@ class _MainScreenState extends State<MainScreen>
         _pickAndReadFile();
         break;
       case 6:
-        // Offline Money detection
-        final isReady = await _ensureOfflineModelLoaded(
-          notifyOnFreshLoad: true,
-        );
-        if (isReady) {
-          await _detectMoneyOffline();
-        } else {
-          _accessibilityManager.speak(
-            AppLocalizations.t('main_no_offline_model', _settings.language),
-          );
-          _accessibilityManager.triggerErrorVibration();
-        }
+        // Offline Text Recognition (Quick Read)
+        await _scanWithMLKit();
         break;
     }
   }
@@ -1082,7 +1081,16 @@ class _MainScreenState extends State<MainScreen>
         children: [
           if (_cameraController != null &&
               _cameraController!.value.isInitialized)
-            Positioned.fill(child: CameraPreview(_cameraController!)),
+            Positioned.fill(
+              child: FittedBox(
+                fit: BoxFit.cover,
+                child: SizedBox(
+                  width: _cameraController!.value.previewSize!.height,
+                  height: _cameraController!.value.previewSize!.width,
+                  child: CameraPreview(_cameraController!),
+                ),
+              ),
+            ),
 
           if (_isWalkingModeEnabled)
             Positioned.fill(

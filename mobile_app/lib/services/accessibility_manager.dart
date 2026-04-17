@@ -41,9 +41,12 @@ class AccessibilityManager {
     await flutterTts.setVolume(1.0);
   }
 
-  Future<void> speak(String text) async {
+  Future<void> speak(String text, {bool interrupt = true}) async {
     if (text.trim().isEmpty) return;
     await _ensureTtsReady();
+    if (interrupt) {
+      await flutterTts.stop();
+    }
     await flutterTts.speak(text);
   }
 
