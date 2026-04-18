@@ -37,9 +37,9 @@ class ModelManager:
             ai_worker_dir / "models" / "model-object-recognition" / "best.pt",
             ai_worker_dir / "models" / "model-object-recognition" / "last.pt",
             # Fallback for old run folders
+            ai_worker_dir / "runs" / "detect" / "vision_assistant_model3" / "weights" / "best.pt",
             ai_worker_dir / "runs" / "detect" / "vision_assistant_model_v3" / "weights" / "best.pt",
             ai_worker_dir / "runs" / "detect" / "vision_assistant_model" / "weights" / "best.pt",
-            ai_worker_dir / "yolo11n.pt",
             repo_root / "mobile_app" / "assets" / "models" / "best_float32.tflite",
         ]
 
@@ -65,6 +65,9 @@ class ModelManager:
         candidates = [
             ai_worker_dir / "models" / "model-money" / "best.pt",
             ai_worker_dir / "models" / "model-money" / "last.pt",
+            # Fallback to combined model if dedicated money model is missing
+            ai_worker_dir / "runs" / "detect" / "vision_assistant_model3" / "weights" / "best.pt",
+            ai_worker_dir / "runs" / "detect" / "vision_assistant_model_v3" / "weights" / "best.pt",
         ]
 
         seen: set[Path] = set()
