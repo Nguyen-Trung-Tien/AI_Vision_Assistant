@@ -12,7 +12,7 @@ export default function PieChartV2({ onNavigate }) {
   if (isLoading) {
     return (
       <div className="bg-bg-card rounded-2xl p-4 sm:p-6 border border-accent-purple/10 shadow-lg">
-        <h3 className="text-xs font-semibold text-white/50 uppercase tracking-widest mb-4">Phân bố theo loại nhận diện</h3>
+      <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-widest mb-4">Phân bố theo loại nhận diện</h3>
         <ChartSkeleton />
       </div>
     );
@@ -21,7 +21,7 @@ export default function PieChartV2({ onNavigate }) {
   if (!data.length) {
     return (
       <div className="bg-bg-card rounded-2xl p-4 sm:p-6 border border-accent-purple/10 shadow-lg">
-        <div className="flex flex-col items-center justify-center h-[300px] text-white/50 text-sm">
+        <div className="flex flex-col items-center justify-center h-[300px] text-text-secondary/50 text-sm">
           Chưa có dữ liệu biểu đồ
         </div>
       </div>
@@ -39,9 +39,9 @@ export default function PieChartV2({ onNavigate }) {
   };
 
   return (
-    <div className="bg-bg-card rounded-2xl p-4 sm:p-6 border border-accent-purple/10 shadow-lg hover:border-accent-purple/30 transition-all duration-300">
-      <h3 className="text-xs font-semibold text-white/50 uppercase tracking-widest mb-4">Phân bố theo loại nhận diện</h3>
-      <ResponsiveContainer width="100%" height={300}>
+    <div className="bg-bg-card rounded-2xl p-4 sm:p-5 border border-accent-purple/10 shadow-lg hover:border-accent-purple/30 transition-all duration-300">
+      <h3 className="text-xs font-semibold text-text-secondary uppercase tracking-widest mb-4">Phân bố theo loại nhận diện</h3>
+      <ResponsiveContainer width="100%" height={260}>
         <RePieChart>
           <Pie 
             data={data} 
@@ -58,12 +58,27 @@ export default function PieChartV2({ onNavigate }) {
           <Tooltip 
              contentStyle={{ 
                backgroundColor: 'var(--bg-card)', 
-               borderColor: 'rgba(108, 99, 255, 0.2)',
-               borderRadius: '10px',
-               color: 'white'
+               borderColor: 'var(--border-color)',
+               borderRadius: '12px',
+               border: '1px solid var(--border-color)',
+               boxShadow: '0 10px 15px -3px rgba(0, 0, 0, 0.3)',
+             }}
+             itemStyle={{
+               color: 'var(--text-primary)',
+               fontSize: '12px',
+               fontWeight: 'bold',
+               textTransform: 'uppercase'
              }}
           />
-          <Legend verticalAlign="bottom" iconType="circle" />
+          <Legend 
+            verticalAlign="bottom" 
+            iconType="circle" 
+            formatter={(value) => (
+              <span className="text-[11px] font-bold text-text-secondary uppercase tracking-wider ml-1">
+                {value}
+              </span>
+            )}
+          />
         </RePieChart>
       </ResponsiveContainer>
     </div>

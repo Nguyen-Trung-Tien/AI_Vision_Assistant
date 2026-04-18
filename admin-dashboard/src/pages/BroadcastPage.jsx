@@ -106,10 +106,12 @@ export default function BroadcastPage() {
       />
 
       {/* Header */}
-      <div>
-        <h2 className="text-2xl font-bold text-text-primary">📢 Broadcast TTS</h2>
-        <p className="text-text-secondary text-sm mt-1">
-          Gửi thông báo — app người dùng sẽ tự đọc bằng giọng nói
+      <div className="flex flex-col gap-1">
+        <h1 className="text-2xl font-bold tracking-tight text-text-primary uppercase">
+          BROADCAST <span className="text-indigo-500">TTS</span>
+        </h1>
+        <p className="text-text-secondary font-medium text-sm">
+          Gửi thông báo giọng nói tức thì đến toàn bộ ứng dụng người dùng
         </p>
       </div>
 

@@ -17,6 +17,24 @@ import { RoleBadge, LockedBadge } from "../components/ui/Badge";
 import AddUserModal from "../components/users/AddUserModal";
 import EditUserModal from "../components/users/EditUserModal";
 import UserEmergencyContactsModal from "../components/users/UserEmergencyContactsModal";
+import { 
+  Users as UsersIcon, 
+  Search, 
+  Plus, 
+  Edit2, 
+  Trash2, 
+  Shield, 
+  Lock, 
+  Unlock, 
+  Users2,
+  RefreshCw,
+  ChevronLeft,
+  ChevronRight,
+  MoreVertical,
+  Mail,
+  Calendar
+} from "lucide-react";
+import { TableSkeleton } from "../components/ui/Skeleton";
 
 // ── Main Page
 export default function UsersPage() {
@@ -39,11 +57,16 @@ export default function UsersPage() {
 
   const load = useCallback(async () => {
     setLoading(true);
-    const res = await fetchUsers(page, 20, search);
-    setUsers(res.data ?? []);
-    setTotal(res.total ?? 0);
-    setTotalPages(res.totalPages ?? 1);
-    setLoading(false);
+    try {
+      const res = await fetchUsers(page, 20, search);
+      setUsers(res.data ?? []);
+      setTotal(res.total ?? 0);
+      setTotalPages(res.totalPages ?? 1);
+    } catch (err) {
+      toast.error("Không thể tải danh sách người dùng");
+    } finally {
+      setLoading(false);
+    }
   }, [page, search]);
 
   useEffect(() => {
@@ -97,7 +120,7 @@ export default function UsersPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/*  Modals  */}
       {showAdd && (
         <AddUserModal
@@ -137,32 +160,28 @@ export default function UsersPage() {
         }
         message={
           confirm?.type === "toggle" ? (
-            <>
-              Chuyển{" "}
-              <strong className="text-white">{confirm.user.email}</strong> sang{" "}
-              <strong className="text-white">
+            <div className="text-sm">
+              Chuyển <strong className="text-text-primary">{confirm.user.email}</strong> sang{" "}
+              <strong className="text-indigo-400">
                 {confirm.user.role === "ADMIN" ? "USER" : "ADMIN"}
               </strong>
               ?
-            </>
+            </div>
           ) : confirm?.type === "lock" ? (
-            <>
-              Khoá tài khoản{" "}
-              <strong className="text-white">{confirm?.user?.email}</strong> —
-              người dùng sẽ không thể đăng nhập.
-            </>
+            <div className="text-sm">
+              Khoá tài khoản <strong className="text-text-primary">{confirm?.user?.email}</strong> —
+              người dùng sẽ không thể đăng nhập vào hệ thống.
+            </div>
           ) : confirm?.type === "unlock" ? (
-            <>
-              Mở khoá tài khoản{" "}
-              <strong className="text-white">{confirm?.user?.email}</strong> —
-              người dùng có thể đăng nhập lại.
-            </>
+            <div className="text-sm">
+              Mở khoá tài khoản <strong className="text-text-primary">{confirm?.user?.email}</strong> —
+              người dùng có thể đăng nhập lại bình thường.
+            </div>
           ) : (
-            <>
-              Tài khoản{" "}
-              <strong className="text-white">{confirm?.user?.email}</strong> sẽ
-              bị xoá vĩnh viễn.
-            </>
+            <div className="text-sm">
+              Tài khoản <strong className="text-text-primary">{confirm?.user?.email}</strong> sẽ
+              bị xoá vĩnh viễn khỏi cơ sở dữ liệu.
+            </div>
           )
         }
         confirmLabel={
@@ -179,7 +198,7 @@ export default function UsersPage() {
             ? "bg-orange-500 hover:bg-orange-400"
             : confirm?.type === "delete"
               ? "bg-red-500 hover:bg-red-400"
-              : "bg-purple-600 hover:bg-purple-500"
+              : "bg-indigo-600 hover:bg-indigo-500"
         }
         loading={actionLoading}
         onConfirm={doConfirm}
@@ -187,247 +206,211 @@ export default function UsersPage() {
       />
 
       {/*  Header  */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <h2 className="text-2xl font-bold text-text-primary">
-            Quản lý người dùng
-          </h2>
-          <p className="text-text-secondary text-sm mt-0.5">
-            {total} tài khoản đã đăng ký
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl font-bold tracking-tight text-text-primary uppercase">
+            USER <span className="text-indigo-500">ACCOUNTS</span>
+          </h1>
+          <p className="text-text-secondary font-medium text-sm">
+            {total} tài khoản người dùng đã đăng ký trong hệ thống
           </p>
         </div>
-        <div className="flex gap-2">
-          <form onSubmit={handleSearch} className="flex gap-2">
+
+        <div className="flex flex-col sm:flex-row gap-4">
+          <form onSubmit={handleSearch} className="relative group">
+            <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary group-focus-within:text-indigo-500 transition-colors" />
             <input
               value={searchInput}
               onChange={(e) => setSearchInput(e.target.value)}
-              placeholder="Tìm email..."
-              className="bg-bg-card border border-border-primary rounded-xl px-4 py-2 text-sm text-text-primary placeholder-text-secondary/50 focus:outline-none focus:border-purple-500/50 w-48"
+              placeholder="Tìm kiếm theo email..."
+              className="min-h-[40px] bg-bg-card border border-border-primary rounded-xl pl-11 pr-4 py-1.5 text-sm text-text-primary placeholder-text-secondary/40 focus:outline-none focus:border-indigo-500/50 focus:ring-4 focus:ring-indigo-500/5 transition-all w-full sm:w-64"
             />
-            <button
-              type="submit"
-              className="px-4 py-2 rounded-xl bg-text-primary/5 hover:bg-text-primary/10 text-text-secondary text-sm font-medium transition-colors border border-border-primary"
-            >
-              Tìm
-            </button>
           </form>
+          
           <button
             onClick={() => setShowAdd(true)}
-            className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-500 text-white text-sm font-semibold transition-colors flex items-center gap-2"
+            className="flex items-center justify-center gap-2 min-h-[40px] px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-bold uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-indigo-600/10"
           >
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 4v16m8-8H4"
-              />
-            </svg>
-            Thêm
+            <Plus className="w-5 h-5" />
+            Thêm mới
+          </button>
+
+          <button
+            onClick={load}
+            className="flex items-center justify-center gap-2 min-h-[40px] px-3 py-2 rounded-xl bg-text-primary/5 border border-border-primary text-text-secondary hover:text-text-primary transition-all active:scale-95"
+          >
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
         </div>
       </div>
 
       {/*  Table  */}
-      <div className="rounded-2xl bg-bg-card border border-border-primary overflow-hidden">
-        <div className="grid grid-cols-[auto_1fr_auto_auto] gap-4 px-5 py-3 border-b border-border-primary text-xs font-semibold text-text-secondary uppercase tracking-wider">
-          <span>Avatar</span>
-          <span>Email</span>
-          <span className="text-center">Role</span>
-          <span className="text-right">Hành động</span>
-        </div>
-
-        {loading ? (
-          <div className="py-16 flex items-center justify-center gap-2 text-text-secondary text-sm">
-            <div className="loader-ring" /> Đang tải...
+      <div className="bg-bg-card border border-border-primary rounded-[2.5rem] overflow-hidden shadow-2xl">
+        {loading && users.length === 0 ? (
+          <div className="p-8">
+            <TableSkeleton rows={8} cols={4} />
           </div>
         ) : users.length === 0 ? (
-          <div className="py-16 text-center text-text-secondary text-sm">
-            Không tìm thấy người dùng
+          <div className="py-24 text-center text-text-secondary space-y-4">
+            <Users2 className="w-16 h-16 mx-auto opacity-10" />
+            <p className="font-bold text-lg">Không tìm thấy người dùng nào</p>
+            <button 
+              onClick={() => { setSearchInput(""); setSearch(""); }}
+              className="text-indigo-400 hover:underline text-sm font-bold"
+            >
+              Xoá bộ lọc tìm kiếm
+            </button>
           </div>
         ) : (
-          <div className="divide-y divide-border-primary">
-            {users.map((user) => (
-              <div
-                key={user.id}
-                className="grid grid-cols-[auto_1fr_auto_auto] gap-4 items-center px-5 py-3.5 hover:bg-text-primary/5 transition-colors"
-              >
-                <Avatar email={user.email} />
-                <div className="min-w-0">
-                  <p className="text-text-primary text-sm font-medium truncate">
-                    {user.email}
-                  </p>
-                  <p className="text-text-secondary text-xs mt-0.5">
-                    Tham gia{" "}
-                    {new Date(user.created_at).toLocaleDateString("vi-VN")}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <RoleBadge role={user.role} />
-                  {!user.is_active && <LockedBadge />}
-                </div>
-                <div className="flex items-center gap-1">
-                  {/* Edit */}
-                  <button
-                    onClick={() => setEditUser(user)}
-                    title="Chỉnh sửa"
-                    className="p-1.5 rounded-lg hover:bg-text-primary/10 text-text-secondary hover:text-blue-500 transition-colors"
+          <div className="overflow-x-auto">
+            <table className="w-full text-left border-collapse">
+              <thead>
+                <tr className="border-b border-border-primary text-[10px] font-black text-text-secondary uppercase tracking-[0.2em] bg-white/[0.02]">
+                  <th className="px-6 py-3.5">Thành viên</th>
+                  <th className="px-6 py-3.5">Vai trò & Trạng thái</th>
+                  <th className="px-6 py-3.5">Ngày tham gia</th>
+                  <th className="px-6 py-3.5 text-right">Thao tác</th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-border-primary/50">
+                {users.map((user) => (
+                  <tr
+                    key={user.id}
+                    className="hover:bg-white/[0.03] transition-colors group"
                   >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M15.232 5.232l3.536 3.536m-2.036-5.036a2.5 2.5 0 113.536 3.536L6.5 21.036H3v-3.572L16.732 3.732z"
-                      />
-                    </svg>
-                  </button>
-                  {/* Emergency Contacts */}
-                  <button
-                    onClick={() => setContactsUser(user)}
-                    title="Liên hệ khẩn cấp"
-                    className="p-1.5 rounded-lg hover:bg-cyan-500/10 text-text-secondary hover:text-cyan-500 transition-colors"
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"
-                      />
-                    </svg>
-                  </button>
-                  {/* Toggle role */}
-                  <button
-                    onClick={() => setConfirm({ type: "toggle", user })}
-                    title={
-                      user.role === "ADMIN" ? "Hạ xuống User" : "Nâng lên Admin"
-                    }
-                    className="p-1.5 rounded-lg hover:bg-text-primary/10 text-text-secondary hover:text-purple-500 transition-colors"
-                  >
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      stroke="currentColor"
-                      viewBox="0 0 24 24"
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        strokeWidth={2}
-                        d="M8 7h12m0 0l-4-4m4 4l-4 4m0 6H4m0 0l4 4m-4-4l4-4"
-                      />
-                    </svg>
-                  </button>
-                  {/* Lock / Unlock — hide for self */}
-                  {user.email !== myEmail &&
-                    (user.is_active ? (
-                      <button
-                        onClick={() => setConfirm({ type: "lock", user })}
-                        title="Khoá tài khoản"
-                        className="p-1.5 rounded-lg hover:bg-orange-500/10 text-text-secondary hover:text-orange-500 transition-colors"
-                      >
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
+                    <td className="px-8 py-6">
+                      <div className="flex items-center gap-4">
+                        <div className="relative">
+                          <Avatar email={user.email} className="w-10 h-10 rounded-2xl border-2 border-border-primary group-hover:border-indigo-500/50 transition-colors" />
+                          {!user.is_active && (
+                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 rounded-full border-2 border-bg-card flex items-center justify-center">
+                              <Lock className="w-2 h-2 text-white" />
+                            </div>
+                          )}
+                        </div>
+                        <div className="min-w-0">
+                          <p className="text-sm font-black text-text-primary truncate flex items-center gap-2">
+                            {user.email}
+                            {user.email === myEmail && (
+                              <span className="px-1.5 py-0.5 rounded bg-white/10 text-[8px] uppercase tracking-widest text-text-secondary">Tôi</span>
+                            )}
+                          </p>
+                          <p className="text-[10px] text-text-secondary font-bold opacity-60 flex items-center gap-1 mt-1 uppercase tracking-wider">
+                            <Mail className="w-3 h-3" /> UID: {user.id.substring(0, 8)}...
+                          </p>
+                        </div>
+                      </div>
+                    </td>
+                    <td className="px-8 py-6">
+                      <div className="flex items-center gap-3">
+                        <RoleBadge role={user.role} />
+                        {!user.is_active && <LockedBadge />}
+                      </div>
+                    </td>
+                    <td className="px-8 py-6">
+                      <div className="flex items-center gap-2 text-xs font-bold text-text-secondary">
+                        <Calendar className="w-3.5 h-3.5 opacity-40" />
+                        {new Date(user.created_at).toLocaleDateString("vi-VN", {
+                          day: '2-digit',
+                          month: 'long',
+                          year: 'numeric'
+                        })}
+                      </div>
+                    </td>
+                    <td className="px-8 py-6">
+                      <div className="flex justify-end items-center gap-2">
+                        {/* Edit */}
+                        <button
+                          onClick={() => setEditUser(user)}
+                          className="w-10 h-10 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-text-secondary hover:text-indigo-400 hover:border-indigo-400/30 transition-all"
+                          title="Chỉnh sửa thông tin"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"
-                          />
-                        </svg>
-                      </button>
-                    ) : (
-                      <button
-                        onClick={() => setConfirm({ type: "unlock", user })}
-                        title="Mở khoá tài khoản"
-                        className="p-1.5 rounded-lg hover:bg-green-500/10 text-text-secondary hover:text-green-500 transition-colors"
-                      >
-                        <svg
-                          className="w-4 h-4"
-                          fill="none"
-                          stroke="currentColor"
-                          viewBox="0 0 24 24"
+                          <Edit2 className="w-4 h-4" />
+                        </button>
+
+                        {/* Emergency Contacts */}
+                        <button
+                          onClick={() => setContactsUser(user)}
+                          className="w-10 h-10 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-text-secondary hover:text-cyan-400 hover:border-cyan-400/30 transition-all"
+                          title="Danh bạ khẩn cấp"
                         >
-                          <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M8 11V7a4 4 0 118 0m-4 8v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2z"
-                          />
-                        </svg>
-                      </button>
-                    ))}
-                  {/* Delete — hide for self */}
-                  {user.email !== myEmail && (
-                    <button
-                      onClick={() => setConfirm({ type: "delete", user })}
-                      title="Xoá"
-                      className="p-1.5 rounded-lg hover:bg-red-500/10 text-text-secondary hover:text-red-500 transition-colors"
-                    >
-                      <svg
-                        className="w-4 h-4"
-                        fill="none"
-                        stroke="currentColor"
-                        viewBox="0 0 24 24"
-                      >
-                        <path
-                          strokeLinecap="round"
-                          strokeLinejoin="round"
-                          strokeWidth={2}
-                          d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"
-                        />
-                      </svg>
-                    </button>
-                  )}
-                </div>
-              </div>
-            ))}
+                          <Users2 className="w-4 h-4" />
+                        </button>
+
+                        {/* More Menu Placeholder - for demo premium feel */}
+                        <div className="h-6 w-[1px] bg-white/10 mx-1" />
+
+                        {/* Role Toggle */}
+                        <button
+                          onClick={() => setConfirm({ type: "toggle", user })}
+                          className="w-10 h-10 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-text-secondary hover:text-amber-400 hover:border-amber-400/30 transition-all"
+                          title={user.role === "ADMIN" ? "Gỡ quyền Admin" : "Cấp quyền Admin"}
+                        >
+                          <Shield className="w-4 h-4" />
+                        </button>
+
+                        {/* Lock/Unlock */}
+                        {user.email !== myEmail && (
+                          <button
+                            onClick={() => setConfirm({ type: user.is_active ? "lock" : "unlock", user })}
+                            className={`w-10 h-10 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center transition-all ${
+                              user.is_active 
+                                ? 'text-text-secondary hover:text-orange-400 hover:border-orange-400/30' 
+                                : 'text-green-500 hover:bg-green-500/10 border-green-500/20'
+                            }`}
+                            title={user.is_active ? "Khoá tài khoản" : "Mở khoá tài khoản"}
+                          >
+                            {user.is_active ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
+                          </button>
+                        )}
+
+                        {/* Delete */}
+                        {user.email !== myEmail && (
+                          <button
+                            onClick={() => setConfirm({ type: "delete", user })}
+                            className="w-10 h-10 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-text-secondary hover:text-red-500 hover:border-red-500/30 transition-all"
+                            title="Xoá vĩnh viễn"
+                          >
+                            <Trash2 className="w-4 h-4" />
+                          </button>
+                        )}
+                      </div>
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
           </div>
         )}
       </div>
 
       {/* ── Pagination  */}
       {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-2">
+        <div className="flex items-center justify-center gap-6 mt-10">
           <button
             onClick={() => setPage((p) => Math.max(1, p - 1))}
             disabled={page <= 1}
-            className="px-3 py-1.5 rounded-lg bg-bg-card border border-border-primary hover:bg-text-primary/5 text-text-secondary text-sm disabled:opacity-30 transition-colors"
+            className="flex items-center gap-2 min-h-[44px] px-6 py-2 text-xs font-black uppercase tracking-widest rounded-xl border border-border-primary bg-text-primary/2 text-text-secondary hover:text-text-primary hover:border-indigo-500/40 hover:bg-text-primary/5 disabled:opacity-20 disabled:cursor-not-allowed transition-all active:scale-95"
           >
-            ← Trước
+            <ChevronLeft className="w-4 h-4" />
+            Trước
           </button>
-          <span className="text-text-secondary text-sm">
-            {page} / {totalPages}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="text-sm font-black text-text-primary">{page}</span>
+            <span className="text-sm font-bold text-text-secondary opacity-30">/</span>
+            <span className="text-sm font-bold text-text-secondary/60">{totalPages}</span>
+          </div>
           <button
             onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
             disabled={page >= totalPages}
-            className="px-3 py-1.5 rounded-lg bg-bg-card border border-border-primary hover:bg-text-primary/5 text-text-secondary text-sm disabled:opacity-30 transition-colors"
+            className="flex items-center gap-2 min-h-[44px] px-6 py-2 text-xs font-black uppercase tracking-widest rounded-xl border border-border-primary bg-white/2 text-text-secondary hover:text-white hover:border-indigo-500/40 hover:bg-white/5 disabled:opacity-20 disabled:cursor-not-allowed transition-all active:scale-95"
           >
-            Sau →
+            Sau
+            <ChevronRight className="w-4 h-4" />
           </button>
         </div>
       )}
     </div>
   );
 }
+

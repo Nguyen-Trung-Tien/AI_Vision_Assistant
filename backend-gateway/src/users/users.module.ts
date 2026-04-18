@@ -4,8 +4,13 @@ import { UsersService } from './users.service';
 import { UsersController } from './users.controller';
 import { User } from './entities/user.entity';
 
+import { AuditModule } from '../audit/audit.module';
+
 @Module({
-  imports: [TypeOrmModule.forFeature([User])],
+  imports: [
+    TypeOrmModule.forFeature([User]),
+    AuditModule,
+  ],
   providers: [UsersService],
   controllers: [UsersController],
   exports: [UsersService],

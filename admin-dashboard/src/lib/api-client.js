@@ -1,6 +1,6 @@
 import axios from "axios";
 import { env } from "@/lib/env";
-import { clearSession } from "@/services/api";
+import { clearSessionLocal } from "@/lib/auth-storage";
 
 /**
  * Global Axios Instance
@@ -25,7 +25,7 @@ apiClient.interceptors.response.use(
     // Handle 401 Unauthorized - clear session and potentially redirect
     if (status === 401) {
       console.warn("Unauthorized - Clearing session...");
-      clearSession();
+      clearSessionLocal();
       // Optional: window.location.href = "/login";
     }
 

@@ -14,6 +14,7 @@ import {
 import type { Request } from 'express';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { AuditService } from '../audit/audit.service';
 
 // Safe helper to extract the requester's ID from JWT payload
 function getRequesterId(req: Request): string | undefined {
@@ -24,7 +25,10 @@ function getRequesterId(req: Request): string | undefined {
 @Controller('users')
 @UseGuards(JwtAuthGuard)
 export class UsersController {
-  constructor(private readonly usersService: UsersService) {}
+  constructor(
+    private readonly usersService: UsersService,
+    private readonly auditService: AuditService,
+  ) {}
 
   private ensureAdmin(req: Request) {
     const user = req.user as { role?: string } | undefined;
@@ -54,11 +58,22 @@ export class UsersController {
     @Body() body: { email: string; password: string; role?: string },
   ) {
     this.ensureAdmin(req);
-    return this.usersService.createUser(
+    const result = await this.usersService.createUser(
       body.email,
       body.password,
       body.role ?? 'USER',
     );
+
+    await this.auditService.log({
+      adminId: getRequesterId(req),
+      action: 'CREATE_USER',
+      targetType: 'user',
+      targetId: result.id,
+      details: { email: body.email, role: body.role },
+      ipAddress: req.ip,
+    });
+
+    return result;
   }
 
   @Patch(':id')
@@ -68,31 +83,81 @@ export class UsersController {
     @Body() body: { role?: string; password?: string },
   ) {
     this.ensureAdmin(req);
-    return this.usersService.updateUser(id, body);
+    const result = await this.usersService.updateUser(id, body);
+
+    await this.auditService.log({
+      adminId: getRequesterId(req),
+      action: 'UPDATE_USER',
+      targetType: 'user',
+      targetId: id,
+      details: { ...body, password: body.password ? '******' : undefined },
+      ipAddress: req.ip,
+    });
+
+    return result;
   }
 
   @Patch(':id/toggle-role')
   async toggleRole(@Req() req: Request, @Param('id') id: string) {
     this.ensureAdmin(req);
-    return this.usersService.toggleRole(id);
+    const result = await this.usersService.toggleRole(id);
+
+    await this.auditService.log({
+      adminId: getRequesterId(req),
+      action: 'TOGGLE_USER_ROLE',
+      targetType: 'user',
+      targetId: id,
+      ipAddress: req.ip,
+    });
+
+    return result;
   }
 
   @Patch(':id/lock')
   async lockUser(@Req() req: Request, @Param('id') id: string) {
     this.ensureAdmin(req);
-    return this.usersService.lockUser(id, getRequesterId(req));
+    const result = await this.usersService.lockUser(id, getRequesterId(req));
+
+    await this.auditService.log({
+      adminId: getRequesterId(req),
+      action: 'LOCK_USER',
+      targetType: 'user',
+      targetId: id,
+      ipAddress: req.ip,
+    });
+
+    return result;
   }
 
   @Patch(':id/unlock')
   async unlockUser(@Req() req: Request, @Param('id') id: string) {
     this.ensureAdmin(req);
-    return this.usersService.unlockUser(id);
+    const result = await this.usersService.unlockUser(id);
+
+    await this.auditService.log({
+      adminId: getRequesterId(req),
+      action: 'UNLOCK_USER',
+      targetType: 'user',
+      targetId: id,
+      ipAddress: req.ip,
+    });
+
+    return result;
   }
 
   @Delete(':id')
   async deleteUser(@Req() req: Request, @Param('id') id: string) {
     this.ensureAdmin(req);
     await this.usersService.deleteUser(id, getRequesterId(req));
+
+    await this.auditService.log({
+      adminId: getRequesterId(req),
+      action: 'DELETE_USER',
+      targetType: 'user',
+      targetId: id,
+      ipAddress: req.ip,
+    });
+
     return { message: 'User deleted successfully' };
   }
 }

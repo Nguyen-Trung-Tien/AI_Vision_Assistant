@@ -4,7 +4,7 @@ export function RoleBadge({ role }) {
       className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-xs font-semibold ${
         role === "ADMIN"
           ? "bg-purple-500/20 text-purple-300 border border-purple-500/30"
-          : "bg-white/8 text-white/50 border border-white/10"
+          : "bg-text-primary/5 text-text-secondary border border-border-primary"
       }`}
     >
       {role === "ADMIN" ? "⚡ Admin" : "👤 User"}

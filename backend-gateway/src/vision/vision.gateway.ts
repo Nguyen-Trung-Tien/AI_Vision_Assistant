@@ -15,6 +15,7 @@ import { TaskQueueService } from './task-queue.service';
 import { FrameStreamDto } from './dto/frame-stream.dto';
 import { SosService } from '../sos/sos.service';
 import { BroadcastService } from '../broadcast/broadcast.service';
+import { NotificationService } from '../notification/notification.service';
 
 interface AuthSocket extends Socket {
   data: {
@@ -22,7 +23,17 @@ interface AuthSocket extends Socket {
   };
 }
 
-@WebSocketGateway({ cors: { origin: '*' } })
+@WebSocketGateway({
+  cors: {
+    origin: [
+      'http://127.0.0.1:4200',
+      'http://localhost:4200',
+      'http://localhost:5173',
+      'http://127.0.0.1:5173',
+    ],
+    credentials: true,
+  },
+})
 export class VisionGateway
   implements OnGatewayConnection, OnGatewayDisconnect, OnGatewayInit
 {
@@ -35,11 +46,13 @@ export class VisionGateway
     private readonly taskQueueService: TaskQueueService,
     private readonly sosService: SosService,
     private readonly broadcastService: BroadcastService,
+    private readonly notificationService: NotificationService,
   ) {}
 
   afterInit(server: Server) {
     this.taskQueueService.setServer(server);
     this.broadcastService.setServer(server);
+    this.notificationService.setServer(server);
   }
 
   handleConnection(client: Socket) {
@@ -152,6 +165,14 @@ export class VisionGateway
       longitude: data.longitude,
       imageBase64: data.imageBase64,
       timestamp: new Date().toISOString(),
+    });
+
+    // Push notification
+    this.notificationService.push({
+      type: 'sos',
+      title: 'Cảnh báo SOS mới!',
+      message: `Người dùng ${userId || 'Ẩn danh'} vừa gửi tín hiệu SOS khẩn cấp.`,
+      link: `/sos?id=${savedAlert.id}`,
     });
 
     client.emit('sos_ack', { status: 'received', timestamp: Date.now() });

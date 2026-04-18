@@ -41,6 +41,9 @@ export class DetectionLog {
   @Column({ length: 20, nullable: true })
   severity!: string;
 
+  @Column({ length: 50, nullable: true, default: 'v1.0.0' })
+  model_version!: string;
+
   @CreateDateColumn()
   created_at!: Date;
 }

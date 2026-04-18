@@ -14,6 +14,7 @@ import type { Request as ExpressRequest } from 'express';
 import { SosService } from './sos.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { JwtUser } from '../common/interfaces/jwt-user.interface';
+import { AuditService } from '../audit/audit.service';
 
 interface AuthRequest extends ExpressRequest {
   user: JwtUser;
@@ -22,7 +23,10 @@ interface AuthRequest extends ExpressRequest {
 @Controller('sos')
 @UseGuards(JwtAuthGuard)
 export class SosController {
-  constructor(private readonly sosService: SosService) {}
+  constructor(
+    private readonly sosService: SosService,
+    private readonly auditService: AuditService,
+  ) {}
 
   private ensureAdmin(req: ExpressRequest) {
     if (req.user?.role !== 'ADMIN') {
@@ -49,18 +53,39 @@ export class SosController {
   }
 
   @Patch(':id/resolve')
-  resolve(
+  async resolve(
     @Param('id') id: string,
     @Request() req: AuthRequest,
     @Body() body: { note?: string },
   ) {
     this.ensureAdmin(req);
-    return this.sosService.resolve(id, req.user.userId, body.note);
+    const result = await this.sosService.resolve(id, req.user.userId, body.note);
+
+    await this.auditService.log({
+      adminId: req.user.userId,
+      action: 'RESOLVE_SOS',
+      targetType: 'sos',
+      targetId: id,
+      details: { note: body.note },
+      ipAddress: req.ip,
+    });
+
+    return result;
   }
 
   @Patch(':id/acknowledge')
-  acknowledge(@Param('id') id: string, @Request() req: AuthRequest) {
+  async acknowledge(@Param('id') id: string, @Request() req: AuthRequest) {
     this.ensureAdmin(req);
-    return this.sosService.acknowledge(id);
+    const result = await this.sosService.acknowledge(id);
+
+    await this.auditService.log({
+      adminId: req.user.userId,
+      action: 'ACKNOWLEDGE_SOS',
+      targetType: 'sos',
+      targetId: id,
+      ipAddress: req.ip,
+    });
+
+    return result;
   }
 }

@@ -13,6 +13,7 @@ import { BroadcastService } from './broadcast.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { UsersService } from '../users/users.service';
 import { JwtUser } from '../common/interfaces/jwt-user.interface';
+import { AuditService } from '../audit/audit.service';
 
 interface AuthRequest extends ExpressRequest {
   user: JwtUser;
@@ -24,6 +25,7 @@ export class BroadcastController {
   constructor(
     private readonly broadcastService: BroadcastService,
     private readonly usersService: UsersService,
+    private readonly auditService: AuditService,
   ) {}
 
   private ensureAdmin(req: ExpressRequest) {
@@ -69,12 +71,27 @@ export class BroadcastController {
       }
     }
 
-    return this.broadcastService.sendBroadcast(
+    const result = await this.broadcastService.sendBroadcast(
       req.user.userId,
       body.message,
       body.targetType ?? 'all',
       resolvedTargetIds,
       body.priority ?? 'normal',
     );
+
+    await this.auditService.log({
+      adminId: req.user.userId,
+      action: 'SEND_BROADCAST',
+      targetType: 'broadcast',
+      targetId: (result as any).id,
+      details: {
+        message: body.message,
+        targetType: body.targetType,
+        targetCount: resolvedTargetIds.length,
+      },
+      ipAddress: req.ip,
+    });
+
+    return result;
   }
 }

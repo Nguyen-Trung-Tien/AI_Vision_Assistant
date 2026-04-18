@@ -99,7 +99,16 @@ export default function FeedbackPage() {
   };
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      {/* Header */}
+      <div className="flex flex-col gap-1">
+        <h1 className="text-2xl font-bold tracking-tight text-text-primary uppercase">
+          USER <span className="text-indigo-500">FEEDBACK</span>
+        </h1>
+        <p className="text-text-secondary font-medium text-sm">
+          Phân tích các báo cáo và góp ý từ người dùng về độ chính xác của AI
+        </p>
+      </div>
       {/* Confirm dialog */}
       <ConfirmDialog
         open={!!confirm}

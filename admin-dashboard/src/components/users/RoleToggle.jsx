@@ -5,7 +5,7 @@ export default function RoleToggle({ value, onChange }) {
         {
           v: "USER",
           label: "👤 User",
-          active: "bg-white/10 border-white/25 text-white",
+          active: "bg-text-primary/10 border-border-primary text-text-primary",
         },
         {
           v: "ADMIN",
@@ -20,7 +20,7 @@ export default function RoleToggle({ value, onChange }) {
           className={`flex-1 py-2 rounded-xl border text-sm font-medium transition-all ${
             value === v
               ? active
-              : "bg-white/3 border-white/8 text-white/35 hover:bg-white/6"
+              : "bg-text-primary/3 border-border-primary text-text-secondary/60 hover:bg-text-primary/6"
           }`}
         >
           {label}

@@ -6,6 +6,7 @@ import { BroadcastController } from './broadcast.controller';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UsersModule } from '../users/users.module';
+import { AuditModule } from '../audit/audit.module';
 
 @Module({
   imports: [
@@ -19,6 +20,7 @@ import { UsersModule } from '../users/users.module';
         signOptions: { expiresIn: '7d' },
       }),
     }),
+    AuditModule,
   ],
   controllers: [BroadcastController],
   providers: [BroadcastService],

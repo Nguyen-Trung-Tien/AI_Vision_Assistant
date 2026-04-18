@@ -1,25 +1,40 @@
 import apiClient from "@/lib/api-client";
+import { 
+  setSession as setSessionLocal, 
+  clearSessionLocal, 
+  getStoredEmail as getStoredEmailLocal,
+  getStoredToken as getStoredTokenLocal
+} from "@/lib/auth-storage";
 
-const EMAIL_KEY = "admin_email";
-const AUTH_KEY = "admin_authenticated";
+export function getApiUrl() {
+  return import.meta.env.VITE_API_URL || "http://localhost:3000/api";
+}
+
+export function isAuthenticated() {
+  return getStoredTokenLocal() === "true";
+}
+
+export function getStoredToken() {
+  // We use HttpOnly cookies, so we don't have a token in JS.
+  // This remains for compatibility but returns null to avoid sending "true" as a JWT.
+  return null;
+}
 
 /**
  * Auth operations
  */
 export function clearSession() {
-  localStorage.removeItem(EMAIL_KEY);
-  localStorage.removeItem(AUTH_KEY);
+  clearSessionLocal();
   // Post logout to clear httpOnly cookies on the backend
   return apiClient.post("/auth/logout").catch(() => {});
 }
 
 export function getStoredEmail() {
-  return localStorage.getItem(EMAIL_KEY) ?? "";
+  return getStoredEmailLocal();
 }
 
 export function setSession(email) {
-  localStorage.setItem(AUTH_KEY, "true");
-  localStorage.setItem(EMAIL_KEY, email);
+  setSessionLocal(email);
 }
 
 export async function loginAdmin(email, password) {
@@ -193,4 +208,82 @@ export async function fetchUserEmergencyContacts(userId) {
   return apiClient
     .get(`/emergency-contacts/admin/user/${userId}`)
     .catch(() => []);
+}
+
+/**
+ * AI & Analytics
+ */
+export async function fetchAiModels() {
+  return apiClient.get("/ai/models").catch(() => []);
+}
+
+export async function switchAiModel(modelId) {
+  return apiClient.patch("/ai/switch", { modelId });
+}
+
+export async function fetchAccuracyTrend(days = 7) {
+  return apiClient.get(`/ai/analytics/accuracy?days=${days}`).catch(() => []);
+}
+
+export async function fetchPeakHours() {
+  return apiClient.get("/ai/analytics/peak-hours").catch(() => []);
+}
+
+export async function fetchAiLogs(page = 1, limit = 10, filters = {}) {
+  const query = new URLSearchParams({ page: String(page), limit: String(limit) });
+  if (filters.actionType) query.append("actionType", filters.actionType);
+  if (filters.modelVersion) query.append("modelVersion", filters.modelVersion);
+  
+  return apiClient.get(`/ai/logs?${query.toString()}`).catch(() => ({
+    items: [],
+    total: 0,
+  }));
+}
+
+/**
+ * Notifications
+ */
+export async function fetchNotifications() {
+  return apiClient.get("/notification").catch(() => []);
+}
+
+export async function markNotificationsReadAll() {
+  return apiClient.patch("/notification/read-all").catch(() => ({ success: false }));
+}
+
+/**
+ * Audit Logs
+ */
+export async function fetchAuditLogs(page = 1, limit = 20, filters = {}) {
+  const query = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+  });
+  if (filters.action) query.append("action", filters.action);
+  if (filters.targetType) query.append("targetType", filters.targetType);
+
+  return apiClient.get(`/audit?${query.toString()}`).catch(() => ({
+    items: [],
+    total: 0,
+    totalPages: 0,
+  }));
+}
+
+/**
+ * System Monitoring
+ */
+export async function fetchSystemHealth() {
+  return apiClient.get("/system/health").catch(() => null);
+}
+
+export async function fetchSystemMetrics() {
+  return apiClient.get("/system/metrics").catch(() => null);
+}
+
+export async function fetchSystemSettings() {
+  return apiClient.get("/system/settings").catch(() => []);
+}
+
+export async function updateSystemSetting(key, value) {
+  return apiClient.patch(`/system/settings/${key}`, { value });
 }

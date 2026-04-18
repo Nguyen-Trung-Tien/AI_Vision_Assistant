@@ -20,6 +20,12 @@ import { EmergencyContactModule } from './emergency-contact/emergency-contact.mo
 import { SmsModule } from './sms/sms.module';
 import { FaceModule } from './face/face.module';
 import { FaceRegistration } from './face/entities/face-registration.entity';
+import { AuditModule } from './audit/audit.module';
+import { AuditLog } from './audit/entities/audit-log.entity';
+import { NotificationModule } from './notification/notification.module';
+import { SystemModule } from './system/system.module';
+import { AiModule } from './ai/ai.module';
+import { SystemSetting } from './system/entities/system-setting.entity';
 
 @Module({
   imports: [
@@ -45,6 +51,8 @@ import { FaceRegistration } from './face/entities/face-registration.entity';
           UserSession,
           EmergencyContact,
           FaceRegistration,
+          AuditLog,
+          SystemSetting,
         ],
         synchronize: configService.get<string>('DB_SYNC', 'false') === 'true',
       }),
@@ -58,6 +66,10 @@ import { FaceRegistration } from './face/entities/face-registration.entity';
     EmergencyContactModule,
     SmsModule,
     FaceModule,
+    AuditModule,
+    NotificationModule,
+    SystemModule,
+    AiModule,
   ],
   controllers: [AppController],
   providers: [AppService],

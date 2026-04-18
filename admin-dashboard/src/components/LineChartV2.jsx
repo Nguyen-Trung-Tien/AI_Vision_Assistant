@@ -34,9 +34,9 @@ export default function LineChartV2() {
   }
 
   return (
-    <div className="bg-bg-card rounded-2xl p-4 sm:p-6 border border-border-primary shadow-lg hover:border-accent-purple/30 transition-all duration-300">
+    <div className="bg-bg-card rounded-2xl p-4 sm:p-5 border border-border-primary shadow-lg hover:border-accent-purple/30 transition-all duration-300">
       <h3 className="text-[10px] font-bold text-text-secondary uppercase tracking-widest mb-6">Xu hướng nhận diện (30 ngày)</h3>
-      <ResponsiveContainer width="100%" height={300}>
+      <ResponsiveContainer width="100%" height={260}>
         <AreaChart data={data} margin={{ left: -20 }}>
           <defs>
             <linearGradient id="colorCountV2" x1="0" y1="0" x2="0" y2="1">

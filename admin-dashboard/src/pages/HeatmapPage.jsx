@@ -64,6 +64,15 @@ export default function HeatmapPage() {
   const [type, setType] = useState("danger");
   const [days, setDays] = useState(30);
   const [loading, setLoading] = useState(false);
+  const [isDark, setIsDark] = useState(document.documentElement.classList.contains("dark"));
+
+  useEffect(() => {
+    const observer = new MutationObserver(() => {
+      setIsDark(document.documentElement.classList.contains("dark"));
+    });
+    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    return () => observer.disconnect();
+  }, []);
 
   const load = async () => {
     setLoading(true);
@@ -95,13 +104,12 @@ export default function HeatmapPage() {
     <div className="space-y-6 animate-slide-in">
       {/* ── Header ──────────────────────────────────────────────── */}
       <div className="flex items-start justify-between flex-wrap gap-3">
-        <div>
-          <h2 className="text-2xl font-bold text-text-primary">
-            🗺 Heatmap Khu Vực Nguy Hiểm
-          </h2>
-          <p className="text-text-secondary text-sm mt-0.5">
-            {points.length} vị trí · {totalHits} lượt phát hiện · {days} ngày
-            qua
+        <div className="flex flex-col gap-1">
+          <h1 className="text-2xl font-bold tracking-tight text-text-primary uppercase">
+            HEATMAP <span className="text-indigo-500">NGUY HIỂM</span>
+          </h1>
+          <p className="text-text-secondary font-medium text-sm">
+            {points.length} vị trí · {totalHits} lượt phát hiện · {days} ngày qua
           </p>
         </div>
         <button
@@ -208,7 +216,10 @@ export default function HeatmapPage() {
           >
             {/* Dark tile layer */}
             <TileLayer
-              url="https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+              url={isDark 
+                ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+              }
               attribution='&copy; <a href="https://carto.com/">CARTO</a> | &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
               subdomains="abcd"
               maxZoom={19}
@@ -234,7 +245,7 @@ export default function HeatmapPage() {
             ].map(({ color, label }) => (
               <div key={label} className="flex items-center gap-3">
                 <div
-                  className={`w-4 h-4 rounded-full ${color} opacity-85 shrink-0 border border-black/5`}
+                  className={`w-4 h-4 rounded-full ${color} opacity-85 shrink-0 border border-border-primary shadow-sm`}
                 />
                 <span className="text-text-secondary text-xs">{label}</span>
               </div>
