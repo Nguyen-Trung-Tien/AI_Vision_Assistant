@@ -637,36 +637,6 @@ GEMINI_MAX_OUTPUT_TOKENS=256             # Optional: limit response length
                              18: den_giao_thong (traffic_light)
                              19: vach_qua_duong (crosswalk)
 ```
-
-### Công cụ chuẩn bị dataset
-
-| Script                             | Mục đích                                   |
-| ---------------------------------- | ------------------------------------------ |
-| `prepare_dataset_from_roboflow.py` | Chuẩn hóa dataset Roboflow → format YOLO   |
-| `merge_vnd_dataset.py`             | Gộp dataset tiền VN + vật thể → 18 classes |
-| `package_for_colab.py`             | Đóng gói dataset → ZIP cho Google Colab    |
-| `train_yolo.py`                    | Script training YOLO (finetune / scratch)  |
-
-### Training trên Google Colab
-
-```bash
-# 1. Upload project lên Colab (hoặc git clone)
-# 2. Cài đặt dependencies
-!pip install -r requirements.txt
-
-# 3. Chuẩn bị dataset
-!python prepare_dataset_from_roboflow.py --source-root dataset_image --target dataset_roboflow --clean
-
-# 4. Train YOLO (fine-tune)
-!python train_yolo.py \
-  --mode finetune \
-  --dataset dataset_roboflow/data.yaml \
-  --epochs 80 --imgsz 640 \
-  --model yolo11n.pt \
-  --device 0 --batch 16 \
-  --run-name vision_assistant_model_v3
-
-# 5. Download best.pt
 ```
 
 > [!NOTE]
@@ -722,7 +692,6 @@ Dashboard quản trị cung cấp các trang:
 - [ ] Admin Dashboard mở rộng (System Monitor, Analytics, RBAC, Activity Log)
 - [ ] Cloud deployment (Docker Compose full stack)
 - [ ] Layout analysis (đọc menu/sách)
-- [ ] Nhận diện màu sắc quần áo/vật thể
 - [ ] CI/CD pipeline cho model training + deployment
 - [ ] Progressive Web App cho Admin Dashboard
 - [ ] Offline model auto-update (OTA)
