@@ -3,6 +3,7 @@ import {
   setSession as setSessionLocal, 
   clearSessionLocal, 
   getStoredEmail as getStoredEmailLocal,
+  getStoredRole as getStoredRoleLocal,
   getStoredToken as getStoredTokenLocal,
   isAuthenticated as isAuthenticatedLocal
 } from "@/lib/auth-storage";
@@ -40,8 +41,12 @@ export function getStoredEmail() {
   return getStoredEmailLocal();
 }
 
-export function setSession(email, token) {
-  setSessionLocal(email, token);
+export function getStoredRole() {
+  return getStoredRoleLocal();
+}
+
+export function setSession(email, token, role) {
+  setSessionLocal(email, token, role);
 }
 
 export async function loginAdmin(email, password) {
@@ -50,12 +55,14 @@ export async function loginAdmin(email, password) {
     password,
   });
 
-  setSession(payload?.user?.email || email, payload.access_token);
+  setSession(payload?.user?.email || email, payload.access_token, payload?.user?.role);
   return payload;
 }
 
 export async function registerAdmin(email, password) {
-  return apiClient.post("/auth/register", { email, password });
+  const payload = await apiClient.post("/auth/register", { email, password });
+  setSession(payload?.user?.email || email, payload.access_token, payload?.user?.role);
+  return payload;
 }
 
 /**

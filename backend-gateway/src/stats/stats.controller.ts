@@ -9,6 +9,7 @@ import {
 import type { Request } from 'express';
 import { StatsService } from './stats.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
+import { Role } from '../common/enums/role.enum';
 
 @Controller('stats')
 @UseGuards(JwtAuthGuard)
@@ -16,8 +17,8 @@ export class StatsController {
   constructor(private readonly statsService: StatsService) {}
 
   private ensureAdmin(req: Request) {
-    const user = req.user as { role?: string } | undefined;
-    if (user?.role !== 'ADMIN') {
+    const user = req.user as { role?: Role } | undefined;
+    if (user?.role !== Role.ADMIN && user?.role !== Role.SUPER_ADMIN) {
       throw new ForbiddenException('Admin access required');
     }
   }

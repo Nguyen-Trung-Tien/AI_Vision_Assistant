@@ -7,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import * as bcrypt from 'bcrypt';
+import { Role } from '../common/enums/role.enum';
 
 @Injectable()
 export class UsersService {
@@ -63,7 +64,7 @@ export class UsersService {
   async toggleRole(id: string): Promise<User> {
     const user = await this.usersRepository.findOne({ where: { id } });
     if (!user) throw new NotFoundException('User not found');
-    user.role = user.role === 'ADMIN' ? 'USER' : 'ADMIN';
+    user.role = user.role === Role.ADMIN ? Role.USER : Role.ADMIN;
     return this.usersRepository.save(user);
   }
 
@@ -94,7 +95,7 @@ export class UsersService {
   async createUser(
     email: string,
     password: string,
-    role = 'USER',
+    role: Role = Role.USER,
   ): Promise<User> {
     const existing = await this.usersRepository.findOne({ where: { email } });
     if (existing) throw new ConflictException('Email already in use');
@@ -105,7 +106,7 @@ export class UsersService {
 
   async updateUser(
     id: string,
-    data: { role?: string; password?: string },
+    data: { role?: Role; password?: string },
   ): Promise<User> {
     const user = await this.usersRepository.findOne({ where: { id } });
     if (!user) throw new NotFoundException('User not found');

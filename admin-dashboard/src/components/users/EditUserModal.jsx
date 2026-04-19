@@ -4,11 +4,13 @@ import { useToast } from "../Toast";
 import Modal, { Field, INPUT_STYLES } from "../ui/Modal";
 import RoleToggle from "./RoleToggle";
 import Avatar from "../ui/Avatar";
+import { Eye, EyeOff } from "lucide-react";
 
 export default function EditUserModal({ user, onClose, onSuccess }) {
   const toast = useToast();
   const [form, setForm] = useState({ role: user.role, password: "" });
   const [loading, setLoading] = useState(false);
+  const [showPassword, setShowPassword] = useState(false);
 
   const handleSubmit = async () => {
     setLoading(true);
@@ -71,13 +73,22 @@ export default function EditUserModal({ user, onClose, onSuccess }) {
       </Field>
 
       <Field label="Đặt lại mật khẩu (để trống nếu không đổi)">
-        <input
-          value={form.password}
-          onChange={set("password")}
-          type="password"
-          placeholder="Mật khẩu mới..."
-          className={INPUT_STYLES}
-        />
+        <div className="relative group">
+          <input
+            value={form.password}
+            onChange={set("password")}
+            type={showPassword ? "text" : "password"}
+            placeholder="Mật khẩu mới..."
+            className={`${INPUT_STYLES} pr-11`}
+          />
+          <button
+            type="button"
+            onClick={() => setShowPassword(!showPassword)}
+            className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-text-secondary hover:text-text-primary hover:bg-text-primary/5 transition-all"
+          >
+            {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+          </button>
+        </div>
       </Field>
     </Modal>
   );

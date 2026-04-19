@@ -5,10 +5,11 @@ import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
 import { SettingsService } from './settings.service';
 import { Body, Patch, Param } from '@nestjs/common';
+import { Role } from '../common/enums/role.enum';
 
 @Controller('system')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('ADMIN')
+@Roles(Role.ADMIN, Role.SUPER_ADMIN)
 export class SystemController {
   constructor(
     private readonly systemService: SystemService,

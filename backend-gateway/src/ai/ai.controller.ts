@@ -3,10 +3,11 @@ import { AiService } from './ai.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { RolesGuard } from '../auth/guards/roles.guard';
 import { Roles } from '../auth/decorators/roles.decorator';
+import { Role } from '../common/enums/role.enum';
 
 @Controller('ai')
 @UseGuards(JwtAuthGuard, RolesGuard)
-@Roles('ADMIN')
+@Roles(Role.ADMIN, Role.SUPER_ADMIN)
 export class AiController {
   constructor(private readonly aiService: AiService) {}
 
@@ -16,6 +17,7 @@ export class AiController {
   }
 
   @Patch('switch')
+  @Roles(Role.SUPER_ADMIN)
   switchModel(@Body('modelId') modelId: string) {
     return this.aiService.switchModel(modelId);
   }
@@ -37,6 +39,9 @@ export class AiController {
     @Query('actionType') actionType: string,
     @Query('modelVersion') modelVersion: string,
   ) {
-    return this.aiService.getDetectionLogs(page || 1, limit || 20, { actionType, modelVersion });
+    return this.aiService.getDetectionLogs(page || 1, limit || 20, {
+      actionType,
+      modelVersion,
+    });
   }
 }

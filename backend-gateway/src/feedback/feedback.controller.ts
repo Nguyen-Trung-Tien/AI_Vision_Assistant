@@ -16,6 +16,7 @@ import type { Request as ExpressRequest } from 'express';
 import { FeedbackService } from './feedback.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { JwtUser } from '../common/interfaces/jwt-user.interface';
+import { Role } from '../common/enums/role.enum';
 
 interface AuthRequest extends ExpressRequest {
   user: JwtUser;
@@ -27,7 +28,8 @@ export class FeedbackController {
   constructor(private readonly feedbackService: FeedbackService) {}
 
   private ensureAdmin(req: ExpressRequest) {
-    if (req.user?.role !== 'ADMIN') {
+    const user = req.user as JwtUser | undefined;
+    if (user?.role !== Role.ADMIN && user?.role !== Role.SUPER_ADMIN) {
       throw new ForbiddenException('Admin access required');
     }
   }

@@ -77,7 +77,7 @@ export default function Sidebar({
               return (
                 <div key={group} className="space-y-0.5">
                   {sidebarOpen ? (
-                    <h3 className="px-3 text-[9px] font-black uppercase tracking-[0.25em] text-text-secondary opacity-30 mb-1">
+                    <h3 className="px-3 text-[9px] font-black uppercase tracking-[0.25em] text-text-secondary opacity-60 mb-1">
                       {group}
                     </h3>
                   ) : (

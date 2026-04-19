@@ -10,6 +10,7 @@ import {
 import type { Response } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto, RegisterDto } from './dto/auth.dto';
+import { Role } from '../common/enums/role.enum';
 
 type ValidatedUser = Record<string, unknown>;
 
@@ -38,7 +39,7 @@ export class AuthController {
     if (!user) throw new UnauthorizedException('Admin credentials required');
     if (user['__locked'])
       throw new UnauthorizedException('Tài khoản đã bị khoá');
-    if (user['role'] !== 'ADMIN')
+    if (user['role'] !== Role.ADMIN && user['role'] !== Role.SUPER_ADMIN)
       throw new UnauthorizedException('Admin credentials required');
 
     const result = this.authService.login(
@@ -54,9 +55,9 @@ export class AuthController {
     res.cookie('access_token', result.access_token, COOKIE_OPTIONS);
 
     // Return user info AND the token (for WebSocket auth in dashboard)
-    return { 
+    return {
       user: result.user,
-      access_token: result.access_token 
+      access_token: result.access_token,
     };
   }
 

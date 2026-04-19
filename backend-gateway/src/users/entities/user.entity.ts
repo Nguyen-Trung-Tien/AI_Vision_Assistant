@@ -8,6 +8,7 @@ import {
 } from 'typeorm';
 import { DetectionLog } from '../../vision/entities/detection-log.entity';
 import { EmergencyContact } from '../../emergency-contact/entities/emergency-contact.entity';
+import { Role } from '../../common/enums/role.enum';
 
 @Entity('users')
 export class User {
@@ -20,8 +21,8 @@ export class User {
   @Column()
   password_hash!: string;
 
-  @Column({ default: 'USER' })
-  role!: string;
+  @Column({ type: 'enum', enum: Role, default: Role.USER })
+  role!: Role;
 
   @Column({ nullable: true })
   full_name?: string;

@@ -17,6 +17,7 @@ import { CreateEmergencyContactDto } from './dto/create-emergency-contact.dto';
 import { UpdateEmergencyContactDto } from './dto/update-emergency-contact.dto';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { JwtUser } from '../common/interfaces/jwt-user.interface';
+import { Role } from '../common/enums/role.enum';
 
 @UseGuards(JwtAuthGuard)
 @Controller('emergency-contacts')
@@ -40,7 +41,7 @@ export class EmergencyContactController {
   @Get('admin/user/:userId')
   adminFindAllByUser(@Req() req: any, @Param('userId') userId: string) {
     const user = (req as Request).user as JwtUser;
-    if (user.role !== 'ADMIN') {
+    if (user.role !== Role.ADMIN && user.role !== Role.SUPER_ADMIN) {
       throw new ForbiddenException('Admin access required');
     }
     return this.emergencyContactService.findAllByUser(userId);

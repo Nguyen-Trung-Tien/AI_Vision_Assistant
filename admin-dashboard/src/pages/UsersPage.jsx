@@ -108,15 +108,7 @@ export default function UsersPage() {
     if (!confirm) return;
     setActionLoading(true);
     try {
-      if (confirm.type === "toggle") {
-        const updated = await toggleUserRole(confirm.user.id);
-        setUsers((prev) =>
-          prev.map((u) =>
-            u.id === updated.id ? { ...u, role: updated.role } : u,
-          ),
-        );
-        toast.success(`Đã chuyển "${confirm.user.email}" → ${updated.role}`);
-      } else if (confirm.type === "lock") {
+      if (confirm.type === "lock") {
         const updated = await lockUser(confirm.user.id);
         setUsers((prev) =>
           prev.map((u) =>
@@ -182,24 +174,14 @@ export default function UsersPage() {
       <ConfirmDialog
         open={!!confirm}
         title={
-          confirm?.type === "toggle"
-            ? "Thay đổi quyền?"
-            : confirm?.type === "lock"
+          confirm?.type === "lock"
               ? "Khoá tài khoản?"
               : confirm?.type === "unlock"
                 ? "Mở khoá tài khoản?"
                 : "Xoá tài khoản?"
         }
         message={
-          confirm?.type === "toggle" ? (
-            <div className="text-sm">
-              Chuyển <strong className="text-text-primary">{confirm.user.email}</strong> sang{" "}
-              <strong className="text-indigo-400">
-                {confirm.user.role === "ADMIN" ? "USER" : "ADMIN"}
-              </strong>
-              ?
-            </div>
-          ) : confirm?.type === "lock" ? (
+          confirm?.type === "lock" ? (
             <div className="text-sm">
               Khoá tài khoản <strong className="text-text-primary">{confirm?.user?.email}</strong> —
               người dùng sẽ không thể đăng nhập vào hệ thống.
@@ -217,9 +199,7 @@ export default function UsersPage() {
           )
         }
         confirmLabel={
-          confirm?.type === "toggle"
-            ? "Đổi quyền"
-            : confirm?.type === "lock"
+          confirm?.type === "lock"
               ? "Khoá ngay 🔒"
               : confirm?.type === "unlock"
                 ? "Mở khoá 🔓"
@@ -321,7 +301,6 @@ export default function UsersPage() {
                 <button onClick={() => setEditUser(user)} className="w-9 h-9 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-text-secondary hover:text-indigo-400 hover:border-indigo-400/30 transition-all" title="Chỉnh sửa thông tin"><Edit2 className="w-4 h-4" /></button>
                 <button onClick={() => setContactsUser(user)} className="w-9 h-9 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-text-secondary hover:text-cyan-400 hover:border-cyan-400/30 transition-all" title="Danh bạ khẩn cấp"><Users2 className="w-4 h-4" /></button>
                 <div className="h-6 w-[1px] bg-white/10 mx-1" />
-                <button onClick={() => setConfirm({ type: "toggle", user })} className="w-9 h-9 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-text-secondary hover:text-amber-400 hover:border-amber-400/30 transition-all" title={user.role === "ADMIN" ? "Gỡ quyền Admin" : "Cấp quyền Admin"}><Shield className="w-4 h-4" /></button>
                 {user.email !== myEmail && (
                   <>
                     <button onClick={() => setConfirm({ type: user.is_active ? "lock" : "unlock", user })} className={`w-9 h-9 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center transition-all ${user.is_active ? 'text-text-secondary hover:text-orange-400 hover:border-orange-400/30' : 'text-green-500 hover:bg-green-500/10 border-green-500/20'}`} title={user.is_active ? "Khoá tài khoản" : "Mở khoá tài khoản"}>{user.is_active ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}</button>

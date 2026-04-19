@@ -28,6 +28,7 @@ import AnalyticsPage from "./pages/AnalyticsPage";
 import {
   clearSession,
   getStoredEmail,
+  getStoredRole,
   fetchNotifications as fetchNotificationsApi,
   markNotificationsReadAll,
   isAuthenticated,
@@ -41,6 +42,7 @@ export default function App() {
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [notifications, setNotifications] = useState([]);
   const [email, setEmail] = useState("");
+  const [role, setRole] = useState("USER");
   const [isDarkMode, setIsDarkMode] = useState(() => {
     return (
       localStorage.getItem("theme") === "dark" ||
@@ -55,12 +57,14 @@ export default function App() {
       label: "Bảng Điều Khiển",
       icon: LayoutDashboard,
       group: "Tổng quan",
+      roles: ["SUPER_ADMIN", "ADMIN", "MODERATOR"],
     },
     {
       id: "analytics",
       label: "Phân Tích Nâng Cao",
       icon: LineChart,
       group: "Tổng quan",
+      roles: ["SUPER_ADMIN", "ADMIN"],
     },
     {
       id: "sos",
@@ -68,41 +72,49 @@ export default function App() {
       icon: ShieldAlert,
       group: "An toàn",
       badge: notifications.filter((n) => n.type === "SOS" && !n.isRead).length,
+      roles: ["SUPER_ADMIN", "ADMIN", "MODERATOR"],
     },
-    { id: "heatmap", label: "Khu Vực Nguy Hiểm", icon: Map, group: "An toàn" },
-    { id: "broadcast", label: "Broadcast TTS", icon: Radio, group: "An toàn" },
+    { id: "heatmap", label: "Khu Vực Nguy Hiểm", icon: Map, group: "An toàn", roles: ["SUPER_ADMIN", "ADMIN", "MODERATOR"] },
+    { id: "broadcast", label: "Broadcast TTS", icon: Radio, group: "An toàn", roles: ["SUPER_ADMIN", "ADMIN"] },
     {
       id: "feedback",
       label: "Phản Hồi Người Dùng",
       icon: MessageSquare,
       group: "Giao tiếp",
+      roles: ["SUPER_ADMIN", "ADMIN", "MODERATOR"],
     },
-    { id: "users", label: "Quản Lý Tài Khoản", icon: Users, group: "Quản trị" },
+    { id: "users", label: "Quản Lý Tài Khoản", icon: Users, group: "Quản trị", roles: ["SUPER_ADMIN", "ADMIN"] },
     {
       id: "model-manager",
       label: "Quản Lý Mô Hình AI",
       icon: Database,
       group: "Hệ thống",
+      roles: ["SUPER_ADMIN"],
     },
     {
       id: "activity",
       label: "Nhật Ký Hoạt Động",
       icon: Activity,
       group: "Hệ thống",
+      roles: ["SUPER_ADMIN", "ADMIN"],
     },
     {
       id: "system",
       label: "Trạng Thái Hệ Thống",
       icon: Activity,
       group: "Hệ thống",
+      roles: ["SUPER_ADMIN", "ADMIN"],
     },
     {
       id: "settings",
       label: "Cài Đặt Hệ Thống",
       icon: Settings,
       group: "Hệ thống",
+      roles: ["SUPER_ADMIN"],
     },
   ];
+
+  const filteredMenuItems = menuItems.filter(item => item.roles.includes(role));
 
   useEffect(() => {
     if (isDarkMode) {
@@ -118,6 +130,7 @@ export default function App() {
     if (isAuthenticated()) {
       setIsLoggedIn(true);
       setEmail(getStoredEmail());
+      setRole(getStoredRole());
       connectSocket();
     }
   };
@@ -207,7 +220,7 @@ export default function App() {
         handleMarkAllRead={handleMarkAllRead}
         isDarkMode={isDarkMode}
         setIsDarkMode={setIsDarkMode}
-        menuItems={menuItems}
+        menuItems={filteredMenuItems}
         handleLogout={handleLogout}
       >
         {renderContent()}

@@ -15,6 +15,7 @@ import type { Request } from 'express';
 import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AuditService } from '../audit/audit.service';
+import { Role } from '../common/enums/role.enum';
 
 // Safe helper to extract the requester's ID from JWT payload
 function getRequesterId(req: Request): string | undefined {
@@ -31,8 +32,8 @@ export class UsersController {
   ) {}
 
   private ensureAdmin(req: Request) {
-    const user = req.user as { role?: string } | undefined;
-    if (user?.role !== 'ADMIN') {
+    const user = req.user as { role?: Role } | undefined;
+    if (user?.role !== Role.ADMIN && user?.role !== Role.SUPER_ADMIN) {
       throw new ForbiddenException('Admin access required');
     }
   }
@@ -55,13 +56,13 @@ export class UsersController {
   @Post()
   async createUser(
     @Req() req: Request,
-    @Body() body: { email: string; password: string; role?: string },
+    @Body() body: { email: string; password: string; role?: Role },
   ) {
     this.ensureAdmin(req);
     const result = await this.usersService.createUser(
       body.email,
       body.password,
-      body.role ?? 'USER',
+      body.role ?? Role.USER,
     );
 
     await this.auditService.log({
@@ -80,7 +81,7 @@ export class UsersController {
   async updateUser(
     @Req() req: Request,
     @Param('id') id: string,
-    @Body() body: { role?: string; password?: string },
+    @Body() body: { role?: Role; password?: string },
   ) {
     this.ensureAdmin(req);
     const result = await this.usersService.updateUser(id, body);

@@ -8,6 +8,7 @@ import { ConfigService } from '@nestjs/config';
 import { UsersService } from '../users/users.service';
 import { JwtService } from '@nestjs/jwt';
 import * as bcrypt from 'bcrypt';
+import { Role } from '../common/enums/role.enum';
 
 const BCRYPT_SALT_ROUNDS = 10;
 
@@ -47,7 +48,7 @@ export class AuthService implements OnModuleInit {
       await this.usersService.create({
         email: adminEmail,
         password_hash: hashedPassword,
-        role: 'ADMIN',
+        role: Role.SUPER_ADMIN,
         accessibility_prefs: {
           tts_speed: 1.0,
           warning_distance_m: 2.0,
@@ -57,7 +58,7 @@ export class AuthService implements OnModuleInit {
       return;
     }
 
-    existing.role = 'ADMIN';
+    existing.role = Role.SUPER_ADMIN;
 
     let isSamePassword = false;
     try {
