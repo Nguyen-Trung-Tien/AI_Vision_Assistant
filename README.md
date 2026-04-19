@@ -668,8 +668,6 @@ GEMINI_MAX_OUTPUT_TOKENS=256             # Optional: limit response length
                              19: vach_qua_duong (crosswalk)
 ```
 
-```
-
 > [!NOTE]
 > Xem hướng dẫn chi tiết tại [`ai-worker/COLAB_TRAINING.md`](ai-worker/COLAB_TRAINING.md).
 
@@ -816,19 +814,13 @@ Dashboard quản trị cung cấp các trang:
 
 <div align="center">
 
-**Nguyễn Trung Tiến**
+### **Nguyễn Trung Tiến**
 
-[![Email](https://img.shields.io/badge/Email-2251120447%40ut.edu.vn-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:2251120447@ut.edu.vn)
-[![Email](https://img.shields.io/badge/Email-trungtiennguyen910%40gmail.com-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:trungtiennguyen910@gmail.com)
-[![GitHub](https://img.shields.io/badge/GitHub-Nguyen--Trung--Tien-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Nguyen-Trung-Tien)
+[![Email](https://img.shields.io/badge/Email-2251120447%40ut.edu.vn-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:2251120447@ut.edu.vn) [![Email](https://img.shields.io/badge/Email-trungtiennguyen910%40gmail.com-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:trungtiennguyen910@gmail.com) [![GitHub](https://img.shields.io/badge/GitHub-Nguyen--Trung--Tien-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Nguyen-Trung-Tien)
 
 _Đồ án tốt nghiệp — Đại học Giao thông Vận tải TP. Hồ Chí Minh (UTH)_
 
-</div>
-
 ---
-
-<div align="center">
 
 **⭐ Nếu dự án hữu ích, hãy cho một star trên GitHub! ⭐**
 
