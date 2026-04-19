@@ -352,14 +352,14 @@ mobile_app/lib/
 
 ```
 Vision Assistant/
-├── 📱 mobile_app/                    # Flutter mobile application
+├── 📱 mobile_app/                    # Flutter mobile application | [README.md](mobile_app/README.md)
 │   ├── lib/                          # Source code Dart
 │   ├── android/                      # Android native config
 │   ├── ios/                          # iOS native config
 │   ├── assets/models/                # TFLite models (offline)
 │   └── pubspec.yaml                  # Flutter dependencies
 │
-├── 🔗 backend-gateway/              # NestJS API Gateway
+├── 🔗 backend-gateway/              # NestJS API Gateway | [README.md](backend-gateway/README.md)
 │   ├── src/
 │   │   ├── auth/                     # JWT authentication + WS guard
 │   │   ├── vision/                   # WebSocket gateway + RabbitMQ queue
@@ -373,7 +373,7 @@ Vision Assistant/
 │   ├── docker-compose.yml            # RabbitMQ container
 │   └── package.json                  # Node.js dependencies
 │
-├── 🧠 ai-worker/                    # Python AI Processing Engine
+├── 🧠 ai-worker/                    # Python AI Processing Engine | [README.md](ai-worker/README.md)
 │   ├── services/
 │   │   ├── ai_service.py             # Façade module (backward compat API)
 │   │   ├── model_manager.py          # YOLO model loading & detection
@@ -396,7 +396,7 @@ Vision Assistant/
 │   ├── COLAB_TRAINING.md             # Training guide
 │   └── requirements.txt             # Python dependencies
 │
-├── 📊 admin-dashboard/              # React Admin Panel
+├── 📊 admin-dashboard/              # React Admin Panel | [README.md](admin-dashboard/README.md)
 │   ├── src/
 │   │   ├── pages/
 │   │   │   ├── DashboardV2.jsx       # Tổng quan thống kê
