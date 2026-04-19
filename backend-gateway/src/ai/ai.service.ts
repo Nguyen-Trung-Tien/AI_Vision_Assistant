@@ -1,6 +1,7 @@
-import { Injectable, Logger } from '@nestjs/common';
+import { Injectable, Logger, Inject } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository, Between } from 'typeorm';
+import { ClientProxy } from '@nestjs/microservices';
 import { DetectionLog } from '../vision/entities/detection-log.entity';
 import { AiFeedback } from '../feedback/entities/ai-feedback.entity';
 import { SettingsService } from '../system/settings.service';
@@ -16,45 +17,62 @@ export class AiService {
     @InjectRepository(AiFeedback)
     private feedbackRepo: Repository<AiFeedback>,
     private settingsService: SettingsService,
+    @Inject('AI_SERVICE') private aiClient: ClientProxy,
   ) {}
 
   async getModels() {
-    const activeModelId = await this.settingsService.getByKey('ACTIVE_AI_MODEL') || 'v1.0.0';
-    
+    const activeModelId =
+      (await this.settingsService.getByKey('ACTIVE_AI_MODEL')) || 'v1.0.0';
+
     return [
-      { 
-        id: 'v1.0.0', 
-        name: 'VisionCore Standard', 
-        status: activeModelId === 'v1.0.0' ? 'ACTIVE' : 'AVAILABLE', 
-        type: 'YOLOv8', 
-        accuracy: '92%' 
+      {
+        id: 'v1.0.0',
+        name: 'VisionCore Standard (v11)',
+        status: activeModelId === 'v1.0.0' ? 'ACTIVE' : 'AVAILABLE',
+        type: 'YOLOv11',
+        accuracy: '92%',
+        objectPath: 'models/model-object-recognition/best.pt',
       },
-      { 
-        id: 'v1.1.0-beta', 
-        name: 'VisionCore Pro (Beta)', 
-        status: activeModelId === 'v1.1.0-beta' ? 'ACTIVE' : 'AVAILABLE', 
-        type: 'YOLOv11', 
-        accuracy: '95%' 
+      {
+        id: 'v1.1.0-beta',
+        name: 'VisionCore Pro (v11.1 Beta)',
+        status: activeModelId === 'v1.1.0-beta' ? 'ACTIVE' : 'AVAILABLE',
+        type: 'YOLOv11',
+        accuracy: '95%',
+        objectPath: 'models/model-object-recognition/pro_beta.pt',
       },
-      { 
-        id: 'v0.9.0', 
-        name: 'Legacy Model', 
-        status: activeModelId === 'v0.9.0' ? 'ACTIVE' : 'DEPRECATED', 
-        type: 'YOLOv5', 
-        accuracy: '88%' 
+      {
+        id: 'v0.9.0',
+        name: 'VisionCore Lite (v11 Nano)',
+        status: activeModelId === 'v0.9.0' ? 'ACTIVE' : 'AVAILABLE',
+        type: 'YOLOv11',
+        accuracy: '88%',
+        objectPath: 'models/model-object-recognition/legacy.pt',
       },
     ];
   }
 
   async switchModel(modelId: string) {
     this.logger.log(`Switching active AI model to: ${modelId}`);
-    const updated = await this.settingsService.update('ACTIVE_AI_MODEL', modelId);
-    if (!updated) {
-      // If it doesn't exist for some reason, we could create it, 
-      // but seedSettings should have handled it.
-      // For robustness:
-      return this.settingsService.update('ACTIVE_AI_MODEL', modelId); // This is redundant but okay
-    }
+
+    // Find model details to get path
+    const models = await this.getModels();
+    const model = models.find((m) => m.id === modelId);
+
+    const updated = await this.settingsService.update(
+      'ACTIVE_AI_MODEL',
+      modelId,
+    );
+
+    // Dispatch reload command to AI worker
+    this.aiClient.emit('ai_tasks_queue', {
+      taskType: 'RELOAD_MODEL',
+      data: {
+        modelId: modelId,
+        objectPath: model?.objectPath,
+      },
+    });
+
     return updated;
   }
 
@@ -83,34 +101,46 @@ export class AiService {
   async getPeakHours() {
     const logs = await this.detectionRepo
       .createQueryBuilder('log')
-      .select("EXTRACT(HOUR FROM log.created_at)", "hour")
-      .addSelect("COUNT(*)", "count")
+      .select('EXTRACT(HOUR FROM log.created_at)', 'hour')
+      .addSelect('COUNT(*)', 'count')
       .where("log.created_at > NOW() - INTERVAL '24 hours'")
-      .groupBy("hour")
-      .orderBy("hour", "ASC")
-      .getRawMany();
+      .groupBy('hour')
+      .orderBy('hour', 'ASC')
+      .getRawMany<{ hour: string; count: string }>();
 
-    return logs.map(l => ({
+    return logs.map((l) => ({
       hour: parseInt(l.hour),
       count: parseInt(l.count),
     }));
   }
 
-  async getDetectionLogs(page: number = 1, limit: number = 20, filters: any = {}) {
-    const qb = this.detectionRepo.createQueryBuilder('log')
-      .leftJoinAndSelect('log.user', 'user')
-      .orderBy('log.created_at', 'DESC')
+  async getDetectionLogs(
+    page: number = 1,
+    limit: number = 20,
+    filters: { actionType?: string; modelVersion?: string } = {},
+  ) {
+    const qb = this.detectionRepo
+      .createQueryBuilder('log')
+      .leftJoinAndSelect('log.user', 'user');
+
+    if (filters.actionType) {
+      qb.andWhere('log.action_type = :actionType', {
+        actionType: filters.actionType,
+      });
+    }
+
+    if (filters.modelVersion) {
+      qb.andWhere('log.model_version = :modelVersion', {
+        modelVersion: filters.modelVersion,
+      });
+    }
+
+    qb.orderBy('log.created_at', 'DESC')
       .skip((page - 1) * limit)
       .take(limit);
 
-    if (filters.actionType) {
-      qb.andWhere('log.action_type = :type', { type: filters.actionType });
-    }
-    if (filters.modelVersion) {
-      qb.andWhere('log.model_version = :version', { version: filters.modelVersion });
-    }
-
     const [items, total] = await qb.getManyAndCount();
+
     return {
       items,
       total,

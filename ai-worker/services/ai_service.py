@@ -69,6 +69,10 @@ class AIService:
     def process_text_ocr(cls, image_base64: str, client_id: str = "default", lang: str = "vi") -> dict:
         return process_text_ocr(image_base64, client_id, lang=lang)
 
+    @classmethod
+    def reload_models(cls, object_path: str = None, money_path: str = None) -> dict:
+        return ModelManager.reload_models(object_path, money_path)
+
     # --- Internal methods re-exported for test backward compat ---
 
     _normalize_label = staticmethod(normalize_label)

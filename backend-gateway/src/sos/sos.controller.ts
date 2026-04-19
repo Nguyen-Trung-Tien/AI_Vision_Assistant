@@ -59,7 +59,11 @@ export class SosController {
     @Body() body: { note?: string },
   ) {
     this.ensureAdmin(req);
-    const result = await this.sosService.resolve(id, req.user.userId, body.note);
+    const result = await this.sosService.resolve(
+      id,
+      req.user.userId,
+      body.note,
+    );
 
     await this.auditService.log({
       adminId: req.user.userId,

@@ -1,5 +1,8 @@
 import { useState, useEffect } from "react";
-import { fetchAuditLogs } from "../services/api";
+import { 
+  exportActivityReport,
+  fetchAuditLogs 
+} from "../services/api";
 import { useToast } from "../components/Toast";
 import { 
   History, 
@@ -13,13 +16,15 @@ import {
   Clock,
   Shield,
   Activity,
-  ArrowRight
+  ArrowRight,
+  Download
 } from "lucide-react";
 import { TableSkeleton } from "../components/ui/Skeleton";
 
 export default function ActivityLogPage() {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
   const [page, setPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [filters, setFilters] = useState({
@@ -38,6 +43,25 @@ export default function ActivityLogPage() {
       toast?.error?.("Không thể lấy danh sách log");
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const blob = await exportActivityReport();
+      const url = window.URL.createObjectURL(new Blob([blob]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `activity_report_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      toast?.success?.("Báo cáo đã được tải xuống");
+    } catch (err) {
+      toast?.error?.("Không thể xuất báo cáo");
+    } finally {
+      setExporting(false);
     }
   };
 
@@ -76,6 +100,15 @@ export default function ActivityLogPage() {
         </div>
 
         <div className="flex flex-wrap items-center gap-3">
+          <button
+            onClick={handleExport}
+            disabled={exporting}
+            className="flex items-center gap-2 min-h-[44px] px-6 py-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-xs font-black uppercase tracking-widest rounded-xl hover:bg-emerald-500/20 transition-all active:scale-95 disabled:opacity-50"
+          >
+            <Download className={`w-4 h-4 ${exporting ? 'animate-bounce' : ''}`} />
+            {exporting ? 'Exporting...' : 'Export CSV'}
+          </button>
+
           <div className="relative group">
             <Filter className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary group-hover:text-indigo-500 transition-colors" />
             <select

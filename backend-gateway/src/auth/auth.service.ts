@@ -99,7 +99,7 @@ export class AuthService implements OnModuleInit {
     id: string;
     email: string;
     role: string;
-    accessibility_prefs: Record<string, unknown>;
+    accessibility_prefs?: Record<string, unknown>;
   }) {
     const payload = { email: user.email, sub: user.id, role: user.role };
     return {
@@ -108,7 +108,7 @@ export class AuthService implements OnModuleInit {
         id: user.id,
         email: user.email,
         role: user.role,
-        accessibility_prefs: user.accessibility_prefs,
+        accessibility_prefs: user.accessibility_prefs || {},
       },
     };
   }

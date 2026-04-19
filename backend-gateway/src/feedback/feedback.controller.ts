@@ -76,6 +76,12 @@ export class FeedbackController {
     );
   }
 
+  @Get(':id/suggest')
+  suggestLabel(@Param('id') id: string, @Request() req: ExpressRequest) {
+    this.ensureAdmin(req);
+    return this.feedbackService.suggestLabel(id);
+  }
+
   @Patch(':id/review')
   review(
     @Param('id') id: string,
@@ -84,5 +90,28 @@ export class FeedbackController {
   ) {
     this.ensureAdmin(req);
     return this.feedbackService.review(id, req.user.userId, body.correctLabel);
+  }
+
+  @Post('bulk-delete')
+  deleteBulk(@Request() req: ExpressRequest, @Body() body: { ids: string[] }) {
+    this.ensureAdmin(req);
+    return this.feedbackService.removeBulk(body.ids);
+  }
+
+  @Post('clear-all')
+  deleteAll(
+    @Request() req: ExpressRequest,
+    @Query('onlyWrong') onlyWrong = 'false',
+  ) {
+    this.ensureAdmin(req);
+    return this.feedbackService.removeAll(
+      onlyWrong === 'true' || onlyWrong === '1',
+    );
+  }
+
+  @Post(':id/delete')
+  delete(@Param('id') id: string, @Request() req: ExpressRequest) {
+    this.ensureAdmin(req);
+    return this.feedbackService.remove(id);
   }
 }

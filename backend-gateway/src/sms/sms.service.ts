@@ -15,7 +15,9 @@ export class SmsService {
 
     // Use mock service if credentials aren't provided
     if (!accountSid || !authToken || !this.twilioPhone) {
-      this.logger.warn('Twilio credentials missing. Falling back to mock SMS logging.');
+      this.logger.warn(
+        'Twilio credentials missing. Falling back to mock SMS logging.',
+      );
       this.isDev = true;
     } else {
       this.twilioClient = new Twilio(accountSid, authToken);
@@ -23,7 +25,12 @@ export class SmsService {
     }
   }
 
-  async sendSOS(phone: string, userName: string, lat: number, lng: number): Promise<boolean> {
+  async sendSOS(
+    phone: string,
+    userName: string,
+    lat: number,
+    lng: number,
+  ): Promise<boolean> {
     const mapUrl = `https://maps.google.com/maps?q=${lat},${lng}`;
     const messageBody = `[KHẨN CẤP] ${userName} đang cần trợ giúp! Vị trí ước tính: ${mapUrl} - Lúc: ${new Date().toLocaleString('vi-VN')}`;
 

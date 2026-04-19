@@ -1,4 +1,4 @@
-import { useEffect, useState, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import {
   fetchUsers,
   toggleUserRole,
@@ -7,6 +7,7 @@ import {
   updateUser,
   lockUser,
   unlockUser,
+  exportUsersReport,
 } from "../services/api";
 import { getStoredEmail } from "../services/api";
 import { useToast } from "../components/Toast";
@@ -32,7 +33,8 @@ import {
   ChevronRight,
   MoreVertical,
   Mail,
-  Calendar
+  Calendar,
+  Download
 } from "lucide-react";
 import { TableSkeleton } from "../components/ui/Skeleton";
 
@@ -47,6 +49,7 @@ export default function UsersPage() {
   const [search, setSearch] = useState("");
   const [searchInput, setSearchInput] = useState("");
   const [loading, setLoading] = useState(false);
+  const [exporting, setExporting] = useState(false);
 
   // Modal states
   const [showAdd, setShowAdd] = useState(false);
@@ -68,6 +71,25 @@ export default function UsersPage() {
       setLoading(false);
     }
   }, [page, search]);
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const blob = await exportUsersReport();
+      const url = window.URL.createObjectURL(new Blob([blob]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `users_report_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      toast?.success?.("Danh sách người dùng đã được tải xuống");
+    } catch (err) {
+      toast?.error?.("Không thể xuất danh sách");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   useEffect(() => {
     load();
@@ -233,6 +255,15 @@ export default function UsersPage() {
           >
             <Plus className="w-5 h-5" />
             Thêm mới
+          </button>
+
+          <button
+            onClick={handleExport}
+            disabled={exporting}
+            className="flex items-center justify-center gap-2 min-h-[40px] px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-[11px] font-bold uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50"
+          >
+            <Download className={`w-4 h-4 ${exporting ? 'animate-bounce' : ''}`} />
+            Export
           </button>
 
           <button

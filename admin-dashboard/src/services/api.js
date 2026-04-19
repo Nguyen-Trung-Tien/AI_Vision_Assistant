@@ -3,21 +3,26 @@ import {
   setSession as setSessionLocal, 
   clearSessionLocal, 
   getStoredEmail as getStoredEmailLocal,
-  getStoredToken as getStoredTokenLocal
+  getStoredToken as getStoredTokenLocal,
+  isAuthenticated as isAuthenticatedLocal
 } from "@/lib/auth-storage";
 
 export function getApiUrl() {
   return import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 }
 
+export function getFileUrl(path) {
+  if (!path) return null;
+  const baseUrl = getApiUrl().replace("/api", "");
+  return `${baseUrl}${path}`;
+}
+
 export function isAuthenticated() {
-  return getStoredTokenLocal() === "true";
+  return isAuthenticatedLocal();
 }
 
 export function getStoredToken() {
-  // We use HttpOnly cookies, so we don't have a token in JS.
-  // This remains for compatibility but returns null to avoid sending "true" as a JWT.
-  return null;
+  return getStoredTokenLocal();
 }
 
 /**
@@ -25,6 +30,8 @@ export function getStoredToken() {
  */
 export function clearSession() {
   clearSessionLocal();
+  localStorage.removeItem("is_authenticated");
+  localStorage.removeItem("access_token");
   // Post logout to clear httpOnly cookies on the backend
   return apiClient.post("/auth/logout").catch(() => {});
 }
@@ -33,8 +40,8 @@ export function getStoredEmail() {
   return getStoredEmailLocal();
 }
 
-export function setSession(email) {
-  setSessionLocal(email);
+export function setSession(email, token) {
+  setSessionLocal(email, token);
 }
 
 export async function loginAdmin(email, password) {
@@ -43,13 +50,7 @@ export async function loginAdmin(email, password) {
     password,
   });
 
-  const role = payload?.user?.role || "";
-  if (role !== "ADMIN") {
-    clearSession();
-    throw new Error("Chỉ admin mới được đăng nhập dashboard");
-  }
-
-  setSession(payload?.user?.email || email);
+  setSession(payload?.user?.email || email, payload.access_token);
   return payload;
 }
 
@@ -123,6 +124,22 @@ export async function fetchFeedbackStats() {
 
 export async function reviewFeedback(id, correctLabel) {
   return apiClient.patch(`/feedback/${id}/review`, { correctLabel });
+}
+
+export async function suggestFeedbackLabel(id) {
+  return apiClient.get(`/feedback/${id}/suggest`);
+}
+
+export async function deleteFeedback(id) {
+  return apiClient.post(`/feedback/${id}/delete`);
+}
+
+export async function deleteFeedbackBulk(ids) {
+  return apiClient.post("/feedback/bulk-delete", { ids });
+}
+
+export async function deleteAllFeedback(onlyWrong = false) {
+  return apiClient.post(`/feedback/clear-all?onlyWrong=${onlyWrong}`);
 }
 
 export async function exportFeedbackDataset() {
@@ -286,4 +303,19 @@ export async function fetchSystemSettings() {
 
 export async function updateSystemSetting(key, value) {
   return apiClient.patch(`/system/settings/${key}`, { value });
+}
+
+/**
+ * Report Export
+ */
+export async function exportUsersReport() {
+  return apiClient.get("/report/users", { responseType: "blob" });
+}
+
+export async function exportSosReport() {
+  return apiClient.get("/report/sos", { responseType: "blob" });
+}
+
+export async function exportActivityReport() {
+  return apiClient.get("/report/activity", { responseType: "blob" });
 }

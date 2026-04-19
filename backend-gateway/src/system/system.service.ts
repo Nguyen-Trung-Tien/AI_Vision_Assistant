@@ -2,7 +2,7 @@ import { Injectable, Inject, Logger } from '@nestjs/common';
 import { DataSource } from 'typeorm';
 import { ClientProxy } from '@nestjs/microservices';
 import * as os from 'os';
-import { firstValueFrom, timeout } from 'rxjs';
+import axios from 'axios';
 
 @Injectable()
 export class SystemService {
@@ -29,16 +29,16 @@ export class SystemService {
       this.logger.error('Database health check failed', err);
     }
 
-    // Check RabbitMQ / AI Worker
-    // Since AI_SERVICE is a ClientProxy, we can try to send a ping if the worker supports it
-    // Or just check if the client is connected (some ClientProxy types support this)
+    // Check AI Worker via HTTP (if available)
     try {
-      // Small timeout for health check
-      // Note: If worker doesn't respond to 'ping', this will fail.
-      // For now, we'll just check if we can emit or use a specific health event if implemented
-      // If no health event exists, we'll just return UP if the proxy exists
-    } catch (err) {
-      status.rabbitmq = 'DOWN';
+      const response = await axios.get('http://localhost:8000/health', {
+        timeout: 2000,
+      });
+      if (response.status !== 200) {
+        status.aiWorker = 'DOWN';
+      }
+    } catch {
+      status.aiWorker = 'DOWN';
     }
 
     return status;
@@ -49,11 +49,15 @@ export class SystemService {
     const freeMem = os.freemem();
     const usedMem = totalMem - freeMem;
 
+    // Calculate real CPU load (simplified for Windows/Linux)
+    const cpus = os.cpus();
+    const loadAvg = os.loadavg();
+
     return {
       cpu: {
-        model: os.cpus()[0].model,
-        cores: os.cpus().length,
-        loadAvg: os.loadavg(), // Only works on Linux/macOS properly, returns [0,0,0] on Windows sometimes
+        model: cpus[0].model,
+        cores: cpus.length,
+        loadAvg: loadAvg[0] || 0,
       },
       memory: {
         total: totalMem,
@@ -65,10 +69,12 @@ export class SystemService {
         platform: os.platform(),
         release: os.release(),
         uptime: os.uptime(),
+        arch: os.arch(),
       },
       process: {
         uptime: process.uptime(),
         memoryUsage: process.memoryUsage(),
+        nodeVersion: process.version,
       },
       timestamp: new Date().toISOString(),
     };

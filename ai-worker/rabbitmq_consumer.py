@@ -248,6 +248,17 @@ def on_message(channel, method, properties, body):
                     'name': name,
                     'stable': True
                 }
+        elif task_type == 'RELOAD_MODEL':
+            print(f"[*] Reloading models as requested...")
+            object_path = data.get('objectPath')
+            money_path = data.get('moneyPath')
+            reload_res = AIService.reload_models(object_path, money_path)
+            ai_result = {
+                'text': f'Models reloaded: {reload_res["object_model"]}',
+                'status': 'success',
+                'details': reload_res,
+                'stable': True
+            }
         else:
             print(f'[!] Unknown task type: {task_type}')
             channel.basic_ack(delivery_tag=method.delivery_tag)

@@ -52,24 +52,74 @@ import { cn } from "@/lib/utils";
 
 // --- Components ---
 
-function AdminShell({ children, activeTab, setActiveTab, email, notifications, setNotifications, isDarkMode, setIsDarkMode }) {
+function AdminShell({
+  children,
+  activeTab,
+  setActiveTab,
+  email,
+  notifications,
+  setNotifications,
+  isDarkMode,
+  setIsDarkMode,
+}) {
   const [sidebarOpen, setSidebarOpen] = useState(true);
   const [notifOpen, setNotifOpen] = useState(false);
   const notifRef = useRef(null);
   const toast = useToast();
 
   const menuItems = [
-    { id: "dashboard", label: "Bảng Điều Khiển", icon: LayoutDashboard, group: "Tổng quan" },
-    { id: "analytics", label: "Phân Tích Nâng Cao", icon: LineChart, group: "Tổng quan" },
-    { id: "sos", label: "SOS Khẩn Cấp", icon: ShieldAlert, group: "An toàn", badge: notifications.filter(n => n.type === 'SOS' && !n.isRead).length },
-    { id: "heatmap", label: "Heatmap Khu Vực Nguy Hiểm", icon: Map, group: "An toàn" },
+    {
+      id: "dashboard",
+      label: "Bảng Điều Khiển",
+      icon: LayoutDashboard,
+      group: "Tổng quan",
+    },
+    {
+      id: "analytics",
+      label: "Phân Tích Nâng Cao",
+      icon: LineChart,
+      group: "Tổng quan",
+    },
+    {
+      id: "sos",
+      label: "SOS Khẩn Cấp",
+      icon: ShieldAlert,
+      group: "An toàn",
+      badge: notifications.filter((n) => n.type === "SOS" && !n.isRead).length,
+    },
+    { id: "heatmap", label: "Khu Vực Nguy Hiểm", icon: Map, group: "An toàn" },
     { id: "broadcast", label: "Broadcast TTS", icon: Radio, group: "An toàn" },
-    { id: "feedback", label: "Phản Hồi Người Dùng", icon: MessageSquare, group: "Giao tiếp" },
+    {
+      id: "feedback",
+      label: "Phản Hồi Người Dùng",
+      icon: MessageSquare,
+      group: "Giao tiếp",
+    },
     { id: "users", label: "Quản Lý Tài Khoản", icon: Users, group: "Quản trị" },
-    { id: "model-manager", label: "Quản Lý Mô Hình AI", icon: Database, group: "Hệ thống" },
-    { id: "activity", label: "Nhật Ký Hoạt Động", icon: Activity, group: "Hệ thống" },
-    { id: "system", label: "Trạng Thái Hệ Thống", icon: Activity, group: "Hệ thống" },
-    { id: "settings", label: "Cài Đặt Hệ Thống", icon: Settings, group: "Hệ thống" },
+    {
+      id: "model-manager",
+      label: "Quản Lý Mô Hình AI",
+      icon: Database,
+      group: "Hệ thống",
+    },
+    {
+      id: "activity",
+      label: "Nhật Ký Hoạt Động",
+      icon: Activity,
+      group: "Hệ thống",
+    },
+    {
+      id: "system",
+      label: "Trạng Thái Hệ Thống",
+      icon: Activity,
+      group: "Hệ thống",
+    },
+    {
+      id: "settings",
+      label: "Cài Đặt Hệ Thống",
+      icon: Settings,
+      group: "Hệ thống",
+    },
   ];
 
   const unreadCount = notifications.filter((n) => !n.isRead).length;
@@ -81,7 +131,7 @@ function AdminShell({ children, activeTab, setActiveTab, email, notifications, s
 
   const handleMarkAllRead = async () => {
     await markNotificationsReadAll();
-    setNotifications(prev => prev.map(n => ({ ...n, isRead: true })));
+    setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
     setNotifOpen(false);
   };
 
@@ -113,13 +163,13 @@ function AdminShell({ children, activeTab, setActiveTab, email, notifications, s
       {/* Sidebar */}
       <motion.aside
         initial={false}
-        animate={{ 
+        animate={{
           width: sidebarOpen ? "280px" : "80px",
-          x: 0 
+          x: 0,
         }}
         className={cn(
           "fixed inset-y-0 left-0 z-50 bg-bg-card border-r border-border-primary flex flex-col transition-all duration-300 lg:static",
-          !sidebarOpen && "lg:w-20"
+          !sidebarOpen && "lg:w-20",
         )}
       >
         {/* Logo Section */}
@@ -134,8 +184,12 @@ function AdminShell({ children, activeTab, setActiveTab, email, notifications, s
                 animate={{ opacity: 1, x: 0 }}
                 className="flex flex-col -space-y-1"
               >
-                <span className="text-[10px] font-bold text-indigo-500 tracking-[0.2em] uppercase">AI VISION</span>
-                <span className="text-base font-bold tracking-tighter">ASSISTANT</span>
+                <span className="text-[10px] font-bold text-indigo-500 tracking-[0.2em] uppercase">
+                  AI VISION
+                </span>
+                <span className="text-base font-bold tracking-tighter">
+                  ASSISTANT
+                </span>
               </motion.div>
             )}
           </div>
@@ -143,63 +197,75 @@ function AdminShell({ children, activeTab, setActiveTab, email, notifications, s
 
         {/* Navigation */}
         <div className="flex-1 overflow-y-auto py-6 px-4 space-y-8 scrollbar-none">
-          {["Tổng quan", "An toàn", "Giao tiếp", "Quản trị", "Hệ thống"].map((group) => {
-            const items = menuItems.filter(i => i.group === group);
-            if (items.length === 0) return null;
+          {["Tổng quan", "An toàn", "Giao tiếp", "Quản trị", "Hệ thống"].map(
+            (group) => {
+              const items = menuItems.filter((i) => i.group === group);
+              if (items.length === 0) return null;
 
-            return (
-              <div key={group} className="space-y-2">
-                {sidebarOpen && (
-                  <h3 className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary opacity-50 mb-2">
-                    {group}
-                  </h3>
-                )}
-                <div className="space-y-1">
-                  {items.map((item) => (
-                    <button
-                      key={item.id}
-                      onClick={() => setActiveTab(item.id)}
-                      className={cn(
-                        "w-full flex items-center transition-all duration-200 group relative",
-                        sidebarOpen ? "gap-3 px-4 py-3 rounded-xl" : "justify-center py-3.5 rounded-xl",
-                        activeTab === item.id
-                          ? "bg-indigo-500/10 text-indigo-500 font-bold shadow-sm border border-indigo-500/20"
-                          : "text-text-secondary hover:bg-text-primary/5 hover:text-text-primary"
-                      )}
-                    >
-                      <item.icon 
+              return (
+                <div key={group} className="space-y-2">
+                  {sidebarOpen && (
+                    <h3 className="px-4 text-[10px] font-black uppercase tracking-[0.2em] text-text-secondary opacity-50 mb-2">
+                      {group}
+                    </h3>
+                  )}
+                  <div className="space-y-1">
+                    {items.map((item) => (
+                      <button
+                        key={item.id}
+                        onClick={() => setActiveTab(item.id)}
                         className={cn(
-                          "transition-transform group-hover:scale-110",
-                          sidebarOpen ? "w-5 h-5" : "w-6 h-6",
-                          activeTab === item.id ? "text-indigo-500" : "text-text-secondary"
-                        )} 
-                        strokeWidth={activeTab === item.id ? 2.5 : (sidebarOpen ? 2 : 2.2)}
-                      />
-                      {sidebarOpen && (
-                        <span className={cn(
-                          "text-sm font-semibold tracking-tight truncate",
-                          item.id === 'sos' && item.badge > 0 ? "text-red-500 animate-pulse font-black" : "text-text-primary/80"
-                        )}>
-                          {item.label}
-                        </span>
-                      )}
-                      {activeTab === item.id && (
-                        <motion.div
-                          layoutId="active-pill"
-                          className="absolute left-0 w-1 h-6 bg-indigo-500 rounded-r-full"
+                          "w-full flex items-center transition-all duration-200 group relative",
+                          sidebarOpen
+                            ? "gap-3 px-4 py-3 rounded-xl"
+                            : "justify-center py-3.5 rounded-xl",
+                          activeTab === item.id
+                            ? "bg-indigo-500/10 text-indigo-500 font-bold shadow-sm border border-indigo-500/20"
+                            : "text-text-secondary hover:bg-text-primary/5 hover:text-text-primary",
+                        )}
+                      >
+                        <item.icon
+                          className={cn(
+                            "transition-transform group-hover:scale-110",
+                            sidebarOpen ? "w-5 h-5" : "w-6 h-6",
+                            activeTab === item.id
+                              ? "text-indigo-500"
+                              : "text-text-secondary",
+                          )}
+                          strokeWidth={
+                            activeTab === item.id ? 2.5 : sidebarOpen ? 2 : 2.2
+                          }
                         />
-                      )}
-                      {item.badge > 0 && (
-                        <span className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-red-500 text-[10px] font-black text-white flex items-center justify-center animate-pulse">
-                          {item.badge}
-                        </span>
-                      )}
-                    </button>
-                  ))}
+                        {sidebarOpen && (
+                          <span
+                            className={cn(
+                              "text-sm font-semibold tracking-tight truncate",
+                              item.id === "sos" && item.badge > 0
+                                ? "text-red-500 animate-pulse font-black"
+                                : "text-text-primary/80",
+                            )}
+                          >
+                            {item.label}
+                          </span>
+                        )}
+                        {activeTab === item.id && (
+                          <motion.div
+                            layoutId="active-pill"
+                            className="absolute left-0 w-1 h-6 bg-indigo-500 rounded-r-full"
+                          />
+                        )}
+                        {item.badge > 0 && (
+                          <span className="absolute right-3 top-1/2 -translate-y-1/2 w-5 h-5 rounded-full bg-red-500 text-[10px] font-black text-white flex items-center justify-center animate-pulse">
+                            {item.badge}
+                          </span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
+              );
+            },
+          )}
         </div>
 
         {/* User Footer */}
@@ -208,7 +274,7 @@ function AdminShell({ children, activeTab, setActiveTab, email, notifications, s
             onClick={handleLogout}
             className={cn(
               "w-full flex items-center gap-3 px-4 py-3 rounded-xl text-red-500 hover:bg-red-500/10 transition-all font-bold",
-              !sidebarOpen && "justify-center"
+              !sidebarOpen && "justify-center",
             )}
           >
             <LogOut className="w-5 h-5" />
@@ -222,14 +288,18 @@ function AdminShell({ children, activeTab, setActiveTab, email, notifications, s
         {/* Header */}
         <header className="h-20 bg-bg-card/50 backdrop-blur-xl border-b border-border-primary px-8 flex items-center justify-between shrink-0 z-30">
           <div className="flex items-center gap-4">
-            <button 
+            <button
               onClick={() => setSidebarOpen(!sidebarOpen)}
               className="p-2 hover:bg-text-primary/5 rounded-lg text-text-secondary transition-colors"
             >
-              {sidebarOpen ? <Menu className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+              {sidebarOpen ? (
+                <Menu className="w-5 h-5" />
+              ) : (
+                <ChevronRight className="w-5 h-5" />
+              )}
             </button>
             <h2 className="text-lg font-bold tracking-tight uppercase">
-              {activeTab === 'sos' ? (
+              {activeTab === "sos" ? (
                 <>
                   <span className="text-text-primary">SOS</span>{" "}
                   <span className="text-red-600 animate-pulse">KHẨN CẤP</span>
@@ -247,7 +317,11 @@ function AdminShell({ children, activeTab, setActiveTab, email, notifications, s
             <button
               onClick={() => setIsDarkMode(!isDarkMode)}
               className="p-2.5 hover:bg-text-primary/5 rounded-xl text-text-secondary transition-all group"
-              title={isDarkMode ? "Chuyển sang Chế độ sáng" : "Chuyển sang Chế độ tối"}
+              title={
+                isDarkMode
+                  ? "Chuyển sang Chế độ sáng"
+                  : "Chuyển sang Chế độ tối"
+              }
             >
               {isDarkMode ? (
                 <Sun className="w-5 h-5 group-hover:rotate-45 transition-transform" />
@@ -277,8 +351,10 @@ function AdminShell({ children, activeTab, setActiveTab, email, notifications, s
                     className="absolute right-0 mt-4 w-96 bg-bg-card border border-border-primary rounded-3xl shadow-2xl overflow-hidden z-50"
                   >
                     <div className="p-6 border-b border-border-primary flex items-center justify-between">
-                      <h3 className="font-black text-sm uppercase tracking-widest">Thông báo</h3>
-                      <button 
+                      <h3 className="font-black text-sm uppercase tracking-widest">
+                        Thông báo
+                      </h3>
+                      <button
                         onClick={handleMarkAllRead}
                         className="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 uppercase tracking-tighter"
                       >
@@ -289,7 +365,9 @@ function AdminShell({ children, activeTab, setActiveTab, email, notifications, s
                       {notifications.length === 0 ? (
                         <div className="p-12 text-center space-y-3">
                           <Bell className="w-8 h-8 text-text-secondary opacity-20 mx-auto" />
-                          <p className="text-sm text-text-secondary font-medium">Không có thông báo mới</p>
+                          <p className="text-sm text-text-secondary font-medium">
+                            Không có thông báo mới
+                          </p>
                         </div>
                       ) : (
                         notifications.map((n) => (
@@ -297,23 +375,41 @@ function AdminShell({ children, activeTab, setActiveTab, email, notifications, s
                             key={n.id}
                             className={cn(
                               "px-6 py-4 flex gap-4 hover:bg-text-primary/5 transition-colors group cursor-pointer border-b border-border-primary last:border-0",
-                              !n.isRead && "bg-indigo-500/5"
+                              !n.isRead && "bg-indigo-500/5",
                             )}
                           >
-                            <div className={cn(
-                              "w-10 h-10 rounded-full flex items-center justify-center shrink-0",
-                              n.type === 'SOS' ? "bg-red-500/20 text-red-500" : "bg-indigo-500/20 text-indigo-500"
-                            )}>
-                              {n.type === 'SOS' ? <ShieldAlert className="w-5 h-5" /> : <Bell className="w-5 h-5" />}
+                            <div
+                              className={cn(
+                                "w-10 h-10 rounded-full flex items-center justify-center shrink-0",
+                                n.type === "SOS"
+                                  ? "bg-red-500/20 text-red-500"
+                                  : "bg-indigo-500/20 text-indigo-500",
+                              )}
+                            >
+                              {n.type === "SOS" ? (
+                                <ShieldAlert className="w-5 h-5" />
+                              ) : (
+                                <Bell className="w-5 h-5" />
+                              )}
                             </div>
                             <div className="flex-1 min-w-0 space-y-1">
                               <div className="flex items-center justify-between gap-2">
-                                <p className={cn("text-sm truncate", !n.isRead ? "font-black" : "font-medium text-text-secondary")}>
+                                <p
+                                  className={cn(
+                                    "text-sm truncate",
+                                    !n.isRead
+                                      ? "font-black"
+                                      : "font-medium text-text-secondary",
+                                  )}
+                                >
                                   {n.title}
                                 </p>
                                 <span className="text-[10px] text-text-secondary font-medium shrink-0 italic opacity-50">
                                   <Clock className="w-3 h-3 inline mr-1" />
-                                  {new Date(n.created_at).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                                  {new Date(n.created_at).toLocaleTimeString(
+                                    [],
+                                    { hour: "2-digit", minute: "2-digit" },
+                                  )}
                                 </span>
                               </div>
                               <p className="text-xs text-text-secondary line-clamp-2 leading-relaxed opacity-70">
@@ -337,8 +433,12 @@ function AdminShell({ children, activeTab, setActiveTab, email, notifications, s
             {/* Profile */}
             <div className="flex items-center gap-3 pl-6 border-l border-border-primary">
               <div className="text-right hidden sm:block">
-                <p className="text-xs font-black truncate max-w-[150px] uppercase tracking-tighter">{email?.split('@')[0]}</p>
-                <p className="text-[10px] text-indigo-400 font-bold uppercase tracking-widest">Administrator</p>
+                <p className="text-xs font-black truncate max-w-[150px] uppercase tracking-tighter">
+                  {email?.split("@")[0]}
+                </p>
+                <p className="text-[10px] text-indigo-400 font-bold uppercase tracking-widest">
+                  Administrator
+                </p>
               </div>
               <div className="w-10 h-10 rounded-2xl bg-white/5 border border-border-primary flex items-center justify-center shadow-inner group cursor-pointer hover:border-indigo-500 transition-all">
                 <User className="w-5 h-5 text-text-secondary group-hover:text-indigo-400" />
@@ -373,8 +473,11 @@ export default function App() {
   const [notifications, setNotifications] = useState([]);
   const [email, setEmail] = useState("");
   const [isDarkMode, setIsDarkMode] = useState(() => {
-    return localStorage.getItem("theme") === "dark" || 
-      (!localStorage.getItem("theme") && window.matchMedia("(prefers-color-scheme: dark)").matches);
+    return (
+      localStorage.getItem("theme") === "dark" ||
+      (!localStorage.getItem("theme") &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches)
+    );
   });
 
   useEffect(() => {
@@ -412,7 +515,7 @@ export default function App() {
       // Listen for real-time notifications
       socket.on("new_notification", (newNotif) => {
         setNotifications((prev) => [newNotif, ...prev]);
-        
+
         // Play sound
         try {
           const audio = new Audio("/notification-sound.mp3");
@@ -428,9 +531,9 @@ export default function App() {
           title: "CẢNH BÁO SOS!",
           message: `Người dùng ${sosData.userId} vừa yêu cầu cứu hộ tại tọa độ ${sosData.latitude}, ${sosData.longitude}`,
           created_at: new Date().toISOString(),
-          isRead: false
+          isRead: false,
         };
-        setNotifications(prev => [notif, ...prev]);
+        setNotifications((prev) => [notif, ...prev]);
       });
 
       return () => {
@@ -450,18 +553,30 @@ export default function App() {
 
   const renderContent = () => {
     switch (activeTab) {
-      case "dashboard": return <DashboardV2 />;
-      case "analytics": return <AnalyticsPage />;
-      case "sos": return <SosPage />;
-      case "heatmap": return <HeatmapPage />;
-      case "broadcast": return <BroadcastPage />;
-      case "feedback": return <FeedbackPage />;
-      case "users": return <UsersPage />;
-      case "model-manager": return <ModelManagerPage />;
-      case "activity": return <ActivityLogPage />;
-      case "system": return <SystemPage />;
-      case "settings": return <SettingsPage />;
-      default: return <DashboardV2 />;
+      case "dashboard":
+        return <DashboardV2 />;
+      case "analytics":
+        return <AnalyticsPage />;
+      case "sos":
+        return <SosPage />;
+      case "heatmap":
+        return <HeatmapPage />;
+      case "broadcast":
+        return <BroadcastPage />;
+      case "feedback":
+        return <FeedbackPage />;
+      case "users":
+        return <UsersPage />;
+      case "model-manager":
+        return <ModelManagerPage />;
+      case "activity":
+        return <ActivityLogPage />;
+      case "system":
+        return <SystemPage />;
+      case "settings":
+        return <SettingsPage />;
+      default:
+        return <DashboardV2 />;
     }
   };
 

@@ -190,3 +190,28 @@ class ModelManager:
             print("[AI Worker] Untrained model money: Missing weights at models/model-money/best.pt")
             return []
         return cls._run_inference(model, image)
+
+    @classmethod
+    def reload_models(cls, object_path: str = None, money_path: str = None):
+        """Clear cached models and reload from specified or default paths."""
+        print(f"[AI Worker] Reloading models... (Object: {object_path}, Money: {money_path})")
+        
+        # Clear existing models
+        cls._object_model = None
+        cls._money_model = None
+        
+        # Update env vars if paths provided
+        if object_path:
+            os.environ["OBJECT_MODEL_PATH"] = object_path
+        if money_path:
+            os.environ["MONEY_MODEL_PATH"] = money_path
+            
+        # Re-load
+        cls.load_object_model()
+        cls.load_money_model()
+        
+        return {
+            "status": "success",
+            "object_model": str(cls.object_model_candidates()[0]) if cls._object_model else "None",
+            "money_model": str(cls.money_model_candidates()[0]) if cls._money_model else "None"
+        }

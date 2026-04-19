@@ -4,9 +4,27 @@ import {
   fetchFeedbackStats,
   reviewFeedback,
   exportFeedbackDataset,
+  suggestFeedbackLabel,
+  getFileUrl,
+  deleteFeedback,
+  deleteFeedbackBulk,
+  deleteAllFeedback,
 } from "../services/api";
 import { useToast } from "../components/Toast";
 import ConfirmDialog from "../components/ConfirmDialog";
+import { 
+  Trash2, 
+  Trash, 
+  AlertCircle, 
+  CheckSquare, 
+  Square, 
+  RefreshCw,
+  Download,
+  Filter,
+  CheckCircle2,
+  XCircle,
+  MoreVertical
+} from "lucide-react";
 
 function AccBar({ label, value, color }) {
   return (
@@ -41,6 +59,8 @@ export default function FeedbackPage() {
   const [confirm, setConfirm] = useState(null);
   const [actionLoading, setActionLoading] = useState(false);
   const [exporting, setExporting] = useState(false);
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [deleteConfirm, setDeleteConfirm] = useState(null); // { type, id, count }
 
   const load = async (p = 1, wrong = onlyWrong) => {
     setLoading(true);
@@ -52,7 +72,61 @@ export default function FeedbackPage() {
     setTotal(res.total ?? 0);
     setStats(s);
     setPage(p);
+    setSelectedIds([]); // Clear selection on load
     setLoading(false);
+  };
+
+  const handleSingleDelete = (id) => {
+    setDeleteConfirm({ type: "single", id });
+  };
+
+  const handleBulkDeleteRequest = () => {
+    if (selectedIds.length === 0) return;
+    setDeleteConfirm({ type: "bulk", count: selectedIds.length });
+  };
+
+  const handleDeleteAllRequest = (wrongOnly = false) => {
+    setDeleteConfirm({ type: wrongOnly ? "wrong" : "all" });
+  };
+
+  const executeDelete = async () => {
+    if (!deleteConfirm) return;
+    setActionLoading(true);
+    try {
+      const { type, id } = deleteConfirm;
+      if (type === "single") {
+        await deleteFeedback(id);
+        toast.success("Đã xoá thành công");
+      } else if (type === "bulk") {
+        await deleteFeedbackBulk(selectedIds);
+        toast.success(`Đã xoá ${selectedIds.length} mục`);
+      } else if (type === "wrong") {
+        await deleteAllFeedback(true);
+        toast.success("Đã xoá tất cả phản hồi sai");
+      } else if (type === "all") {
+        await deleteAllFeedback(false);
+        toast.success("Đã xoá toàn bộ dữ liệu phản hồi");
+      }
+      load(type === "all" ? 1 : page);
+    } catch {
+      toast.error("Thao tác thất bại, vui lòng thử lại");
+    }
+    setActionLoading(false);
+    setDeleteConfirm(null);
+  };
+
+  const toggleSelect = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
+
+  const toggleSelectAll = () => {
+    if (selectedIds.length === data.length) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(data.map((fb) => fb.id));
+    }
   };
 
   useEffect(() => {
@@ -121,10 +195,41 @@ export default function FeedbackPage() {
           </>
         }
         confirmLabel="Lưu nhãn"
-        confirmClass="bg-purple-600 hover:bg-purple-500"
+        confirmClass="bg-indigo-600 hover:bg-indigo-500"
         loading={actionLoading}
         onConfirm={doReview}
         onCancel={() => setConfirm(null)}
+      />
+
+      <ConfirmDialog
+        open={!!deleteConfirm}
+        title={
+          deleteConfirm?.type === "single"
+            ? "Xoá phản hồi?"
+            : deleteConfirm?.type === "bulk"
+            ? `Xoá ${deleteConfirm.count} phản hồi?`
+            : deleteConfirm?.type === "wrong"
+            ? "Xoá nhãn sai?"
+            : "Xoá TẤT CẢ dữ liệu?"
+        }
+        message={
+          <div className="flex items-start gap-3">
+            <AlertCircle className="w-5 h-5 text-red-500 shrink-0 mt-0.5" />
+            <div className="text-sm">
+              {deleteConfirm?.type === "single" && "Bạn có chắc chắn muốn xoá bản ghi này? Hành động này không thể hoàn tác."}
+              {deleteConfirm?.type === "bulk" && `Xác nhận xoá vĩnh viễn ${deleteConfirm.count} bản ghi đã chọn khỏi hệ thống.`}
+              {deleteConfirm?.type === "wrong" && "Tất cả các phản hồi được đánh dấu là SAI sẽ bị xoá vĩnh viễn khỏi cơ sở dữ liệu."}
+              {deleteConfirm?.type === "all" && "CẢNH BÁO: Toàn bộ dữ liệu phản hồi sẽ bị xoá sạch. Đây là hành động nguy hiểm và không thể khôi phục."}
+            </div>
+          </div>
+        }
+        confirmLabel={
+          deleteConfirm?.type === "all" ? "Xoá sạch sành sanh" : "Xác nhận xoá"
+        }
+        confirmClass="bg-red-600 hover:bg-red-500"
+        loading={actionLoading}
+        onConfirm={executeDelete}
+        onCancel={() => setDeleteConfirm(null)}
       />
 
       {/* Stats */}
@@ -159,34 +264,90 @@ export default function FeedbackPage() {
       </div>
 
       {/* Table header */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-text-primary">Feedback AI</h2>
-        <div className="flex gap-3">
+      <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+        <div className="flex items-center gap-3">
+          <h2 className="text-xl font-bold text-text-primary">Dữ liệu Feedback</h2>
+          <span className="px-2 py-0.5 rounded-lg bg-text-primary/5 border border-border-primary text-text-secondary text-[10px] font-bold">
+            {total} BẢN GHI
+          </span>
+        </div>
+        
+        <div className="flex flex-wrap gap-2">
           <button
             onClick={handleExport}
             disabled={exporting}
-            className="px-4 py-2 rounded-xl bg-purple-500/10 border border-purple-500/30 text-purple-600 dark:text-purple-300 text-sm hover:bg-purple-500/20 transition-all disabled:opacity-50"
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-xs font-bold uppercase tracking-wider hover:bg-emerald-500/20 transition-all disabled:opacity-50"
           >
-            {exporting ? "Dang export..." : "Export dataset"}
+            <Download className="w-4 h-4" />
+            Export Dataset
           </button>
+          
+          <button
+            onClick={() => handleDeleteAllRequest(true)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-orange-500/10 border border-orange-500/20 text-orange-500 text-xs font-bold uppercase tracking-wider hover:bg-orange-500/20 transition-all"
+            title="Xoá tất cả những phản hồi được đánh dấu là SAI"
+          >
+            <Filter className="w-4 h-4" />
+            Xoá nhãn sai
+          </button>
+
+          <button
+            onClick={() => handleDeleteAllRequest(false)}
+            className="flex items-center gap-2 px-4 py-2 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-bold uppercase tracking-wider hover:bg-red-500/20 transition-all"
+          >
+            <Trash className="w-4 h-4" />
+            Xoá tất cả
+          </button>
+
+          <div className="w-[1px] h-8 bg-border-primary mx-1 hidden sm:block" />
+
           <button
             onClick={toggleFilter}
-            className={`px-4 py-2 rounded-xl border text-sm font-medium transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl border text-xs font-bold uppercase tracking-wider transition-all ${
               onlyWrong
-                ? "bg-red-500/10 border-red-500/40 text-red-600 dark:text-red-400"
-                : "bg-bg-card border-border-primary text-text-secondary"
+                ? "bg-indigo-500/10 border-indigo-500/40 text-indigo-500"
+                : "bg-bg-card border-border-primary text-text-secondary hover:text-text-primary"
             }`}
           >
-            {onlyWrong ? "Chỉ kết quả sai" : "Tất cả"}
+            {onlyWrong ? "Đang lọc sai" : "Tất cả"}
           </button>
+          
           <button
             onClick={() => load(page)}
-            className="px-4 py-2 rounded-xl bg-bg-card border border-border-primary text-text-secondary text-sm hover:bg-text-primary/5 transition-all"
+            className="p-2 rounded-xl bg-bg-card border border-border-primary text-text-secondary hover:text-text-primary transition-all active:scale-95"
           >
-            🔄 Làm mới
+            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
           </button>
         </div>
       </div>
+
+      {/* Bulk Action Bar */}
+      {selectedIds.length > 0 && (
+        <div className="fixed bottom-8 left-1/2 -translate-x-1/2 z-50 bg-indigo-600 text-white px-6 py-3 rounded-2xl shadow-2xl flex items-center gap-6 animate-in slide-in-from-bottom-8 duration-300">
+          <div className="flex items-center gap-2">
+            <span className="bg-white/20 w-6 h-6 rounded-full flex items-center justify-center text-xs font-bold">
+              {selectedIds.length}
+            </span>
+            <span className="text-sm font-bold tracking-wide">mục đã chọn</span>
+          </div>
+          <div className="w-[1px] h-4 bg-white/20" />
+          <div className="flex gap-2">
+            <button
+              onClick={handleBulkDeleteRequest}
+              className="flex items-center gap-2 px-4 py-1.5 rounded-xl bg-white text-indigo-600 text-xs font-bold uppercase tracking-wider hover:bg-white/90 transition-all"
+            >
+              <Trash2 className="w-4 h-4" />
+              Xoá đã chọn
+            </button>
+            <button
+              onClick={() => setSelectedIds([])}
+              className="px-4 py-1.5 rounded-xl bg-white/10 text-white text-xs font-bold uppercase tracking-wider hover:bg-white/20 transition-all"
+            >
+              Huỷ
+            </button>
+          </div>
+        </div>
+      )}
 
       <div className="bg-bg-card rounded-2xl border border-border-primary overflow-hidden shadow-sm">
         {loading ? (
@@ -198,8 +359,18 @@ export default function FeedbackPage() {
         ) : (
           <table className="w-full text-sm">
             <thead>
-              <tr className="border-b border-border-primary text-text-secondary text-xs uppercase">
+              <tr className="border-b border-border-primary text-text-secondary text-[10px] font-black uppercase tracking-widest bg-white/[0.02]">
+                <th className="p-4 w-10">
+                  <button onClick={toggleSelectAll} className="text-text-secondary hover:text-indigo-500 transition-colors">
+                    {selectedIds.length === data.length && data.length > 0 ? (
+                      <CheckSquare className="w-4 h-4 text-indigo-500" />
+                    ) : (
+                      <Square className="w-4 h-4" />
+                    )}
+                  </button>
+                </th>
                 <th className="text-left p-4">ID</th>
+                <th className="text-left p-4">Ảnh</th>
                 <th className="text-left p-4">Loại AI</th>
                 <th className="text-left p-4">Kết quả AI</th>
                 <th className="text-left p-4">Phản hồi</th>
@@ -211,9 +382,40 @@ export default function FeedbackPage() {
               {data.map((fb) => (
                 <tr
                   key={fb.id}
-                  className="border-b border-border-primary hover:bg-text-primary/5 transition-colors"
+                  className={`border-b border-border-primary hover:bg-white/[0.02] transition-colors group ${
+                    selectedIds.includes(fb.id) ? "bg-indigo-500/5" : ""
+                  }`}
                 >
-                  <td className="p-4 text-text-secondary font-mono">#{fb.id}</td>
+                  <td className="p-4">
+                    <button onClick={() => toggleSelect(fb.id)} className="text-text-secondary hover:text-indigo-500 transition-colors">
+                      {selectedIds.includes(fb.id) ? (
+                        <CheckSquare className="w-4 h-4 text-indigo-500" />
+                      ) : (
+                        <Square className="w-4 h-4 opacity-40 group-hover:opacity-100" />
+                      )}
+                    </button>
+                  </td>
+                  <td className="p-4 text-text-secondary font-mono text-[10px]">#{fb.id}</td>
+                  <td className="p-4">
+                    {fb.image_url ? (
+                      <a
+                        href={getFileUrl(fb.image_url)}
+                        target="_blank"
+                        rel="noreferrer"
+                        className="block w-12 h-12 rounded-lg overflow-hidden border border-border-primary hover:scale-105 transition-transform"
+                      >
+                        <img
+                          src={getFileUrl(fb.image_url)}
+                          alt="Feedback"
+                          className="w-full h-full object-cover"
+                        />
+                      </a>
+                    ) : (
+                      <div className="w-12 h-12 rounded-lg bg-text-primary/5 flex items-center justify-center text-[10px] text-text-secondary">
+                        No image
+                      </div>
+                    )}
+                  </td>
                   <td className="p-4 text-text-primary text-xs">
                     {fb.detection?.action_type ?? "—"}
                   </td>
@@ -256,6 +458,21 @@ export default function FeedbackPage() {
                               Lưu
                             </button>
                             <button
+                              onClick={async () => {
+                                try {
+                                  const { suggestion } = await suggestFeedbackLabel(fb.id);
+                                  setLabel(suggestion);
+                                  toast.success("Gemini đã gợi ý nhãn!");
+                                } catch {
+                                  toast.error("Không thể lấy gợi ý từ Gemini");
+                                }
+                              }}
+                              title="Gợi ý bởi Gemini"
+                              className="px-2 py-1 rounded-lg bg-indigo-500/10 border border-indigo-500/30 text-indigo-600 dark:text-indigo-300 text-xs hover:bg-indigo-500/20 transition-all flex items-center gap-1"
+                            >
+                              🪄 AI
+                            </button>
+                            <button
                               onClick={() => {
                                 setReviewing(null);
                                 setLabel("");
@@ -277,10 +494,20 @@ export default function FeedbackPage() {
                           </button>
                         ))}
                       {fb.review_status === "reviewed" && (
-                        <span className="text-green-500/50 text-xs">
-                          Đã duyệt
+                        <span className="flex items-center gap-1 text-green-500/70 text-[10px] font-bold uppercase tracking-wider bg-green-500/5 px-2 py-1 rounded-lg">
+                          <CheckCircle2 className="w-3 h-3" /> Đã duyệt
                         </span>
                       )}
+
+                      <div className="h-6 w-[1px] bg-border-primary mx-2 opacity-50" />
+                      
+                      <button
+                        onClick={() => handleSingleDelete(fb.id)}
+                        className="w-8 h-8 rounded-lg flex items-center justify-center text-text-secondary hover:text-red-500 hover:bg-red-500/10 transition-all"
+                        title="Xoá phản hồi này"
+                      >
+                        <Trash2 className="w-4 h-4" />
+                      </button>
                     </div>
                   </td>
                 </tr>

@@ -28,12 +28,12 @@ export class SosService {
       image_url: imageUrl,
       status: 'pending',
     });
-    
+
     const savedAlert = await this.sosRepo.save(alert);
 
     // Trigger SMS to emergency contacts asynchronously
     if (userId) {
-      this.sendEmergencySms(userId, latitude, longitude).catch(err => {
+      this.sendEmergencySms(userId, latitude, longitude).catch((err) => {
         console.error('Failed to send emergency SMS:', err);
       });
     }
@@ -42,12 +42,13 @@ export class SosService {
   }
 
   private async sendEmergencySms(userId: string, lat: number, lng: number) {
-    const contacts = await this.emergencyContactService.findAllSosContactsByUserId(userId);
+    const contacts =
+      await this.emergencyContactService.findAllSosContactsByUserId(userId);
     if (!contacts || contacts.length === 0) return;
 
     // TODO: fetch user name if available in the future. For now use a generic placeholder.
-    const userName = 'Người dùng'; 
-    
+    const userName = 'Người dùng';
+
     // In production we should limit concurrent SMS sends or use a queue
     for (const contact of contacts) {
       await this.smsService.sendSOS(contact.phone, userName, lat, lng);

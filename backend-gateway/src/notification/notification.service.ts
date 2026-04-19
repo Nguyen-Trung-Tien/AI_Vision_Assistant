@@ -1,5 +1,8 @@
 import { Injectable, Logger } from '@nestjs/common';
 import { Server } from 'socket.io';
+import { InjectRepository } from '@nestjs/typeorm';
+import { Repository } from 'typeorm';
+import { NotificationEntity } from './entities/notification.entity';
 
 export interface Notification {
   id: string;
@@ -14,52 +17,56 @@ export interface Notification {
 @Injectable()
 export class NotificationService {
   private server: Server;
-  private notifications: Notification[] = [];
   private readonly logger = new Logger(NotificationService.name);
-  private readonly MAX_NOTIFICATIONS = 100;
+
+  constructor(
+    @InjectRepository(NotificationEntity)
+    private readonly notificationRepo: Repository<NotificationEntity>,
+  ) {}
 
   setServer(server: Server) {
     this.server = server;
+    this.logger.log('WebSocket server linked to NotificationService');
   }
 
-  push(data: Omit<Notification, 'id' | 'read' | 'timestamp'>) {
-    const notification: Notification = {
-      id: Math.random().toString(36).substring(7),
-      read: false,
-      timestamp: new Date(),
+  async push(data: Omit<Notification, 'id' | 'read' | 'timestamp'>) {
+    const notification = this.notificationRepo.create({
       ...data,
-    };
+      read: false,
+    });
 
-    this.notifications.unshift(notification);
-    if (this.notifications.length > this.MAX_NOTIFICATIONS) {
-      this.notifications.pop();
-    }
+    const saved = await this.notificationRepo.save(notification);
 
     if (this.server) {
-      this.server.to('admin').emit('admin_notification', notification);
+      this.server.to('admin').emit('admin_notification', saved);
     } else {
       this.logger.warn('WebSocket server not initialized in NotificationService');
     }
 
-    return notification;
+    return saved;
   }
 
-  findAll() {
-    return this.notifications;
-  }
-
-  markAsRead(id: string) {
-    const notification = this.notifications.find((n) => n.id === id);
-    if (notification) {
-      notification.read = true;
+  async findAll() {
+    try {
+      return await this.notificationRepo.find({
+        order: { timestamp: 'DESC' },
+        take: 50,
+      });
+    } catch (err) {
+      this.logger.error('Failed to fetch notifications:', err);
+      throw err;
     }
   }
 
-  markAllAsRead() {
-    this.notifications.forEach((n) => (n.read = true));
+  async markAsRead(id: string) {
+    await this.notificationRepo.update(id, { read: true });
   }
 
-  clear() {
-    this.notifications = [];
+  async markAllAsRead() {
+    await this.notificationRepo.update({ read: false }, { read: true });
+  }
+
+  async clear() {
+    await this.notificationRepo.clear();
   }
 }

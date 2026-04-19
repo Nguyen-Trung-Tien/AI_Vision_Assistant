@@ -53,8 +53,11 @@ export class AuthController {
     // Set httpOnly cookie — JS cannot read this
     res.cookie('access_token', result.access_token, COOKIE_OPTIONS);
 
-    // Return user info (but NOT the raw token)
-    return { user: result.user };
+    // Return user info AND the token (for WebSocket auth in dashboard)
+    return { 
+      user: result.user,
+      access_token: result.access_token 
+    };
   }
 
   @HttpCode(HttpStatus.OK)

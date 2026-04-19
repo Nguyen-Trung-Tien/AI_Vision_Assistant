@@ -25,10 +25,25 @@ import { AuditLog } from './audit/entities/audit-log.entity';
 import { NotificationModule } from './notification/notification.module';
 import { SystemModule } from './system/system.module';
 import { AiModule } from './ai/ai.module';
+import { ReportModule } from './report/report.module';
 import { SystemSetting } from './system/entities/system-setting.entity';
+import { NotificationEntity } from './notification/entities/notification.entity';
+import { ServeStaticModule } from '@nestjs/serve-static';
+import path from 'node:path';
 
 @Module({
   imports: [
+    ServeStaticModule.forRoot({
+      rootPath: path.resolve(
+        __dirname,
+        '..',
+        '..',
+        'ai-worker',
+        'dataset',
+        'feedback',
+      ),
+      serveRoot: '/uploads/feedback',
+    }),
     ConfigModule.forRoot({
       isGlobal: true,
     }),
@@ -53,6 +68,7 @@ import { SystemSetting } from './system/entities/system-setting.entity';
           FaceRegistration,
           AuditLog,
           SystemSetting,
+          NotificationEntity,
         ],
         synchronize: configService.get<string>('DB_SYNC', 'false') === 'true',
       }),
@@ -70,6 +86,7 @@ import { SystemSetting } from './system/entities/system-setting.entity';
     NotificationModule,
     SystemModule,
     AiModule,
+    ReportModule,
   ],
   controllers: [AppController],
   providers: [AppService],

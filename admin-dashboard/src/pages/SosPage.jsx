@@ -16,8 +16,10 @@ import {
   RefreshCw, 
   ChevronLeft, 
   ChevronRight,
-  User as UserIcon
+  User as UserIcon,
+  Download
 } from "lucide-react";
+import { exportSosReport } from "../services/api";
 
 const STATUS_COLORS = {
   pending: "bg-red-500/20 text-red-400 border-red-500/30",
@@ -30,10 +32,30 @@ export default function SosPage() {
   const [page, setPage] = useState(1);
   const [incoming, setIncoming] = useState(null);
   const [confirm, setConfirm] = useState(null); // { type:'ack'|'resolve', id, label }
+  const [exporting, setExporting] = useState(false);
 
   const { data, isLoading, refetch } = useSosAlerts(page, 15);
   const alerts = data?.data ?? [];
   const total = data?.total ?? 0;
+
+  const handleExport = async () => {
+    setExporting(true);
+    try {
+      const blob = await exportSosReport();
+      const url = window.URL.createObjectURL(new Blob([blob]));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `sos_report_${new Date().toISOString().split('T')[0]}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      toast?.success?.("Báo cáo SOS đã được tải xuống");
+    } catch (err) {
+      toast?.error?.("Không thể xuất báo cáo");
+    } finally {
+      setExporting(false);
+    }
+  };
 
   const ackMutation = useAcknowledgeSos();
   const resolveMutation = useResolveSos();
@@ -204,13 +226,24 @@ export default function SosPage() {
             Danh sách cảnh báo ({total} tổng)
           </p>
         </div>
-        <button
-          onClick={() => refetch()}
-          className="flex items-center justify-center gap-2 min-h-[44px] px-4 py-2.5 rounded-xl bg-bg-card border border-border-primary text-text-secondary text-sm font-bold hover:bg-text-primary/5 active:scale-[0.98] transition-all shrink-0"
-        >
-          <RefreshCw className="w-4 h-4" />
-          Làm mới
-        </button>
+        <div className="flex gap-3">
+          <button
+            onClick={handleExport}
+            disabled={exporting}
+            className="flex items-center justify-center gap-2 min-h-[44px] px-4 py-2.5 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-sm font-bold hover:bg-emerald-500/20 active:scale-[0.98] transition-all shrink-0 disabled:opacity-50"
+          >
+            <Download className={`w-4 h-4 ${exporting ? 'animate-bounce' : ''}`} />
+            Xuất báo cáo
+          </button>
+          
+          <button
+            onClick={() => refetch()}
+            className="flex items-center justify-center gap-2 min-h-[44px] px-4 py-2.5 rounded-xl bg-bg-card border border-border-primary text-text-secondary text-sm font-bold hover:bg-text-primary/5 active:scale-[0.98] transition-all shrink-0"
+          >
+            <RefreshCw className="w-4 h-4" />
+            Làm mới
+          </button>
+        </div>
       </div>
 
       {/* Table */}

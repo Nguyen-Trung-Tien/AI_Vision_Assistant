@@ -12,33 +12,38 @@ import { EmergencyContact } from '../../emergency-contact/entities/emergency-con
 @Entity('users')
 export class User {
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id!: string;
 
   @Column({ unique: true })
-  email: string;
+  email!: string;
 
   @Column()
-  password_hash: string;
+  password_hash!: string;
 
   @Column({ default: 'USER' })
-  role: string;
+  role!: string;
+
+  @Column({ nullable: true })
+  full_name?: string;
+
+  @Column({ nullable: true })
+  phone?: string;
 
   @Column({ default: true })
-  is_active: boolean;
+  is_active!: boolean;
 
   @Column({ type: 'jsonb', nullable: true })
-  accessibility_prefs: any;
+  accessibility_prefs?: any;
 
   @OneToMany(() => DetectionLog, (log) => log.user)
-  detectionLogs: DetectionLog[];
+  detectionLogs!: DetectionLog[];
 
   @OneToMany(() => EmergencyContact, (contact) => contact.user)
-  emergencyContacts: EmergencyContact[];
-
+  emergencyContacts!: EmergencyContact[];
 
   @CreateDateColumn()
-  created_at: Date;
+  created_at!: Date;
 
   @UpdateDateColumn()
-  updated_at: Date;
+  updated_at!: Date;
 }
