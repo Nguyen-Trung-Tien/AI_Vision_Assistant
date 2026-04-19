@@ -4,6 +4,19 @@ Bảng điều khiển quản trị tập trung cho hệ thống AI Vision Assis
 
 ---
 
+## 🗓️ Lịch sử cập nhật (Dashboard)
+
+| Ngày | Cập nhật | Chi tiết |
+| --- | --- | --- |
+| **19/04** | 📊 RBAC UI | Cập nhật giao diện phân quyền cho Admin và Super Admin. |
+| **18/04** | 🔧 UI Density Fix | Tối ưu hóa mật độ hiển thị, giúp dashboard gọn gàng và chuyên nghiệp hơn. |
+| **15/04** | 🛡️ SOS Real-time | Nâng cấp hệ thống cảnh báo SOS kèm popup và thông báo âm thanh. |
+| **26/02** | 📈 Heatmap v2 | Tích hợp bản đồ nhiệt vùng nguy hiểm sử dụng Leaflet.heat. |
+| **25/02** | 🗣️ Broadcast TTS | Chức năng gửi thông báo giọng nói tức thời đến toàn bộ Mobile App. |
+| **24/02** | 📺 UI Modernization | Chuyển sang React 19 + Tailwind v4 + Dark Mode mặc định. |
+
+---
+
 ## 🚀 Công nghệ sử dụng
 
 - **React 19**: Framework frontend hiện đại nhất.

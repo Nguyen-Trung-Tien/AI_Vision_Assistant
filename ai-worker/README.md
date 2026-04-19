@@ -4,6 +4,21 @@
 
 ---
 
+## 🗓️ Lịch sử cập nhật (AI Engine)
+
+| Ngày | Cập nhật | Chi tiết |
+| --- | --- | --- |
+| **17/04** | 👤 InsightFace | Tích hợp nhận diện khuôn mặt Buffalo_L cho người quen. |
+| **17/04** | 📏 MiDaS Depth | Triển khai mô hình ước lượng chiều sâu đơn mục MiDaS Small. |
+| **17/04** | 📄 Gemini Smart OCR | Chế độ đọc thông minh (menu, hóa đơn) qua Gemini AI. |
+| **04/04** | 🚶 Smart Throttle | Tối ưu hóa hàng đợi Latest-only cho Continuous Stream. |
+| **28/03** | 🚦 Traffic Lights | Mở rộng dataset YOLO lên 29 lớp (thêm đèn giao thông, ổ gà, nắp cống). |
+| **27/03** | 🎓 YOLO Pipeline | Hoàn thiện quy trình training tự động: Roboflow → Colab → Deploy. |
+| **26/02** | 🤖 Visual Q&A | Tích hợp Google Gemini Vision API cho hỏi đáp tự nhiên. |
+| **25/02** | 🗣️ TTS Cache | Sử dụng Redis để lưu trữ kết quả TTS, giảm latency phát giọng nói. |
+
+---
+
 ## 🧠 Các dịch vụ AI tích hợp
 
 - **Object Detection (YOLO v11)**: Nhận diện xe cộ, người, vật cản với mô hình Nano tối ưu tốc độ.

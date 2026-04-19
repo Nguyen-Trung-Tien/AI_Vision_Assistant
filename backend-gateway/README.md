@@ -4,6 +4,19 @@ API Gateway trung tâm đóng vai trò là "nhà điều phối" toàn bộ hệ
 
 ---
 
+## 🗓️ Lịch sử cập nhật (Infrastructure)
+
+| Ngày | Cập nhật | Chi tiết |
+| --- | --- | --- |
+| **04/04** | 🚨 Emergency System | Tích hợp dịch vụ SMS (Twilio/Firebase) để gửi tin nhắn khẩn cấp. |
+| **01/04** | 🛡️ Integrity Audit | Kiểm tra sức khỏe hệ thống, dọn dẹp code thừa và tối ưu hóa query DB. |
+| **27/02** | 🧹 Security Hardening | Loại bỏ secrets khỏi source code, thêm sanitize cho nội dung TTS. |
+| **25/02** | 👥 RBAC | Hoàn thiện hệ thống phân quyền Super Admin/Admin/User. |
+| **25/02** | 🔐 WS Guard | Bảo mật kết nối WebSocket bằng JWT Validation. |
+| **20/02** | 📨 RabbitMQ Bridge | Chuyển đổi từ request-response trực tiếp sang Message Queue để xử lý bất đồng bộ. |
+
+---
+
 ## ✅ Chức năng chính
 
 - **Xác thực & Bảo mật**: Quản lý tài khoản người dùng, JWT Authentication và WebSocket Guards.

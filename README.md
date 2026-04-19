@@ -76,17 +76,17 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 ### 🗓️ Tháng 4/2026 — v1.5.0 (Current)
 
-| Ngày      | Cập nhật                        | Mô tả                                                                                       |
-| --------- | ------------------------------- | ------------------------------------------------------------------------------------------- |
-| **17/04** | 🧠 Face Registration (Alpha)     | Nhận diện người quen sử dụng InsightFace: phát hiện tên người đứng trước camera; thêm phản hồi giọng nói & rung khi đăng ký thành công |
-| **17/04** | 📏 MiDaS Depth Estimation       | Tích hợp mô hình MiDaS Small cho ước lượng chiều sâu đơn mục, tăng độ chính xác khoảng cách |
-| **17/04** | 📄 Smart OCR (Gemini Vision)    | Chế độ đọc thông minh: phân tích biển báo, thực đơn (menu), hóa đơn bằng Gemini AI          |
-| **17/04** | 🔧 Fix OCR & File Reader        | Sửa lỗi OCR Offline (ML Kit), đồng bộ giọng nói chuyển mode, hỗ trợ đọc tệp .txt và tối ưu hóa trích xuất PDF |
-| **15/04** | 📺 Visual Feedback              | Hiển thị Bounding Boxes + Object Chips trên mobile, tăng độ nhạy AI (480x480)               |
-| **15/04** | 🔊 Spatial Audio 3D             | Tích hợp âm thanh 3D: xác định hướng vật cản qua tai nghe stereo                            |
-| **08/04** | 🔧 Fix offline model            | Sửa lỗi mobile không nhận model TFLite offline đã có sẵn trên máy                           |
-| **04/04** | 🚨 Emergency Contact Network    | Tích hợp mạng lưới liên hệ khẩn cấp: tự động SMS + cuộc gọi khi SOS                         |
-| **04/04** | 🚶 Continuous Stream hoàn thiện | Walking Mode 3–5 FPS: adaptive FPS, latest-only queue, smart throttle, battery saving       |
+| Ngày      | Cập nhật                        | Mô tả                                                                                                                                  |
+| --------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| **17/04** | 🧠 Face Registration (Alpha)    | Nhận diện người quen sử dụng InsightFace: phát hiện tên người đứng trước camera; thêm phản hồi giọng nói & rung khi đăng ký thành công |
+| **17/04** | 📏 MiDaS Depth Estimation       | Tích hợp mô hình MiDaS Small cho ước lượng chiều sâu đơn mục, tăng độ chính xác khoảng cách                                            |
+| **17/04** | 📄 Smart OCR (Gemini Vision)    | Chế độ đọc thông minh: phân tích biển báo, thực đơn (menu), hóa đơn bằng Gemini AI                                                     |
+| **17/04** | 🔧 Fix OCR & File Reader        | Sửa lỗi OCR Offline (ML Kit), đồng bộ giọng nói chuyển mode, hỗ trợ đọc tệp .txt và tối ưu hóa trích xuất PDF                          |
+| **15/04** | 📺 Visual Feedback              | Hiển thị Bounding Boxes + Object Chips trên mobile, tăng độ nhạy AI (480x480)                                                          |
+| **15/04** | 🔊 Spatial Audio 3D             | Tích hợp âm thanh 3D: xác định hướng vật cản qua tai nghe stereo                                                                       |
+| **08/04** | 🔧 Fix offline model            | Sửa lỗi mobile không nhận model TFLite offline đã có sẵn trên máy                                                                      |
+| **04/04** | 🚨 Emergency Contact Network    | Tích hợp mạng lưới liên hệ khẩn cấp: tự động SMS + cuộc gọi khi SOS                                                                    |
+| **04/04** | 🚶 Continuous Stream hoàn thiện | Walking Mode 3–5 FPS: adaptive FPS, latest-only queue, smart throttle, battery saving                                                  |
 
 ### 🗓️ Tháng 4/2026 — v1.4.0
 
@@ -140,10 +140,40 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 ---
 
+## 🚀 Các tính năng nổi bật vừa cập nhật (v1.5.0)
+
+Để mang lại trải nghiệm tốt nhất cho người dùng khiếm thị, phiên bản v1.5.0 tập trung vào khả năng **phản hồi liên tục** và **nhận diện thông minh**:
+
+1.  **🧠 Nhận diện khuôn mặt người quen (InsightFace)**:
+    - Tích hợp model `Buffalo_L` cho độ chính xác cao.
+    - Thông báo tên người quen ngay khi họ xuất hiện trước camera.
+    - Quy trình đăng ký đơn giản kèm phản hồi rung và giọng nói.
+
+2.  **📏 Ước lượng chiều sâu MiDaS**:
+    - Sử dụng AI (`MiDaS Small`) để tính toán khoảng cách vật cản từ ảnh đơn mục.
+    - Giúp cảnh báo nguy hiểm chính xác hơn (sai số được cải thiện đáng kể).
+
+3.  **🚶 Walking Mode (Continuous Stream)**:
+    - Luồng xử lý liên tục 3–5 FPS mà không cần chạm màn hình.
+    - Cơ chế **Smart Throttle**: Tự động điều chỉnh FPS dựa trên tốc độ di chuyển và dung lượng pin.
+
+4.  **🔊 Spatial Audio 3D (Âm thanh nổi)**:
+    - Phát âm thanh cảnh báo theo hướng vật thể (Trái/Phải/Giữa).
+    - Giúp người dùng hình dung không gian 3D chỉ qua tai nghe.
+
+5.  **📄 Smart OCR (Gemini Vision)**:
+    - Vượt xa OCR truyền thống, Gemini AI có thể phân tích và tóm tắt thực đơn, đọc biển báo giao thông hoặc hóa đơn phức tạp.
+
+6.  **🚨 Mạng lưới liên hệ khẩn cấp (SOS)**:
+    - Tự động gửi tin nhắn SMS kèm vị trí GPS và thực hiện cuộc gọi đến người thân khi người dùng gặp sự cố.
+
+---
+
 ## 📖 Mục lục
 
 - [Giới thiệu](#-giới-thiệu)
 - [Tính năng chính](#-tính-năng-chính)
+- [Các tính năng vừa cập nhật](#-các-tính-năng-nổi-bật-vừa-cập-nhật-v150)
 - [Kiến trúc hệ thống](#-kiến-trúc-hệ-thống)
 - [Luồng xử lý chính](#-luồng-xử-lý-chính)
 - [Các chế độ trên Mobile App](#-các-chế-độ-trên-mobile-app)
@@ -637,6 +667,7 @@ GEMINI_MAX_OUTPUT_TOKENS=256             # Optional: limit response length
                              18: den_giao_thong (traffic_light)
                              19: vach_qua_duong (crosswalk)
 ```
+
 ```
 
 > [!NOTE]
@@ -802,3 +833,4 @@ _Đồ án tốt nghiệp — Đại học Giao thông Vận tải TP. Hồ Chí
 **⭐ Nếu dự án hữu ích, hãy cho một star trên GitHub! ⭐**
 
 </div>
+```

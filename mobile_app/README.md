@@ -4,6 +4,21 @@
 
 ---
 
+## 🗓️ Lịch sử cập nhật (Mobile)
+
+| Ngày | Cập nhật | Chi tiết |
+| --- | --- | --- |
+| **17/04** | 🧠 Face Registration | Thêm phản hồi giọng nói & rung khi đăng ký khuôn mặt thành công. |
+| **17/04** | 📄 File Reader Fix | Sửa lỗi OCR Offline, trích xuất văn bản từ file PDF và .txt. |
+| **15/04** | 📺 Visual Feedback | Hiển thị Bounding Boxes + Object Chips trực tiếp trên camera preview. |
+| **15/04** | 🔊 Spatial Audio 3D | Cảnh báo vật cản trái/phải qua tai nghe stereo. |
+| **04/04** | 🚨 Emergency Network | Tự động SMS + cuộc gọi đến người thân khi SOS. |
+| **04/04** | 🚶 Walking Mode | Hoàn thiện luồng stream 3-5 FPS liên tục. |
+| **27/02** | 🗺️ OSM Migration | Chuyển từ Google Maps sang OpenStreetMap & OSRM. |
+| **25/02** | 🎤 Voice Commands | Điều khiển ứng dụng bằng giọng nói (STT). |
+
+---
+
 ## 🌟 Tính năng nổi bật (v1.5.0)
 
 - **Continuous Stream (Walking Mode)**: Chế độ đi bộ 3-5 FPS, phân tích môi trường liên tục mà không cần thao tác tay.
