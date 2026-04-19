@@ -18,8 +18,12 @@ export class StatsController {
 
   private ensureAdmin(req: Request) {
     const user = req.user as { role?: Role } | undefined;
-    if (user?.role !== Role.ADMIN && user?.role !== Role.SUPER_ADMIN) {
-      throw new ForbiddenException('Admin access required');
+    if (
+      user?.role !== Role.ADMIN &&
+      user?.role !== Role.SUPER_ADMIN &&
+      user?.role !== Role.MODERATOR
+    ) {
+      throw new ForbiddenException('Insufficient permissions');
     }
   }
 

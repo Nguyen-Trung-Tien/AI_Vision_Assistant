@@ -29,8 +29,12 @@ export class FeedbackController {
 
   private ensureAdmin(req: ExpressRequest) {
     const user = req.user as JwtUser | undefined;
-    if (user?.role !== Role.ADMIN && user?.role !== Role.SUPER_ADMIN) {
-      throw new ForbiddenException('Admin access required');
+    if (
+      user?.role !== Role.ADMIN &&
+      user?.role !== Role.SUPER_ADMIN &&
+      user?.role !== Role.MODERATOR
+    ) {
+      throw new ForbiddenException('Insufficient permissions');
     }
   }
 

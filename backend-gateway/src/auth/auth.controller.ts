@@ -39,7 +39,14 @@ export class AuthController {
     if (!user) throw new UnauthorizedException('Admin credentials required');
     if (user['__locked'])
       throw new UnauthorizedException('Tài khoản đã bị khoá');
-    if (user['role'] !== Role.ADMIN && user['role'] !== Role.SUPER_ADMIN)
+    const userRole = String(user['role']);
+    const allowedRoles: string[] = [
+      Role.ADMIN,
+      Role.SUPER_ADMIN,
+      Role.MODERATOR,
+    ];
+
+    if (!allowedRoles.includes(userRole))
       throw new UnauthorizedException('Admin credentials required');
 
     const result = this.authService.login(
