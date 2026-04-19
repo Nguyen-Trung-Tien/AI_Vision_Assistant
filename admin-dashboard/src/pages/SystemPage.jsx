@@ -23,6 +23,9 @@ import {
   HardDrive
 } from "lucide-react";
 
+import PageHeader from "../components/ui/PageHeader";
+import Loading from "../components/ui/Loading";
+
 export default function SystemPage() {
   const [health, setHealth] = useState(null);
   const [metrics, setMetrics] = useState(null);
@@ -60,7 +63,6 @@ export default function SystemPage() {
   useEffect(() => {
     fetchInitialData();
 
-    // Listen for real-time metrics
     socket.on("system_metrics", (data) => {
       setMetrics(data);
       updateHistory(data);
@@ -107,23 +109,20 @@ export default function SystemPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-bold tracking-tight text-text-primary uppercase">
-            SYSTEM <span className="text-indigo-500">MONITOR</span>
-          </h1>
-          <p className="text-text-secondary font-medium text-sm">
-            Giám sát trạng thái hạ tầng và hiệu năng thời gian thực qua WebSocket
-          </p>
-        </div>
+      <PageHeader 
+        title="GIÁM SÁT" 
+        highlight="HỆ THỐNG" 
+        description="Giám sát trạng thái hạ tầng và hiệu năng thời gian thực qua WebSocket"
+      >
         <button
           onClick={fetchInitialData}
           className="flex items-center justify-center gap-2 px-4 py-2 rounded-xl bg-text-primary/5 border border-border-primary text-text-secondary text-[11px] font-black uppercase tracking-widest hover:bg-text-primary/10 hover:text-text-primary transition-all active:scale-95"
         >
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          {loading ? <Loading variant="inline" size="xs" /> : <RefreshCw className="w-4 h-4" />}
           Force Refresh
         </button>
-      </div>
+      </PageHeader>
+
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <StatusCard
@@ -261,7 +260,7 @@ export default function SystemPage() {
                   <span className="text-[10px] font-black text-text-secondary uppercase tracking-widest">Disk Usage</span>
                   <span className="text-[10px] font-black text-text-primary">Simulated</span>
                </div>
-               <div className="h-2 w-full bg-white/5 rounded-full overflow-hidden">
+               <div className="h-2 w-full bg-text-primary/5 rounded-full overflow-hidden">
                   <div className="h-full w-[42%] bg-indigo-500 rounded-full shadow-[0_0_8px_rgba(99,102,241,0.5)]" />
                </div>
             </div>
@@ -274,8 +273,8 @@ export default function SystemPage() {
 
 function InfoRow({ label, value, icon: Icon, sub }) {
   return (
-    <div className="flex items-center gap-4 p-4 bg-white/[0.02] rounded-2xl border border-border-primary group hover:bg-white/[0.04] transition-colors">
-      <div className="w-10 h-10 rounded-xl bg-white/5 flex items-center justify-center text-text-secondary group-hover:text-indigo-400 transition-colors">
+    <div className="flex items-center gap-4 p-4 bg-text-primary/[0.02] rounded-2xl border border-border-primary group hover:bg-text-primary/[0.04] transition-colors">
+      <div className="w-10 h-10 rounded-xl bg-text-primary/5 flex items-center justify-center text-text-secondary group-hover:text-indigo-400 transition-colors">
         <Icon className="w-5 h-5" />
       </div>
       <div className="flex-1 min-w-0">

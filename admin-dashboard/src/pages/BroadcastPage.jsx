@@ -2,6 +2,8 @@ import { useEffect, useState } from "react";
 import { fetchBroadcasts, sendBroadcast } from "../services/api";
 import { useToast } from "../components/Toast";
 import ConfirmDialog from "../components/ConfirmDialog";
+import PageHeader from "../components/ui/PageHeader";
+import Loading from "../components/ui/Loading";
 
 const PRIORITIES = [
   {
@@ -25,6 +27,7 @@ const PRIORITIES = [
     color: "text-red-600 dark:text-red-300 border-red-500/30 bg-red-500/10",
   },
 ];
+
 
 export default function BroadcastPage() {
   const toast = useToast();
@@ -81,8 +84,7 @@ export default function BroadcastPage() {
   const selectedPriority = PRIORITIES.find((p) => p.value === priority);
 
   return (
-    <div className="space-y-6 animate-slide-in">
-      {/* Confirm dialog */}
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <ConfirmDialog
         open={showConfirm}
         title="Xác nhận gửi broadcast?"
@@ -105,15 +107,12 @@ export default function BroadcastPage() {
         onCancel={() => setShowConfirm(false)}
       />
 
-      {/* Header */}
-      <div className="flex flex-col gap-1">
-        <h1 className="text-2xl font-bold tracking-tight text-text-primary uppercase">
-          BROADCAST <span className="text-indigo-500">TTS</span>
-        </h1>
-        <p className="text-text-secondary font-medium text-sm">
-          Gửi thông báo giọng nói tức thì đến toàn bộ ứng dụng người dùng
-        </p>
-      </div>
+      <PageHeader 
+        title="THÔNG BÁO" 
+        highlight="BROADCAST" 
+        description="Gửi thông báo giọng nói tức thì đến toàn bộ ứng dụng người dùng"
+      />
+
 
       {/* Compose */}
       <div className="bg-bg-card border border-border-primary rounded-2xl p-6 shadow-sm space-y-5">
@@ -232,9 +231,7 @@ export default function BroadcastPage() {
           disabled={sending || !canSend}
           className="w-full py-3.5 rounded-xl font-bold text-sm shadow-lg shadow-purple-500/20 transition-all bg-linear-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white disabled:opacity-40 flex items-center justify-center gap-2.5"
         >
-          {sending && (
-            <span className="loader-ring" style={{ width: 16, height: 16 }} />
-          )}
+          {sending && <Loading variant="inline" size="xs" />}
           {sending ? "Đang gửi..." : "📢 Gửi thông báo"}
         </button>
       </div>
@@ -255,9 +252,7 @@ export default function BroadcastPage() {
 
         <div className="bg-bg-card border border-border-primary rounded-2xl overflow-hidden shadow-sm">
           {loading ? (
-            <div className="py-12 flex items-center justify-center gap-2 text-text-secondary text-sm">
-              <div className="loader-ring" /> Đang tải...
-            </div>
+            <Loading size="md" text="Đang đồng bộ..." className="py-12" />
           ) : history.length === 0 ? (
             <div className="text-center py-12 text-text-secondary text-sm">
               Chưa có broadcast nào

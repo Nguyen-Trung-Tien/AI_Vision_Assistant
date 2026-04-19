@@ -1,6 +1,8 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
+import { motion, AnimatePresence } from "framer-motion";
+import { Eye, EyeOff, Lock, Mail, ArrowRight, ShieldCheck, Sun, Moon, RefreshCw } from "lucide-react";
 import { useLogin, useRegister } from "@/hooks/use-queries";
 import { useToast } from "../components/Toast";
 import { loginSchema, registerSchema } from "@/lib/form-schemas";
@@ -8,8 +10,26 @@ import { loginSchema, registerSchema } from "@/lib/form-schemas";
 export default function LoginV2({ onLoginSuccess }) {
   const toast = useToast();
   const [showPassword, setShowPassword] = useState(false);
-  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [isRegisterMode, setIsRegisterMode] = useState(false);
+  
+  // Theme state synchronized with document and localStorage
+  const [isDarkMode, setIsDarkMode] = useState(() => {
+    return (
+      localStorage.getItem("theme") === "dark" ||
+      (!localStorage.getItem("theme") &&
+        window.matchMedia("(prefers-color-scheme: dark)").matches)
+    );
+  });
+
+  useEffect(() => {
+    if (isDarkMode) {
+      document.documentElement.classList.add("dark");
+      localStorage.setItem("theme", "dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+      localStorage.setItem("theme", "light");
+    }
+  }, [isDarkMode]);
 
   const loginMutation = useLogin();
   const registerMutation = useRegister();
@@ -31,28 +51,25 @@ export default function LoginV2({ onLoginSuccess }) {
 
   const onSubmit = async (data) => {
     if (submitting) return;
-
     try {
       if (isRegisterMode) {
         await registerMutation.mutateAsync({
           email: data.email.trim(),
           password: data.password,
         });
-        toast?.success?.("Đăng ký thành công");
+        toast?.success?.("Đăng ký thành công! Hãy đăng nhập.");
+        setIsRegisterMode(false);
+        reset();
       } else {
         await loginMutation.mutateAsync({
           email: data.email.trim(),
           password: data.password,
         });
-        toast?.success?.("Đăng nhập thành công");
+        toast?.success?.("Chào mừng trở lại!");
+        onLoginSuccess?.();
       }
-      onLoginSuccess?.();
     } catch (err) {
-      const msg =
-        err?.response?.data?.message ||
-        err?.message ||
-        (isRegisterMode ? "Đăng ký thất bại" : "Đăng nhập thất bại");
-      toast?.error?.(msg);
+      toast?.error?.(err?.response?.data?.message || err?.message || "Thao tác thất bại");
     }
   };
 
@@ -62,282 +79,207 @@ export default function LoginV2({ onLoginSuccess }) {
   };
 
   return (
-    <div className="min-h-screen bg-bg-primary flex items-center justify-center p-4 relative overflow-hidden font-sans transition-colors duration-500">
-      {/* Background decorations */}
-      <div className="absolute -top-20 -left-20 w-64 h-64 rounded-full bg-accent-purple/10 blur-3xl animate-pulse" />
-      <div
-        className="absolute -bottom-20 -right-20 w-64 h-64 rounded-full bg-accent-cyan/10 blur-3xl animate-pulse"
-        style={{ animationDelay: "1s" }}
-      />
-
-      <form
-        onSubmit={handleSubmit(onSubmit)}
-        className="w-full max-w-[380px] bg-bg-card/90 backdrop-blur-xl border border-border-primary rounded-[1.5rem] p-6 sm:p-8 shadow-xl relative z-10 animate-slide-in"
+    <div className="min-h-screen bg-bg-primary flex items-center justify-center p-4 relative overflow-hidden selection:bg-indigo-500/30 transition-colors duration-500">
+      {/* Theme Toggle Button */}
+      <motion.button
+        initial={{ opacity: 0, x: 20 }}
+        animate={{ opacity: 1, x: 0 }}
+        onClick={() => setIsDarkMode(!isDarkMode)}
+        className="absolute top-6 right-6 z-50 p-3 rounded-2xl bg-bg-card/40 backdrop-blur-md border border-white/10 shadow-lg hover:bg-bg-card/60 transition-all text-text-primary group"
       >
-        <div className="flex items-center gap-3 mb-6">
-          <div className="w-10 h-10 rounded-xl bg-linear-to-br from-accent-purple to-accent-cyan flex items-center justify-center shadow-lg shadow-accent-purple/20">
-            <svg
-              className="w-5 h-5 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-              />
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-              />
-            </svg>
-          </div>
-          <div>
-            <h1 className="text-base font-bold text-text-primary tracking-tight">
-              VISION ADMIN
+        {isDarkMode ? (
+          <Sun className="w-5 h-5 text-yellow-400 group-hover:rotate-45 transition-transform duration-500" />
+        ) : (
+          <Moon className="w-5 h-5 text-indigo-500 group-hover:-rotate-12 transition-transform duration-500" />
+        )}
+      </motion.button>
+
+      {/* Dynamic Background Elements */}
+      <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-indigo-600/10 blur-[120px] animate-pulse" />
+      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-cyan-600/10 blur-[120px] animate-pulse" style={{ animationDelay: "2s" }} />
+
+      <motion.div
+        initial={{ opacity: 0, y: 20 }}
+        animate={{ opacity: 1, y: 0 }}
+        className="w-full max-w-[420px] relative z-10"
+      >
+        {/* Logo Section */}
+        <div className="flex flex-col items-center mb-6">
+          <motion.div 
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            transition={{ type: "spring", stiffness: 200, damping: 15 }}
+            className="w-16 h-16 mb-3 p-1 rounded-2xl bg-linear-to-br from-indigo-500/20 to-cyan-500/20 backdrop-blur-md border border-white/10 shadow-xl flex items-center justify-center group"
+          >
+            <img 
+              src="/logo.png" 
+              alt="Vision Assistant Logo" 
+              className="w-11 h-11 object-contain group-hover:scale-110 transition-transform duration-500"
+            />
+          </motion.div>
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.2 }}
+            className="text-center"
+          >
+            <h1 className="text-xl font-black text-text-primary tracking-tighter uppercase">
+              Vision <span className="text-indigo-500">Admin</span>
             </h1>
-            <p className="text-[9px] text-text-secondary font-semibold tracking-widest opacity-50 uppercase">
-              Security Portal
+            <p className="text-[9px] text-text-secondary font-bold uppercase tracking-[0.3em] opacity-50">
+              Cổng Quản Trị Hệ Thống AI
             </p>
-          </div>
+          </motion.div>
         </div>
 
-        <h2 className="text-xl font-bold text-text-primary mb-1 tracking-tight">
-          {isRegisterMode ? "Đăng ký" : "Đăng nhập"}
-        </h2>
-        <p className="text-text-secondary mb-6 text-xs font-medium">
-          {isRegisterMode
-            ? "Tạo tài khoản quản trị mới"
-            : "Truy cập hệ thống điều hành AI"}
-        </p>
+        {/* Main Card */}
+        <div className="bg-bg-card/40 backdrop-blur-2xl border border-white/5 rounded-[2rem] p-7 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.3)] overflow-hidden transition-all duration-500">
+          <AnimatePresence mode="wait">
+            <motion.div
+              key={isRegisterMode ? "register" : "login"}
+              initial={{ opacity: 0, x: isRegisterMode ? 20 : -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              exit={{ opacity: 0, x: isRegisterMode ? -20 : 20 }}
+              transition={{ duration: 0.3, ease: "easeInOut" }}
+            >
+              <h2 className="text-lg font-bold text-text-primary mb-1">
+                {isRegisterMode ? "Bắt đầu ngay" : "Chào mừng trở lại"}
+              </h2>
+              <p className="text-xs text-text-secondary mb-6 opacity-70 leading-relaxed">
+                {isRegisterMode 
+                  ? "Tạo tài khoản quản trị để tiếp tục" 
+                  : "Đăng nhập để quản lý AI Vision"}
+              </p>
 
-        {/* Email Field */}
-        <div className="space-y-1.5 mb-4">
-          <label
-            htmlFor="email"
-            className="block text-text-secondary text-[10px] font-bold uppercase tracking-wider ml-1"
-          >
-            Email
-          </label>
-          <div className="relative">
-            <input
-              id="email"
-              type="email"
-              {...register("email")}
-              className={`w-full rounded-xl bg-text-primary/5 border ${errors.email ? "border-accent-red/50" : "border-border-primary"} px-4 py-2.5 text-text-primary font-medium text-sm outline-none focus:border-accent-cyan/50 focus:bg-bg-card transition-all placeholder:text-text-secondary/30`}
-              placeholder="admin@example.com"
-            />
-          </div>
-          {errors.email && (
-            <p className="text-accent-red text-[10px] mt-1 ml-1 font-bold">
-              {errors.email.message}
-            </p>
-          )}
-        </div>
+              <form onSubmit={handleSubmit(onSubmit)} className="space-y-4">
+                {/* Email */}
+                <div className="space-y-1.5">
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-text-secondary group-focus-within:text-indigo-500 transition-colors">
+                      <Mail className="w-4 h-4" />
+                    </div>
+                    <input
+                      type="email"
+                      {...register("email")}
+                      className={`w-full bg-text-primary/5 border ${errors.email ? "border-red-500/50" : "border-white/5"} rounded-xl py-3 pl-11 pr-4 text-sm text-text-primary placeholder:text-text-secondary/30 outline-none focus:border-indigo-500/50 focus:bg-text-primary/10 transition-all`}
+                      placeholder="Địa chỉ Email"
+                    />
+                  </div>
+                  {errors.email && (
+                    <p className="text-[10px] text-red-500 font-bold ml-4 animate-in fade-in slide-in-from-left-2">
+                      {errors.email.message}
+                    </p>
+                  )}
+                </div>
 
-        {/* Password Field */}
-        <div className="space-y-1.5 mb-4">
-          <label
-            htmlFor="password"
-            className="block text-text-secondary text-[10px] font-bold uppercase tracking-wider ml-1"
-          >
-            Mật khẩu
-          </label>
-          <div className="relative">
-            <input
-              id="password"
-              type={showPassword ? "text" : "password"}
-              {...register("password")}
-              className={`w-full rounded-xl bg-text-primary/5 border ${errors.password ? "border-accent-red/50" : "border-border-primary"} px-4 py-2.5 pr-12 text-text-primary font-medium text-sm outline-none focus:border-accent-cyan/50 focus:bg-bg-card transition-all placeholder:text-text-secondary/30`}
-              placeholder="••••••••"
-            />
+                {/* Password */}
+                <div className="space-y-1.5">
+                  <div className="relative group">
+                    <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-text-secondary group-focus-within:text-indigo-500 transition-colors">
+                      <Lock className="w-4 h-4" />
+                    </div>
+                    <input
+                      type={showPassword ? "text" : "password"}
+                      {...register("password")}
+                      className={`w-full bg-text-primary/5 border ${errors.password ? "border-red-500/50" : "border-white/5"} rounded-xl py-3 pl-11 pr-11 text-sm text-text-primary placeholder:text-text-secondary/30 outline-none focus:border-indigo-500/50 focus:bg-text-primary/10 transition-all`}
+                      placeholder="Mật khẩu"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute inset-y-0 right-4 flex items-center text-text-secondary/40 hover:text-text-primary transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                    </button>
+                  </div>
+                  {errors.password && (
+                    <p className="text-[10px] text-red-500 font-bold ml-4 animate-in fade-in slide-in-from-left-2">
+                      {errors.password.message}
+                    </p>
+                  )}
+                </div>
+
+                {/* Confirm Password (Register Only) */}
+                {isRegisterMode && (
+                  <motion.div 
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: "auto" }}
+                    className="space-y-1.5"
+                  >
+                    <div className="relative group">
+                      <div className="absolute inset-y-0 left-4 flex items-center pointer-events-none text-text-secondary group-focus-within:text-indigo-500 transition-colors">
+                        <ShieldCheck className="w-4 h-4" />
+                      </div>
+                      <input
+                        type={showPassword ? "text" : "password"}
+                        {...register("confirmPassword")}
+                        className={`w-full bg-text-primary/5 border ${errors.confirmPassword ? "border-red-500/50" : "border-white/5"} rounded-xl py-3 pl-11 pr-4 text-sm text-text-primary placeholder:text-text-secondary/30 outline-none focus:border-indigo-500/50 focus:bg-text-primary/10 transition-all`}
+                        placeholder="Xác nhận mật khẩu"
+                      />
+                    </div>
+                    {errors.confirmPassword && (
+                      <p className="text-[10px] text-red-500 font-bold ml-4 animate-in fade-in slide-in-from-left-2">
+                        {errors.confirmPassword.message}
+                      </p>
+                    )}
+                  </motion.div>
+                )}
+
+                {!isRegisterMode && (
+                  <div className="flex justify-end px-1">
+                    <button type="button" className="text-[10px] font-bold text-indigo-400 hover:text-indigo-300 transition-colors uppercase tracking-wider opacity-60 hover:opacity-100">
+                      Quên mật khẩu?
+                    </button>
+                  </div>
+                )}
+
+                <button
+                  type="submit"
+                  disabled={submitting}
+                  className="w-full group relative overflow-hidden rounded-xl bg-indigo-600 py-3.5 font-black uppercase tracking-[0.2em] text-white text-[10px] shadow-[0_8px_16px_-4px_rgba(79,70,229,0.4)] hover:shadow-[0_12px_24px_-8px_rgba(79,70,229,0.6)] active:scale-[0.98] transition-all duration-300 disabled:opacity-50"
+                >
+                  <div className="absolute inset-0 bg-linear-to-r from-white/0 via-white/10 to-white/0 translate-x-[-100%] group-hover:translate-x-[100%] transition-transform duration-1000" />
+                  <span className="flex items-center justify-center gap-2">
+                    {submitting ? (
+                      <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                    ) : (
+                      <>
+                        {isRegisterMode ? "Tham gia" : "Truy cập"}
+                        <ArrowRight className="w-3.5 h-3.5 group-hover:translate-x-1 transition-transform" />
+                      </>
+                    )}
+                  </span>
+                </button>
+              </form>
+            </motion.div>
+          </AnimatePresence>
+
+          {/* Footer Toggle */}
+          <div className="mt-6 pt-5 border-t border-white/5 text-center">
             <button
               type="button"
-              onClick={() => setShowPassword((v) => !v)}
-              className="absolute inset-y-0 right-0 px-4 text-text-secondary/40 hover:text-text-primary transition-colors"
+              onClick={toggleMode}
+              className="text-[11px] text-text-secondary font-medium hover:text-indigo-400 transition-colors group"
             >
-              {showPassword ? (
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"
-                  />
-                </svg>
+              {isRegisterMode ? (
+                <>Đã có tài khoản? <span className="text-indigo-500 font-bold group-hover:underline">Đăng nhập</span></>
               ) : (
-                <svg
-                  className="w-4 h-4"
-                  fill="none"
-                  stroke="currentColor"
-                  viewBox="0 0 24 24"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                  />
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                  />
-                </svg>
+                <>Chưa có quyền? <span className="text-indigo-500 font-bold group-hover:underline">Đăng ký ngay</span></>
               )}
             </button>
           </div>
-          {errors.password && (
-            <p className="text-accent-red text-[10px] mt-1 ml-1 font-bold">
-              {errors.password.message}
-            </p>
-          )}
         </div>
 
-        {/* Confirm Password Field (Register Only) */}
-        {isRegisterMode && (
-          <div className="space-y-1.5 mb-6">
-            <label
-              htmlFor="confirmPassword"
-              className="block text-text-secondary text-[10px] font-bold uppercase tracking-wider ml-1"
-            >
-              Xác nhận mật khẩu
-            </label>
-            <div className="relative">
-              <input
-                id="confirmPassword"
-                type={showConfirmPassword ? "text" : "password"}
-                {...register("confirmPassword")}
-                className={`w-full rounded-xl bg-text-primary/5 border ${errors.confirmPassword ? "border-accent-red/50" : "border-border-primary"} px-4 py-2.5 pr-12 text-text-primary font-medium text-sm outline-none focus:border-accent-cyan/50 focus:bg-bg-card transition-all placeholder:text-text-secondary/30`}
-                placeholder="••••••••"
-              />
-              <button
-                type="button"
-                onClick={() => setShowConfirmPassword((v) => !v)}
-                className="absolute inset-y-0 right-0 px-4 text-text-secondary/40 hover:text-text-primary transition-colors"
-              >
-                {showConfirmPassword ? (
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l18 18"
-                    />
-                  </svg>
-                ) : (
-                  <svg
-                    className="w-4 h-4"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-                    />
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"
-                    />
-                  </svg>
-                )}
-              </button>
-            </div>
-            {errors.confirmPassword && (
-              <p className="text-accent-red text-[10px] mt-1 ml-1 font-bold">
-                {errors.confirmPassword.message}
-              </p>
-            )}
-          </div>
-        )}
-
-        {(loginMutation.error || registerMutation.error) && (
-          <div className="mb-4 flex items-start gap-2 text-[11px] text-accent-red bg-accent-red/10 border border-accent-red/20 rounded-xl p-3 animate-in fade-in slide-in-from-top-1">
-            <svg
-              className="w-3.5 h-3.5 shrink-0 mt-0.5"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-              />
-            </svg>
-            <span className="font-bold leading-tight">
-              {loginMutation.error?.response?.data?.message ||
-                registerMutation.error?.response?.data?.message ||
-                loginMutation.error?.message ||
-                registerMutation.error?.message}
-            </span>
-          </div>
-        )}
-
-        <button
-          type="submit"
-          disabled={submitting}
-          className="w-full min-h-[48px] rounded-xl bg-linear-to-r from-accent-purple to-accent-cyan py-3 font-bold uppercase tracking-widest text-white text-[11px] shadow-lg shadow-accent-purple/20 hover:shadow-accent-purple/30 hover:scale-[1.01] active:scale-[0.99] disabled:opacity-60 inline-flex items-center justify-center gap-2 transition-all duration-300"
+        {/* System Info */}
+        <motion.p 
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          transition={{ delay: 0.5 }}
+          className="text-center mt-6 text-[9px] text-text-secondary/30 font-bold uppercase tracking-widest"
         >
-          {submitting ? (
-            <>
-              <span
-                className="loader-ring border-white/30 border-t-white"
-                style={{ width: 14, height: 14 }}
-              />
-              <span>Đang xử lý</span>
-            </>
-          ) : (
-            <span>{isRegisterMode ? "Đăng ký" : "Đăng nhập"}</span>
-          )}
-        </button>
-
-        <div className="mt-6 text-center">
-          <button
-            type="button"
-            disabled={submitting}
-            onClick={toggleMode}
-            className="text-[10px] text-text-secondary/60 hover:text-accent-cyan transition-colors disabled:opacity-50 group font-bold uppercase tracking-wider"
-          >
-            {isRegisterMode ? (
-              <>
-                Đã có tài khoản?{" "}
-                <span className="text-accent-purple group-hover:text-accent-cyan transition-colors underline underline-offset-4 decoration-2">
-                  Đăng nhập
-                </span>
-              </>
-            ) : (
-              <>
-                Chưa có tài khoản?{" "}
-                <span className="text-accent-purple group-hover:text-accent-cyan transition-colors underline underline-offset-4 decoration-2">
-                  Yêu cầu quyền
-                </span>
-              </>
-            )}
-          </button>
-        </div>
-      </form>
+          © 2026 Vision Assistant • AI Safety Portal v4.2.0
+        </motion.p>
+      </motion.div>
     </div>
   );
 }

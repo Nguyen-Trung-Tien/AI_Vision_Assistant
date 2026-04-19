@@ -13,8 +13,12 @@ import { getStoredEmail } from "../services/api";
 import { useToast } from "../components/Toast";
 import ConfirmDialog from "../components/ConfirmDialog";
 
+import PageHeader from "../components/ui/PageHeader";
+import DataTable from "../components/ui/DataTable";
+import Pagination from "../components/ui/Pagination";
 import Avatar from "../components/ui/Avatar";
 import { RoleBadge, LockedBadge } from "../components/ui/Badge";
+import Loading from "../components/ui/Loading";
 import AddUserModal from "../components/users/AddUserModal";
 import EditUserModal from "../components/users/EditUserModal";
 import UserEmergencyContactsModal from "../components/users/UserEmergencyContactsModal";
@@ -38,7 +42,6 @@ import {
 } from "lucide-react";
 import { TableSkeleton } from "../components/ui/Skeleton";
 
-// ── Main Page
 export default function UsersPage() {
   const toast = useToast();
   const myEmail = getStoredEmail(); // current logged-in admin's email
@@ -141,6 +144,13 @@ export default function UsersPage() {
     setConfirm(null);
   };
 
+  const tableHeaders = [
+    { label: "Thành viên" },
+    { label: "Vai trò & Trạng thái" },
+    { label: "Ngày tham gia" },
+    { label: "Thao tác", className: "text-right" },
+  ];
+
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/*  Modals  */}
@@ -227,19 +237,15 @@ export default function UsersPage() {
         onCancel={() => setConfirm(null)}
       />
 
-      {/*  Header  */}
-      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-bold tracking-tight text-text-primary uppercase">
-            USER <span className="text-indigo-500">ACCOUNTS</span>
-          </h1>
-          <p className="text-text-secondary font-medium text-sm">
-            {total} tài khoản người dùng đã đăng ký trong hệ thống
-          </p>
-        </div>
+      <PageHeader 
+        title="USER" 
+        highlight="ACCOUNTS" 
+        description={`${total} tài khoản người dùng đã đăng ký trong hệ thống`}
+      />
 
-        <div className="flex flex-col sm:flex-row gap-4">
-          <form onSubmit={handleSearch} className="relative group">
+      <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-6">
+        <div className="flex flex-col sm:flex-row gap-4 w-full lg:w-auto">
+          <form onSubmit={handleSearch} className="relative group flex-1 sm:flex-none">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-text-secondary group-focus-within:text-indigo-500 transition-colors" />
             <input
               value={searchInput}
@@ -249,199 +255,90 @@ export default function UsersPage() {
             />
           </form>
           
-          <button
-            onClick={() => setShowAdd(true)}
-            className="flex items-center justify-center gap-2 min-h-[40px] px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-bold uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-indigo-600/10"
-          >
-            <Plus className="w-5 h-5" />
-            Thêm mới
-          </button>
-
-          <button
-            onClick={handleExport}
-            disabled={exporting}
-            className="flex items-center justify-center gap-2 min-h-[40px] px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-[11px] font-bold uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50"
-          >
-            <Download className={`w-4 h-4 ${exporting ? 'animate-bounce' : ''}`} />
-            Export
-          </button>
-
-          <button
-            onClick={load}
-            className="flex items-center justify-center gap-2 min-h-[40px] px-3 py-2 rounded-xl bg-text-primary/5 border border-border-primary text-text-secondary hover:text-text-primary transition-all active:scale-95"
-          >
-            <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
-          </button>
-        </div>
-      </div>
-
-      {/*  Table  */}
-      <div className="bg-bg-card border border-border-primary rounded-[2.5rem] overflow-hidden shadow-2xl">
-        {loading && users.length === 0 ? (
-          <div className="p-8">
-            <TableSkeleton rows={8} cols={4} />
-          </div>
-        ) : users.length === 0 ? (
-          <div className="py-24 text-center text-text-secondary space-y-4">
-            <Users2 className="w-16 h-16 mx-auto opacity-10" />
-            <p className="font-bold text-lg">Không tìm thấy người dùng nào</p>
-            <button 
-              onClick={() => { setSearchInput(""); setSearch(""); }}
-              className="text-indigo-400 hover:underline text-sm font-bold"
-            >
-              Xoá bộ lọc tìm kiếm
+          <div className="flex gap-2">
+            <button onClick={() => setShowAdd(true)} className="flex-1 sm:flex-none flex items-center justify-center gap-2 min-h-[40px] px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-bold uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-indigo-600/10"><Plus className="w-5 h-5" /> Thêm mới</button>
+            <button onClick={handleExport} disabled={exporting} className="flex-1 sm:flex-none flex items-center justify-center gap-2 min-h-[40px] px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-[11px] font-bold uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50"><Download className={`w-4 h-4 ${exporting ? 'animate-bounce' : ''}`} /> Export</button>
+            <button onClick={load} className="p-2 rounded-xl bg-bg-card border border-border-primary text-text-secondary hover:text-text-primary transition-all active:scale-95">
+              {loading ? <Loading variant="inline" size="xs" /> : <RefreshCw className="w-4 h-4" />}
             </button>
           </div>
-        ) : (
-          <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse">
-              <thead>
-                <tr className="border-b border-border-primary text-[10px] font-black text-text-secondary uppercase tracking-[0.2em] bg-white/[0.02]">
-                  <th className="px-6 py-3.5">Thành viên</th>
-                  <th className="px-6 py-3.5">Vai trò & Trạng thái</th>
-                  <th className="px-6 py-3.5">Ngày tham gia</th>
-                  <th className="px-6 py-3.5 text-right">Thao tác</th>
-                </tr>
-              </thead>
-              <tbody className="divide-y divide-border-primary/50">
-                {users.map((user) => (
-                  <tr
-                    key={user.id}
-                    className="hover:bg-white/[0.03] transition-colors group"
-                  >
-                    <td className="px-8 py-6">
-                      <div className="flex items-center gap-4">
-                        <div className="relative">
-                          <Avatar email={user.email} className="w-10 h-10 rounded-2xl border-2 border-border-primary group-hover:border-indigo-500/50 transition-colors" />
-                          {!user.is_active && (
-                            <div className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 rounded-full border-2 border-bg-card flex items-center justify-center">
-                              <Lock className="w-2 h-2 text-white" />
-                            </div>
-                          )}
-                        </div>
-                        <div className="min-w-0">
-                          <p className="text-sm font-black text-text-primary truncate flex items-center gap-2">
-                            {user.email}
-                            {user.email === myEmail && (
-                              <span className="px-1.5 py-0.5 rounded bg-white/10 text-[8px] uppercase tracking-widest text-text-secondary">Tôi</span>
-                            )}
-                          </p>
-                          <p className="text-[10px] text-text-secondary font-bold opacity-60 flex items-center gap-1 mt-1 uppercase tracking-wider">
-                            <Mail className="w-3 h-3" /> UID: {user.id.substring(0, 8)}...
-                          </p>
-                        </div>
-                      </div>
-                    </td>
-                    <td className="px-8 py-6">
-                      <div className="flex items-center gap-3">
-                        <RoleBadge role={user.role} />
-                        {!user.is_active && <LockedBadge />}
-                      </div>
-                    </td>
-                    <td className="px-8 py-6">
-                      <div className="flex items-center gap-2 text-xs font-bold text-text-secondary">
-                        <Calendar className="w-3.5 h-3.5 opacity-40" />
-                        {new Date(user.created_at).toLocaleDateString("vi-VN", {
-                          day: '2-digit',
-                          month: 'long',
-                          year: 'numeric'
-                        })}
-                      </div>
-                    </td>
-                    <td className="px-8 py-6">
-                      <div className="flex justify-end items-center gap-2">
-                        {/* Edit */}
-                        <button
-                          onClick={() => setEditUser(user)}
-                          className="w-10 h-10 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-text-secondary hover:text-indigo-400 hover:border-indigo-400/30 transition-all"
-                          title="Chỉnh sửa thông tin"
-                        >
-                          <Edit2 className="w-4 h-4" />
-                        </button>
-
-                        {/* Emergency Contacts */}
-                        <button
-                          onClick={() => setContactsUser(user)}
-                          className="w-10 h-10 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-text-secondary hover:text-cyan-400 hover:border-cyan-400/30 transition-all"
-                          title="Danh bạ khẩn cấp"
-                        >
-                          <Users2 className="w-4 h-4" />
-                        </button>
-
-                        {/* More Menu Placeholder - for demo premium feel */}
-                        <div className="h-6 w-[1px] bg-white/10 mx-1" />
-
-                        {/* Role Toggle */}
-                        <button
-                          onClick={() => setConfirm({ type: "toggle", user })}
-                          className="w-10 h-10 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-text-secondary hover:text-amber-400 hover:border-amber-400/30 transition-all"
-                          title={user.role === "ADMIN" ? "Gỡ quyền Admin" : "Cấp quyền Admin"}
-                        >
-                          <Shield className="w-4 h-4" />
-                        </button>
-
-                        {/* Lock/Unlock */}
-                        {user.email !== myEmail && (
-                          <button
-                            onClick={() => setConfirm({ type: user.is_active ? "lock" : "unlock", user })}
-                            className={`w-10 h-10 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center transition-all ${
-                              user.is_active 
-                                ? 'text-text-secondary hover:text-orange-400 hover:border-orange-400/30' 
-                                : 'text-green-500 hover:bg-green-500/10 border-green-500/20'
-                            }`}
-                            title={user.is_active ? "Khoá tài khoản" : "Mở khoá tài khoản"}
-                          >
-                            {user.is_active ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}
-                          </button>
-                        )}
-
-                        {/* Delete */}
-                        {user.email !== myEmail && (
-                          <button
-                            onClick={() => setConfirm({ type: "delete", user })}
-                            className="w-10 h-10 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-text-secondary hover:text-red-500 hover:border-red-500/30 transition-all"
-                            title="Xoá vĩnh viễn"
-                          >
-                            <Trash2 className="w-4 h-4" />
-                          </button>
-                        )}
-                      </div>
-                    </td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        )}
+        </div>
       </div>
 
-      {/* ── Pagination  */}
-      {totalPages > 1 && (
-        <div className="flex items-center justify-center gap-6 mt-10">
-          <button
-            onClick={() => setPage((p) => Math.max(1, p - 1))}
-            disabled={page <= 1}
-            className="flex items-center gap-2 min-h-[44px] px-6 py-2 text-xs font-black uppercase tracking-widest rounded-xl border border-border-primary bg-text-primary/2 text-text-secondary hover:text-text-primary hover:border-indigo-500/40 hover:bg-text-primary/5 disabled:opacity-20 disabled:cursor-not-allowed transition-all active:scale-95"
-          >
-            <ChevronLeft className="w-4 h-4" />
-            Trước
-          </button>
-          <div className="flex items-center gap-2">
-            <span className="text-sm font-black text-text-primary">{page}</span>
-            <span className="text-sm font-bold text-text-secondary opacity-30">/</span>
-            <span className="text-sm font-bold text-text-secondary/60">{totalPages}</span>
-          </div>
-          <button
-            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
-            disabled={page >= totalPages}
-            className="flex items-center gap-2 min-h-[44px] px-6 py-2 text-xs font-black uppercase tracking-widest rounded-xl border border-border-primary bg-white/2 text-text-secondary hover:text-white hover:border-indigo-500/40 hover:bg-white/5 disabled:opacity-20 disabled:cursor-not-allowed transition-all active:scale-95"
-          >
-            Sau
-            <ChevronRight className="w-4 h-4" />
-          </button>
-        </div>
-      )}
+      <DataTable 
+        headers={tableHeaders} 
+        loading={loading} 
+        empty={users.length === 0}
+        emptyMessage={
+          <>
+            <Users2 className="w-16 h-16 mx-auto opacity-10" />
+            <p className="font-bold text-lg">Không tìm thấy người dùng nào</p>
+            <button onClick={() => { setSearchInput(""); setSearch(""); }} className="text-indigo-400 hover:underline text-sm font-bold">Xoá bộ lọc tìm kiếm</button>
+          </>
+        }
+      >
+        {users.map((user) => (
+          <tr key={user.id} className="hover:bg-white/[0.03] transition-colors group border-b border-border-primary last:border-0">
+            <td className="px-6 py-5">
+              <div className="flex items-center gap-4">
+                <div className="relative">
+                  <Avatar email={user.email} className="w-10 h-10 rounded-2xl border-2 border-border-primary group-hover:border-indigo-500/50 transition-colors" />
+                  {!user.is_active && (
+                    <div className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 rounded-full border-2 border-bg-card flex items-center justify-center">
+                      <Lock className="w-2 h-2 text-white" />
+                    </div>
+                  )}
+                </div>
+                <div className="min-w-0">
+                  <p className="text-sm font-black text-text-primary truncate flex items-center gap-2">
+                    {user.email}
+                    {user.email === myEmail && (
+                      <span className="px-1.5 py-0.5 rounded bg-white/10 text-[8px] uppercase tracking-widest text-text-secondary">Tôi</span>
+                    )}
+                  </p>
+                  <p className="text-[10px] text-text-secondary font-bold opacity-60 flex items-center gap-1 mt-1 uppercase tracking-wider">
+                    <Mail className="w-3 h-3" /> UID: {user.id.substring(0, 8)}...
+                  </p>
+                </div>
+              </div>
+            </td>
+            <td className="px-6 py-5">
+              <div className="flex items-center gap-3">
+                <RoleBadge role={user.role} />
+                {!user.is_active && <LockedBadge />}
+              </div>
+            </td>
+            <td className="px-6 py-5">
+              <div className="flex items-center gap-2 text-xs font-bold text-text-secondary">
+                <Calendar className="w-3.5 h-3.5 opacity-40" />
+                {new Date(user.created_at).toLocaleDateString("vi-VN", {
+                  day: '2-digit', month: 'long', year: 'numeric'
+                })}
+              </div>
+            </td>
+            <td className="px-6 py-5">
+              <div className="flex justify-end items-center gap-2">
+                <button onClick={() => setEditUser(user)} className="w-9 h-9 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-text-secondary hover:text-indigo-400 hover:border-indigo-400/30 transition-all" title="Chỉnh sửa thông tin"><Edit2 className="w-4 h-4" /></button>
+                <button onClick={() => setContactsUser(user)} className="w-9 h-9 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-text-secondary hover:text-cyan-400 hover:border-cyan-400/30 transition-all" title="Danh bạ khẩn cấp"><Users2 className="w-4 h-4" /></button>
+                <div className="h-6 w-[1px] bg-white/10 mx-1" />
+                <button onClick={() => setConfirm({ type: "toggle", user })} className="w-9 h-9 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-text-secondary hover:text-amber-400 hover:border-amber-400/30 transition-all" title={user.role === "ADMIN" ? "Gỡ quyền Admin" : "Cấp quyền Admin"}><Shield className="w-4 h-4" /></button>
+                {user.email !== myEmail && (
+                  <>
+                    <button onClick={() => setConfirm({ type: user.is_active ? "lock" : "unlock", user })} className={`w-9 h-9 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center transition-all ${user.is_active ? 'text-text-secondary hover:text-orange-400 hover:border-orange-400/30' : 'text-green-500 hover:bg-green-500/10 border-green-500/20'}`} title={user.is_active ? "Khoá tài khoản" : "Mở khoá tài khoản"}>{user.is_active ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}</button>
+                    <button onClick={() => setConfirm({ type: "delete", user })} className="w-9 h-9 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-text-secondary hover:text-red-500 hover:border-red-500/30 transition-all" title="Xoá vĩnh viễn"><Trash2 className="w-4 h-4" /></button>
+                  </>
+                )}
+              </div>
+            </td>
+          </tr>
+        ))}
+      </DataTable>
+
+      <Pagination 
+        page={page} 
+        totalPages={totalPages} 
+        onPageChange={(p) => setPage(p)} 
+      />
     </div>
   );
 }
-

@@ -27,46 +27,67 @@ import {
   MousePointer2
 } from "lucide-react";
 
+import PageHeader from "../components/ui/PageHeader";
+import Loading from "../components/ui/Loading";
+
 export default function AnalyticsPage() {
   const [accuracyData, setAccuracyData] = useState([]);
   const [peakHours, setPeakHours] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedDays, setSelectedDays] = useState(7);
   const toast = useToast();
 
-  const fetchData = async () => {
+  const fetchData = async (days) => {
+    setLoading(true);
     try {
-      const accData = await fetchAccuracyTrend(7);
+      const accData = await fetchAccuracyTrend(days);
       setAccuracyData(accData);
 
       const peakData = await fetchPeakHours();
       setPeakHours(peakData);
     } catch (err) {
       console.error(err);
+      toast.error("Không thể tải dữ liệu phân tích");
     } finally {
       setLoading(false);
     }
   };
 
   useEffect(() => {
-    fetchData();
-  }, []);
+    fetchData(selectedDays);
+  }, [selectedDays]);
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-bold tracking-tight text-text-primary uppercase">
-            ADVANCED <span className="text-indigo-500">ANALYTICS</span>
-          </h1>
-          <p className="text-text-secondary font-medium text-sm">
-            Phân tích chuyên sâu về hiệu năng và xu hướng sử dụng AI
-          </p>
+      <PageHeader 
+        title="PHÂN TÍCH" 
+        highlight="CHUYÊN SÂU" 
+        description={`Phân tích hiệu năng và xu hướng trong ${selectedDays} ngày gần nhất`}
+      >
+        <div className="flex items-center gap-2 bg-text-primary/5 border border-border-primary rounded-2xl p-1.5">
+          <button 
+            onClick={() => setSelectedDays(7)}
+            className={`px-4 py-1.5 text-[10px] font-black rounded-xl uppercase tracking-widest transition-all ${
+              selectedDays === 7 
+              ? "bg-indigo-500 text-white shadow-lg shadow-indigo-500/20" 
+              : "text-text-secondary hover:text-text-primary"
+            }`}
+          >
+            7 Ngày
+          </button>
+          <button 
+            onClick={() => setSelectedDays(30)}
+            className={`px-4 py-1.5 text-[10px] font-black rounded-xl uppercase tracking-widest transition-all ${
+              selectedDays === 30 
+              ? "bg-indigo-500 text-white shadow-lg shadow-indigo-500/20" 
+              : "text-text-secondary hover:text-text-primary"
+            }`}
+          >
+            30 Ngày
+          </button>
         </div>
-        <div className="flex items-center gap-2 bg-white/5 border border-border-primary rounded-2xl p-1.5">
-          <button className="px-4 py-1.5 bg-cyan-500 text-black text-[10px] font-black rounded-xl uppercase tracking-widest shadow-lg shadow-cyan-500/20">7 Ngày</button>
-          <button className="px-4 py-1.5 text-text-secondary text-[10px] font-black rounded-xl uppercase tracking-widest hover:text-text-primary transition-colors">30 Ngày</button>
-        </div>
-      </div>
+      </PageHeader>
+
 
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
         {/* Accuracy Trend */}
@@ -87,69 +108,73 @@ export default function AnalyticsPage() {
             </div>
           </div>
 
-          <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={accuracyData}>
-                <defs>
-                  <linearGradient id="colorAcc" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#22d3ee" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#22d3ee" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="var(--border-color)"
-                  opacity={0.1}
-                  vertical={false}
-                />
-                <XAxis 
-                  dataKey="date" 
-                  stroke="var(--text-secondary)" 
-                  fontSize={10} 
-                  fontWeight="bold"
-                  tick={{fill: 'var(--text-secondary)'}}
-                  axisLine={false}
-                  tickLine={false}
-                  dy={10}
-                />
-                <YAxis 
-                  stroke="var(--text-secondary)" 
-                  fontSize={10} 
-                  fontWeight="bold"
-                  tick={{fill: 'var(--text-secondary)'}}
-                  domain={[0, 100]} 
-                  axisLine={false}
-                  tickLine={false}
-                  dx={-10}
-                />
-                <Tooltip
-                  cursor={{stroke: '#22d3ee', strokeWidth: 2, strokeDasharray: '4 4'}}
-                  contentStyle={{
-                    backgroundColor: "var(--bg-card)",
-                    border: "1px solid var(--border-color)",
-                    borderRadius: "16px",
-                    boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.3)",
-                    padding: "12px 16px"
-                  }}
-                  itemStyle={{
-                    fontSize: '12px',
-                    fontWeight: '900',
-                    textTransform: 'uppercase',
-                    letterSpacing: '0.05em',
-                    color: "var(--text-primary)"
-                  }}
-                />
-                <Area
-                  type="monotone"
-                  dataKey="accuracy"
-                  stroke="#22d3ee"
-                  strokeWidth={4}
-                  fillOpacity={1}
-                  fill="url(#colorAcc)"
-                  animationDuration={2000}
-                />
-              </AreaChart>
-            </ResponsiveContainer>
+          <div className="h-[300px] w-full flex items-center justify-center">
+            {loading ? (
+              <Loading size="lg" text="Đang phân tính xu hướng..." />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <AreaChart data={accuracyData}>
+                  <defs>
+                    <linearGradient id="colorAcc" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#22d3ee" stopOpacity={0.3}/>
+                      <stop offset="95%" stopColor="#22d3ee" stopOpacity={0}/>
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="var(--border-color)"
+                    opacity={0.1}
+                    vertical={false}
+                  />
+                  <XAxis 
+                    dataKey="date" 
+                    stroke="var(--text-secondary)" 
+                    fontSize={10} 
+                    fontWeight="bold"
+                    tick={{fill: 'var(--text-secondary)'}}
+                    axisLine={false}
+                    tickLine={false}
+                    dy={10}
+                  />
+                  <YAxis 
+                    stroke="var(--text-secondary)" 
+                    fontSize={10} 
+                    fontWeight="bold"
+                    tick={{fill: 'var(--text-secondary)'}}
+                    domain={[0, 100]} 
+                    axisLine={false}
+                    tickLine={false}
+                    dx={-10}
+                  />
+                  <Tooltip
+                    cursor={{stroke: '#22d3ee', strokeWidth: 2, strokeDasharray: '4 4'}}
+                    contentStyle={{
+                      backgroundColor: "var(--bg-card)",
+                      border: "1px solid var(--border-color)",
+                      borderRadius: "16px",
+                      boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.3)",
+                      padding: "12px 16px"
+                    }}
+                    itemStyle={{
+                      fontSize: '12px',
+                      fontWeight: '900',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.05em',
+                      color: "var(--text-primary)"
+                    }}
+                  />
+                  <Area
+                    type="monotone"
+                    dataKey="accuracy"
+                    stroke="#22d3ee"
+                    strokeWidth={4}
+                    fillOpacity={1}
+                    fill="url(#colorAcc)"
+                    animationDuration={2000}
+                  />
+                </AreaChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
 
@@ -171,51 +196,55 @@ export default function AnalyticsPage() {
             </div>
           </div>
 
-          <div className="h-[300px] w-full">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={peakHours}>
-                <CartesianGrid
-                  strokeDasharray="3 3"
-                  stroke="#ffffff05"
-                  vertical={false}
-                />
-                <XAxis 
-                  dataKey="hour" 
-                  stroke="#ffffff20" 
-                  fontSize={10} 
-                  fontWeight="bold"
-                  tick={{fill: '#94a3b8'}}
-                  axisLine={false}
-                  tickLine={false}
-                  dy={10}
-                />
-                <YAxis 
-                  stroke="#ffffff20" 
-                  fontSize={10} 
-                  fontWeight="bold"
-                  tick={{fill: '#94a3b8'}}
-                  axisLine={false}
-                  tickLine={false}
-                  dx={-10}
-                />
-                <Tooltip
-                  cursor={{fill: 'rgba(251, 146, 60, 0.05)'}}
-                  contentStyle={{
-                    backgroundColor: "#0f172a",
-                    border: "1px solid #1e293b",
-                    borderRadius: "16px",
-                    boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.3)",
-                    padding: "12px 16px"
-                  }}
-                />
-                <Bar 
-                  dataKey="count" 
-                  fill="#fb923c" 
-                  radius={[6, 6, 0, 0]} 
-                  animationDuration={1500}
-                />
-              </BarChart>
-            </ResponsiveContainer>
+          <div className="h-[300px] w-full flex items-center justify-center">
+            {loading ? (
+              <Loading size="lg" text="Đang tính toán giờ cao điểm..." />
+            ) : (
+              <ResponsiveContainer width="100%" height="100%">
+                <BarChart data={peakHours}>
+                  <CartesianGrid
+                    strokeDasharray="3 3"
+                    stroke="#ffffff05"
+                    vertical={false}
+                  />
+                  <XAxis 
+                    dataKey="hour" 
+                    stroke="#ffffff20" 
+                    fontSize={10} 
+                    fontWeight="bold"
+                    tick={{fill: '#94a3b8'}}
+                    axisLine={false}
+                    tickLine={false}
+                    dy={10}
+                  />
+                  <YAxis 
+                    stroke="#ffffff20" 
+                    fontSize={10} 
+                    fontWeight="bold"
+                    tick={{fill: '#94a3b8'}}
+                    axisLine={false}
+                    tickLine={false}
+                    dx={-10}
+                  />
+                  <Tooltip
+                    cursor={{fill: 'rgba(251, 146, 60, 0.05)'}}
+                    contentStyle={{
+                      backgroundColor: "#0f172a",
+                      border: "1px solid #1e293b",
+                      borderRadius: "16px",
+                      boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.3)",
+                      padding: "12px 16px"
+                    }}
+                  />
+                  <Bar 
+                    dataKey="count" 
+                    fill="#fb923c" 
+                    radius={[6, 6, 0, 0]} 
+                    animationDuration={1500}
+                  />
+                </BarChart>
+              </ResponsiveContainer>
+            )}
           </div>
         </div>
       </div>

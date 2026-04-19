@@ -4,6 +4,10 @@ import L from "leaflet";
 import "leaflet.heat";
 import { fetchHeatmap } from "../services/api";
 
+import PageHeader from "../components/ui/PageHeader";
+import StatsCard from "../components/ui/StatsCard";
+import { MapIcon, Thermometer, MapPin, Calendar, RefreshCw } from "lucide-react";
+
 // ── Heatmap layer (uses leaflet.heat) ─────────────────────────────────────────
 function HeatLayer({ points }) {
   const map = useMap();
@@ -59,6 +63,7 @@ function Stat({ label, value, color = "text-text-primary" }) {
 }
 
 // ── Main Page ──────────────────────────────────────────────────────────────────
+
 export default function HeatmapPage() {
   const [points, setPoints] = useState([]);
   const [type, setType] = useState("danger");
@@ -101,52 +106,49 @@ export default function HeatmapPage() {
   const defaultCenter = [16.047, 108.206];
 
   return (
-    <div className="space-y-6 animate-slide-in">
-      {/* ── Header ──────────────────────────────────────────────── */}
-      <div className="flex items-start justify-between flex-wrap gap-3">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-2xl font-bold tracking-tight text-text-primary uppercase">
-            HEATMAP <span className="text-indigo-500">NGUY HIỂM</span>
-          </h1>
-          <p className="text-text-secondary font-medium text-sm">
-            {points.length} vị trí · {totalHits} lượt phát hiện · {days} ngày qua
-          </p>
-        </div>
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <PageHeader 
+        title="DANGER" 
+        highlight="HEATMAP" 
+        description={`${points.length} vị trí · ${totalHits} lượt phát hiện · ${days} ngày qua`}
+      >
         <button
           onClick={load}
           disabled={loading}
-          className="px-4 py-2 rounded-xl bg-bg-card border border-border-primary text-text-secondary text-sm hover:bg-text-primary/5 transition-all disabled:opacity-40 flex items-center gap-2"
+          className="h-11 px-5 rounded-2xl bg-text-primary/5 border border-border-primary text-text-secondary text-[11px] font-bold uppercase tracking-widest hover:bg-text-primary/10 hover:text-text-primary transition-all disabled:opacity-40 flex items-center gap-2"
         >
-          {loading && (
-            <span className="loader-ring" style={{ width: 14, height: 14 }} />
-          )}
-          🔄 Làm mới
+          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          Làm mới
         </button>
-      </div>
+      </PageHeader>
 
-      {/* ── Stats ───────────────────────────────────────────────── */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-        <Stat
+      <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <StatsCard
           label="Vị trí ghi nhận"
           value={points.length}
-          color="text-text-primary"
+          icon={MapPin}
+          color="text-indigo-500"
         />
-        <Stat
+        <StatsCard
           label="Tổng lượt phát hiện"
           value={totalHits}
+          icon={Thermometer}
           color="text-orange-500"
         />
-        <Stat
+        <StatsCard
           label="Điểm nóng nhất"
           value={`${maxInt}x`}
+          icon={MapIcon}
           color="text-red-500"
         />
-        <Stat
+        <StatsCard
           label="Khoảng thời gian"
           value={`${days} ngày`}
-          color="text-purple-600 dark:text-purple-400"
+          icon={Calendar}
+          color="text-purple-500"
         />
       </div>
+
 
       {/* ── Filters ─────────────────────────────────────────────── */}
       <div className="flex flex-wrap gap-6">

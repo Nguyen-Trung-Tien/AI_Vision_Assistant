@@ -1,3 +1,4 @@
+import PageHeader from "../components/ui/PageHeader";
 import PieChartV2 from "../components/PieChartV2";
 import LineChartV2 from "../components/LineChartV2";
 import RecentLogsV2 from "../components/RecentLogsV2";
@@ -6,16 +7,13 @@ import { motion } from "framer-motion";
 
 export default function DashboardV2() {
   return (
-    <div className="space-y-6">
-      {/* Welcome Section */}
-      <div className="flex flex-col gap-0.5">
-        <h1 className="text-2xl font-bold tracking-tight text-text-primary uppercase">
-          SYSTEM <span className="text-indigo-500">OVERVIEW</span>
-        </h1>
-        <p className="text-text-secondary font-medium text-sm">
-          Giám sát thời gian thực các hoạt động nhận diện AI và cảnh báo SOS
-        </p>
-      </div>
+    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <PageHeader 
+        title="SYSTEM" 
+        highlight="OVERVIEW" 
+        description="Giám sát thời gian thực các hoạt động nhận diện AI và cảnh báo SOS"
+      />
+
 
       {/* Stats Bar */}
       <RealtimeStatsBar />

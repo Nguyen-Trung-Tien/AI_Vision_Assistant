@@ -1,3 +1,5 @@
+import Loading from "./ui/Loading";
+
 export default function ConfirmDialog({
   open,
   title,
@@ -54,9 +56,7 @@ export default function ConfirmDialog({
             disabled={loading}
             className={`flex-1 py-2.5 rounded-xl text-white text-sm font-semibold transition-all active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 ${confirmClass}`}
           >
-            {loading && (
-              <span className="loader-ring" style={{ width: 14, height: 14 }} />
-            )}
+            {loading && <Loading variant="inline" size="xs" />}
             {confirmLabel}
           </button>
         </div>

@@ -18,6 +18,8 @@ import {
   Globe,
   CheckCircle2
 } from "lucide-react";
+import PageHeader from "../components/ui/PageHeader";
+import Loading from "../components/ui/Loading";
 
 const CATEGORIES = [
   { id: 'all', name: 'Tất cả', icon: SettingsIcon },
@@ -26,6 +28,7 @@ const CATEGORIES = [
   { id: 'notif', name: 'Thông báo', icon: Bell },
   { id: 'system', name: 'Hệ thống', icon: HardDrive },
 ];
+
 
 export default function SettingsPage() {
   const [settings, setSettings] = useState([]);
@@ -85,23 +88,11 @@ export default function SettingsPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      {/* Header Section */}
-      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
-        <div className="flex flex-col gap-1">
-          <div className="flex items-center gap-2 mb-1">
-             <div className="w-8 h-8 rounded-lg bg-indigo-500/10 flex items-center justify-center">
-                <SettingsIcon className="w-4 h-4 text-indigo-500" />
-             </div>
-             <span className="text-[10px] font-black text-indigo-500 uppercase tracking-widest">Control Panel</span>
-          </div>
-          <h1 className="text-3xl font-black tracking-tight text-text-primary uppercase">
-            System <span className="text-indigo-500">Configuration</span>
-          </h1>
-          <p className="text-text-secondary font-medium text-sm">
-            Quản trị các tham số vận hành lõi và thiết lập mạng lưới an toàn
-          </p>
-        </div>
-        
+      <PageHeader 
+        title="SYSTEM" 
+        highlight="CONFIGURATION" 
+        description="Quản trị các tham số vận hành lõi và thiết lập mạng lưới an toàn"
+      >
         <div className="flex items-center gap-3">
           {saving === 'done' && (
             <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 border border-green-500/20 rounded-full text-green-500 text-[10px] font-black uppercase tracking-widest animate-in fade-in zoom-in">
@@ -111,13 +102,14 @@ export default function SettingsPage() {
           )}
           <button
             onClick={fetchSettings}
-            className="flex items-center justify-center gap-2 h-11 px-5 rounded-2xl bg-white/[0.03] border border-border-primary text-text-secondary text-[11px] font-bold uppercase tracking-widest hover:bg-white/[0.08] hover:text-text-primary transition-all active:scale-95 group shadow-sm"
+            className="flex items-center justify-center gap-2 h-11 px-5 rounded-2xl bg-text-primary/5 border border-border-primary text-text-secondary text-[11px] font-bold uppercase tracking-widest hover:bg-text-primary/10 hover:text-text-primary transition-all active:scale-95 group shadow-sm"
           >
-            <RefreshCw className={`w-4 h-4 group-hover:rotate-180 transition-transform duration-500 ${loading ? 'animate-spin' : ''}`} />
+            {loading ? <Loading variant="inline" size="xs" /> : <RefreshCw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />}
             Sync Data
           </button>
         </div>
-      </div>
+      </PageHeader>
+
 
       <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
         {/* Navigation Sidebar */}
@@ -129,7 +121,7 @@ export default function SettingsPage() {
               className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl transition-all border ${
                 activeCategory === cat.id 
                 ? 'bg-indigo-500 text-white border-indigo-400 shadow-lg shadow-indigo-500/20 translate-x-1' 
-                : 'bg-white/[0.02] text-text-secondary border-border-primary hover:bg-white/[0.05] hover:text-text-primary'
+                : 'bg-text-primary/5 text-text-secondary border-border-primary hover:bg-text-primary/10 hover:text-text-primary'
               }`}
             >
               <cat.icon className={`w-5 h-5 ${activeCategory === cat.id ? 'text-white' : 'text-indigo-500'}`} />
@@ -151,11 +143,7 @@ export default function SettingsPage() {
         {/* Settings Content */}
         <div className="lg:col-span-9 space-y-4">
           {loading && settings.length === 0 ? (
-            <div className="space-y-4">
-              {[1, 2, 3, 4, 5].map(i => (
-                <div key={i} className="h-28 bg-white/5 animate-pulse rounded-[2rem] border border-border-primary" />
-              ))}
-            </div>
+            <Loading size="xl" text="Đang chuẩn bị dữ liệu cấu hình..." className="py-32 bg-text-primary/5 rounded-[3rem] border border-border-primary border-dashed" />
           ) : (
             <div className="grid grid-cols-1 gap-4">
               {filteredSettings.map((s) => (
@@ -164,7 +152,7 @@ export default function SettingsPage() {
                   className={`group relative flex flex-col md:flex-row md:items-center justify-between gap-6 p-7 rounded-[2rem] border transition-all duration-500 ${
                     saving === s.key 
                     ? 'bg-indigo-500/10 border-indigo-500 ring-4 ring-indigo-500/5' 
-                    : 'bg-bg-card border-border-primary hover:border-white/20 hover:shadow-xl'
+                    : 'bg-bg-card border-border-primary hover:border-text-primary/20 hover:shadow-xl'
                   }`}
                 >
                   <div className="flex items-start gap-6">
@@ -177,8 +165,9 @@ export default function SettingsPage() {
                           {s.key.replace(/_/g, " ")}
                         </h3>
                         {saving === s.key && (
-                          <div className="flex items-center gap-1.5 px-2 py-0.5 bg-indigo-500 text-white rounded text-[8px] font-black uppercase tracking-widest animate-pulse">
-                            Saving...
+                          <div className="flex items-center gap-2">
+                            <Loading variant="inline" size="xs" />
+                            <span className="text-[8px] font-black text-indigo-500 uppercase tracking-widest">Saving...</span>
                           </div>
                         )}
                       </div>
@@ -198,7 +187,7 @@ export default function SettingsPage() {
                             handleUpdate(s.key, e.target.value);
                           }
                         }}
-                        className="h-14 bg-bg-primary border-2 border-border-primary text-white text-base font-black rounded-2xl px-8 w-full md:w-44 focus:border-indigo-500 focus:ring-8 focus:ring-indigo-500/10 outline-none transition-all text-center tabular-nums placeholder:opacity-20"
+                        className="h-14 bg-bg-primary border-2 border-border-primary text-text-primary text-base font-black rounded-2xl px-8 w-full md:w-44 focus:border-indigo-500 focus:ring-8 focus:ring-indigo-500/10 outline-none transition-all text-center tabular-nums placeholder:opacity-20"
                         placeholder="Giá trị..."
                       />
                     </div>
