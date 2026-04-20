@@ -10,6 +10,7 @@ import {
   Users,
   Database,
   LineChart,
+  Bell,
 } from "lucide-react";
 
 import LoginV2 from "./pages/LoginV2";
@@ -24,6 +25,7 @@ import SystemPage from "./pages/SystemPage";
 import SettingsPage from "./pages/SettingsPage";
 import ModelManagerPage from "./pages/ModelManagerPage";
 import AnalyticsPage from "./pages/AnalyticsPage";
+import NotificationsPage from "./pages/NotificationsPage";
 
 import {
   clearSession,
@@ -97,6 +99,14 @@ export default function App() {
       icon: Activity,
       group: "Hệ thống",
       roles: ["SUPER_ADMIN", "ADMIN"],
+    },
+    {
+      id: "notifications",
+      label: "Thông Báo Hệ Thống",
+      icon: Bell,
+      group: "Hệ thống",
+      badge: notifications.filter((n) => !n.isRead).length,
+      roles: ["SUPER_ADMIN", "ADMIN", "MODERATOR"],
     },
     {
       id: "system",
@@ -204,6 +214,7 @@ export default function App() {
       case "users": return <UsersPage />;
       case "model-manager": return <ModelManagerPage />;
       case "activity": return <ActivityLogPage />;
+      case "notifications": return <NotificationsPage notifications={notifications} handleMarkAllRead={handleMarkAllRead} />;
       case "system": return <SystemPage />;
       case "settings": return <SettingsPage />;
       default: return <DashboardV2 />;

@@ -16,6 +16,7 @@ import { FrameStreamDto } from './dto/frame-stream.dto';
 import { SosService } from '../sos/sos.service';
 import { BroadcastService } from '../broadcast/broadcast.service';
 import { NotificationService } from '../notification/notification.service';
+import { EmergencyContact } from '../emergency-contact/entities/emergency-contact.entity';
 
 interface AuthSocket extends Socket {
   data: {
@@ -157,10 +158,30 @@ export class VisionGateway
         : undefined,
     );
 
+    // Fetch user details and emergency contacts
+    let userEmail = 'Ẩn danh';
+    let emergencyContacts: EmergencyContact[] = [];
+    if (userId) {
+      const contacts =
+        await this.sosService['emergencyContactService'].findAllByUser(userId);
+      emergencyContacts = contacts;
+
+      // Try to get user email from the alert relation
+      const alertWithUser = await this.sosService['sosRepo'].findOne({
+        where: { id: savedAlert.id },
+        relations: ['user'],
+      });
+      if (alertWithUser?.user?.email) {
+        userEmail = alertWithUser.user.email;
+      }
+    }
+
     // Broadcast to all admins in room 'admin'
     this.server.to('admin').emit('sos_incoming', {
       sosId: savedAlert.id,
       userId,
+      userEmail,
+      emergencyContacts,
       latitude: data.latitude,
       longitude: data.longitude,
       imageBase64: data.imageBase64,
@@ -171,7 +192,7 @@ export class VisionGateway
     this.notificationService.push({
       type: 'sos',
       title: 'Cảnh báo SOS mới!',
-      message: `Người dùng ${userId || 'Ẩn danh'} vừa gửi tín hiệu SOS khẩn cấp.`,
+      message: `Người dùng ${userEmail} vừa gửi tín hiệu SOS khẩn cấp.`,
       link: `/sos?id=${savedAlert.id}`,
     });
 

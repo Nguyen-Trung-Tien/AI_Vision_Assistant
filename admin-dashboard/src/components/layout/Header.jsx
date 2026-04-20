@@ -23,6 +23,7 @@ export default function Header({
   notifications,
   unreadCount,
   handleMarkAllRead,
+  setActiveTab,
   email,
 }) {
   const [notifOpen, setNotifOpen] = useState(false);
@@ -39,20 +40,20 @@ export default function Header({
   }, []);
 
   return (
-    <header className="h-20 bg-bg-card/50 backdrop-blur-xl border-b border-border-primary px-8 flex items-center justify-between shrink-0 z-30">
+    <header className="h-24 bg-bg-card/50 backdrop-blur-xl border-b border-border-primary px-10 flex items-center justify-between shrink-0 z-30">
       <div className="flex items-center gap-4">
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
-          className="p-2 hover:bg-text-primary/5 rounded-lg text-text-secondary transition-colors"
+          className="p-2.5 hover:bg-text-primary/5 rounded-lg text-text-secondary transition-colors"
         >
           {sidebarOpen ? (
-            <Menu className="w-5 h-5" />
+            <Menu className="w-6 h-6" />
           ) : (
-            <ChevronRight className="w-5 h-5" />
+            <ChevronRight className="w-6 h-6" />
           )}
         </button>
 
-        <h2 className="text-lg font-bold tracking-tight uppercase">
+        <h2 className="text-xl font-bold tracking-tight uppercase">
           {activeTab === "sos" ? (
             <>
               <span className="text-text-primary">SOS</span>{" "}
@@ -70,15 +71,15 @@ export default function Header({
         {/* Theme Toggle */}
         <button
           onClick={() => setIsDarkMode(!isDarkMode)}
-          className="p-2.5 hover:bg-text-primary/5 rounded-xl text-text-secondary transition-all group"
+          className="p-3 hover:bg-text-primary/5 rounded-xl text-text-secondary transition-all group"
           title={
             isDarkMode ? "Chuyển sang Chế độ sáng" : "Chuyển sang Chế độ tối"
           }
         >
           {isDarkMode ? (
-            <Sun className="w-5 h-5 group-hover:rotate-45 transition-transform" />
+            <Sun className="w-6 h-6 group-hover:rotate-45 transition-transform" />
           ) : (
-            <Moon className="w-5 h-5 group-hover:-rotate-12 transition-transform" />
+            <Moon className="w-6 h-6 group-hover:-rotate-12 transition-transform" />
           )}
         </button>
 
@@ -86,11 +87,11 @@ export default function Header({
         <div className="relative" ref={notifRef}>
           <button
             onClick={() => setNotifOpen(!notifOpen)}
-            className="relative p-2.5 hover:bg-text-primary/5 rounded-xl text-text-secondary transition-all group"
+            className="relative p-3 hover:bg-text-primary/5 rounded-xl text-text-secondary transition-all group"
           >
-            <Bell className="w-5 h-5 group-hover:rotate-12 transition-transform" />
+            <Bell className="w-6 h-6 group-hover:rotate-12 transition-transform" />
             {unreadCount > 0 && (
-              <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-bg-card animate-bounce" />
+              <span className="absolute top-2.5 right-2.5 w-3 h-3 bg-red-500 rounded-full border-2 border-bg-card animate-bounce" />
             )}
           </button>
 
@@ -176,7 +177,13 @@ export default function Header({
                   )}
                 </div>
                 <div className="p-4 bg-white/2 border-t border-border-primary text-center">
-                  <button className="text-xs font-bold text-text-secondary hover:text-text-primary transition-colors flex items-center justify-center gap-2 mx-auto">
+                  <button
+                    onClick={() => {
+                      setActiveTab("notifications");
+                      setNotifOpen(false);
+                    }}
+                    className="text-xs font-bold text-text-secondary hover:text-text-primary transition-colors flex items-center justify-center gap-2 mx-auto"
+                  >
                     Xem tất cả <ExternalLink className="w-3 h-3" />
                   </button>
                 </div>

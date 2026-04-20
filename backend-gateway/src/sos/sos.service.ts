@@ -57,7 +57,7 @@ export class SosService {
 
   async findAll(page: number = 1, limit: number = 20) {
     const [data, total] = await this.sosRepo.findAndCount({
-      relations: ['user', 'handledBy'],
+      relations: ['user', 'user.emergencyContacts', 'handledBy'],
       order: { created_at: 'DESC' },
       skip: (page - 1) * limit,
       take: limit,

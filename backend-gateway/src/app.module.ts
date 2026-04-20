@@ -31,8 +31,12 @@ import { NotificationEntity } from './notification/entities/notification.entity'
 import { ServeStaticModule } from '@nestjs/serve-static';
 import path from 'node:path';
 
+import { APP_GUARD } from '@nestjs/core';
+import { MaintenanceGuard } from './common/guards/maintenance.guard';
+
 @Module({
   imports: [
+    // ... imports remain same
     ServeStaticModule.forRoot({
       rootPath: path.resolve(
         __dirname,
@@ -89,6 +93,12 @@ import path from 'node:path';
     ReportModule,
   ],
   controllers: [AppController],
-  providers: [AppService],
+  providers: [
+    AppService,
+    {
+      provide: APP_GUARD,
+      useClass: MaintenanceGuard,
+    },
+  ],
 })
 export class AppModule {}

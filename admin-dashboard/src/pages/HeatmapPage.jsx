@@ -136,13 +136,13 @@ export default function HeatmapPage() {
           color="text-orange-500"
         />
         <StatsCard
-          label="Điểm nóng nhất"
-          value={`${maxInt}x`}
+          label="Điểm rủi ro nhất"
+          value={`${maxInt} lượt`}
           icon={MapIcon}
           color="text-red-500"
         />
         <StatsCard
-          label="Khoảng thời gian"
+          label="Phạm vi hiển thị"
           value={`${days} ngày`}
           icon={Calendar}
           color="text-purple-500"
@@ -155,12 +155,12 @@ export default function HeatmapPage() {
         {/* Type */}
         <div>
           <label className="block text-text-secondary text-[10px] uppercase font-bold tracking-widest mb-3">
-            Loại phát hiện
+            Loại dữ liệu hiển thị
           </label>
           <div className="flex gap-2">
             {[
-              { v: "danger", label: "⚠️ Nguy hiểm" },
-              { v: "all", label: "📊 Tất cả" },
+              { v: "danger", label: "⚠️ Chỉ mục nguy hiểm" },
+              { v: "all", label: "📊 Tất cả phát hiện" },
             ].map(({ v, label }) => (
               <button
                 key={v}
@@ -180,20 +180,28 @@ export default function HeatmapPage() {
         {/* Days */}
         <div>
           <label className="block text-text-secondary text-[10px] uppercase font-bold tracking-widest mb-3">
-            Khoảng thời gian
+            Phạm vi thời gian
           </label>
-          <div className="flex gap-2">
-            {[7, 14, 30, 90].map((d) => (
+          <div className="flex flex-wrap gap-2">
+            {[
+              { v: 1, l: "Hôm nay" },
+              { v: 7, l: "7 ngày" },
+              { v: 14, l: "14 ngày" },
+              { v: 30, l: "1 tháng" },
+              { v: 90, l: "3 tháng" },
+              { v: 180, l: "6 tháng" },
+              { v: 365, l: "1 năm" },
+            ].map((d) => (
               <button
-                key={d}
-                onClick={() => setDays(d)}
-                className={`px-4 py-2 rounded-xl border text-sm transition-all ${
-                  days === d
-                    ? "bg-purple-600/10 border-purple-500/40 text-purple-600 dark:text-purple-300"
+                key={d.v}
+                onClick={() => setDays(d.v)}
+                className={`px-3 py-2 rounded-xl border text-[11px] font-bold uppercase tracking-tight transition-all ${
+                  days === d.v
+                    ? "bg-purple-600/10 border-purple-500/40 text-purple-600 dark:text-purple-300 shadow-[0_0_15px_rgba(147,51,234,0.1)]"
                     : "bg-bg-card border-border-primary text-text-secondary hover:bg-text-primary/5"
                 }`}
               >
-                {d}d
+                {d.l}
               </button>
             ))}
           </div>
@@ -207,7 +215,7 @@ export default function HeatmapPage() {
       >
         {loading ? (
           <div className="h-full flex items-center justify-center bg-bg-card text-text-secondary text-sm gap-2">
-            <div className="loader-ring" /> Đang tải dữ liệu...
+            <div className="loader-ring" /> Đang tổng hợp dữ liệu...
           </div>
         ) : (
           <MapContainer
@@ -236,14 +244,14 @@ export default function HeatmapPage() {
         {/* Legend */}
         <div className="bg-bg-card border border-border-primary rounded-2xl p-6 shadow-sm">
           <h3 className="text-text-primary text-sm font-bold uppercase tracking-wider text-[10px] mb-5">
-            Chú thích màu sắc
+            Mức độ rủi ro (Theo màu sắc)
           </h3>
           <div className="space-y-3.5">
             {[
-              { color: "bg-white", label: "Mật độ cực cao (đỉnh)" },
+              { color: "bg-white", label: "Cực kỳ nguy hiểm (SOS/Vật cản sát bên)" },
               { color: "bg-red-500", label: "Nguy hiểm cao" },
-              { color: "bg-amber-400", label: "Nguy hiểm trung bình" },
-              { color: "bg-blue-500", label: "Nguy hiểm thấp" },
+              { color: "bg-amber-400", label: "Cảnh báo trung bình" },
+              { color: "bg-blue-500", label: "Ghi nhận có vật cản" },
             ].map(({ color, label }) => (
               <div key={label} className="flex items-center gap-3">
                 <div
@@ -260,16 +268,17 @@ export default function HeatmapPage() {
                 "linear-gradient(to right, #3b82f6, #f59e0b, #ef4444, #ffffff)",
             }}
           />
+          <p className="mt-4 text-[10px] text-text-secondary italic">Dữ liệu được tổng hợp từ AI và tín hiệu SOS của người dùng.</p>
         </div>
 
         {/* Top hotspots */}
         <div className="bg-bg-card border border-border-primary rounded-2xl p-6 shadow-sm">
           <h3 className="text-text-primary text-sm font-bold uppercase tracking-wider text-[10px] mb-5">
-            🔥 Top 5 điểm nóng
+            🔥 Top 5 khu vực rủi ro nhất
           </h3>
           {top5.length === 0 ? (
             <p className="text-text-secondary text-xs">
-              Chưa có dữ liệu GPS trong khoảng thời gian này
+              Chưa có dữ liệu ghi nhận trong khoảng thời gian này
             </p>
           ) : (
             <div className="space-y-4">
@@ -279,9 +288,15 @@ export default function HeatmapPage() {
                     {i + 1}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <p className="text-text-primary text-xs font-mono truncate">
+                    <a 
+                      href={`https://www.google.com/maps?q=${p.lat},${p.lng}`}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                      className="text-text-primary text-xs font-mono truncate hover:text-indigo-500 transition-colors flex items-center gap-2"
+                    >
+                      <MapPin className="w-3 h-3 text-red-500" />
                       {p.lat.toFixed(5)}, {p.lng.toFixed(5)}
-                    </p>
+                    </a>
                     <div className="mt-1.5 h-1.5 bg-text-primary/5 rounded-full overflow-hidden">
                       <div
                         className="h-full bg-gradient-to-r from-amber-500 to-red-500 rounded-full transition-all duration-700 ease-out"
@@ -290,7 +305,7 @@ export default function HeatmapPage() {
                     </div>
                   </div>
                   <span className="text-red-500 text-xs font-bold shrink-0 tabular-nums">
-                    {p.intensity}x
+                    {p.intensity} cảnh báo
                   </span>
                 </div>
               ))}

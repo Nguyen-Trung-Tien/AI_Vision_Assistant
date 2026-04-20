@@ -22,10 +22,13 @@ const COOKIE_OPTIONS = {
   path: '/',
 };
 
+import { SkipMaintenance } from '../common/decorators/skip-maintenance.decorator';
+
 @Controller('auth')
 export class AuthController {
   constructor(private authService: AuthService) {}
 
+  @SkipMaintenance()
   @HttpCode(HttpStatus.OK)
   @Post('admin/login')
   async adminLogin(
@@ -95,6 +98,7 @@ export class AuthController {
     return { user: result.user, access_token: result.access_token };
   }
 
+  @SkipMaintenance()
   @HttpCode(HttpStatus.OK)
   @Post('logout')
   logout(@Res({ passthrough: true }) res: Response) {

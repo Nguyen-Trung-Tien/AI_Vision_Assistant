@@ -2,8 +2,10 @@ import {
   Controller,
   Post,
   Get,
+  Delete,
   Body,
   Query,
+  Param,
   UseGuards,
   Request,
   ForbiddenException,
@@ -85,7 +87,7 @@ export class BroadcastController {
       adminId: req.user.userId,
       action: 'SEND_BROADCAST',
       targetType: 'broadcast',
-      targetId: (result as any).id,
+      targetId: result.id,
       details: {
         message: body.message,
         targetType: body.targetType,
@@ -95,5 +97,40 @@ export class BroadcastController {
     });
 
     return result;
+  }
+
+  @Delete(':id')
+  async remove(@Request() req: AuthRequest, @Param('id') id: string) {
+    this.ensureAdmin(req);
+    const success = await this.broadcastService.remove(id);
+
+    if (success) {
+      await this.auditService.log({
+        adminId: req.user.userId,
+        action: 'DELETE_BROADCAST',
+        targetType: 'broadcast',
+        targetId: id,
+        details: { id },
+        ipAddress: req.ip,
+      });
+    }
+    return { success };
+  }
+
+  @Post('bulk-delete')
+  async removeMany(@Request() req: AuthRequest, @Body('ids') ids: string[]) {
+    this.ensureAdmin(req);
+    const affected = await this.broadcastService.removeMany(ids);
+
+    await this.auditService.log({
+      adminId: req.user.userId,
+      action: 'BULK_DELETE_BROADCAST',
+      targetType: 'broadcast',
+      targetId: 'multiple',
+      details: { count: affected, ids },
+      ipAddress: req.ip,
+    });
+
+    return { success: true, affected };
   }
 }

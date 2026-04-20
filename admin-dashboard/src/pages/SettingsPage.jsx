@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
-import { fetchSystemSettings, updateSystemSetting } from "../services/api";
+import { fetchSystemSettings, updateSystemSetting, getStoredRole } from "../services/api";
 import { useToast } from "../components/Toast";
-import { 
-  Settings as SettingsIcon, 
-  Sliders, 
-  Save, 
-  RefreshCw, 
-  AlertCircle, 
+import {
+  Settings as SettingsIcon,
+  Sliders,
+  Save,
+  RefreshCw,
+  AlertCircle,
   Info,
   ShieldCheck,
   Zap,
@@ -16,32 +16,48 @@ import {
   Shield,
   Activity,
   Globe,
-  CheckCircle2
+  CheckCircle2,
+  BookOpen,
+  ArrowRight,
 } from "lucide-react";
 import PageHeader from "../components/ui/PageHeader";
 import Loading from "../components/ui/Loading";
+import ConfirmDialog from "../components/ConfirmDialog";
 
 const CATEGORIES = [
-  { id: 'all', name: 'Tất cả', icon: SettingsIcon },
-  { id: 'ai', name: 'AI & Nhận diện', icon: Cpu },
-  { id: 'sos', name: 'SOS & An toàn', icon: Shield },
-  { id: 'notif', name: 'Thông báo', icon: Bell },
-  { id: 'system', name: 'Hệ thống', icon: HardDrive },
+  { id: "all", name: "Tất cả", icon: SettingsIcon },
+  { id: "ai", name: "AI & Nhận diện", icon: Cpu },
+  { id: "sos", name: "SOS & An toàn", icon: Shield },
+  { id: "notif", name: "Thông báo", icon: Bell },
+  { id: "system", name: "Hệ thống", icon: HardDrive },
 ];
 
+const SETTING_OPTIONS = {
+  AI_FPS_LIMIT: ["1", "2", "5", "10", "15", "30"],
+  AI_CONFIDENCE_THRESHOLD: ["0.3", "0.4", "0.5", "0.6", "0.7", "0.8", "0.9"],
+  SYSTEM_MAINTENANCE: ["true", "false"],
+};
 
 export default function SettingsPage() {
-  const [settings, setSettings] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [activeCategory, setActiveCategory] = useState('all');
-  const [saving, setSaving] = useState(null); // Key being saved
   const toast = useToast();
+  const myRole = getStoredRole();
+  const isSuperAdmin = myRole === "SUPER_ADMIN";
+  const [settings, setSettings] = useState([]);
+  const [localValues, setLocalValues] = useState({});
+  const [loading, setLoading] = useState(true);
+  const [activeCategory, setActiveCategory] = useState("all");
+  const [saving, setSaving] = useState(null);
+  const [confirmOpen, setConfirmOpen] = useState(false);
+  const [pendingUpdate, setPendingUpdate] = useState(null);
 
-  const fetchSettings = async () => {
+  const load = async () => {
     setLoading(true);
     try {
       const data = await fetchSystemSettings();
       setSettings(data);
+      const initialLocal = {};
+      data.forEach((s) => (initialLocal[s.key] = s.value));
+      setLocalValues(initialLocal);
     } catch (err) {
       toast?.error?.("Không thể tải cấu hình");
     } finally {
@@ -50,196 +66,295 @@ export default function SettingsPage() {
   };
 
   useEffect(() => {
-    fetchSettings();
+    load();
   }, []);
 
-  const handleUpdate = async (key, value) => {
+  const initiateUpdate = (key, value) => {
+    if (!isSuperAdmin) {
+      toast?.error?.("Bạn không có quyền thay đổi cấu hình hệ thống");
+      return;
+    }
+    setPendingUpdate({ key, value });
+    setConfirmOpen(true);
+  };
+
+  const handleUpdate = async () => {
+    if (!pendingUpdate || !isSuperAdmin) return;
+    const { key, value } = pendingUpdate;
+    setConfirmOpen(false);
     setSaving(key);
     try {
       await updateSystemSetting(key, value);
-      setSaving('done');
+      toast?.success?.(`Đã cập nhật ${key.replace(/_/g, " ")}`);
+      setSaving("done");
       setTimeout(() => setSaving(null), 2000);
+      // Refresh settings to ensure sync
+      const updatedData = await fetchSystemSettings();
+      setSettings(updatedData);
     } catch (err) {
       toast?.error?.("Cập nhật thất bại");
       setSaving(null);
     }
+    setPendingUpdate(null);
   };
 
   const getIcon = (key) => {
-    if (key.includes('ALERT') || key.includes('RADIUS')) return <AlertCircle className="w-5 h-5 text-red-500" />;
-    if (key.includes('NOTIFICATION')) return <Bell className="w-5 h-5 text-indigo-500" />;
-    if (key.includes('STORAGE')) return <HardDrive className="w-5 h-5 text-cyan-500" />;
-    if (key.includes('SECURITY') || key.includes('AUTH')) return <ShieldCheck className="w-5 h-5 text-green-500" />;
-    if (key.includes('AI') || key.includes('CONFIDENCE')) return <Cpu className="w-5 h-5 text-pink-500" />;
-    return <Sliders className="w-5 h-5 text-indigo-500" />;
+    if (key.includes("ALERT") || key.includes("RADIUS"))
+      return <AlertCircle className="w-4 h-4 text-red-400" />;
+    if (key.includes("NOTIFICATION"))
+      return <Bell className="w-4 h-4 text-indigo-400" />;
+    if (key.includes("STORAGE"))
+      return <HardDrive className="w-4 h-4 text-cyan-400" />;
+    if (key.includes("SECURITY") || key.includes("AUTH"))
+      return <ShieldCheck className="w-4 h-4 text-emerald-400" />;
+    if (key.includes("AI") || key.includes("CONFIDENCE"))
+      return <Cpu className="w-4 h-4 text-pink-400" />;
+    return <Sliders className="w-4 h-4 text-indigo-400" />;
   };
 
   const getCategory = (key) => {
-    if (key.includes('AI') || key.includes('CONFIDENCE')) return 'ai';
-    if (key.includes('SOS') || key.includes('RADIUS') || key.includes('ALERT')) return 'sos';
-    if (key.includes('NOTIF') || key.includes('PUSH')) return 'notif';
-    if (key.includes('STORAGE') || key.includes('DB') || key.includes('SYSTEM')) return 'system';
-    return 'system';
+    if (key.includes("AI") || key.includes("CONFIDENCE")) return "ai";
+    if (key.includes("SOS") || key.includes("RADIUS") || key.includes("ALERT"))
+      return "sos";
+    if (key.includes("NOTIF") || key.includes("PUSH")) return "notif";
+    if (key.includes("STORAGE") || key.includes("DB") || key.includes("SYSTEM"))
+      return "system";
+    return "system";
   };
 
-  const filteredSettings = settings.filter(s => 
-    activeCategory === 'all' || getCategory(s.key) === activeCategory
+  const filteredSettings = settings.filter(
+    (s) => activeCategory === "all" || getCategory(s.key) === activeCategory,
   );
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <PageHeader 
-        title="SYSTEM" 
-        highlight="CONFIGURATION" 
-        description="Quản trị các tham số vận hành lõi và thiết lập mạng lưới an toàn"
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Xác nhận thay đổi?"
+        message={`Bạn có chắc chắn muốn thay đổi tham số "${pendingUpdate?.key?.replace(/_/g, " ")}" thành "${pendingUpdate?.value}"?`}
+        confirmLabel="Xác nhận"
+        onConfirm={handleUpdate}
+        onCancel={() => {
+          setConfirmOpen(false);
+          setPendingUpdate(null);
+        }}
+      />
+
+      <PageHeader
+        title="SYSTEM"
+        highlight="CONFIGURATION"
+        description="Quản trị tham số vận hành lõi"
       >
-        <div className="flex items-center gap-3">
-          {saving === 'done' && (
-            <div className="flex items-center gap-2 px-3 py-1.5 bg-green-500/10 border border-green-500/20 rounded-full text-green-500 text-[10px] font-black uppercase tracking-widest animate-in fade-in zoom-in">
-              <CheckCircle2 className="w-3.5 h-3.5" />
-              Đã lưu thay đổi
-            </div>
+        <button
+          onClick={load}
+          disabled={loading}
+          className="flex items-center gap-2 h-9 px-4 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-500 text-[10px] font-black uppercase tracking-widest hover:bg-indigo-500 hover:text-white transition-all group"
+        >
+          {loading ? (
+            <Loading variant="inline" size="xs" />
+          ) : (
+            <RefreshCw className="w-3.5 h-3.5 group-hover:rotate-180 transition-transform duration-500" />
           )}
-          <button
-            onClick={fetchSettings}
-            className="flex items-center justify-center gap-2 h-11 px-5 rounded-2xl bg-text-primary/5 border border-border-primary text-text-secondary text-[11px] font-bold uppercase tracking-widest hover:bg-text-primary/10 hover:text-text-primary transition-all active:scale-95 group shadow-sm"
-          >
-            {loading ? <Loading variant="inline" size="xs" /> : <RefreshCw className="w-4 h-4 group-hover:rotate-180 transition-transform duration-500" />}
-            Sync Data
-          </button>
-        </div>
+          Làm mới
+        </button>
       </PageHeader>
 
-
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Navigation Sidebar */}
-        <div className="lg:col-span-3 space-y-2">
+      <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
+        <div className="space-y-1.5">
           {CATEGORIES.map((cat) => (
             <button
               key={cat.id}
               onClick={() => setActiveCategory(cat.id)}
-              className={`w-full flex items-center gap-4 px-5 py-4 rounded-2xl transition-all border ${
-                activeCategory === cat.id 
-                ? 'bg-indigo-500 text-white border-indigo-400 shadow-lg shadow-indigo-500/20 translate-x-1' 
-                : 'bg-text-primary/5 text-text-secondary border-border-primary hover:bg-text-primary/10 hover:text-text-primary'
+              className={`w-full flex items-center gap-3 px-4 py-3 rounded-xl transition-all border text-[10px] font-black uppercase tracking-wider ${
+                activeCategory === cat.id
+                  ? "bg-indigo-500 text-white border-indigo-400 shadow-md"
+                  : "bg-bg-card text-text-secondary border-border-primary hover:border-indigo-500/30"
               }`}
             >
-              <cat.icon className={`w-5 h-5 ${activeCategory === cat.id ? 'text-white' : 'text-indigo-500'}`} />
-              <span className="text-xs font-black uppercase tracking-widest">{cat.name}</span>
+              <cat.icon className="w-4 h-4" />
+              {cat.name}
             </button>
           ))}
 
-          <div className="mt-8 p-6 bg-indigo-500/5 border border-indigo-500/10 rounded-3xl">
-             <div className="flex items-center gap-2 mb-3">
-                <Shield className="w-4 h-4 text-indigo-500" />
-                <span className="text-[10px] font-black text-text-primary uppercase tracking-widest">Security Info</span>
-             </div>
-             <p className="text-[11px] font-medium text-text-secondary leading-relaxed">
-                Mọi thay đổi tại đây sẽ ảnh hưởng trực tiếp đến hiệu năng AI và độ trễ của hệ thống SOS. Hãy cẩn trọng khi điều chỉnh.
-             </p>
+          <div className="mt-6 p-5 bg-indigo-500/5 border border-indigo-500/10 rounded-2xl">
+            <div className="flex items-center gap-2 mb-2">
+              <Shield className="w-3.5 h-3.5 text-indigo-500" />
+              <span className="text-[9px] font-black text-text-primary uppercase tracking-widest">
+                Lưu ý bảo mật
+              </span>
+            </div>
+            <p className="text-[10px] font-medium text-text-secondary leading-relaxed opacity-70">
+              Thay đổi có hiệu lực ngay lập tức. Hãy kiểm tra kỹ trước khi xác
+              nhận.
+            </p>
           </div>
         </div>
 
-        {/* Settings Content */}
-        <div className="lg:col-span-9 space-y-4">
+        <div className="lg:col-span-3 space-y-3">
           {loading && settings.length === 0 ? (
-            <Loading size="xl" text="Đang chuẩn bị dữ liệu cấu hình..." className="py-32 bg-text-primary/5 rounded-[3rem] border border-border-primary border-dashed" />
+            <div className="h-64 flex flex-col items-center justify-center bg-bg-card border border-border-primary rounded-3xl border-dashed">
+              <Loading size="lg" text="Đang tải cấu hình..." />
+            </div>
           ) : (
-            <div className="grid grid-cols-1 gap-4">
-              {filteredSettings.map((s) => (
-                <div
-                  key={s.id}
-                  className={`group relative flex flex-col md:flex-row md:items-center justify-between gap-6 p-7 rounded-[2rem] border transition-all duration-500 ${
-                    saving === s.key 
-                    ? 'bg-indigo-500/10 border-indigo-500 ring-4 ring-indigo-500/5' 
-                    : 'bg-bg-card border-border-primary hover:border-text-primary/20 hover:shadow-xl'
-                  }`}
-                >
-                  <div className="flex items-start gap-6">
-                    <div className="w-14 h-14 rounded-2xl bg-bg-primary border border-border-primary flex items-center justify-center shrink-0 group-hover:scale-105 group-hover:bg-indigo-500/10 group-hover:border-indigo-500/30 transition-all duration-500">
-                      {getIcon(s.key)}
-                    </div>
-                    <div className="space-y-1.5 py-1">
-                      <div className="flex items-center gap-3">
-                        <h3 className="text-sm font-black text-text-primary uppercase tracking-tight group-hover:text-indigo-400 transition-colors">
+            <div className="space-y-3">
+              {filteredSettings.map((s) => {
+                const hasChanged = localValues[s.key] !== s.value;
+                const options = SETTING_OPTIONS[s.key];
+
+                return (
+                  <div
+                    key={s.id}
+                    className={`group flex items-center justify-between p-3 px-4 rounded-2xl border transition-all ${
+                      hasChanged
+                        ? "bg-indigo-500/5 border-indigo-500/30 ring-1 ring-indigo-500/10"
+                        : "bg-bg-card border-border-primary hover:border-text-primary/20"
+                    }`}
+                  >
+                    <div className="flex items-center gap-4 flex-1">
+                      <div
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
+                          hasChanged
+                            ? "bg-indigo-500 text-white scale-110 shadow-lg shadow-indigo-500/20"
+                            : "bg-bg-primary border border-border-primary text-text-secondary group-hover:border-indigo-500/30 group-hover:text-indigo-500"
+                        }`}
+                      >
+                        {getIcon(s.key)}
+                      </div>
+                      <div className="min-w-0">
+                        <h3 className="text-[11px] font-black text-text-primary uppercase tracking-wider">
                           {s.key.replace(/_/g, " ")}
                         </h3>
-                        {saving === s.key && (
-                          <div className="flex items-center gap-2">
-                            <Loading variant="inline" size="xs" />
-                            <span className="text-[8px] font-black text-indigo-500 uppercase tracking-widest">Saving...</span>
-                          </div>
-                        )}
+                        <p className="text-[10px] font-medium text-text-secondary opacity-60 truncate">
+                          {s.description || "Không có mô tả."}
+                        </p>
                       </div>
-                      <p className="text-xs font-bold text-text-secondary opacity-60 max-w-md italic">
-                         {s.description || "Tham số cấu hình hệ thống chưa được định nghĩa mô tả chi tiết."}
-                      </p>
                     </div>
-                  </div>
 
-                  <div className="flex items-center gap-4">
-                    <div className="relative group/input flex-1 md:flex-none">
-                      <input
-                        type="text"
-                        defaultValue={s.value}
-                        onBlur={(e) => {
-                          if (e.target.value !== s.value) {
-                            handleUpdate(s.key, e.target.value);
+                    <div className="flex items-center gap-4">
+                      {options ? (
+                        <select
+                          value={localValues[s.key] || s.value}
+                          disabled={!isSuperAdmin}
+                          onChange={(e) =>
+                            setLocalValues({
+                              ...localValues,
+                              [s.key]: e.target.value,
+                            })
                           }
-                        }}
-                        className="h-14 bg-bg-primary border-2 border-border-primary text-text-primary text-base font-black rounded-2xl px-8 w-full md:w-44 focus:border-indigo-500 focus:ring-8 focus:ring-indigo-500/10 outline-none transition-all text-center tabular-nums placeholder:opacity-20"
-                        placeholder="Giá trị..."
-                      />
+                          className={`h-9 w-32 bg-bg-primary border border-border-primary text-text-primary text-[11px] font-black rounded-lg px-3 outline-none focus:border-indigo-500 transition-all appearance-none ${isSuperAdmin ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}
+                        >
+                          {options.map((opt) => (
+                            <option key={opt} value={opt}>
+                              {opt === "true"
+                                ? "BẬT (True)"
+                                : opt === "false"
+                                  ? "TẮT (False)"
+                                  : opt}
+                            </option>
+                          ))}
+                        </select>
+                      ) : (
+                        <input
+                          type="text"
+                          value={localValues[s.key] || s.value}
+                          disabled={!isSuperAdmin}
+                          onChange={(e) =>
+                            setLocalValues({
+                              ...localValues,
+                              [s.key]: e.target.value,
+                            })
+                          }
+                          className={`h-9 w-32 bg-bg-primary border border-border-primary text-text-primary text-[11px] font-black rounded-lg px-3 outline-none focus:border-indigo-500 transition-all text-center ${isSuperAdmin ? "" : "cursor-not-allowed opacity-50"}`}
+                        />
+                      )}
+
+                      <button
+                        disabled={!hasChanged || saving === s.key || !isSuperAdmin}
+                        onClick={() =>
+                          initiateUpdate(s.key, localValues[s.key])
+                        }
+                        className={`flex items-center justify-center gap-2 h-9 px-4 rounded-lg text-[10px] font-black uppercase tracking-widest transition-all ${
+                          hasChanged && isSuperAdmin
+                            ? "bg-indigo-500 text-white shadow-lg shadow-indigo-500/20 hover:scale-105 active:scale-95"
+                            : "bg-text-primary/5 text-text-secondary opacity-30 grayscale cursor-not-allowed"
+                        }`}
+                        title={isSuperAdmin ? "Lưu thay đổi" : "Bạn không có quyền thay đổi"}
+                      >
+                        {saving === s.key ? (
+                          <Loading variant="inline" size="xs" />
+                        ) : (
+                          <Save className="w-3.5 h-3.5" />
+                        )}
+                        Lưu
+                      </button>
                     </div>
                   </div>
-                </div>
-              ))}
-              
-              {filteredSettings.length === 0 && (
-                <div className="py-32 bg-white/[0.01] border border-dashed border-border-primary rounded-[3rem] text-center flex flex-col items-center justify-center gap-4">
-                  <div className="w-16 h-16 rounded-full bg-white/5 flex items-center justify-center">
-                    <AlertCircle className="w-8 h-8 text-text-secondary opacity-20" />
-                  </div>
-                  <div className="space-y-1">
-                    <p className="text-sm font-black text-text-primary uppercase tracking-widest">No Settings Found</p>
-                    <p className="text-xs font-medium text-text-secondary italic">Không có tham số nào trong danh mục này</p>
-                  </div>
-                </div>
-              )}
+                );
+              })}
             </div>
           )}
+
+          <div className="mt-12 bg-bg-card border border-border-primary rounded-[2rem] overflow-hidden">
+            <div className="p-8 border-b border-border-primary bg-indigo-500/[0.02] flex items-center justify-between">
+              <div className="flex items-center gap-4">
+                <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center">
+                  <BookOpen className="w-6 h-6 text-indigo-500" />
+                </div>
+                <div>
+                  <h2 className="text-sm font-black text-text-primary uppercase tracking-widest">
+                    Hướng dẫn cấu hình
+                  </h2>
+                  <p className="text-[11px] font-medium text-text-secondary">
+                    Chi tiết các tham số vận hành hệ thống
+                  </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="p-8 grid grid-cols-1 md:grid-cols-2 gap-8">
+              <DocItem
+                title="AI FPS Limit"
+                content="Giới hạn số khung hình AI phân tích mỗi giây. Giá trị cao (15-30) giúp nhận diện mượt mà nhưng tốn pin và băng thông. Khuyến nghị: 2-5 cho đi bộ thông thường."
+              />
+              <DocItem
+                title="Confidence Threshold"
+                content="Ngưỡng tin cậy để AI đưa ra thông báo. 0.5 nghĩa là AI chắc chắn trên 50% mới báo. Tăng lên để giảm báo động nhầm, giảm xuống để nhạy hơn với vật cản mờ."
+              />
+              <DocItem
+                title="SOS Radius"
+                content="Bán kính (km) tìm kiếm tình nguyện viên khi người dùng cần hỗ trợ khẩn cấp. Nên đặt phù hợp với mật độ dân cư (Thành phố: 2-5km, Nông thôn: 10km)."
+              />
+              <DocItem
+                title="Maintenance Mode"
+                content="Khi bật (True), hệ thống sẽ từ chối các yêu cầu mới từ app mobile để thực hiện bảo trì. Chỉ nên sử dụng khi cần nâng cấp hạ tầng quan trọng."
+              />
+            </div>
+          </div>
         </div>
       </div>
 
-      {/* Footer Info */}
-      <div className="bg-bg-card border border-border-primary rounded-[2rem] p-6 flex flex-col md:flex-row items-center justify-between gap-6 shadow-2xl relative overflow-hidden">
-        <div className="absolute top-0 left-0 w-1 h-full bg-indigo-500" />
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-xl bg-indigo-500/10 flex items-center justify-center">
-            <Zap className="w-6 h-6 text-indigo-500" />
-          </div>
-          <div className="space-y-0.5">
-            <p className="text-xs font-black text-text-primary uppercase tracking-widest">Auto-Sync Protocol Active</p>
-            <p className="text-[11px] font-medium text-text-secondary">Các thay đổi sẽ được áp dụng ngay lập tức cho toàn bộ người dùng sau khi lưu.</p>
-          </div>
-        </div>
-        
-        <div className="flex items-center gap-8">
-           <div className="flex flex-col items-end">
-              <span className="text-[10px] font-black text-text-secondary uppercase tracking-[0.2em] opacity-40">Status</span>
-              <span className="text-[11px] font-black text-green-500 uppercase tracking-widest flex items-center gap-1.5">
-                <div className="w-1.5 h-1.5 rounded-full bg-green-500 animate-pulse" />
-                Live Connection
-              </span>
-           </div>
-           <button 
-             onClick={fetchSettings}
-             className="px-6 py-2.5 bg-text-primary text-bg-primary rounded-xl text-[10px] font-black uppercase tracking-widest hover:bg-indigo-500 hover:text-white transition-all active:scale-95 shadow-lg shadow-black/20"
-           >
-             Reload All
-           </button>
-        </div>
-      </div>
+      <ConfirmDialog
+        open={confirmOpen}
+        title="Xác nhận thay đổi?"
+        message={`Bạn có chắc chắn muốn cập nhật tham số "${pendingUpdate?.key.replace(/_/g, " ")}" thành "${pendingUpdate?.value}" không?`}
+        onConfirm={handleUpdate}
+        onCancel={() => setConfirmOpen(false)}
+        loading={saving === pendingUpdate?.key}
+      />
+    </div>
+  );
+}
+
+function DocItem({ title, content }) {
+  return (
+    <div className="space-y-2">
+      <h4 className="text-[10px] font-black text-indigo-500 uppercase tracking-widest flex items-center gap-2">
+        <ArrowRight className="w-3 h-3" />
+        {title}
+      </h4>
+      <p className="text-[11px] font-medium text-text-secondary leading-relaxed pl-5 border-l border-indigo-500/20">
+        {content}
+      </p>
     </div>
   );
 }

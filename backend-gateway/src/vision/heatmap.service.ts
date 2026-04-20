@@ -2,6 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { DetectionLog } from './entities/detection-log.entity';
+import { SosAlert } from '../sos/entities/sos-alert.entity';
 
 export interface HeatmapPoint {
   lat: number;
@@ -14,13 +15,16 @@ export class HeatmapService {
   constructor(
     @InjectRepository(DetectionLog)
     private readonly logRepo: Repository<DetectionLog>,
+    @InjectRepository(SosAlert)
+    private readonly sosRepo: Repository<SosAlert>,
   ) {}
 
   async getHeatmapData(
     type: string = 'danger',
     days: number = 30,
   ): Promise<HeatmapPoint[]> {
-    const qb = this.logRepo
+    // 1. Get detection logs
+    const detectionQb = this.logRepo
       .createQueryBuilder('log')
       .select('log.latitude', 'lat')
       .addSelect('log.longitude', 'lng')
@@ -30,20 +34,57 @@ export class HeatmapService {
       .andWhere("log.created_at >= NOW() - INTERVAL '1 day' * :days", { days });
 
     if (type === 'danger') {
-      qb.andWhere(
+      detectionQb.andWhere(
         "log.action_type = 'CAPTION' AND log.severity IN ('HIGH', 'CRITICAL')",
       );
     }
+    detectionQb.groupBy('log.latitude, log.longitude');
+    const detectionRows = await detectionQb.getRawMany();
 
-    qb.groupBy('log.latitude, log.longitude');
+    // 2. Get SOS alerts (always considered high danger)
+    const sosRows: any[] = [];
+    if (type === 'danger' || type === 'all') {
+      const sosQb = this.sosRepo
+        .createQueryBuilder('sos')
+        .select('sos.latitude', 'lat')
+        .addSelect('sos.longitude', 'lng')
+        .addSelect('COUNT(*) * 5', 'count') // Weigh SOS higher (x5 intensity)
+        .where('sos.latitude IS NOT NULL')
+        .andWhere('sos.longitude IS NOT NULL')
+        .andWhere("sos.created_at >= NOW() - INTERVAL '1 day' * :days", {
+          days,
+        })
+        .groupBy('sos.latitude, sos.longitude');
 
-    const rows: { lat: string; lng: string; count: string }[] =
-      await qb.getRawMany();
+      sosRows.push(...(await sosQb.getRawMany()));
+    }
 
-    return rows.map((r) => ({
-      lat: parseFloat(r.lat),
-      lng: parseFloat(r.lng),
-      intensity: parseInt(r.count, 10),
-    }));
+    // 3. Combine results
+    const combinedMap = new Map<string, number>();
+
+    interface RawRow {
+      lat: string | number;
+      lng: string | number;
+      count: string | number;
+    }
+
+    const merge = (rows: RawRow[]) => {
+      for (const r of rows) {
+        const key = `${parseFloat(r.lat.toString()).toFixed(5)},${parseFloat(r.lng.toString()).toFixed(5)}`;
+        const count = parseInt(r.count.toString(), 10);
+        combinedMap.set(key, (combinedMap.get(key) || 0) + count);
+      }
+    };
+
+    merge(detectionRows as RawRow[]);
+    merge(sosRows as RawRow[]);
+
+    const result: HeatmapPoint[] = [];
+    combinedMap.forEach((intensity, key) => {
+      const [lat, lng] = key.split(',').map(parseFloat);
+      result.push({ lat, lng, intensity });
+    });
+
+    return result;
   }
 }

@@ -1,15 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
-import {
-  fetchUsers,
-  toggleUserRole,
-  deleteUser,
-  createUser,
-  updateUser,
-  lockUser,
-  unlockUser,
-  exportUsersReport,
-} from "../services/api";
-import { getStoredEmail } from "../services/api";
+import { fetchUsers, toggleUserRole, deleteUser, createUser, updateUser, lockUser, unlockUser, exportUsersReport, getStoredEmail, getStoredRole } from "../services/api";
 import { useToast } from "../components/Toast";
 import ConfirmDialog from "../components/ConfirmDialog";
 
@@ -44,7 +34,9 @@ import { TableSkeleton } from "../components/ui/Skeleton";
 
 export default function UsersPage() {
   const toast = useToast();
-  const myEmail = getStoredEmail(); // current logged-in admin's email
+  const myEmail = getStoredEmail();
+  const myRole = getStoredRole();
+  const isSuperAdmin = myRole === "SUPER_ADMIN";
   const [users, setUsers] = useState([]);
   const [total, setTotal] = useState(0);
   const [totalPages, setTotalPages] = useState(1);
@@ -144,7 +136,7 @@ export default function UsersPage() {
   ];
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
       {/*  Modals  */}
       {showAdd && (
         <AddUserModal
@@ -236,8 +228,14 @@ export default function UsersPage() {
           </form>
           
           <div className="flex gap-2">
-            <button onClick={() => setShowAdd(true)} className="flex-1 sm:flex-none flex items-center justify-center gap-2 min-h-[40px] px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-bold uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-indigo-600/10"><Plus className="w-5 h-5" /> Thêm mới</button>
-            <button onClick={handleExport} disabled={exporting} className="flex-1 sm:flex-none flex items-center justify-center gap-2 min-h-[40px] px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-[11px] font-bold uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50"><Download className={`w-4 h-4 ${exporting ? 'animate-bounce' : ''}`} /> Export</button>
+            {isSuperAdmin && (
+              <button onClick={() => setShowAdd(true)} className="flex-1 sm:flex-none flex items-center justify-center gap-2 min-h-[40px] px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-bold uppercase tracking-widest transition-all active:scale-95 shadow-lg shadow-indigo-600/10">
+                <Plus className="w-5 h-5" /> Thêm mới
+              </button>
+            )}
+            <button onClick={handleExport} disabled={exporting} className="flex-1 sm:flex-none flex items-center justify-center gap-2 min-h-[40px] px-4 py-2 rounded-xl bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-[11px] font-bold uppercase tracking-widest transition-all active:scale-95 disabled:opacity-50">
+              <Download className={`w-4 h-4 ${exporting ? 'animate-bounce' : ''}`} /> Export
+            </button>
             <button onClick={load} className="p-2 rounded-xl bg-bg-card border border-border-primary text-text-secondary hover:text-text-primary transition-all active:scale-95">
               {loading ? <Loading variant="inline" size="xs" /> : <RefreshCw className="w-4 h-4" />}
             </button>
@@ -259,10 +257,10 @@ export default function UsersPage() {
       >
         {users.map((user) => (
           <tr key={user.id} className="hover:bg-white/[0.03] transition-colors group border-b border-border-primary last:border-0">
-            <td className="px-6 py-5">
+            <td className="px-4 py-3">
               <div className="flex items-center gap-4">
                 <div className="relative">
-                  <Avatar email={user.email} className="w-10 h-10 rounded-2xl border-2 border-border-primary group-hover:border-indigo-500/50 transition-colors" />
+                  <Avatar email={user.email} className="w-9 h-9 rounded-2xl border-2 border-border-primary group-hover:border-indigo-500/50 transition-colors" />
                   {!user.is_active && (
                     <div className="absolute -top-1 -right-1 w-4 h-4 bg-orange-500 rounded-full border-2 border-bg-card flex items-center justify-center">
                       <Lock className="w-2 h-2 text-white" />
@@ -282,13 +280,13 @@ export default function UsersPage() {
                 </div>
               </div>
             </td>
-            <td className="px-6 py-5">
+            <td className="px-4 py-3">
               <div className="flex items-center gap-3">
                 <RoleBadge role={user.role} />
                 {!user.is_active && <LockedBadge />}
               </div>
             </td>
-            <td className="px-6 py-5">
+            <td className="px-4 py-3">
               <div className="flex items-center gap-2 text-xs font-bold text-text-secondary">
                 <Calendar className="w-3.5 h-3.5 opacity-40" />
                 {new Date(user.created_at).toLocaleDateString("vi-VN", {
@@ -296,13 +294,25 @@ export default function UsersPage() {
                 })}
               </div>
             </td>
-            <td className="px-6 py-5">
+            <td className="px-4 py-3">
               <div className="flex justify-end items-center gap-2">
-                <button onClick={() => setEditUser(user)} className="w-9 h-9 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-text-secondary hover:text-indigo-400 hover:border-indigo-400/30 transition-all" title="Chỉnh sửa thông tin"><Edit2 className="w-4 h-4" /></button>
+                <button 
+                  onClick={() => isSuperAdmin && setEditUser(user)} 
+                  disabled={!isSuperAdmin}
+                  className={`w-9 h-9 rounded-xl border flex items-center justify-center transition-all ${
+                    isSuperAdmin 
+                    ? "bg-white/5 border-white/5 text-text-secondary hover:text-indigo-400 hover:border-indigo-400/30" 
+                    : "bg-black/5 border-transparent text-text-secondary/20 cursor-not-allowed"
+                  }`}
+                  title={isSuperAdmin ? "Chỉnh sửa thông tin" : "Bạn không có quyền chỉnh sửa"}
+                >
+                  <Edit2 className="w-4 h-4" />
+                </button>
                 <button onClick={() => setContactsUser(user)} className="w-9 h-9 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-text-secondary hover:text-cyan-400 hover:border-cyan-400/30 transition-all" title="Danh bạ khẩn cấp"><Users2 className="w-4 h-4" /></button>
-                <div className="h-6 w-[1px] bg-white/10 mx-1" />
-                {user.email !== myEmail && (
+                
+                {isSuperAdmin && user.email !== myEmail && (
                   <>
+                    <div className="h-6 w-[1px] bg-white/10 mx-1" />
                     <button onClick={() => setConfirm({ type: user.is_active ? "lock" : "unlock", user })} className={`w-9 h-9 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center transition-all ${user.is_active ? 'text-text-secondary hover:text-orange-400 hover:border-orange-400/30' : 'text-green-500 hover:bg-green-500/10 border-green-500/20'}`} title={user.is_active ? "Khoá tài khoản" : "Mở khoá tài khoản"}>{user.is_active ? <Lock className="w-4 h-4" /> : <Unlock className="w-4 h-4" />}</button>
                     <button onClick={() => setConfirm({ type: "delete", user })} className="w-9 h-9 rounded-xl bg-white/5 border border-white/5 flex items-center justify-center text-text-secondary hover:text-red-500 hover:border-red-500/30 transition-all" title="Xoá vĩnh viễn"><Trash2 className="w-4 h-4" /></button>
                   </>

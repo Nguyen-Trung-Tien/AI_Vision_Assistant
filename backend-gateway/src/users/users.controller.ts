@@ -38,6 +38,13 @@ export class UsersController {
     }
   }
 
+  private ensureSuperAdmin(req: Request) {
+    const user = req.user as { role?: Role } | undefined;
+    if (user?.role !== Role.SUPER_ADMIN) {
+      throw new ForbiddenException('Super Admin access required');
+    }
+  }
+
   @Get()
   async findAll(
     @Req() req: Request,
@@ -58,7 +65,7 @@ export class UsersController {
     @Req() req: Request,
     @Body() body: { email: string; password: string; role?: Role },
   ) {
-    this.ensureAdmin(req);
+    this.ensureSuperAdmin(req);
     const result = await this.usersService.createUser(
       body.email,
       body.password,
@@ -83,7 +90,7 @@ export class UsersController {
     @Param('id') id: string,
     @Body() body: { role?: Role; password?: string },
   ) {
-    this.ensureAdmin(req);
+    this.ensureSuperAdmin(req);
     const result = await this.usersService.updateUser(id, body);
 
     await this.auditService.log({
@@ -100,7 +107,7 @@ export class UsersController {
 
   @Patch(':id/toggle-role')
   async toggleRole(@Req() req: Request, @Param('id') id: string) {
-    this.ensureAdmin(req);
+    this.ensureSuperAdmin(req);
     const result = await this.usersService.toggleRole(id);
 
     await this.auditService.log({
@@ -116,7 +123,7 @@ export class UsersController {
 
   @Patch(':id/lock')
   async lockUser(@Req() req: Request, @Param('id') id: string) {
-    this.ensureAdmin(req);
+    this.ensureSuperAdmin(req);
     const result = await this.usersService.lockUser(id, getRequesterId(req));
 
     await this.auditService.log({
@@ -132,7 +139,7 @@ export class UsersController {
 
   @Patch(':id/unlock')
   async unlockUser(@Req() req: Request, @Param('id') id: string) {
-    this.ensureAdmin(req);
+    this.ensureSuperAdmin(req);
     const result = await this.usersService.unlockUser(id);
 
     await this.auditService.log({
@@ -148,7 +155,7 @@ export class UsersController {
 
   @Delete(':id')
   async deleteUser(@Req() req: Request, @Param('id') id: string) {
-    this.ensureAdmin(req);
+    this.ensureSuperAdmin(req);
     await this.usersService.deleteUser(id, getRequesterId(req));
 
     await this.auditService.log({

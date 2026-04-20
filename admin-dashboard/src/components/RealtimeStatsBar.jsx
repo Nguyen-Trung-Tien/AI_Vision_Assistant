@@ -88,12 +88,12 @@ export default function RealtimeStatsBar() {
   }, []);
 
   return (
-    <div className="bg-bg-card rounded-3xl p-6 sm:p-8 border border-border-primary shadow-2xl hover:border-indigo-500/30 transition-all duration-500 mb-8 group">
+    <div className="bg-bg-card rounded-2xl p-5 sm:p-6 border border-border-primary shadow-2xl hover:border-indigo-500/30 transition-all duration-500 mb-6 group">
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-8">
-        <div className="flex items-center gap-4">
-          <div className="w-12 h-12 rounded-2xl bg-indigo-500/10 flex items-center justify-center text-indigo-500 group-hover:scale-110 transition-transform">
-            <TrendingUp className="w-6 h-6" />
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-xl bg-indigo-500/10 flex items-center justify-center text-indigo-500 group-hover:scale-110 transition-transform">
+            <TrendingUp className="w-5 h-5" />
           </div>
           <div>
             <h3 className="text-sm font-bold text-text-primary uppercase tracking-widest">
@@ -145,17 +145,17 @@ export default function RealtimeStatsBar() {
           ].map(({ label, value, color, icon: Icon }) => (
             <div
               key={label}
-              className="relative overflow-hidden rounded-xl p-4 border transition-all hover:translate-y-[-4px] group/card"
+              className="relative overflow-hidden rounded-xl p-3 border transition-all hover:translate-y-[-4px] group/card"
               style={{
                 background: `${color}05`,
                 borderColor: `${color}15`,
               }}
             >
-              <div className="absolute top-0 right-0 p-4 opacity-10 group-hover/card:opacity-20 transition-opacity">
-                <Icon className="w-12 h-12" style={{ color }} />
+              <div className="absolute top-0 right-0 p-3 opacity-10 group-hover/card:opacity-20 transition-opacity">
+                <Icon className="w-10 h-10" style={{ color }} />
               </div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-50 mb-2" style={{ color }}>{label}</p>
-              <p className="text-2xl font-bold tracking-tighter" style={{ color }}>
+              <p className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-50 mb-1" style={{ color }}>{label}</p>
+              <p className="text-xl font-bold tracking-tighter" style={{ color }}>
                 {value}
               </p>
             </div>
@@ -169,7 +169,7 @@ export default function RealtimeStatsBar() {
           {isRefreshing ? "Đang tải dữ liệu..." : "Không có dữ liệu thống kê"}
         </div>
       ) : (
-        <ResponsiveContainer width="100%" height={240}>
+        <ResponsiveContainer width="100%" height={200}>
           <AreaChart
             data={data}
             margin={{ top: 10, right: 10, bottom: 0, left: -20 }}

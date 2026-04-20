@@ -177,6 +177,14 @@ export async function sendBroadcast(
   });
 }
 
+export async function deleteBroadcast(id) {
+  return apiClient.delete(`/broadcast/${id}`);
+}
+
+export async function bulkDeleteBroadcasts(ids) {
+  return apiClient.post("/broadcast/bulk-delete", { ids });
+}
+
 /**
  * Heatmap Data
  */

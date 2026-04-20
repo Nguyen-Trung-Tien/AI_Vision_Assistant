@@ -29,7 +29,7 @@ export default function Sidebar({
       <motion.aside
         initial={false}
         animate={{
-          width: sidebarOpen ? "260px" : "72px",
+          width: sidebarOpen ? "260px" : "80px",
         }}
         transition={{ type: "spring", stiffness: 300, damping: 30 }}
         className={cn(
@@ -37,16 +37,16 @@ export default function Sidebar({
         )}
       >
         {/* Logo Section */}
-        <div className="h-14 flex items-center px-4 border-b border-border-primary overflow-hidden shrink-0">
+        <div className="h-16 flex items-center px-6 border-b border-border-primary overflow-hidden shrink-0">
           <div className={cn(
             "flex items-center gap-3 w-full",
             !sidebarOpen && "justify-center px-0"
           )}>
-            <div className="w-9 h-9 rounded-lg bg-bg-primary border border-border-primary flex items-center justify-center shadow-lg overflow-hidden shrink-0 group">
+            <div className="w-10 h-10 rounded-xl bg-bg-primary border border-border-primary flex items-center justify-center shadow-lg overflow-hidden shrink-0 group">
               <img 
                 src="/logo.png" 
                 alt="Logo" 
-                className="w-6.5 h-6.5 object-contain group-hover:scale-110 transition-transform duration-500" 
+                className="w-7 h-7 object-contain group-hover:scale-110 transition-transform duration-500" 
               />
             </div>
             {sidebarOpen && (
@@ -56,10 +56,10 @@ export default function Sidebar({
                 exit={{ opacity: 0, x: -10 }}
                 className="flex flex-col -space-y-1 min-w-0"
               >
-                <span className="text-[9px] font-black text-indigo-500 tracking-[0.2em] uppercase truncate">
+                <span className="text-[10px] font-black text-indigo-500 tracking-[0.2em] uppercase truncate">
                   VISION
                 </span>
-                <span className="text-xs font-black tracking-tighter truncate">
+                <span className="text-sm font-black tracking-tighter truncate">
                   ASSISTANT
                 </span>
               </motion.div>
@@ -77,7 +77,7 @@ export default function Sidebar({
               return (
                 <div key={group} className="space-y-0.5">
                   {sidebarOpen ? (
-                    <h3 className="px-3 text-[9px] font-black uppercase tracking-[0.25em] text-text-secondary opacity-60 mb-1">
+                    <h3 className="px-3 text-[11px] font-black uppercase tracking-[0.25em] text-text-secondary opacity-60 mb-2 mt-4 first:mt-0">
                       {group}
                     </h3>
                   ) : (
@@ -92,8 +92,8 @@ export default function Sidebar({
                         className={cn(
                           "w-full flex items-center transition-all duration-200 group relative",
                           sidebarOpen
-                            ? "gap-3 px-3 py-2 rounded-xl"
-                            : "justify-center py-2.5 rounded-xl",
+                            ? "gap-2.5 px-3 py-1.5 rounded-xl"
+                            : "justify-center py-2 rounded-xl",
                           activeTab === item.id
                             ? "bg-indigo-500/10 text-indigo-500 font-bold border border-indigo-500/20"
                             : "text-text-secondary hover:bg-text-primary/5 hover:text-text-primary"
@@ -114,10 +114,10 @@ export default function Sidebar({
                         {sidebarOpen && (
                           <span
                             className={cn(
-                              "text-[13px] font-bold tracking-tight truncate",
+                              "text-[14px] font-bold tracking-tight truncate",
                               item.id === "sos" && item.badge > 0
                                 ? "text-red-500 animate-pulse font-black"
-                                : "text-text-primary/80"
+                                : "text-text-primary/90"
                             )}
                           >
                             {item.label}

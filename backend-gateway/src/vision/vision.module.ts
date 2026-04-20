@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DetectionLog } from './entities/detection-log.entity';
+import { SosAlert } from '../sos/entities/sos-alert.entity';
 import { VisionGateway } from './vision.gateway';
 import { JwtModule } from '@nestjs/jwt';
 import { ConfigModule, ConfigService } from '@nestjs/config';
@@ -15,7 +16,7 @@ import { FaceModule } from '../face/face.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([DetectionLog]),
+    TypeOrmModule.forFeature([DetectionLog, SosAlert]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

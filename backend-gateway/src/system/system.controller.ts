@@ -32,6 +32,7 @@ export class SystemController {
   }
 
   @Patch('settings/:key')
+  @Roles(Role.SUPER_ADMIN)
   updateSetting(@Param('key') key: string, @Body('value') value: string) {
     return this.settingsService.update(key, value);
   }

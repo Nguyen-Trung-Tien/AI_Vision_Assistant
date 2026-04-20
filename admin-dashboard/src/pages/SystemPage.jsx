@@ -74,7 +74,7 @@ export default function SystemPage() {
   }, []);
 
   const StatusCard = ({ title, status, desc, icon: Icon }) => (
-    <div className="bg-bg-card border border-border-primary p-5 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 group">
+    <div className="bg-bg-card border border-border-primary p-4 rounded-2xl shadow-xl hover:shadow-2xl transition-all duration-300 group">
       <div className="flex items-center justify-between mb-4">
         <div className="flex items-center gap-3">
           <div className={`p-2 rounded-lg ${status === "UP" ? "bg-green-500/10 text-green-500" : "bg-red-500/10 text-red-500"}`}>
@@ -91,7 +91,7 @@ export default function SystemPage() {
         />
       </div>
       <div className="flex items-baseline gap-2">
-        <p className="text-2xl font-black text-text-primary tracking-tighter">{status}</p>
+        <p className="text-xl font-black text-text-primary tracking-tighter">{status}</p>
         <p className="text-[10px] font-bold text-text-secondary uppercase opacity-40">
           {desc}
         </p>
@@ -108,7 +108,7 @@ export default function SystemPage() {
   };
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <PageHeader 
         title="GIÁM SÁT" 
         highlight="HỆ THỐNG" 
@@ -124,7 +124,7 @@ export default function SystemPage() {
       </PageHeader>
 
 
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-5">
         <StatusCard
           title="PostgreSQL"
           status={health?.database || "UP"}
@@ -145,8 +145,8 @@ export default function SystemPage() {
         />
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-        <div className="lg:col-span-2 bg-bg-card border border-border-primary p-6 rounded-3xl shadow-2xl relative overflow-hidden group">
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-5">
+        <div className="lg:col-span-2 bg-bg-card border border-border-primary p-5 rounded-2xl shadow-2xl relative overflow-hidden group">
           <div className="absolute top-0 right-0 p-8 opacity-5 group-hover:opacity-10 transition-opacity">
             <Activity className="w-32 h-32 text-indigo-500" />
           </div>
@@ -168,7 +168,7 @@ export default function SystemPage() {
             </div>
           </div>
           
-          <div className="h-[320px] w-full">
+          <div className="h-[260px] w-full">
             <ResponsiveContainer width="100%" height="100%">
               <AreaChart data={metricsHistory}>
                 <defs>
@@ -224,7 +224,7 @@ export default function SystemPage() {
           </div>
         </div>
 
-        <div className="bg-bg-card border border-border-primary p-7 rounded-3xl shadow-2xl space-y-8">
+        <div className="bg-bg-card border border-border-primary p-5 rounded-2xl shadow-2xl space-y-5">
           <h2 className="text-sm font-black text-text-primary flex items-center gap-3 uppercase tracking-widest">
             <span className="w-1.5 h-6 bg-emerald-500 rounded-full" />
             Server Blueprint
@@ -273,9 +273,9 @@ export default function SystemPage() {
 
 function InfoRow({ label, value, icon: Icon, sub }) {
   return (
-    <div className="flex items-center gap-4 p-4 bg-text-primary/[0.02] rounded-2xl border border-border-primary group hover:bg-text-primary/[0.04] transition-colors">
-      <div className="w-10 h-10 rounded-xl bg-text-primary/5 flex items-center justify-center text-text-secondary group-hover:text-indigo-400 transition-colors">
-        <Icon className="w-5 h-5" />
+    <div className="flex items-center gap-4 p-3 bg-text-primary/[0.02] rounded-xl border border-border-primary group hover:bg-text-primary/[0.04] transition-colors">
+      <div className="w-9 h-9 rounded-xl bg-text-primary/5 flex items-center justify-center text-text-secondary group-hover:text-indigo-400 transition-colors">
+        <Icon className="w-4 h-4" />
       </div>
       <div className="flex-1 min-w-0">
         <p className="text-[10px] font-black text-text-secondary uppercase tracking-widest mb-0.5 opacity-50">{label}</p>

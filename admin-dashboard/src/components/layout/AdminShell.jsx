@@ -40,11 +40,12 @@ export default function AdminShell({
           notifications={notifications}
           unreadCount={unreadCount}
           handleMarkAllRead={handleMarkAllRead}
+          setActiveTab={setActiveTab}
           email={email}
         />
 
         {/* Viewport */}
-        <div className="flex-1 overflow-y-auto p-6 scrollbar-thin">
+        <div className="flex-1 overflow-y-auto p-10 scrollbar-thin">
           <AnimatePresence mode="wait">
             <motion.div
               key={activeTab}

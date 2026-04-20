@@ -21,6 +21,11 @@
   --font-sans: "Inter", ui-sans-serif, system-ui, sans-serif;
 }
 
+html {
+  font-size: 15px;
+  -webkit-text-size-adjust: 100%;
+}
+
 :root {
   /* Light Mode (Default) */
   --bg-primary: #f8fafc;
@@ -28,7 +33,7 @@
   --bg-card-hover: #f1f5f9;
   --text-primary: #0f172a;
   --text-secondary: #475569;
-  --border-color: rgba(0, 0, 0, 0.12);
+  --border-color: rgba(0, 0, 0, 0.08);
   
   --accent-purple: #6366f1;
   --accent-cyan: #06b6d4;
@@ -41,9 +46,9 @@
   --safe-right: env(safe-area-inset-right, 0px);
   --safe-bottom: env(safe-area-inset-bottom, 0px);
   --safe-left: env(safe-area-inset-left, 0px);
-  --touch-min: 44px;
-  --mobile-gutter: 1rem;
-  --mobile-header-h: 56px;
+  --touch-min: 40px;
+  --mobile-gutter: 0.75rem;
+  --mobile-header-h: 48px;
   
   --background: #f8fafc;
   --foreground: #0f172a;
@@ -60,10 +65,10 @@
   --accent: #f1f5f9;
   --accent-foreground: #0f172a;
   --destructive: #ef4444;
-  --border: rgba(0, 0, 0, 0.1);
-  --input: rgba(0, 0, 0, 0.05);
+  --border: rgba(0, 0, 0, 0.08);
+  --input: rgba(0, 0, 0, 0.04);
   --ring: #6366f1;
-  --radius: 0.75rem;
+  --radius: 0.5rem;
 }
 
 .dark {

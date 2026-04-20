@@ -71,4 +71,14 @@ export class BroadcastService {
     });
     return { data, total, page, totalPages: Math.ceil(total / limit) };
   }
+
+  async remove(id: string): Promise<boolean> {
+    const result = await this.broadcastRepo.delete(id);
+    return (result.affected ?? 0) > 0;
+  }
+
+  async removeMany(ids: string[]): Promise<number> {
+    const result = await this.broadcastRepo.delete(ids);
+    return result.affected ?? 0;
+  }
 }

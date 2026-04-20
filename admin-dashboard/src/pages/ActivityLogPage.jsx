@@ -97,7 +97,7 @@ export default function ActivityLogPage() {
   ];
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <PageHeader 
         title="NHẬT KÝ" 
         highlight="HOẠT ĐỘNG" 
@@ -111,7 +111,7 @@ export default function ActivityLogPage() {
             <select
               value={filters.action}
               onChange={(e) => setFilters({ ...filters, action: e.target.value })}
-              className="min-h-[44px] bg-bg-card border border-border-primary text-text-primary text-[10px] font-black rounded-xl pl-11 pr-8 appearance-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500/50 outline-none transition-all cursor-pointer uppercase tracking-widest"
+              className="min-h-[40px] bg-bg-card border border-border-primary text-text-primary text-[10px] font-black rounded-xl pl-11 pr-8 appearance-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500/50 outline-none transition-all cursor-pointer uppercase tracking-widest"
             >
               <option value="">Hành động</option>
               <option value="RESOLVE_SOS">Resolve SOS</option>
@@ -129,7 +129,7 @@ export default function ActivityLogPage() {
               onChange={(e) =>
                 setFilters({ ...filters, targetType: e.target.value })
               }
-              className="min-h-[44px] bg-bg-card border border-border-primary text-text-primary text-[10px] font-black rounded-xl pl-11 pr-8 appearance-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500/50 outline-none transition-all cursor-pointer uppercase tracking-widest"
+              className="min-h-[40px] bg-bg-card border border-border-primary text-text-primary text-[10px] font-black rounded-xl pl-11 pr-8 appearance-none focus:ring-4 focus:ring-indigo-500/10 focus:border-indigo-500/50 outline-none transition-all cursor-pointer uppercase tracking-widest"
             >
               <option value="">Đối tượng</option>
               <option value="sos">SOS</option>
@@ -142,7 +142,7 @@ export default function ActivityLogPage() {
         <button
           onClick={handleExport}
           disabled={exporting}
-          className="flex items-center justify-center gap-2 min-h-[44px] px-6 py-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-[11px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-500/20 transition-all active:scale-95 disabled:opacity-50"
+          className="flex items-center justify-center gap-2 min-h-[40px] px-6 py-2 bg-emerald-500/10 border border-emerald-500/20 text-emerald-500 text-[11px] font-black uppercase tracking-widest rounded-xl hover:bg-emerald-500/20 transition-all active:scale-95 disabled:opacity-50"
         >
           <Download className={`w-4 h-4 ${exporting ? 'animate-bounce' : ''}`} />
           Export CSV
@@ -157,13 +157,13 @@ export default function ActivityLogPage() {
       >
         {logs.map((log) => (
           <tr key={log.id} className="hover:bg-text-primary/5 transition-colors group border-b border-border-primary last:border-0">
-            <td className="px-6 py-4">
+            <td className="px-4 py-3">
               <div className="flex items-center gap-2 text-xs font-bold text-text-secondary italic">
                 <Clock className="w-3.5 h-3.5 opacity-40" />
                 {new Date(log.created_at).toLocaleString("vi-VN")}
               </div>
             </td>
-            <td className="px-6 py-4">
+            <td className="px-4 py-3">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-lg bg-indigo-500/10 border border-indigo-500/20 flex items-center justify-center text-indigo-400">
                   <Shield className="w-4 h-4" />
@@ -176,12 +176,12 @@ export default function ActivityLogPage() {
                 </div>
               </div>
             </td>
-            <td className="px-6 py-4">
+            <td className="px-4 py-3">
               <span className={`px-3 py-1 rounded-full text-[10px] font-black uppercase tracking-widest border ${getActionStyles(log.action)}`}>
                 {log.action.replace(/_/g, " ")}
               </span>
             </td>
-            <td className="px-6 py-4">
+            <td className="px-4 py-3">
               <div className="flex items-center gap-2">
                 <span className="text-xs font-black text-text-primary uppercase tracking-tighter">
                   {log.target_type}

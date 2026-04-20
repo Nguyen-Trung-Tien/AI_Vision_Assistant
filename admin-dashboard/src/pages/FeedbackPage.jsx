@@ -196,7 +196,7 @@ export default function FeedbackPage() {
   ];
 
   return (
-    <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
+    <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <PageHeader 
         title="USER" 
         highlight="FEEDBACK" 
@@ -274,13 +274,13 @@ export default function FeedbackPage() {
       >
         {data.map((fb) => (
           <tr key={fb.id} className={`border-b border-border-primary hover:bg-white/[0.02] transition-colors group ${selectedIds.includes(fb.id) ? "bg-indigo-500/5" : ""}`}>
-            <td className="p-4">
+            <td className="p-3">
               <button onClick={() => toggleSelect(fb.id)} className="text-text-secondary hover:text-indigo-500 transition-colors">
                 {selectedIds.includes(fb.id) ? <CheckSquare className="w-4 h-4 text-indigo-500" /> : <Square className="w-4 h-4 opacity-40 group-hover:opacity-100" />}
               </button>
             </td>
             <td className="p-4 text-text-secondary font-mono text-[10px]">#{fb.id}</td>
-            <td className="p-4">
+            <td className="p-3">
               {fb.image_url ? (
                 <a href={getFileUrl(fb.image_url)} target="_blank" rel="noreferrer" className="block w-12 h-12 rounded-lg overflow-hidden border border-border-primary hover:scale-105 transition-transform">
                   <img src={getFileUrl(fb.image_url)} alt="Feedback" className="w-full h-full object-cover" />
@@ -289,7 +289,7 @@ export default function FeedbackPage() {
             </td>
             <td className="p-4 text-text-primary text-xs">{fb.detection?.action_type ?? "—"}</td>
             <td className="p-4 text-text-secondary text-xs max-w-[200px] truncate">{fb.detection?.result_text ?? "—"}</td>
-            <td className="p-4">
+            <td className="p-3">
               <span className={`px-2 py-0.5 rounded-full text-xs border ${fb.is_correct ? "bg-green-500/10 text-green-600 dark:text-green-400 border-green-500/30" : "bg-red-500/10 text-red-600 dark:text-red-400 border-red-500/30"}`}>
                 {fb.is_correct ? "Đúng" : "Sai"}
               </span>
