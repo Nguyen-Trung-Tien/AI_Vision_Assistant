@@ -70,28 +70,33 @@ class TfliteService {
 
     try {
       Object? lastError;
-      final candidateAssets = await _candidateAssetModels();
-      for (final assetPath in candidateAssets) {
+
+      // 1. Check local models first (for OTA updates)
+      final localModels = await _candidateLocalModels();
+      for (final file in localModels) {
         try {
-          _interpreter = await _createInterpreterFromAsset(assetPath);
-          _loadedModelAsset = assetPath;
+          _interpreter = await _createInterpreterFromFile(file);
+          _loadedModelAsset = file.path;
+          debugPrint('[TFLite] Successfully loaded LOCAL model from ${file.path}');
           break;
         } catch (e) {
           lastError = e;
-          debugPrint('[TFLite] Failed loading asset model $assetPath: $e');
+          debugPrint('[TFLite] Failed loading local model ${file.path}: $e');
         }
       }
 
+      // 2. Fallback to asset models if no local model found
       if (_interpreter == null) {
-        final localModels = await _candidateLocalModels();
-        for (final file in localModels) {
+        final candidateAssets = await _candidateAssetModels();
+        for (final assetPath in candidateAssets) {
           try {
-            _interpreter = await _createInterpreterFromFile(file);
-            _loadedModelAsset = file.path;
+            _interpreter = await _createInterpreterFromAsset(assetPath);
+            _loadedModelAsset = assetPath;
+            debugPrint('[TFLite] Successfully loaded ASSET model from $assetPath');
             break;
           } catch (e) {
             lastError = e;
-            debugPrint('[TFLite] Failed loading local model ${file.path}: $e');
+            debugPrint('[TFLite] Failed loading asset model $assetPath: $e');
           }
         }
       }

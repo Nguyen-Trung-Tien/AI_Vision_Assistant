@@ -44,4 +44,10 @@ export class AiController {
       modelVersion,
     });
   }
+
+  @Get('ota-model')
+  @Roles(Role.USER, Role.ADMIN, Role.SUPER_ADMIN)
+  getOtaModel() {
+    return this.aiService.getLatestOtaModel();
+  }
 }

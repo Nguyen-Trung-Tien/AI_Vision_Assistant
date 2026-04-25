@@ -22,7 +22,7 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 <br/>
 
-![Version](https://img.shields.io/badge/Version-1.5.0-blue?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.6.0-blue?style=flat-square)
 ![License](https://img.shields.io/badge/License-UNLICENSED-gray?style=flat-square)
 ![Status](https://img.shields.io/badge/Status-In_Development-orange?style=flat-square)
 
@@ -74,7 +74,15 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 ## 📰 Cập nhật mới nhất
 
-### 🗓️ Tháng 4/2026 — v1.5.0 (Current)
+### 🗓️ Tháng 4/2026 — v1.6.0 (Current)
+
+| Ngày      | Cập nhật                        | Mô tả                                                                                                                                  |
+| --------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| **25/04** | 🐳 Docker Compose               | Đóng gói toàn bộ hệ thống (Mobile API, AI Worker, Admin Dashboard, DB, Redis, RabbitMQ) thành Docker containers để triển khai dễ dàng  |
+| **25/04** | 🔄 OTA Model Update             | Thêm cơ chế tải model offline (.tflite) qua không khí (OTA) cho Mobile App, tự động check và tải khi có bản cập nhật AI từ Backend       |
+| **25/04** | 🌐 Smart OCR Translation        | Mở rộng tính năng OCR với sức mạnh từ Gemini Vision, tự động tóm tắt và dịch thuật văn bản ngoại ngữ sang tiếng Việt                    |
+
+### 🗓️ Tháng 4/2026 — v1.5.0
 
 | Ngày      | Cập nhật                        | Mô tả                                                                                                                                  |
 | --------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
@@ -140,11 +148,20 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 ---
 
-## 🚀 Các tính năng nổi bật vừa cập nhật (v1.5.0)
+## 🚀 Các tính năng nổi bật vừa cập nhật (v1.6.0)
 
-Để mang lại trải nghiệm tốt nhất cho người dùng khiếm thị, phiên bản v1.5.0 tập trung vào khả năng **phản hồi liên tục** và **nhận diện thông minh**:
+Để mang lại trải nghiệm tốt nhất cho người dùng khiếm thị, phiên bản v1.6.0 tập trung vào khả năng **triển khai linh hoạt** và **nhận diện thông minh**:
 
-1.  **🧠 Nhận diện khuôn mặt người quen (InsightFace)**:
+1.  **🐳 Docker Compose Deployment (Mới)**:
+    - Toàn bộ hạ tầng Backend, AI, Web Dashboard, Database được đóng gói Container, triển khai dễ dàng chỉ với một dòng lệnh.
+
+2.  **🔄 Cập nhật mô hình AI OTA (Mới)**:
+    - Cơ chế cập nhật (OTA - Over The Air) cho phép nâng cấp thuật toán nhận diện ngoại tuyến (`.tflite`) cho ứng dụng di động mà không cần phải cập nhật App qua Store.
+
+3.  **🌐 Smart OCR Dịch Thuật (Mới)**:
+    - Chế độ OCR được tích hợp chức năng dịch thuật. Gemini AI sẽ đọc, tóm tắt và dịch mọi văn bản ngoại ngữ từ luồng ảnh sang tiếng Việt một cách tự nhiên.
+
+4.  **🧠 Nhận diện khuôn mặt người quen (InsightFace)**:
     - Tích hợp model `Buffalo_L` cho độ chính xác cao.
     - Thông báo tên người quen ngay khi họ xuất hiện trước camera.
     - Quy trình đăng ký đơn giản kèm phản hồi rung và giọng nói.
@@ -173,7 +190,7 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 - [Giới thiệu](#-giới-thiệu)
 - [Tính năng chính](#-tính-năng-chính)
-- [Các tính năng vừa cập nhật](#-các-tính-năng-nổi-bật-vừa-cập-nhật-v150)
+- [Các tính năng vừa cập nhật](#-các-tính-năng-nổi-bật-vừa-cập-nhật-v160)
 - [Kiến trúc hệ thống](#-kiến-trúc-hệ-thống)
 - [Luồng xử lý chính](#-luồng-xử-lý-chính)
 - [Các chế độ trên Mobile App](#-các-chế-độ-trên-mobile-app)
@@ -684,7 +701,10 @@ Dashboard quản trị cung cấp các trang:
 | **Heatmap**      | Bản đồ nhiệt vùng nguy hiểm (Leaflet + heatmap layer)        |
 | **Feedback AI**  | Review phản hồi người dùng về kết quả AI (đúng/sai)          |
 | **Broadcast**    | Gửi thông báo TTS đến tất cả users đang online               |
-| **Người dùng**   | Quản lý tài khoản, danh sách sessions, thống kê cá nhân      |
+| **Người dùng**   | Quản lý tài khoản, phân quyền RBAC (Admin/User), thống kê    |
+| **Analytics**    | Phân tích độ chính xác AI, xu hướng và giờ cao điểm          |
+| **Hệ thống**     | Giám sát tài nguyên (CPU, RAM, DB), Audit Logs (Nhật ký)     |
+| **AI Models**    | Quản lý và chuyển đổi các mô hình AI (Model Manager)         |
 
 ### Tính năng nổi bật
 
@@ -698,32 +718,31 @@ Dashboard quản trị cung cấp các trang:
 
 ## 📌 Roadmap
 
-### Đã hoàn thành (v1.5.0)
+### Đã hoàn thành (v1.6.0)
 
+- [x] Smart OCR nâng cao (dịch thuật trực tiếp nội dung biển báo)
+- [x] Offline-First Mode hoàn chỉnh (auto-switch online/offline)
+- [x] Cloud deployment (Docker Compose full stack)
+- [x] Offline model auto-update (OTA)
 - [x] Nhận diện khuôn mặt người quen (Face Recognition với InsightFace)
 - [x] Ước lượng chiều sâu đơn mục (Monocular Depth Estimation với MiDaS)
 - [x] Chế độ OCR thông minh (Smart OCR: biển báo, menu, hóa đơn qua Gemini)
 - [x] Stream liên tục 3–5 FPS cho chế độ đi bộ (walking mode + adaptive FPS)
-- [x] Emergency Contact Network (SMS + cuộc gọi tự động khi SOS)
-- [x] Spatial audio (trái/phải) theo vị trí vật cản 3D
+- [x] Mạng lưới liên hệ khẩn cấp (SMS + cuộc gọi tự động khi SOS)
+- [x] Âm thanh không gian 3D (trái/phải) theo vị trí vật cản
 - [x] Visual Feedback (Bounding Boxes + Object Labels) trên preview
+- [x] Admin Dashboard mở rộng (System Monitor, Analytics, RBAC, Activity Log)
 
 ### Đang phát triển
 
-- [ ] Smart OCR nâng cao (dịch thuật trực tiếp nội dung biển báo)
 - [ ] Tối ưu hóa depth estimation cho các loại địa hình phức tạp
 - [ ] Nhận diện hành vi nguy hiểm (xe phóng nhanh, vật rơi)
-- [ ] Offline-First Mode hoàn chỉnh (auto-switch online/offline)
 
 ### Kế hoạch tương lai
 
-- [ ] Offline-First Mode (TFLite + auto-switch online/offline)
-- [ ] Admin Dashboard mở rộng (System Monitor, Analytics, RBAC, Activity Log)
-- [ ] Cloud deployment (Docker Compose full stack)
 - [ ] Layout analysis (đọc menu/sách)
 - [ ] CI/CD pipeline cho model training + deployment
 - [ ] Progressive Web App cho Admin Dashboard
-- [ ] Offline model auto-update (OTA)
 
 ---
 

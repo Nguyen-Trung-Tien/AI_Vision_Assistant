@@ -148,4 +148,22 @@ export class AiService {
       totalPages: Math.ceil(total / limit),
     };
   }
+
+  async getLatestOtaModel() {
+    const activeModelId =
+      (await this.settingsService.getByKey('ACTIVE_AI_MODEL')) || 'v1.0.0';
+
+    const models = await this.getModels();
+    const activeModel = models.find((m) => m.id === activeModelId) || models[0];
+
+    // Cung cấp URL download giả định (hoặc thực tế) tới file .tflite cho Mobile tải về
+    return {
+      version: activeModel.id,
+      name: activeModel.name,
+      downloadUrl: `https://storage.visionassistant.com/models/tflite/${activeModel.id}/detect.tflite`,
+      hash: 'sha256-dummy-hash-xyz', // Thường sẽ là checksum của file model
+      sizeBytes: 15_400_000, // 15MB
+      minAppVersion: '1.5.0',
+    };
+  }
 }

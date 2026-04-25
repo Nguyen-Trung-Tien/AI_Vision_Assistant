@@ -11,6 +11,8 @@ export class SosService {
   constructor(
     @InjectRepository(SosAlert)
     private readonly sosRepo: Repository<SosAlert>,
+    @InjectRepository(User)
+    private readonly userRepo: Repository<User>,
     private readonly smsService: SmsService,
     private readonly emergencyContactService: EmergencyContactService,
   ) {}
@@ -46,8 +48,15 @@ export class SosService {
       await this.emergencyContactService.findAllSosContactsByUserId(userId);
     if (!contacts || contacts.length === 0) return;
 
-    // TODO: fetch user name if available in the future. For now use a generic placeholder.
-    const userName = 'Người dùng';
+    let userName = 'Người dùng';
+    try {
+      const user = await this.userRepo.findOne({ where: { id: userId } });
+      if (user && user.full_name) {
+        userName = user.full_name;
+      }
+    } catch (error) {
+      console.error('Failed to fetch user name for SMS:', error);
+    }
 
     // In production we should limit concurrent SMS sends or use a queue
     for (const contact of contacts) {

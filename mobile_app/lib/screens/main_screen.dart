@@ -24,6 +24,7 @@ import 'package:mobile_app/services/voice_command_service.dart';
 import 'package:mobile_app/services/volume_button_service.dart';
 import 'package:mobile_app/services/websocket_service.dart';
 import 'package:mobile_app/services/continuous_stream_service.dart';
+import 'package:mobile_app/services/offline_ota_service.dart';
 import 'package:mobile_app/services/spatial_audio_service.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
 import 'package:mobile_app/utils/text_utils.dart';
@@ -258,6 +259,7 @@ class _MainScreenState extends State<MainScreen>
     _aiService.start();
 
     unawaited(_ensureOfflineModelLoaded(notifyOnFreshLoad: true));
+    unawaited(OfflineOtaService().checkForUpdates());
 
     _voiceCommandService = VoiceCommandService(
       onCommandRecognized: _onCommandRecognized,

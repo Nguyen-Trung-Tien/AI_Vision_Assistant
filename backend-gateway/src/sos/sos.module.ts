@@ -1,6 +1,7 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { SosAlert } from './entities/sos-alert.entity';
+import { User } from '../users/entities/user.entity';
 import { SosService } from './sos.service';
 import { SosController } from './sos.controller';
 import { JwtModule } from '@nestjs/jwt';
@@ -11,7 +12,7 @@ import { AuditModule } from '../audit/audit.module';
 
 @Module({
   imports: [
-    TypeOrmModule.forFeature([SosAlert]),
+    TypeOrmModule.forFeature([SosAlert, User]),
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

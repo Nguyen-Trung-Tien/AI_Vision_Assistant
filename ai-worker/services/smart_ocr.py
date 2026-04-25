@@ -41,6 +41,12 @@ def process(image_base64: str, sub_mode: str = "general", lang: str = "vi") -> d
             "Đây là một tờ hóa đơn. Hãy đọc và tìm ra tổng số tiền phải thanh toán "
             "(thường là Tổng cộng hoặc Total). Trả lời bằng 1 câu duy nhất, ví dụ: 'Tổng hóa đơn là 250 nghìn đồng'."
         )
+    elif sub_mode == "translate":
+        prompt = (
+            "Hãy đọc toàn bộ văn bản ngoại ngữ trong hình ảnh (nếu có) và dịch sang tiếng Việt một cách tự nhiên, dễ hiểu. "
+            "Nếu văn bản quá dài, hãy tóm tắt và dịch những ý chính quan trọng nhất. "
+            "Không cần giải thích, chỉ trả lời bản dịch."
+        )
     else:
         # general mode
         prompt = (

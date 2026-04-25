@@ -1,0 +1,88 @@
+version: "3.9"
+services:
+  postgres:
+    image: postgres:16-alpine
+    environment:
+      POSTGRES_DB: AI_Vision_Assistant
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: ${DB_PASS:-postgres}
+    ports: ["5433:5432"]
+    volumes: [postgres_data:/var/lib/postgresql/data]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d AI_Vision_Assistant"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+  
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+  
+  rabbitmq:
+    image: rabbitmq:3-management-alpine
+    ports: ["5672:5672", "15672:15672"]
+    healthcheck:
+      test: ["CMD", "rabbitmq-diagnostics", "check_running"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+  
+  backend:
+    build: ./backend-gateway
+    ports: ["3000:3000"]
+    depends_on:
+      postgres:
+        condition: service_healthy
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file: ./backend-gateway/.env.docker
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3000/system/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+  
+  ai-worker:
+    build: ./ai-worker
+    ports: ["8000:8000"]
+    depends_on:
+      rabbitmq:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    env_file: ./ai-worker/.env.docker
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: 1
+              capabilities: [gpu]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:8000/health"]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+  
+  admin:
+    build: ./admin-dashboard
+    ports: ["4200:80"]
+    depends_on:
+      backend:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  postgres_data:
