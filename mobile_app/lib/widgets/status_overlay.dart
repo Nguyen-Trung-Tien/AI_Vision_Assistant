@@ -87,7 +87,9 @@ class StatusOverlay extends StatelessWidget {
                       child: Container(
                         padding: const EdgeInsets.all(6),
                         child: Icon(
-                          isFrontCamera ? Icons.camera_rear : Icons.camera_front,
+                          isFrontCamera
+                              ? Icons.camera_rear
+                              : Icons.camera_front,
                           color: AppTheme.accentCyan,
                           size: 28, // Increase size as requested
                         ),

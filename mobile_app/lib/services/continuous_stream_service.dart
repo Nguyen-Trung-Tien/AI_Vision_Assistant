@@ -1,6 +1,5 @@
 import 'dart:async';
 import 'dart:convert';
-
 import 'package:battery_plus/battery_plus.dart';
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
@@ -38,7 +37,7 @@ class ContinuousStreamService {
   DateTime _lastPositionTime = DateTime.fromMillisecondsSinceEpoch(0);
   DateTime _lastMotionTime = DateTime.now();
   DateTime _awaitingSince = DateTime.fromMillisecondsSinceEpoch(0);
-  
+
   final MlKitService _mlKitService = MlKitService();
   DateTime _lastFaceRecognitionTime = DateTime.fromMillisecondsSinceEpoch(0);
   bool _faceDetectionInFlight = false;
@@ -208,7 +207,9 @@ class ContinuousStreamService {
 
       final faces = await _mlKitService.detectFaces(tempFile.path);
       if (faces.isNotEmpty) {
-        debugPrint('[ContinuousStream] Face detected locally, sending for Recognition');
+        debugPrint(
+          '[ContinuousStream] Face detected locally, sending for Recognition',
+        );
         _lastFaceRecognitionTime = now;
         _wsService.sendFrame(
           base64Encode(bytes),

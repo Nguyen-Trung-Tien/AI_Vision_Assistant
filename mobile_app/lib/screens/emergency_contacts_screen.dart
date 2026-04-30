@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
-
 import '../models/emergency_contact.dart';
 import '../services/accessibility_manager.dart';
 import '../services/emergency_contact_service.dart';

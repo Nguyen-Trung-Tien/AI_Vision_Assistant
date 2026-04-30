@@ -1,6 +1,5 @@
 import 'dart:convert';
 import 'dart:io';
-
 import 'package:flutter/foundation.dart';
 import 'package:flutter/services.dart';
 import 'package:image/image.dart' as img;
@@ -23,17 +22,43 @@ class TfliteService {
 
   /// Danh sách 24 nhãn chuẩn của hệ thống (15 objects + 9 money).
   static const List<String> _unifiedLabels = [
-    'vat_can', 'cot_dien', 'den_do', 'den_vang', 'den_xanh',
-    'nap_cong', 'nguoi', 'o_ga', 'rao_chan', 'thung_rac',
-    'vach_qua_duong', 'xe_dap', 'xe_lon', 'xe_may', 'cau_thang',
-    'tien_1k', 'tien_2k', 'tien_5k', 'tien_10k', 'tien_20k',
-    'tien_50k', 'tien_100k', 'tien_200k', 'tien_500k',
+    'vat_can',
+    'cot_dien',
+    'den_do',
+    'den_vang',
+    'den_xanh',
+    'nap_cong',
+    'nguoi',
+    'o_ga',
+    'rao_chan',
+    'thung_rac',
+    'vach_qua_duong',
+    'xe_dap',
+    'xe_lon',
+    'xe_may',
+    'cau_thang',
+    'tien_1k',
+    'tien_2k',
+    'tien_5k',
+    'tien_10k',
+    'tien_20k',
+    'tien_50k',
+    'tien_100k',
+    'tien_200k',
+    'tien_500k',
   ];
 
   /// Danh sách 9 nhãn khi dùng model chỉ có tiền (Money only).
   static const List<String> _moneyOnlyLabels = [
-    'tien_1k', 'tien_2k', 'tien_5k', 'tien_10k', 'tien_20k',
-    'tien_50k', 'tien_100k', 'tien_200k', 'tien_500k',
+    'tien_1k',
+    'tien_2k',
+    'tien_5k',
+    'tien_10k',
+    'tien_20k',
+    'tien_50k',
+    'tien_100k',
+    'tien_200k',
+    'tien_500k',
   ];
 
   /// Map nhãn model -> text hiển thị.
@@ -77,7 +102,9 @@ class TfliteService {
         try {
           _interpreter = await _createInterpreterFromFile(file);
           _loadedModelAsset = file.path;
-          debugPrint('[TFLite] Successfully loaded LOCAL model from ${file.path}');
+          debugPrint(
+            '[TFLite] Successfully loaded LOCAL model from ${file.path}',
+          );
           break;
         } catch (e) {
           lastError = e;
@@ -92,7 +119,9 @@ class TfliteService {
           try {
             _interpreter = await _createInterpreterFromAsset(assetPath);
             _loadedModelAsset = assetPath;
-            debugPrint('[TFLite] Successfully loaded ASSET model from $assetPath');
+            debugPrint(
+              '[TFLite] Successfully loaded ASSET model from $assetPath',
+            );
             break;
           } catch (e) {
             lastError = e;
@@ -110,7 +139,9 @@ class TfliteService {
       debugPrint(
         '[TFLite] Model loaded from $_loadedModelAsset. Output shape: $outputShape',
       );
-      if (outputShape.length == 2 && outputShape.last != _unifiedLabels.length && outputShape.last != _moneyOnlyLabels.length) {
+      if (outputShape.length == 2 &&
+          outputShape.last != _unifiedLabels.length &&
+          outputShape.last != _moneyOnlyLabels.length) {
         debugPrint(
           '[TFLite] WARNING: Model output size (${outputShape.last}) '
           'Results may be incorrect if this is not a classification model.',
@@ -332,10 +363,15 @@ class TfliteService {
         final scores = (output[0] as List).map((e) => (e as num).toDouble());
         probabilities = _fitScoresToLabels(scores.toList(), currentLabels);
       } else {
-        probabilities = _parseYoloLikeOutput(output, outputShape, currentLabels);
+        probabilities = _parseYoloLikeOutput(
+          output,
+          outputShape,
+          currentLabels,
+        );
       }
 
-      if (probabilities == null || probabilities.length != currentLabels.length) {
+      if (probabilities == null ||
+          probabilities.length != currentLabels.length) {
         return 'Lỗi: Model không tương thích với chế độ nhận diện offline.';
       }
 
@@ -363,7 +399,10 @@ class TfliteService {
     }
   }
 
-  List<double>? _fitScoresToLabels(List<double> rawScores, List<String> currentLabels) {
+  List<double>? _fitScoresToLabels(
+    List<double> rawScores,
+    List<String> currentLabels,
+  ) {
     if (rawScores.length == currentLabels.length) {
       return rawScores;
     }
@@ -374,7 +413,11 @@ class TfliteService {
     return null;
   }
 
-  List<double>? _parseYoloLikeOutput(dynamic output, List<int> shape, List<String> currentLabels) {
+  List<double>? _parseYoloLikeOutput(
+    dynamic output,
+    List<int> shape,
+    List<String> currentLabels,
+  ) {
     if (shape.length != 3 || shape[0] != 1) return null;
 
     const classStart = 4;

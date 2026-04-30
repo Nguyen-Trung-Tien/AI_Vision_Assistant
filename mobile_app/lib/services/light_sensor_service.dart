@@ -1,5 +1,4 @@
 ﻿import 'dart:async';
-
 import 'package:camera/camera.dart';
 import 'package:flutter/foundation.dart';
 import 'package:mobile_app/services/accessibility_manager.dart';
