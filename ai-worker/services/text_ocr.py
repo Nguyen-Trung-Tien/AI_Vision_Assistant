@@ -12,12 +12,9 @@ import pytesseract
 from .image_utils import decode_base64_image, is_blurry
 from .translations import t
 
-
 # Auto-detect tesseract executable (cross-platform)
 _tesseract_cmd = (
-    os.getenv("TESSERACT_CMD")
-    or shutil.which("tesseract")
-    or r"C:\Program Files\Tesseract-OCR\tesseract.exe"
+    os.getenv("TESSERACT_CMD") or shutil.which("tesseract") or r"C:\Program Files\Tesseract-OCR\tesseract.exe"
 )
 if _tesseract_cmd:
     pytesseract.pytesseract.tesseract_cmd = _tesseract_cmd
@@ -42,14 +39,8 @@ def _calc_confidence(image, lang: str) -> float:
     Trả về trung bình confidence của các từ nhận diện được (0.0 - 1.0).
     """
     try:
-        data = pytesseract.image_to_data(
-            image, lang=lang, output_type=pytesseract.Output.DICT
-        )
-        confs = [
-            int(c)
-            for c in data.get("conf", [])
-            if str(c).lstrip("-").isdigit() and int(c) >= 0
-        ]
+        data = pytesseract.image_to_data(image, lang=lang, output_type=pytesseract.Output.DICT)
+        confs = [int(c) for c in data.get("conf", []) if str(c).lstrip("-").isdigit() and int(c) >= 0]
         if not confs:
             return 0.0
         return round(sum(confs) / len(confs) / 100, 2)

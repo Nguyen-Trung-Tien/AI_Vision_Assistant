@@ -63,11 +63,11 @@ def validate_denomination_by_color(hsv: tuple[int, int, int], denomination: str)
 
     # Xử lý Hue vòng qua 0 (cho màu đỏ/cam)
     if h_min > h_max:
-        h_match = (h >= h_min or h <= h_max)
+        h_match = h >= h_min or h <= h_max
     else:
-        h_match = (h_min <= h <= h_max)
+        h_match = h_min <= h <= h_max
 
-    s_match = (s_min <= s <= s_max)
+    s_match = s_min <= s <= s_max
 
     return h_match and s_match
 
@@ -166,9 +166,7 @@ def process_ocr(image_base64: str, client_id: str = "default", lang: str = "vi")
             final_money_results.append((det, denom, score))
 
         if final_money_results:
-            best_item, denomination, final_score = max(
-                final_money_results, key=lambda x: x[2]
-            )
+            best_item, denomination, final_score = max(final_money_results, key=lambda x: x[2])
 
             conf = round(float(best_item["confidence"]), 2)
             label = best_item["label"]

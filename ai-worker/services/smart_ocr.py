@@ -50,9 +50,7 @@ def process(image_base64: str, sub_mode: str = "general", lang: str = "vi") -> d
         )
     else:
         # general mode
-        prompt = (
-            "Hãy tóm tắt ngắn gọn các nội dung chữ viết xuất hiện trong hình ảnh này thành một câu."
-        )
+        prompt = "Hãy tóm tắt ngắn gọn các nội dung chữ viết xuất hiện trong hình ảnh này thành một câu."
 
     # Đảm bảo ngôn ngữ
     if lang == "en":
@@ -63,6 +61,7 @@ def process(image_base64: str, sub_mode: str = "general", lang: str = "vi") -> d
     # Lấy image bytes raw từ base64 padding
     try:
         import base64
+
         clean_b64 = image_base64.split(",")[1] if "," in image_base64 else image_base64
         img_bytes = base64.b64decode(clean_b64)
     except Exception as e:
@@ -73,15 +72,6 @@ def process(image_base64: str, sub_mode: str = "general", lang: str = "vi") -> d
     result_text = gemini_svc.ask_gemini_vision(img_bytes, prompt)
 
     if not result_text or "có lỗi" in result_text.lower():
-        return {
-            "text": "Không thể phân tích nội dung lúc này.",
-            "confidence_score": 0.0,
-            "stable": False
-        }
+        return {"text": "Không thể phân tích nội dung lúc này.", "confidence_score": 0.0, "stable": False}
 
-    return {
-        "text": result_text.strip(),
-        "confidence_score": 1.0,
-        "stable": True,
-        "danger_alerts": []
-    }
+    return {"text": result_text.strip(), "confidence_score": 1.0, "stable": True, "danger_alerts": []}

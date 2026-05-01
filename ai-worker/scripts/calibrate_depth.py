@@ -16,7 +16,7 @@ def print_calibration_info():
     try:
         while True:
             pair_str = input("Enter pair -> Format: distance_in_m depth_value (or type 'q' to finish): ")
-            if pair_str.strip().lower() == 'q':
+            if pair_str.strip().lower() == "q":
                 break
             parts = pair_str.split()
             if len(parts) != 2:

@@ -12,6 +12,7 @@ from collections import OrderedDict
 
 try:
     import redis
+
     _redis_available = True
 except ImportError:
     _redis_available = False
@@ -63,8 +64,7 @@ class TTSCacheService:
 
     _audio_dir: str = os.getenv(
         "TTS_AUDIO_DIR",
-        "/tmp/vision_audio" if os.name != "nt"
-        else os.path.join(os.environ.get("TEMP", "C:\\temp"), "vision_audio"),
+        "/tmp/vision_audio" if os.name != "nt" else os.path.join(os.environ.get("TEMP", "C:\\temp"), "vision_audio"),
     )
 
     _VOICE_MAP: dict[str, str] = {
@@ -89,9 +89,7 @@ class TTSCacheService:
 
         redis_url = os.getenv("REDIS_URL", "redis://127.0.0.1:6379")
         try:
-            cls._redis_client = redis.from_url(
-                redis_url, decode_responses=True, socket_timeout=2
-            )
+            cls._redis_client = redis.from_url(redis_url, decode_responses=True, socket_timeout=2)
             cls._redis_client.ping()
             print(f"[TTS Cache] Connected to Redis: {redis_url}")
         except Exception as exc:
@@ -120,9 +118,12 @@ class TTSCacheService:
     def _run_edge_tts(cls, text: str, voice: str, file_path: str) -> tuple[bool, str]:
         cmd = [
             "edge-tts",
-            "--voice", voice,
-            "--text", text,
-            "--write-media", file_path,
+            "--voice",
+            voice,
+            "--text",
+            text,
+            "--write-media",
+            file_path,
         ]
         try:
             completed = subprocess.run(

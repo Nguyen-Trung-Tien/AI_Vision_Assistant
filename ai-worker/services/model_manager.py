@@ -87,9 +87,7 @@ class ModelManager:
         if suffix == ".tflite":
             has_tf = importlib.util.find_spec("tensorflow") is not None
             if not has_tf:
-                print(
-                    f"[AI Worker] Skipping TFLite model (tensorflow missing): {path}"
-                )
+                print(f"[AI Worker] Skipping TFLite model (tensorflow missing): {path}")
                 return False
         return True
 
@@ -213,5 +211,5 @@ class ModelManager:
         return {
             "status": "success",
             "object_model": str(cls.object_model_candidates()[0]) if cls._object_model else "None",
-            "money_model": str(cls.money_model_candidates()[0]) if cls._money_model else "None"
+            "money_model": str(cls.money_model_candidates()[0]) if cls._money_model else "None",
         }

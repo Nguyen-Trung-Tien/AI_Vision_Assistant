@@ -34,12 +34,14 @@ def download_and_export_midas():
         dummy_input,
         str(onnx_path),
         export_params=True,
-        opset_version=11,          # Standard opset version, compatible with OpenCV DNN
+        opset_version=11,  # Standard opset version, compatible with OpenCV DNN
         do_constant_folding=True,  # Optimize the ONNX graph
-        input_names=['input'],     # Input tensor name
-        output_names=['output'],   # Output tensor name
-        dynamic_axes={'input': {0: 'batch_size', 2: 'height', 3: 'width'},
-                      'output': {0: 'batch_size', 1: 'height', 2: 'width'}}
+        input_names=["input"],  # Input tensor name
+        output_names=["output"],  # Output tensor name
+        dynamic_axes={
+            "input": {0: "batch_size", 2: "height", 3: "width"},
+            "output": {0: "batch_size", 1: "height", 2: "width"},
+        },
     )
 
     print(f"[+] Successfully exported MiDaS model to {onnx_path}")

@@ -29,19 +29,14 @@ class GeminiService:
         try:
             # Prepare image for Gemini (using raw bytes and mime_type)
             base_prompt = question if question else "Hãy mô tả bức ảnh này."
-            prompt = (
-                "Trả lời ngắn gọn 1-2 câu, không dùng markdown hay danh sách. "
-                + base_prompt
-            )
+            prompt = "Trả lời ngắn gọn 1-2 câu, không dùng markdown hay danh sách. " + base_prompt
             logger.info(f"Asking Gemini: {prompt}")
 
             max_tokens = os.getenv("GEMINI_MAX_OUTPUT_TOKENS")
             config = None
             if max_tokens:
                 try:
-                    config = types.GenerateContentConfig(
-                        max_output_tokens=int(max_tokens)
-                    )
+                    config = types.GenerateContentConfig(max_output_tokens=int(max_tokens))
                 except Exception:
                     config = None
 

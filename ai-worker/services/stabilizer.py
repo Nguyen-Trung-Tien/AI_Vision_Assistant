@@ -23,11 +23,7 @@ class Stabilizer:
         """Xóa lịch sử của những client không hoạt động quá TTL."""
         now = time.monotonic()
         with cls._lock:
-            stale_keys = [
-                key
-                for key, last_seen in cls._client_last_seen.items()
-                if now - last_seen > cls._ttl_seconds
-            ]
+            stale_keys = [key for key, last_seen in cls._client_last_seen.items() if now - last_seen > cls._ttl_seconds]
             for key in stale_keys:
                 cls._client_histories.pop(key, None)
                 cls._client_last_seen.pop(key, None)

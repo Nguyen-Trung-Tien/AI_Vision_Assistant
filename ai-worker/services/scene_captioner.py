@@ -2,7 +2,6 @@
 Mô tả cảnh đường phố: vị trí vật thể, khoảng cách, lối đi an toàn.
 """
 
-
 import time
 from .constants import OBJECT_REAL_HEIGHTS
 from .depth_estimator import DepthEstimator
@@ -162,9 +161,7 @@ def process_captioning(image_base64: str, client_id: str = "default", lang: str 
         pos = get_spatial_position(d["box"], img_w, lang)  # pass lang
 
         d["position"] = (
-            "left" if pos == t("position_left", lang)
-            else "right" if pos == t("position_right", lang)
-            else "center"
+            "left" if pos == t("position_left", lang) else "right" if pos == t("position_right", lang) else "center"
         )
         # Continuous pan ratio for spatial audio (0.0=left, 1.0=right)
         x1, _, x2, _ = d["box"]
@@ -206,12 +203,10 @@ def process_captioning(image_base64: str, client_id: str = "default", lang: str 
                 obj_strings.append(f"{name}{dist_str}")
 
         pos_key = (
-            "left" if pos == t("position_left", lang)
-            else "right" if pos == t("position_right", lang)
-            else "front"
+            "left" if pos == t("position_left", lang) else "right" if pos == t("position_right", lang) else "front"
         )
         pos_translated = t(f"position_{pos_key}", lang)
-        parts.append(t("has_objects", lang, pos=pos_translated, objects=', '.join(obj_strings)))
+        parts.append(t("has_objects", lang, pos=pos_translated, objects=", ".join(obj_strings)))
 
     if not parts:
         result = {
@@ -230,9 +225,7 @@ def process_captioning(image_base64: str, client_id: str = "default", lang: str 
         base_text += t("suggestion", lang) + ", ".join(clear_paths) + "."
 
     # Đánh giá tổng quan mật độ
-    total_objects = sum(
-        sum(len(v) for v in objs.values()) for objs in spatial_groups.values()
-    )
+    total_objects = sum(sum(len(v) for v in objs.values()) for objs in spatial_groups.values())
     if total_objects > 7:
         base_text = t("crowded", lang) + base_text
     elif total_objects == 0:

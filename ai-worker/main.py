@@ -8,13 +8,9 @@ from dotenv import load_dotenv
 
 from services.tts_cache import TTSCacheService
 
-
 load_dotenv()
 
-app = FastAPI(
-    title="AI Vision Assistant - AI Worker",
-    version="1.0"
-)
+app = FastAPI(title="AI Vision Assistant - AI Worker", version="1.0")
 
 # Mount TTS audio directory for static file serving
 # Client/Gateway can request GET /audio/<filename>.mp3
@@ -31,6 +27,7 @@ def health_check():
 def _run_consumer():
     """Background thread: start RabbitMQ consumer."""
     from rabbitmq_consumer import start_consumer
+
     start_consumer()
 
 

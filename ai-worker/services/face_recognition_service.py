@@ -11,7 +11,7 @@ class FaceRecognitionService:
         if cls._app is None:
             # Initialize InsightFace with detection and recognition
             # providers=['CPUExecutionProvider'] for better compatibility on Windows
-            cls._app = FaceAnalysis(name='buffalo_l', providers=['CPUExecutionProvider'])
+            cls._app = FaceAnalysis(name="buffalo_l", providers=["CPUExecutionProvider"])
             cls._app.prepare(ctx_id=0, det_size=(640, 640))
         return cls._app
 
@@ -31,11 +31,13 @@ class FaceRecognitionService:
 
         results = []
         for face in faces:
-            results.append({
-                'embedding': face.normed_embedding,
-                'bbox': face.bbox.astype(int).tolist(),
-                'score': float(face.det_score)
-            })
+            results.append(
+                {
+                    "embedding": face.normed_embedding,
+                    "bbox": face.bbox.astype(int).tolist(),
+                    "score": float(face.det_score),
+                }
+            )
         return results
 
     @staticmethod
@@ -56,10 +58,10 @@ class FaceRecognitionService:
             max_sim = -1
 
             for known in known_faces:
-                sim = cls.cosine_similarity(det['embedding'], known['embedding'])
+                sim = cls.cosine_similarity(det["embedding"], known["embedding"])
                 if sim > max_sim:
                     max_sim = sim
-                    best_match = known['name']
+                    best_match = known["name"]
 
             if max_sim >= threshold:
                 recognized_names.append(best_match)

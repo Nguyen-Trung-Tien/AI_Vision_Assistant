@@ -8,6 +8,7 @@ from .constants import DEPTH_CALIBRATION_POLY_COEFS, USE_DEPTH_ESTIMATION
 
 class DepthEstimator:
     """Wrapper that runs monocular depth estimation using MiDaS Small."""
+
     _instance = None
 
     def __init__(self):
@@ -28,10 +29,7 @@ class DepthEstimator:
 
         try:
             # Re-check onnxruntime availability
-            self.session = ort.InferenceSession(
-                str(model_path),
-                providers=['CPUExecutionProvider']
-            )
+            self.session = ort.InferenceSession(str(model_path), providers=["CPUExecutionProvider"])
             # MiDaS small optimal resolution
             self.input_size = (256, 256)
             print("[DepthEstimator] ONNX Runtime Session loaded successfully.")
@@ -57,12 +55,7 @@ class DepthEstimator:
 
         # 1. Preprocess: Resize & convert image for the MiDaS model
         blob = cv2.dnn.blobFromImage(
-            image,
-            1.0 / 255.0,
-            self.input_size,
-            mean=(0.485 * 255, 0.456 * 255, 0.406 * 255),
-            swapRB=True,
-            crop=False
+            image, 1.0 / 255.0, self.input_size, mean=(0.485 * 255, 0.456 * 255, 0.406 * 255), swapRB=True, crop=False
         )
 
         # 2. Add std deviation scaling (MiDaS uses standard ImageNet std)
