@@ -92,6 +92,8 @@ class EdgeAIService {
               ? 'money'
               : taskType == 'TEXT_OCR'
               ? 'text'
+              : taskType == 'LAYOUT_ANALYSIS'
+              ? 'text'
               : 'detection';
           _historyService.addEntry(historyType, text);
         }
@@ -162,6 +164,16 @@ class EdgeAIService {
     );
     _setProcessing(true);
     _sendFrameFromCamera(taskType: 'FACE_RECOGNITION');
+  }
+
+  void requestLayoutAnalysis() {
+    final lang = SettingsService().language;
+    _accessibilityManager.triggerSuccessVibration();
+    _accessibilityManager.speak(
+      lang == 'vi' ? 'Đang phân tích bố cục...' : 'Analyzing layout...',
+    );
+    _setProcessing(true);
+    _sendFrameFromCamera(taskType: 'LAYOUT_ANALYSIS');
   }
 
   Future<void> _sendFrameFromCamera({String? taskType, String? subMode}) async {

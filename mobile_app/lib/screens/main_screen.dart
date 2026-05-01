@@ -268,6 +268,8 @@ class _MainScreenState extends State<MainScreen>
         _ctrl.pickAndReadFile();
       case 6:
         await _ctrl.scanWithMLKit();
+      case 7:
+        _ctrl.aiService.requestLayoutAnalysis();
     }
   }
 

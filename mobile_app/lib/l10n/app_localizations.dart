@@ -7,6 +7,8 @@ class AppLocalizations {
     'mode_4',
     'mode_5',
     'mode_6',
+    'mode_7',
+    'mode_8',
   ];
 
   static final Map<String, Map<String, String>> _localizedStrings = {
@@ -119,6 +121,11 @@ class AppLocalizations {
     'mode_7_spoken': {
       'vi': 'Chế độ nhận diện người quen',
       'en': 'Person recognition mode',
+    },
+    'mode_8': {'vi': 'Phân tích bố cục', 'en': 'Layout Analysis'},
+    'mode_8_spoken': {
+      'vi': 'Chế độ phân tích bố cục menu và sách',
+      'en': 'Menu and book layout analysis mode',
     },
 
     // --- Main Screen UI ---

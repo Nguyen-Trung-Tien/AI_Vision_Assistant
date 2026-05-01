@@ -259,6 +259,17 @@ def on_message(channel, method, properties, body):
                 'details': reload_res,
                 'stable': True
             }
+        elif task_type == 'LAYOUT_ANALYSIS':
+            print(f"[*] Processing Layout Analysis for client: {client_id}")
+            image_bytes = base64.b64decode(frame_data.split(',')[1] if ',' in frame_data else frame_data)
+            gemini = GeminiService()
+            result_text = gemini.analyze_layout(image_bytes, lang=lang)
+            ai_result = {
+                'text': result_text,
+                'confidence_score': 1.0,
+                'stable': True,
+                'danger_alerts': [],
+            }
         else:
             print(f'[!] Unknown task type: {task_type}')
             channel.basic_ack(delivery_tag=method.delivery_tag)

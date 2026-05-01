@@ -69,6 +69,7 @@ class MainController {
     Icons.text_fields,
     Icons.folder_open,
     Icons.document_scanner,
+    Icons.list_alt_rounded,
   ];
 
   // ── Walking Mode State ────────────────────────────────────────────────
@@ -99,6 +100,7 @@ class MainController {
       AppLocalizations.t('mode_4', lang),
       AppLocalizations.t('mode_6', lang),
       AppLocalizations.t('mode_5', lang),
+      AppLocalizations.t('mode_8', lang),
     ];
   }
 
@@ -111,6 +113,7 @@ class MainController {
       'mode_4',
       'mode_6',
       'mode_5',
+      'mode_8',
     ];
     if (index < 0 || index >= keys.length) return 'mode_0_spoken';
     return '${keys[index]}_spoken';

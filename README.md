@@ -22,9 +22,10 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 <br/>
 
-![Version](https://img.shields.io/badge/Version-1.6.0-blue?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.7.0-blue?style=flat-square)
 ![License](https://img.shields.io/badge/License-UNLICENSED-gray?style=flat-square)
 ![Status](https://img.shields.io/badge/Status-In_Development-orange?style=flat-square)
+[![CI/CD](https://github.com/Nguyen-Trung-Tien/AI_Vision_Assistant/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/Nguyen-Trung-Tien/AI_Vision_Assistant/actions/workflows/ci-cd.yml)
 
 </div>
 
@@ -74,13 +75,15 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 ## 📰 Cập nhật mới nhất
 
-### 🗓️ Tháng 4/2026 — v1.6.0 (Current)
+### 🗓️ Tháng 5/2026 — v1.7.0 (Current)
 
 | Ngày      | Cập nhật                        | Mô tả                                                                                                                                  |
 | --------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| **25/04** | 🐳 Docker Compose               | Đóng gói toàn bộ hệ thống (Mobile API, AI Worker, Admin Dashboard, DB, Redis, RabbitMQ) thành Docker containers để triển khai dễ dàng  |
-| **25/04** | 🔄 OTA Model Update             | Thêm cơ chế tải model offline (.tflite) qua không khí (OTA) cho Mobile App, tự động check và tải khi có bản cập nhật AI từ Backend       |
-| **25/04** | 🌐 Smart OCR Translation        | Mở rộng tính năng OCR với sức mạnh từ Gemini Vision, tự động tóm tắt và dịch thuật văn bản ngoại ngữ sang tiếng Việt                    |
+| **01/05** | 📖 Layout Analysis              | Tích hợp Gemini 1.5 Flash cho phân tích bố cục menu, sách và tài liệu phức tạp, trả về cấu trúc chi tiết và đọc qua TTS                |
+| **01/05** | 🚀 CI/CD Automation             | Thiết lập GitHub Actions tự động hóa quy trình Lint, Test và Build cho toàn bộ thành phần (Backend, AI, Admin, Mobile)                 |
+| **01/05** | 📱 Admin Dashboard PWA          | Chuyển đổi Admin Dashboard sang Progressive Web App (PWA), cho phép cài đặt và hoạt động ổn định trên nhiều thiết bị                   |
+
+### 🗓️ Tháng 4/2026 — v1.6.0
 
 ### 🗓️ Tháng 4/2026 — v1.5.0
 
@@ -148,11 +151,20 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 ---
 
-## 🚀 Các tính năng nổi bật vừa cập nhật (v1.6.0)
+## 🚀 Các tính năng nổi bật vừa cập nhật (v1.7.0)
 
-Để mang lại trải nghiệm tốt nhất cho người dùng khiếm thị, phiên bản v1.6.0 tập trung vào khả năng **triển khai linh hoạt** và **nhận diện thông minh**:
+Để mang lại trải nghiệm tốt nhất cho người dùng khiếm thị, phiên bản v1.7.0 tập trung vào **phân tích dữ liệu thông minh** và **ổn định hệ thống**:
 
-1.  **🐳 Docker Compose Deployment (Mới)**:
+1.  **📖 Layout Analysis (Mới)**:
+    - Tích hợp Gemini 1.5 Flash cho phân tích bố cục menu, sách và tài liệu phức tạp, trả về cấu trúc chi tiết và đọc qua TTS.
+
+2.  **🚀 CI/CD Automation (Mới)**:
+    - Thiết lập GitHub Actions tự động hóa quy trình Lint, Test và Build cho toàn bộ thành phần (Backend, AI, Admin, Mobile).
+
+3.  **📱 Admin Dashboard PWA (Mới)**:
+    - Chuyển đổi Admin Dashboard sang Progressive Web App (PWA), cho phép cài đặt và hoạt động ổn định trên nhiều thiết bị.
+
+4.  **🐳 Docker Compose Deployment**:
     - Toàn bộ hạ tầng Backend, AI, Web Dashboard, Database được đóng gói Container, triển khai dễ dàng chỉ với một dòng lệnh.
 
 2.  **🔄 Cập nhật mô hình AI OTA (Mới)**:
@@ -190,7 +202,7 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 - [Giới thiệu](#-giới-thiệu)
 - [Tính năng chính](#-tính-năng-chính)
-- [Các tính năng vừa cập nhật](#-các-tính-năng-nổi-bật-vừa-cập-nhật-v160)
+- [Các tính năng vừa cập nhật](#-các-tính-năng-nổi-bật-vừa-cập-nhật-v170)
 - [Kiến trúc hệ thống](#-kiến-trúc-hệ-thống)
 - [Luồng xử lý chính](#-luồng-xử-lý-chính)
 - [Các chế độ trên Mobile App](#-các-chế-độ-trên-mobile-app)
@@ -718,7 +730,7 @@ Dashboard quản trị cung cấp các trang:
 
 ## 📌 Roadmap
 
-### Đã hoàn thành (v1.6.0)
+### Đã hoàn thành (v1.7.0)
 
 - [x] Smart OCR nâng cao (dịch thuật trực tiếp nội dung biển báo)
 - [x] Offline-First Mode hoàn chỉnh (auto-switch online/offline)
@@ -732,6 +744,9 @@ Dashboard quản trị cung cấp các trang:
 - [x] Âm thanh không gian 3D (trái/phải) theo vị trí vật cản
 - [x] Visual Feedback (Bounding Boxes + Object Labels) trên preview
 - [x] Admin Dashboard mở rộng (System Monitor, Analytics, RBAC, Activity Log)
+- [x] Layout analysis (đọc menu/sách) bằng Gemini 1.5 Flash
+- [x] CI/CD pipeline tự động hóa (GitHub Actions)
+- [x] Progressive Web App cho Admin Dashboard
 
 ### Đang phát triển
 
@@ -740,9 +755,9 @@ Dashboard quản trị cung cấp các trang:
 
 ### Kế hoạch tương lai
 
-- [ ] Layout analysis (đọc menu/sách)
-- [ ] CI/CD pipeline cho model training + deployment
-- [ ] Progressive Web App cho Admin Dashboard
+- [ ] Tối ưu hóa depth estimation cho các loại địa hình phức tạp
+- [ ] Nhận diện hành vi nguy hiểm (xe phóng nhanh, vật rơi)
+- [ ] Tích hợp mô hình ngôn ngữ lớn (LLM) cho hội thoại tư vấn offline
 
 ---
 
