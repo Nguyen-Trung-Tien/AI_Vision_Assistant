@@ -9,6 +9,7 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+
 def process(image_base64: str, sub_mode: str = "general", lang: str = "vi") -> dict:
     """
     Xử lý Smart OCR sử dụng Gemini Vision API.
@@ -43,9 +44,9 @@ def process(image_base64: str, sub_mode: str = "general", lang: str = "vi") -> d
         )
     elif sub_mode == "translate":
         prompt = (
-            "Hãy đọc toàn bộ văn bản ngoại ngữ trong hình ảnh (nếu có) và dịch sang tiếng Việt một cách tự nhiên, dễ hiểu. "
-            "Nếu văn bản quá dài, hãy tóm tắt và dịch những ý chính quan trọng nhất. "
-            "Không cần giải thích, chỉ trả lời bản dịch."
+            "Hãy đọc toàn bộ văn bản ngoại ngữ trong hình ảnh (nếu có) và dịch sang tiếng Việt một "
+            "cách tự nhiên, dễ hiểu. Nếu văn bản quá dài, hãy tóm tắt và dịch những ý chính "
+            "quan trọng nhất. Không cần giải thích, chỉ trả lời bản dịch."
         )
     else:
         # general mode
@@ -70,7 +71,7 @@ def process(image_base64: str, sub_mode: str = "general", lang: str = "vi") -> d
 
     # Gọi API
     result_text = gemini_svc.ask_gemini_vision(img_bytes, prompt)
-    
+
     if not result_text or "có lỗi" in result_text.lower():
         return {
             "text": "Không thể phân tích nội dung lúc này.",
@@ -80,7 +81,7 @@ def process(image_base64: str, sub_mode: str = "general", lang: str = "vi") -> d
 
     return {
         "text": result_text.strip(),
-        "confidence_score": 1.0, 
+        "confidence_score": 1.0,
         "stable": True,
         "danger_alerts": []
     }

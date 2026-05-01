@@ -75,7 +75,9 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "tl_red_solution": "Stop! Red traffic light ahead, {distance} meters away.",
         "tl_yellow_solution": "Caution! Yellow traffic light ahead, {distance} meters away. Please slow down.",
         "tl_green_solution": "Green traffic light ahead, {distance} meters away. You can proceed safely.",
-        "tl_unknown_solution": "Traffic light {position}, about {distance} meters away. Slow down and observe carefully.",
+        "tl_unknown_solution": (
+            "Traffic light {position}, about {distance} meters away. Slow down and observe carefully."
+        ),
     },
 }
 

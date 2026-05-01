@@ -30,7 +30,7 @@ export class AuditLog {
   target_id: string;
 
   @Column({ type: 'jsonb', nullable: true })
-  details: any;
+  details: Record<string, any> | null;
 
   @Column({ nullable: true })
   ip_address: string;

@@ -20,7 +20,9 @@ DANGER_LABELS = {
 }
 
 
-def detect_dangers(detections: list[dict[str, Any]], threshold_m: float = 5.0, lang: str = "vi") -> list[dict[str, Any]]:
+def detect_dangers(
+    detections: list[dict[str, Any]], threshold_m: float = 5.0, lang: str = "vi"
+) -> list[dict[str, Any]]:
     alerts = []
 
     for obj in detections:

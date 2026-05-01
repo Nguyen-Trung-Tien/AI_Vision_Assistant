@@ -11,7 +11,7 @@ import {
 import { FaceService } from './face.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
-interface AuthenticatedRequest extends Request {
+interface AuthenticatedRequest extends Record<string, any> {
   user: {
     userId: string;
     email: string;

@@ -7,8 +7,11 @@ import os
 import shutil
 
 import cv2
-import numpy as np
 import pytesseract
+
+from .image_utils import decode_base64_image, is_blurry
+from .translations import t
+
 
 # Auto-detect tesseract executable (cross-platform)
 _tesseract_cmd = (
@@ -18,9 +21,6 @@ _tesseract_cmd = (
 )
 if _tesseract_cmd:
     pytesseract.pytesseract.tesseract_cmd = _tesseract_cmd
-
-from .image_utils import decode_base64_image, is_blurry
-from .translations import t
 
 
 def _preprocess_for_ocr(image):

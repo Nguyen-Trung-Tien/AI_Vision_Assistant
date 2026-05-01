@@ -3,7 +3,6 @@ import 'dart:convert';
 import 'dart:typed_data';
 import 'package:camera/camera.dart';
 import 'package:flutter/material.dart';
-import 'package:mobile_app/screens/face_register_screen.dart';
 import 'package:mobile_app/screens/history_screen.dart';
 import 'package:mobile_app/screens/settings_screen.dart';
 import 'package:mobile_app/screens/navigation_screen.dart';
@@ -18,11 +17,8 @@ import 'package:mobile_app/services/settings_service.dart';
 import 'package:mobile_app/services/tflite_service.dart';
 import 'package:mobile_app/services/websocket_service.dart';
 import 'package:mobile_app/services/continuous_stream_service.dart';
-import 'package:mobile_app/services/offline_ota_service.dart';
 import 'package:mobile_app/services/spatial_audio_service.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
-import 'package:mobile_app/utils/text_utils.dart';
-import 'package:mobile_app/utils/spatial_utils.dart';
 
 /// Central controller that owns all services and shared state for MainScreen.
 class MainController {

@@ -7,7 +7,6 @@ import time
 from pathlib import Path
 
 import cv2
-import numpy as np
 
 from .constants import (
     COLOR_RANGES,
@@ -173,7 +172,7 @@ def process_ocr(image_base64: str, client_id: str = "default", lang: str = "vi")
 
             conf = round(float(best_item["confidence"]), 2)
             label = best_item["label"]
-            
+
             # Format display text according to language
             if lang == "en":
                 # For English we might want just "50000 VND"

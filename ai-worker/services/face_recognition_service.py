@@ -1,8 +1,7 @@
-import os
 import cv2
 import numpy as np
-import base64
 from insightface.app import FaceAnalysis
+
 
 class FaceRecognitionService:
     _app = None
@@ -29,7 +28,7 @@ class FaceRecognitionService:
 
         app = cls._get_app()
         faces = app.get(img)
-        
+
         results = []
         for face in faces:
             results.append({
@@ -55,16 +54,16 @@ class FaceRecognitionService:
         for det in detected_faces:
             best_match = None
             max_sim = -1
-            
+
             for known in known_faces:
                 sim = cls.cosine_similarity(det['embedding'], known['embedding'])
                 if sim > max_sim:
                     max_sim = sim
                     best_match = known['name']
-            
+
             if max_sim >= threshold:
                 recognized_names.append(best_match)
             else:
                 recognized_names.append("unknown")
-        
+
         return recognized_names

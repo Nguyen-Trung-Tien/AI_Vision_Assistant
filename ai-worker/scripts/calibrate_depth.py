@@ -1,5 +1,6 @@
 import numpy as np
 
+
 def print_calibration_info():
     print("=" * 50)
     print("           DEPTH ESTIMATION CALIBRATION")
@@ -11,7 +12,7 @@ def print_calibration_info():
 
     distances = []
     depths = []
-    
+
     try:
         while True:
             pair_str = input("Enter pair -> Format: distance_in_m depth_value (or type 'q' to finish): ")
@@ -35,18 +36,19 @@ def print_calibration_info():
 
     d_arr = np.array(distances)
     v_arr = np.array(depths)
-    
+
     # We fit: distance = f(depth_val)
     deg = 1 if len(distances) <= 3 else 2
-    
+
     coefs = np.polyfit(v_arr, d_arr, deg)
-    
+
     print("\nCalibration successful!")
     print(f"Polynomial Degree Used: {deg}")
     print("Coefficients:")
     print(coefs.tolist())
     print("\n[+] Add these to constants.py -> DEPTH_CALIBRATION_POLY_COEFS:")
     print(f"DEPTH_CALIBRATION_POLY_COEFS = {coefs.tolist()}")
+
 
 if __name__ == "__main__":
     print_calibration_info()

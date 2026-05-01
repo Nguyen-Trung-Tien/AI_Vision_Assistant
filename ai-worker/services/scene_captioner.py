@@ -2,7 +2,6 @@
 Mô tả cảnh đường phố: vị trí vật thể, khoảng cách, lối đi an toàn.
 """
 
-import numpy as np
 
 import time
 from .constants import OBJECT_REAL_HEIGHTS
@@ -114,7 +113,7 @@ def process_captioning(image_base64: str, client_id: str = "default", lang: str 
         print(f"[AI Worker Caption] Found {len(detections)} objects:", flush=True)
         for d in detections:
             print(f"  - {d['label']} ({d['confidence']:.2f})", flush=True)
-            
+
     # Compute Depth Map if estimation enabled
     depth_estimator = DepthEstimator.get_instance()
     depth_map = None
@@ -148,7 +147,7 @@ def process_captioning(image_base64: str, client_id: str = "default", lang: str 
     }
 
     significant_objects = []
-    
+
     # Pre-check for blur
     if is_blurry(image, threshold=35.0):
         # We still continue detection, but we'll prepend a warning if total count is low
@@ -161,7 +160,7 @@ def process_captioning(image_base64: str, client_id: str = "default", lang: str 
         label = d["label"]
         translated = translate_label(label, lang)
         pos = get_spatial_position(d["box"], img_w, lang)  # pass lang
-        
+
         d["position"] = (
             "left" if pos == t("position_left", lang)
             else "right" if pos == t("position_right", lang)
@@ -180,10 +179,10 @@ def process_captioning(image_base64: str, client_id: str = "default", lang: str 
             dist = depth_estimator.get_distance_at_bbox(depth_map, d["box"])
         else:
             dist = estimate_distance(label, abs(d["box"][3] - d["box"][1]), img_h)
-            
+
         if dist is not None:
             d["distance"] = dist
-            
+
         spatial_groups[pos][translated].append(dist)
 
     # Xây dựng câu mô tả

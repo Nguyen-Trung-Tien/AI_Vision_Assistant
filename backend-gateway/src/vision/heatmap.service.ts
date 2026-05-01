@@ -24,6 +24,12 @@ export class HeatmapService {
     days: number = 30,
   ): Promise<HeatmapPoint[]> {
     // 1. Get detection logs
+    interface RawRow {
+      lat: string | number;
+      lng: string | number;
+      count: string | number;
+    }
+
     const detectionQb = this.logRepo
       .createQueryBuilder('log')
       .select('log.latitude', 'lat')
@@ -39,15 +45,9 @@ export class HeatmapService {
       );
     }
     detectionQb.groupBy('log.latitude, log.longitude');
-    const detectionRows = await detectionQb.getRawMany();
+    const detectionRows = await detectionQb.getRawMany<RawRow>();
 
     // 2. Get SOS alerts (always considered high danger)
-    interface RawRow {
-      lat: string | number;
-      lng: string | number;
-      count: string | number;
-    }
-
     const sosRows: RawRow[] = [];
     if (type === 'danger' || type === 'all') {
       const sosQb = this.sosRepo
@@ -62,7 +62,7 @@ export class HeatmapService {
         })
         .groupBy('sos.latitude, sos.longitude');
 
-      sosRows.push(...(await sosQb.getRawMany()));
+      sosRows.push(...(await sosQb.getRawMany<RawRow>()));
     }
 
     // 3. Combine results
