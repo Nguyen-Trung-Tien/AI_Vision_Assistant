@@ -174,4 +174,3 @@ USE_DEPTH_ESTIMATION: bool = True
 # Polynomial coefficients to map inverse relative depth to absolute meters.
 # Set an empty list to use the dummy fallback logic, until proper calibration is done.
 DEPTH_CALIBRATION_POLY_COEFS: list[float] = []
-

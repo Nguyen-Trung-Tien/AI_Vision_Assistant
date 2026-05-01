@@ -5,6 +5,7 @@ from pathlib import Path
 
 from .constants import DEPTH_CALIBRATION_POLY_COEFS, USE_DEPTH_ESTIMATION
 
+
 class DepthEstimator:
     """Wrapper that runs monocular depth estimation using MiDaS Small."""
     _instance = None
@@ -115,4 +116,3 @@ class DepthEstimator:
 
         # Convert to absolute meters
         return round(self.depth_to_meters(median_depth), 1)
-
