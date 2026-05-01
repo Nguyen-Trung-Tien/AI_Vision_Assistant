@@ -6,6 +6,9 @@ from fastapi.staticfiles import StaticFiles
 import uvicorn
 from dotenv import load_dotenv
 
+from services.tts_cache import TTSCacheService
+
+
 load_dotenv()
 
 app = FastAPI(
@@ -15,19 +18,21 @@ app = FastAPI(
 
 # Mount TTS audio directory for static file serving
 # Client/Gateway can request GET /audio/<filename>.mp3
-from services.tts_cache import TTSCacheService
 _audio_dir = TTSCacheService.get_audio_dir()
 os.makedirs(_audio_dir, exist_ok=True)
 app.mount("/audio", StaticFiles(directory=_audio_dir), name="audio")
+
 
 @app.get("/health")
 def health_check():
     return {"status": "ok", "service": "ai-worker", "audio_dir": _audio_dir}
 
+
 def _run_consumer():
     """Background thread: start RabbitMQ consumer."""
     from rabbitmq_consumer import start_consumer
     start_consumer()
+
 
 if __name__ == "__main__":
     # Start RabbitMQ consumer in background thread

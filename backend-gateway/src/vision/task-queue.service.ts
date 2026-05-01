@@ -117,7 +117,7 @@ export class TaskQueueService {
     return 6;
   }
 
-  processNextTask() {
+  async processNextTask() {
     this.releaseExpiredContinuousInflight();
 
     let task: VisionTask | undefined;
@@ -147,7 +147,7 @@ export class TaskQueueService {
 
     if (!task) return;
 
-    this.pushHeavyTask(
+    await this.pushHeavyTask(
       task.clientId,
       task.userId,
       task.taskType,
@@ -197,7 +197,7 @@ export class TaskQueueService {
     timestamp?: number,
   ) {
     this.logger.log(`Push ${taskType} -> RabbitMQ (client ${clientId})`);
-    
+
     let knownFaces: { name: string; embedding: number[] }[] = [];
     if (
       (taskType === 'FACE_RECOGNITION' ||
@@ -244,36 +244,48 @@ export class TaskQueueService {
 
       // Handle custom TaskType: GET_FACE_ENCODING result (Face Registration)
       if (resultTaskType === 'GET_FACE_ENCODING') {
-        const name = (result as any).name || 'Unknown Face';
-        
+        const name = result.name || 'Unknown Face';
+
         if (result.encoding && result.userId) {
-          this.logger.log(`AI found face encoding for user ${result.userId} (Name: ${name}). Saving to DB...`);
+          this.logger.log(
+            `AI found face encoding for user ${result.userId} (Name: ${name}). Saving to DB...`,
+          );
           try {
-            await this.faceService.saveEncoding(result.userId, name, result.encoding);
+            await this.faceService.saveEncoding(
+              result.userId,
+              name,
+              result.encoding,
+            );
             this.logger.log(`Successfully saved face registration for ${name}`);
-            
+
             if (this.server) {
-               // Notify the user via the clientId room
-               this.server.to(result.clientId).emit('face_registered', {
-                 success: true,
-                 name: name
-               });
+              // Notify the user via the clientId room
+              this.server.to(result.clientId).emit('face_registered', {
+                success: true,
+                name: name,
+              });
             }
           } catch (error) {
-            this.logger.error(`Failed to save face encoding to DB: ${error.message}`);
+            const errorMessage =
+              error instanceof Error ? error.message : String(error);
+            this.logger.error(
+              `Failed to save face encoding to DB: ${errorMessage}`,
+            );
             if (this.server) {
               this.server.to(result.clientId).emit('face_registered', {
                 success: false,
-                message: 'Internal server error saving face'
+                message: 'Internal server error saving face',
               });
             }
           }
         } else {
-          this.logger.warn(`AI Worker could not detect a face for registration (User: ${result.userId}, Name: ${name})`);
+          this.logger.warn(
+            `AI Worker could not detect a face for registration (User: ${result.userId}, Name: ${name})`,
+          );
           if (this.server) {
             this.server.to(result.clientId).emit('face_registered', {
               success: false,
-              message: result.text || 'Không tìm thấy khuôn mặt trong ảnh'
+              message: result.text || 'Không tìm thấy khuôn mặt trong ảnh',
             });
           }
         }

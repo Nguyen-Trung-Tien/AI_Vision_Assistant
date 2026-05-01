@@ -15,7 +15,7 @@ export class AuditService {
     action: string;
     targetType: string;
     targetId?: string;
-    details?: any;
+    details?: Record<string, any>;
     ipAddress?: string;
   }) {
     const auditLog = this.auditLogRepository.create({
@@ -42,11 +42,7 @@ export class AuditService {
     const queryBuilder = this.auditLogRepository
       .createQueryBuilder('log')
       .leftJoinAndSelect('log.admin', 'admin')
-      .select([
-        'log',
-        'admin.id',
-        'admin.email',
-      ])
+      .select(['log', 'admin.id', 'admin.email'])
       .orderBy('log.created_at', 'DESC')
       .skip(skip)
       .take(limit);

@@ -143,7 +143,6 @@ def on_message(channel, method, properties, body):
         task_type = data.get('taskType', 'UNKNOWN')
         original_task_type = data.get('originalTaskType', task_type)
         frame_data = data.get('frameData', '')
-        question = data.get('question', '')
         lang = data.get('lang', 'vi')
         warning_m = data.get('warningDistanceM', 2.0)
         latitude = data.get('latitude')
@@ -165,7 +164,7 @@ def on_message(channel, method, properties, body):
         if original_task_type == 'CONTINUOUS' and frame_data:
             try:
                 frame_data = _resize_continuous_frame(frame_data)
-                
+
                 # Handle Front Camera Mirroring
                 if is_front_camera:
                     img_bytes = base64.b64decode(frame_data)
@@ -200,11 +199,11 @@ def on_message(channel, method, properties, body):
                     'name': k['name'],
                     'embedding': np.array(k['embedding'], dtype=np.float32)
                 })
-            
+
             image_bytes = base64.b64decode(frame_data.split(',')[1] if ',' in frame_data else frame_data)
             names = FaceRecognitionService.recognize_face(image_bytes, known_faces)
             print(f"[Face] Recognition result: {names}")
-            
+
             if names:
                 # Filter out 'unknown' if we want to be silent for them, or include them
                 identified = [n for n in names if n != "unknown"]
@@ -215,10 +214,10 @@ def on_message(channel, method, properties, body):
                     else:
                         text = f"{names_text} is standing in front of you"
                 else:
-                    text = "" # Silent for unknown
+                    text = ""  # Silent for unknown
             else:
                 text = ""
-                
+
             ai_result = {
                 'text': text,
                 'confidence_score': 1.0,
@@ -241,7 +240,7 @@ def on_message(channel, method, properties, body):
                     'stable': True
                 }
             else:
-                print(f"[Face] Warning: No face detected in the provided image!")
+                print("[Face] Warning: No face detected in the provided image!")
                 ai_result = {
                     'text': 'No face detected',
                     'encoding': None,
@@ -249,7 +248,7 @@ def on_message(channel, method, properties, body):
                     'stable': True
                 }
         elif task_type == 'RELOAD_MODEL':
-            print(f"[*] Reloading models as requested...")
+            print("[*] Reloading models as requested...")
             object_path = data.get('objectPath')
             money_path = data.get('moneyPath')
             reload_res = AIService.reload_models(object_path, money_path)
@@ -301,50 +300,56 @@ def on_message(channel, method, properties, body):
                     danger_alerts,
                     lang,
                 )
-                
+
                 # Context Tuning: If Recognition Mode is active, we don't want to hear about trash cans
                 if sub_mode == 'recognition':
                     # Filter out non-person objects from the result text to avoid "trash can" annoyance
                     raw_dets = ai_result.get('raw_detections', [])
                     persons = [d for d in raw_dets if d.get('label') == 'person']
-                    
+
                     if not persons:
-                         # If no person detected, be silent about obstacles in recognition mode
-                         compact_text = ""
-                         compact_signature = "recognition_silent"
+                        # If no person detected, be silent about obstacles in recognition mode
+                        compact_text = ""
+                        compact_signature = "recognition_silent"
                     else:
-                         # If knownFaces are provided, try to identify who they are
-                         known_faces_data = data.get('knownFaces', [])
-                         if known_faces_data:
-                             try:
-                                 # Convert embedding lists back to numpy arrays
-                                 known_faces = []
-                                 for k in known_faces_data:
-                                     known_faces.append({
-                                         'name': k['name'],
-                                         'embedding': np.array(k['embedding'], dtype=np.float32)
-                                     })
-                                 
-                                 # We need the frame data (already decoded or base64)
-                                 image_bytes = base64.b64decode(frame_data.split(',')[1] if ',' in frame_data else frame_data)
-                                 names = FaceRecognitionService.recognize_face(image_bytes, known_faces)
-                                 
-                                 identified = [n for n in names if n != "unknown"]
-                                 if identified:
-                                     names_text = ", ".join(identified)
-                                     compact_text = f"Phát hiện {names_text} đang đứng trước mặt" if lang == 'vi' else f"Detected {names_text} in front"
-                                     compact_signature = f"face:{':'.join(identified)}"
-                                 else:
-                                     compact_text = t('person_detected', lang) if lang == 'vi' else 'Person detected'
-                                     compact_signature = f"person:{len(persons)}"
-                             except Exception as e:
-                                 print(f"[Error] Continuous recognition failed: {e}")
-                                 compact_text = t('person_detected', lang) if lang == 'vi' else 'Person detected'
-                                 compact_signature = f"person:{len(persons)}"
-                         else:
-                             # Keep only person info
-                             compact_text = t('person_detected', lang) if lang == 'vi' else 'Person detected'
-                             compact_signature = f"person:{len(persons)}"
+                        # If knownFaces are provided, try to identify who they are
+                        known_faces_data = data.get('knownFaces', [])
+                        if known_faces_data:
+                            try:
+                                # Convert embedding lists back to numpy arrays
+                                known_faces = []
+                                for k in known_faces_data:
+                                    known_faces.append({
+                                        'name': k['name'],
+                                        'embedding': np.array(k['embedding'], dtype=np.float32)
+                                    })
+
+                                # We need the frame data (already decoded or base64)
+                                image_bytes = base64.b64decode(
+                                    frame_data.split(',')[1] if ',' in frame_data else frame_data
+                                )
+                                names = FaceRecognitionService.recognize_face(image_bytes, known_faces)
+
+                                identified = [n for n in names if n != "unknown"]
+                                if identified:
+                                    names_text = ", ".join(identified)
+                                    compact_text = (
+                                        f"Phát hiện {names_text} đang đứng trước mặt"
+                                        if lang == 'vi'
+                                        else f"Detected {names_text} in front"
+                                    )
+                                    compact_signature = f"face:{':'.join(identified)}"
+                                else:
+                                    compact_text = t('person_detected', lang) if lang == 'vi' else 'Person detected'
+                                    compact_signature = f"person:{len(persons)}"
+                            except Exception as e:
+                                print(f"[Error] Continuous recognition failed: {e}")
+                                compact_text = t('person_detected', lang) if lang == 'vi' else 'Person detected'
+                                compact_signature = f"person:{len(persons)}"
+                        else:
+                            # Keep only person info
+                            compact_text = t('person_detected', lang) if lang == 'vi' else 'Person detected'
+                            compact_signature = f"person:{len(persons)}"
 
                 # Front Camera suppression for "Trash Can" misidentification
                 if is_front_camera and "thung_rac" in compact_signature:
@@ -352,7 +357,7 @@ def on_message(channel, method, properties, body):
                     raw_dets = ai_result.get('raw_detections', [])
                     has_person = any(d.get('label') == 'person' for d in raw_dets)
                     if has_person:
-                        compact_text = "" # Suppress obstacle when person is there
+                        compact_text = ""  # Suppress obstacle when person is there
                         compact_signature = "suppress_front_obstacle"
 
                 last_signature = continuous_tts_cache.get(client_id, '')
@@ -369,7 +374,7 @@ def on_message(channel, method, properties, body):
                 else:
                     continuous_tts_cache[client_id] = compact_signature
                     # USE FULL TEXT instead of compact for "Full Detail" as requested
-                    tts_text = final_text 
+                    tts_text = final_text
                     final_text = final_text
 
             if tts_text:

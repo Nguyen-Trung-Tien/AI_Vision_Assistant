@@ -37,8 +37,8 @@ export class SystemGateway implements OnGatewayInit, OnGatewayConnection {
   handleConnection(client: Socket) {
     // If client is admin (based on some logic or room join request)
     // For now, let's assume admins join the 'admin' room
-    client.on('join_admin', () => {
-      client.join('admin');
+    client.on('join_admin', async () => {
+      await client.join('admin');
       this.logger.log(`Client ${client.id} joined admin room`);
     });
   }

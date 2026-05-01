@@ -11,23 +11,38 @@ import {
 import { FaceService } from './face.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 
+interface AuthenticatedRequest extends Request {
+  user: {
+    userId: string;
+    email: string;
+    role: string;
+  };
+}
+
 @Controller('face')
 @UseGuards(JwtAuthGuard)
 export class FaceController {
   constructor(private readonly faceService: FaceService) {}
 
   @Post('register')
-  async register(@Request() req, @Body() body: { name: string; frameData: string }) {
-    return this.faceService.registerFace(req.user.userId, body.name, body.frameData);
+  register(
+    @Request() req: AuthenticatedRequest,
+    @Body() body: { name: string; frameData: string },
+  ) {
+    return this.faceService.registerFace(
+      req.user.userId,
+      body.name,
+      body.frameData,
+    );
   }
 
   @Get('list')
-  async list(@Request() req) {
-    return this.faceService.listFaces(req.user.userId);
+  async list(@Request() req: AuthenticatedRequest) {
+    return await this.faceService.listFaces(req.user.userId);
   }
 
   @Delete(':id')
-  async delete(@Request() req, @Param('id') id: string) {
-    return this.faceService.deleteFace(id, req.user.userId);
+  async delete(@Request() req: AuthenticatedRequest, @Param('id') id: string) {
+    return await this.faceService.deleteFace(id, req.user.userId);
   }
 }

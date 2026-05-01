@@ -189,7 +189,7 @@ export class VisionGateway
     });
 
     // Push notification
-    this.notificationService.push({
+    await this.notificationService.push({
       type: 'sos',
       title: 'Cảnh báo SOS mới!',
       message: `Người dùng ${userEmail} vừa gửi tín hiệu SOS khẩn cấp.`,

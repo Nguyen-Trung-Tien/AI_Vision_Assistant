@@ -42,7 +42,13 @@ export class HeatmapService {
     const detectionRows = await detectionQb.getRawMany();
 
     // 2. Get SOS alerts (always considered high danger)
-    const sosRows: any[] = [];
+    interface RawRow {
+      lat: string | number;
+      lng: string | number;
+      count: string | number;
+    }
+
+    const sosRows: RawRow[] = [];
     if (type === 'danger' || type === 'all') {
       const sosQb = this.sosRepo
         .createQueryBuilder('sos')
@@ -62,12 +68,6 @@ export class HeatmapService {
     // 3. Combine results
     const combinedMap = new Map<string, number>();
 
-    interface RawRow {
-      lat: string | number;
-      lng: string | number;
-      count: string | number;
-    }
-
     const merge = (rows: RawRow[]) => {
       for (const r of rows) {
         const key = `${parseFloat(r.lat.toString()).toFixed(5)},${parseFloat(r.lng.toString()).toFixed(5)}`;
@@ -76,8 +76,8 @@ export class HeatmapService {
       }
     };
 
-    merge(detectionRows as RawRow[]);
-    merge(sosRows as RawRow[]);
+    merge(detectionRows);
+    merge(sosRows);
 
     const result: HeatmapPoint[] = [];
     combinedMap.forEach((intensity, key) => {
