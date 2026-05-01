@@ -162,15 +162,13 @@ export class VisionGateway
     let userEmail = 'Ẩn danh';
     let emergencyContacts: EmergencyContact[] = [];
     if (userId) {
-      const contacts =
-        await this.sosService['emergencyContactService'].findAllByUser(userId);
-      emergencyContacts = contacts;
+      emergencyContacts =
+        await this.sosService.getEmergencyContactsByUser(userId);
 
       // Try to get user email from the alert relation
-      const alertWithUser = await this.sosService['sosRepo'].findOne({
-        where: { id: savedAlert.id },
-        relations: ['user'],
-      });
+      const alertWithUser = await this.sosService.findAlertWithUser(
+        savedAlert.id,
+      );
       if (alertWithUser?.user?.email) {
         userEmail = alertWithUser.user.email;
       }

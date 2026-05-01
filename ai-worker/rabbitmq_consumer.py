@@ -2,8 +2,8 @@ import base64
 import json
 import os
 import re
-import time
 import traceback
+from collections import OrderedDict
 
 import cv2
 import numpy as np
@@ -19,9 +19,21 @@ from services.tts_cache import TTSCacheService
 from services import smart_ocr
 from services.face_recognition_service import FaceRecognitionService
 
-# TTS/state cache for continuous stream
-continuous_tts_cache: dict[str, str] = {}
-last_processed_seq_by_client: dict[str, int] = {}
+# ── LRU-bounded caches for continuous stream (prevent memory leak) ──
+_CACHE_MAX_CLIENTS = 500
+
+
+def _lru_set(cache: OrderedDict, key: str, value) -> None:
+    """Set a key in an LRU OrderedDict, evicting oldest if over capacity."""
+    if key in cache:
+        cache.move_to_end(key)
+    cache[key] = value
+    while len(cache) > _CACHE_MAX_CLIENTS:
+        cache.popitem(last=False)
+
+
+continuous_tts_cache: OrderedDict[str, str] = OrderedDict()
+last_processed_seq_by_client: OrderedDict[str, int] = OrderedDict()
 
 load_dotenv()
 
@@ -358,7 +370,7 @@ def on_message(channel, method, properties, body):
                     tts_text = ""
                     stable = True
                 else:
-                    continuous_tts_cache[client_id] = compact_signature
+                    _lru_set(continuous_tts_cache, client_id, compact_signature)
                     # USE FULL TEXT instead of compact for "Full Detail" as requested
                     tts_text = final_text
                     final_text = final_text
@@ -367,9 +379,10 @@ def on_message(channel, method, properties, body):
                 audio_url = TTSCacheService.get_audio_url(tts_text, lang=lang)
 
         if original_task_type == "CONTINUOUS" and frame_seq > 0:
-            last_processed_seq_by_client[client_id] = max(
-                frame_seq,
-                last_processed_seq_by_client.get(client_id, 0),
+            _lru_set(
+                last_processed_seq_by_client,
+                client_id,
+                max(frame_seq, last_processed_seq_by_client.get(client_id, 0)),
             )
 
         result_payload = {
@@ -408,7 +421,7 @@ def on_message(channel, method, properties, body):
 
         if retry_count < MAX_RETRIES:
             new_headers = {**headers, RETRY_HEADER: retry_count + 1}
-            delay = 2**retry_count
+            # Re-enqueue with incremented retry count (no blocking sleep)
             channel.basic_publish(
                 exchange="",
                 routing_key=method.routing_key,
@@ -419,8 +432,7 @@ def on_message(channel, method, properties, body):
                 ),
             )
             channel.basic_ack(delivery_tag=method.delivery_tag)
-            print(f"[Retry] Queued retry {retry_count + 1}/{MAX_RETRIES} (delay {delay}s)")
-            time.sleep(delay)
+            print(f"[Retry] Queued retry {retry_count + 1}/{MAX_RETRIES}")
         else:
             print(f"[Fatal] Max retries ({MAX_RETRIES}) exceeded. Dropping message.")
             channel.basic_nack(delivery_tag=method.delivery_tag, requeue=False)

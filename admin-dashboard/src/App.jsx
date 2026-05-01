@@ -173,7 +173,9 @@ export default function App() {
         setNotifications((prev) => [newNotif, ...prev]);
         try {
           new Audio("/notification-sound.mp3").play();
-        } catch (e) {}
+        } catch (e) {
+          console.warn("Notification sound playback failed:", e);
+        }
       });
 
       socket.on("sos_incoming", (sosData) => {

@@ -92,4 +92,15 @@ export class SosService {
     alert.status = 'acknowledged';
     return this.sosRepo.save(alert);
   }
+
+  async getEmergencyContactsByUser(userId: string) {
+    return this.emergencyContactService.findAllByUser(userId);
+  }
+
+  async findAlertWithUser(alertId: string): Promise<SosAlert | null> {
+    return this.sosRepo.findOne({
+      where: { id: alertId },
+      relations: ['user'],
+    });
+  }
 }
