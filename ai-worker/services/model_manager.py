@@ -34,8 +34,8 @@ class ModelManager:
         env_candidates = [Path(env_model)] if env_model else []
 
         candidates = [
-            ai_worker_dir / "models" / "model-object-recognition" / "best.pt",
-            ai_worker_dir / "models" / "model-object-recognition" / "last.pt",
+            ai_worker_dir / "models" / "object-recognition" / "best.pt",
+            ai_worker_dir / "models" / "object-recognition" / "last.pt",
             # Fallback for old run folders
             ai_worker_dir / "runs" / "detect" / "vision_assistant_model3" / "weights" / "best.pt",
             ai_worker_dir / "runs" / "detect" / "vision_assistant_model_v3" / "weights" / "best.pt",
@@ -63,8 +63,8 @@ class ModelManager:
         env_candidates = [Path(env_model)] if env_model else []
 
         candidates = [
-            ai_worker_dir / "models" / "model-money" / "best.pt",
-            ai_worker_dir / "models" / "model-money" / "last.pt",
+            ai_worker_dir / "models" / "money" / "best.pt",
+            ai_worker_dir / "models" / "money" / "last.pt",
             # Fallback to combined model if dedicated money model is missing
             ai_worker_dir / "runs" / "detect" / "vision_assistant_model3" / "weights" / "best.pt",
             ai_worker_dir / "runs" / "detect" / "vision_assistant_model_v3" / "weights" / "best.pt",
@@ -106,6 +106,9 @@ class ModelManager:
                 try:
                     print(f"[AI Worker] Loading object model: {candidate}")
                     cls._object_model = YOLO(str(candidate))
+                    # Log classes for debugging
+                    if hasattr(cls._object_model, "names"):
+                        print(f"[AI Worker] Model classes: {list(cls._object_model.names.values())}")
                     return cls._object_model
                 except Exception as exc:
                     errors.append(f"{candidate}: {exc}")
@@ -151,6 +154,10 @@ class ModelManager:
             return detections
 
         result = results[0]
+        # Debug: count raw detections before filtering
+        raw_count = len(result.boxes) if hasattr(result, "boxes") and result.boxes is not None else 0
+        if raw_count > 0:
+            print(f"[DEBUG YOLO] Raw boxes found: {raw_count}")
         names = result.names if hasattr(result, "names") else {}
         boxes = result.boxes
         if boxes is None:

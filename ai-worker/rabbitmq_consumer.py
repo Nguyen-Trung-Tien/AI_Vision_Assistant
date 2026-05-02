@@ -276,8 +276,7 @@ def on_message(channel, method, properties, body):
         # Logging for debugging accuracy
         if original_task_type == "CONTINUOUS":
             raw_dets = ai_result.get("raw_detections", [])
-            task_seq = data.get("seq") or data.get("sequence") or "?"
-            print(f"[DEBUG Continuous] Seq={task_seq}: Found {len(raw_dets)} objects (Threshold 0.10)", flush=True)
+            print(f"[DEBUG Continuous] Seq={frame_seq}: Found {len(raw_dets)} objects (Threshold 0.10)", flush=True)
             for d in raw_dets[:3]:
                 print(f"  - {d.get('label')}: {d.get('confidence', 0):.2f} at {d.get('distance', '?')}m", flush=True)
 

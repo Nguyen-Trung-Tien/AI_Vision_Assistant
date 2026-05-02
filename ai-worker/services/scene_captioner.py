@@ -2,6 +2,7 @@
 Mô tả cảnh đường phố: vị trí vật thể, khoảng cách, lối đi an toàn.
 """
 
+import cv2
 import time
 from .constants import OBJECT_REAL_HEIGHTS
 from .depth_estimator import DepthEstimator
@@ -100,6 +101,9 @@ def process_captioning(image_base64: str, client_id: str = "default", lang: str 
         return {"text": t("no_frame", lang), "confidence_score": 0.0, "stable": False}
 
     img_h, img_w, _ = image.shape
+    # Occasional debug frame save
+    if int(time.time()) % 10 == 0:
+        cv2.imwrite(f"debug_frames/scene_{client_id}.jpg", image)
     print(f"[AI Worker Caption] Scene frame: {img_w}x{img_h}", flush=True)
 
     try:
@@ -152,8 +156,10 @@ def process_captioning(image_base64: str, client_id: str = "default", lang: str 
         # We still continue detection, but we'll prepend a warning if total count is low
         pass
 
+    filtered_count = 0
     for d in detections:
         if d["confidence"] < 0.15:  # Ngưỡng tối thiểu cực nhạy (yêu cầu từ user)
+            filtered_count += 1
             continue
 
         label = d["label"]
@@ -181,6 +187,9 @@ def process_captioning(image_base64: str, client_id: str = "default", lang: str 
             d["distance"] = dist
 
         spatial_groups[pos][translated].append(dist)
+
+    if filtered_count > 0:
+        print(f"[AI Worker Caption] Filtered {filtered_count} objects below 0.15 confidence.")
 
     # Xây dựng câu mô tả
     parts = []

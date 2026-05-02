@@ -48,7 +48,7 @@ class DepthEstimator:
         Runs the MiDaS inference and returns a depth map
         matching the original image's aspect ratio/size.
         """
-        if not self.enabled or self.model is None:
+        if not self.enabled or not hasattr(self, "session"):
             return None
 
         img_h, img_w = image.shape[:2]
