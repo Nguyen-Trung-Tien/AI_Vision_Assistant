@@ -4,23 +4,32 @@ import { getApiUrl, getStoredToken } from "./api";
 const SOCKET_URL = getApiUrl().replace("/api", "");
 
 export const socket = io(SOCKET_URL, {
-  auth: {
-    token: getStoredToken(),
-  },
   autoConnect: false,
   withCredentials: true,
+  reconnection: true,
+  reconnectionAttempts: 10,
+  reconnectionDelay: 1000,
+  reconnectionDelayMax: 30000,
 });
 
 export const connectSocket = () => {
+  const token = getStoredToken();
+  if (!token) return;
+
+  socket.auth = { token };
   if (!socket.connected) {
-    socket.auth.token = getStoredToken();
     socket.connect();
   }
 };
 
 socket.on("connect", () => {
-  console.log("Socket connected:", socket.id);
   socket.emit("join_admin");
+});
+
+socket.on("connect_error", (err) => {
+  if (err.message?.includes("jwt expired") || err.message?.includes("401")) {
+    socket.disconnect();
+  }
 });
 
 export const disconnectSocket = () => {
@@ -28,4 +37,3 @@ export const disconnectSocket = () => {
     socket.disconnect();
   }
 };
-

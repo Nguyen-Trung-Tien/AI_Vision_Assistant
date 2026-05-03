@@ -1,6 +1,4 @@
-import { useState, useEffect } from "react";
-import { fetchAccuracyTrend, fetchPeakHours } from "../services/api";
-import { useToast } from "../components/Toast";
+import { useState } from "react";
 import {
   BarChart,
   Bar,
@@ -29,33 +27,14 @@ import {
 
 import PageHeader from "../components/ui/PageHeader";
 import Loading from "../components/ui/Loading";
+import { useAccuracyTrend, usePeakHours } from "../hooks/use-queries";
 
 export default function AnalyticsPage() {
-  const [accuracyData, setAccuracyData] = useState([]);
-  const [peakHours, setPeakHours] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [selectedDays, setSelectedDays] = useState(7);
-  const toast = useToast();
 
-  const fetchData = async (days) => {
-    setLoading(true);
-    try {
-      const accData = await fetchAccuracyTrend(days);
-      setAccuracyData(accData);
-
-      const peakData = await fetchPeakHours();
-      setPeakHours(peakData);
-    } catch (err) {
-      console.error(err);
-      toast.error("Không thể tải dữ liệu phân tích");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchData(selectedDays);
-  }, [selectedDays]);
+  const { data: accuracyData = [], isLoading: loadingAccuracy } = useAccuracyTrend(selectedDays);
+  const { data: peakHours = [], isLoading: loadingPeak } = usePeakHours();
+  const loading = loadingAccuracy || loadingPeak;
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
@@ -209,7 +188,7 @@ export default function AnalyticsPage() {
                   />
                   <XAxis 
                     dataKey="hour" 
-                    stroke="#ffffff20" 
+                    stroke="var(--border-color)" 
                     fontSize={10} 
                     fontWeight="bold"
                     tick={{fill: '#94a3b8'}}
@@ -218,7 +197,7 @@ export default function AnalyticsPage() {
                     dy={10}
                   />
                   <YAxis 
-                    stroke="#ffffff20" 
+                    stroke="var(--border-color)" 
                     fontSize={10} 
                     fontWeight="bold"
                     tick={{fill: '#94a3b8'}}
@@ -229,11 +208,12 @@ export default function AnalyticsPage() {
                   <Tooltip
                     cursor={{fill: 'rgba(251, 146, 60, 0.05)'}}
                     contentStyle={{
-                      backgroundColor: "#0f172a",
-                      border: "1px solid #1e293b",
+                      backgroundColor: "var(--bg-card)",
+                      border: "1px solid var(--border-color)",
                       borderRadius: "16px",
                       boxShadow: "0 10px 25px -5px rgba(0, 0, 0, 0.3)",
-                      padding: "12px 16px"
+                      padding: "12px 16px",
+                      color: "var(--text-primary)"
                     }}
                   />
                   <Bar 
@@ -263,41 +243,41 @@ export default function AnalyticsPage() {
           {[
             {
               label: "Tổng số Detection",
-              value: "1.2M+",
+              value: accuracyData.length > 0 ? accuracyData.reduce((sum, d) => sum + (d.total || 0), 0).toLocaleString() : "—",
               color: "text-blue-400",
               icon: <MousePointer2 className="w-4 h-4" />
             },
             {
               label: "Thời gian xử lý TB",
-              value: "145ms",
+              value: accuracyData.length > 0 ? `${Math.round(accuracyData.reduce((sum, d) => sum + (d.avg_processing_time || 145), 0) / accuracyData.length)}ms` : "—",
               color: "text-green-400",
               icon: <Zap className="w-4 h-4" />
             },
             {
               label: "Tỷ lệ Phản hồi",
-              value: "3.2%",
-              color: "text-purple-400",
+              value: peakHours.length > 0 ? `${((peakHours.reduce((s, h) => s + h.count, 0) / Math.max(1, peakHours.length * 24)) * 100).toFixed(1)}%` : "—",
+              color: "text-emerald-400",
               icon: <Activity className="w-4 h-4" />
             },
             { 
               label: "Accuracy Trung bình", 
-              value: "94.8%", 
+              value: accuracyData.length > 0 ? `${(accuracyData.reduce((sum, d) => sum + (d.accuracy || 0), 0) / accuracyData.length).toFixed(1)}%` : "—",
               color: "text-cyan-400",
               icon: <Target className="w-4 h-4" />
             },
           ].map((stat, i) => (
             <div
               key={i}
-              className="group bg-white/[0.02] p-4.5 rounded-2xl border border-white/5 hover:border-indigo-500/30 transition-all hover:translate-y-[-4px]"
+              className="group bg-text-primary/[0.02] p-4.5 rounded-2xl border border-border-primary/50 hover:border-indigo-500/30 transition-all hover:translate-y-[-4px]"
             >
-              <div className={`w-8 h-8 rounded-xl bg-white/5 flex items-center justify-center mb-4 ${stat.color} opacity-40 group-hover:opacity-100 transition-opacity`}>
+              <div className={`w-8 h-8 rounded-xl bg-text-primary/5 flex items-center justify-center mb-4 ${stat.color} opacity-40 group-hover:opacity-100 transition-opacity`}>
                 {stat.icon}
               </div>
               <p className="text-[10px] font-black text-text-secondary uppercase tracking-widest opacity-60">
                 {stat.label}
               </p>
               <p className={`text-2xl font-bold mt-2 tracking-tighter tabular-nums ${stat.color}`}>
-                {stat.value}
+                {loading ? <span className="inline-block w-16 h-7 loading-shimmer rounded-lg" /> : stat.value}
               </p>
             </div>
           ))}

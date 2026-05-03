@@ -333,14 +333,6 @@ export default function SettingsPage() {
         </div>
       </div>
 
-      <ConfirmDialog
-        open={confirmOpen}
-        title="Xác nhận thay đổi?"
-        message={`Bạn có chắc chắn muốn cập nhật tham số "${pendingUpdate?.key.replace(/_/g, " ")}" thành "${pendingUpdate?.value}" không?`}
-        onConfirm={handleUpdate}
-        onCancel={() => setConfirmOpen(false)}
-        loading={saving === pendingUpdate?.key}
-      />
     </div>
   );
 }

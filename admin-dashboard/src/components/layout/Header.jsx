@@ -1,4 +1,5 @@
 import { useRef, useEffect, useState } from "react";
+import { useLocation, useNavigate } from "react-router-dom";
 import {
   Bell,
   ChevronRight,
@@ -12,22 +13,36 @@ import {
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { cn } from "@/lib/utils";
+import { useAuth } from "../../providers/AuthProvider";
+import { useNotificationContext } from "../../providers/NotificationProvider";
+import { useTheme } from "../../providers/ThemeProvider";
 
-export default function Header({
-  sidebarOpen,
-  setSidebarOpen,
-  activeTab,
-  menuItems,
-  isDarkMode,
-  setIsDarkMode,
-  notifications,
-  unreadCount,
-  handleMarkAllRead,
-  setActiveTab,
-  email,
-}) {
+const PAGE_TITLES = {
+  dashboard: "Bảng Điều Khiển",
+  analytics: "Phân Tích Nâng Cao",
+  sos: null, // Custom rendering
+  heatmap: "Khu Vực Nguy Hiểm",
+  broadcast: "Broadcast TTS",
+  feedback: "Phản Hồi Người Dùng",
+  users: "Quản Lý Tài Khoản",
+  "model-manager": "Quản Lý Mô Hình AI",
+  activity: "Nhật Ký Hoạt Động",
+  notifications: "Thông Báo Hệ Thống",
+  system: "Trạng Thái Hệ Thống",
+  settings: "Cài Đặt Hệ Thống",
+};
+
+export default function Header({ sidebarOpen, setSidebarOpen }) {
+  const { email } = useAuth();
+  const { notifications, unreadCount, handleMarkAllRead } = useNotificationContext();
+  const { isDarkMode, setIsDarkMode } = useTheme();
+  const navigate = useNavigate();
+  const location = useLocation();
+
   const [notifOpen, setNotifOpen] = useState(false);
   const notifRef = useRef(null);
+
+  const activeTab = location.pathname.replace("/", "") || "dashboard";
 
   useEffect(() => {
     const handleClickOutside = (event) => {
@@ -40,20 +55,16 @@ export default function Header({
   }, []);
 
   return (
-    <header className="h-24 bg-bg-card/50 backdrop-blur-xl border-b border-border-primary px-10 flex items-center justify-between shrink-0 z-30">
+    <header className="h-16 bg-bg-card/50 backdrop-blur-xl border-b border-border-primary px-10 flex items-center justify-between shrink-0 z-30">
       <div className="flex items-center gap-4">
         <button
           onClick={() => setSidebarOpen(!sidebarOpen)}
           className="p-2.5 hover:bg-text-primary/5 rounded-lg text-text-secondary transition-colors"
         >
-          {sidebarOpen ? (
-            <Menu className="w-6 h-6" />
-          ) : (
-            <ChevronRight className="w-6 h-6" />
-          )}
+          {sidebarOpen ? <Menu className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
         </button>
 
-        <h2 className="text-xl font-bold tracking-tight uppercase">
+        <h2 className="text-lg font-bold tracking-tight uppercase">
           {activeTab === "sos" ? (
             <>
               <span className="text-text-primary">SOS</span>{" "}
@@ -61,25 +72,23 @@ export default function Header({
             </>
           ) : (
             <span className="text-text-primary">
-              {menuItems.find((m) => m.id === activeTab)?.label}
+              {PAGE_TITLES[activeTab] || "Dashboard"}
             </span>
           )}
         </h2>
       </div>
 
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-5">
         {/* Theme Toggle */}
         <button
           onClick={() => setIsDarkMode(!isDarkMode)}
-          className="p-3 hover:bg-text-primary/5 rounded-xl text-text-secondary transition-all group"
-          title={
-            isDarkMode ? "Chuyển sang Chế độ sáng" : "Chuyển sang Chế độ tối"
-          }
+          className="p-2.5 hover:bg-text-primary/5 rounded-xl text-text-secondary transition-all group"
+          title={isDarkMode ? "Chuyển sang Chế độ sáng" : "Chuyển sang Chế độ tối"}
         >
           {isDarkMode ? (
-            <Sun className="w-6 h-6 group-hover:rotate-45 transition-transform" />
+            <Sun className="w-5 h-5 group-hover:rotate-45 transition-transform" />
           ) : (
-            <Moon className="w-6 h-6 group-hover:-rotate-12 transition-transform" />
+            <Moon className="w-5 h-5 group-hover:-rotate-12 transition-transform" />
           )}
         </button>
 
@@ -87,11 +96,11 @@ export default function Header({
         <div className="relative" ref={notifRef}>
           <button
             onClick={() => setNotifOpen(!notifOpen)}
-            className="relative p-3 hover:bg-text-primary/5 rounded-xl text-text-secondary transition-all group"
+            className="relative p-2.5 hover:bg-text-primary/5 rounded-xl text-text-secondary transition-all group"
           >
-            <Bell className="w-6 h-6 group-hover:rotate-12 transition-transform" />
+            <Bell className="w-5 h-5 group-hover:rotate-12 transition-transform" />
             {unreadCount > 0 && (
-              <span className="absolute top-2.5 right-2.5 w-3 h-3 bg-red-500 rounded-full border-2 border-bg-card animate-bounce" />
+              <span className="absolute top-2 right-2 w-2.5 h-2.5 bg-red-500 rounded-full border-2 border-bg-card animate-bounce" />
             )}
           </button>
 
@@ -153,9 +162,7 @@ export default function Header({
                             <p
                               className={cn(
                                 "text-sm truncate",
-                                !n.isRead
-                                  ? "font-black"
-                                  : "font-medium text-text-secondary"
+                                !n.isRead ? "font-black" : "font-medium text-text-secondary"
                               )}
                             >
                               {n.title}
@@ -179,7 +186,7 @@ export default function Header({
                 <div className="p-4 bg-white/2 border-t border-border-primary text-center">
                   <button
                     onClick={() => {
-                      setActiveTab("notifications");
+                      navigate("/notifications");
                       setNotifOpen(false);
                     }}
                     className="text-xs font-bold text-text-secondary hover:text-text-primary transition-colors flex items-center justify-center gap-2 mx-auto"
@@ -193,7 +200,7 @@ export default function Header({
         </div>
 
         {/* Profile */}
-        <div className="flex items-center gap-3 pl-6 border-l border-border-primary">
+        <div className="flex items-center gap-3 pl-5 border-l border-border-primary">
           <div className="text-right hidden sm:block">
             <p className="text-xs font-black truncate max-w-[150px] uppercase tracking-tighter">
               {email?.split("@")[0]}
@@ -202,8 +209,8 @@ export default function Header({
               Administrator
             </p>
           </div>
-          <div className="w-10 h-10 rounded-2xl bg-white/5 border border-border-primary flex items-center justify-center shadow-inner group cursor-pointer hover:border-indigo-500 transition-all">
-            <User className="w-5 h-5 text-text-secondary group-hover:text-indigo-400" />
+          <div className="w-9 h-9 rounded-2xl bg-text-primary/5 border border-border-primary flex items-center justify-center shadow-inner group cursor-pointer hover:border-indigo-500 transition-all">
+            <User className="w-4 h-4 text-text-secondary group-hover:text-indigo-400" />
           </div>
         </div>
       </div>

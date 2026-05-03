@@ -1,5 +1,5 @@
-import { useState, useEffect } from "react";
-import { fetchAiModels, fetchAiLogs, switchAiModel } from "../services/api";
+import { useState } from "react";
+import { useAiModels, useAiLogs, useSwitchAiModel } from "../hooks/use-queries";
 import { useToast } from "../components/Toast";
 import { 
   Brain, 
@@ -21,37 +21,26 @@ import DataTable from "../components/ui/DataTable";
 
 
 export default function ModelManagerPage() {
-  const [models, setModels] = useState([]);
-  const [logs, setLogs] = useState([]);
-  const [loading, setLoading] = useState(true);
   const [page, setPage] = useState(1);
   const toast = useToast();
 
-  const fetchData = async () => {
-    setLoading(true);
-    try {
-      const mData = await fetchAiModels();
-      setModels(mData);
+  const { data: models = [], isLoading: loadingModels, refetch: refetchModels } = useAiModels();
+  const { data: logsData, isLoading: loadingLogs, refetch: refetchLogs } = useAiLogs(page, 10);
+  const switchMutation = useSwitchAiModel();
 
-      const lData = await fetchAiLogs(page, 10);
-      setLogs(lData.items || []);
-    } catch (err) {
-      toast?.error?.("Không thể tải dữ liệu AI");
-    } finally {
-      setLoading(false);
-    }
+  const logs = logsData?.items || [];
+  const loading = loadingModels || loadingLogs;
+
+  const handleRefresh = () => {
+    refetchModels();
+    refetchLogs();
   };
-
-  useEffect(() => {
-    fetchData();
-  }, [page]);
 
   const handleSwitch = async (modelId) => {
     try {
-      await switchAiModel(modelId);
+      await switchMutation.mutateAsync({ modelId });
       toast?.success?.(`Đã chuyển sang model ${modelId}`);
-      fetchData();
-    } catch (err) {
+    } catch {
       toast?.error?.("Chuyển đổi thất bại");
     }
   };
@@ -72,7 +61,7 @@ export default function ModelManagerPage() {
         description="Quản lý các phiên bản AI Model và kiểm soát chất lượng nhận diện"
       >
         <button
-          onClick={fetchData}
+          onClick={handleRefresh}
           className="flex items-center justify-center gap-2 min-h-[40px] px-4 py-1.5 rounded-xl bg-text-primary/5 border border-border-primary text-text-secondary text-[11px] font-bold uppercase tracking-widest hover:bg-text-primary/10 hover:text-text-primary transition-all active:scale-95"
         >
           <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />

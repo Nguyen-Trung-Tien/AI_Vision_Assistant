@@ -24,10 +24,19 @@ import {
   fetchUserEmergencyContacts,
   loginAdmin,
   registerAdmin,
+  fetchAiModels,
+  fetchAiLogs,
+  switchAiModel,
+  fetchAccuracyTrend,
+  fetchPeakHours,
+  fetchSystemHealth,
+  fetchSystemMetrics,
+  fetchSystemSettings,
+  updateSystemSetting,
+  fetchAuditLogs,
 } from "@/services/api";
 
 // ─── Query Keys ─────────────────────────────
-// Centralized keys prevent typo-bugs and enable targeted invalidation
 
 export const queryKeys = {
   overview: ["stats", "overview"],
@@ -41,6 +50,14 @@ export const queryKeys = {
   heatmap: (type, days) => ["heatmap", type, days],
   users: (page, limit, search) => ["users", "list", page, limit, search],
   userEmergencyContacts: (userId) => ["users", "emergency-contacts", userId],
+  aiModels: ["ai", "models"],
+  aiLogs: (page, limit) => ["ai", "logs", page, limit],
+  accuracyTrend: (days) => ["analytics", "accuracy", days],
+  peakHours: ["analytics", "peakHours"],
+  systemHealth: ["system", "health"],
+  systemMetrics: ["system", "metrics"],
+  systemSettings: ["system", "settings"],
+  auditLogs: (page, limit, filters) => ["audit", "logs", page, limit, filters],
 };
 
 // ─── Auth ───────────────────────────────────
@@ -60,31 +77,22 @@ export function useRegister() {
 // ─── Stats / Dashboard ──────────────────────
 
 export function useOverview() {
-  return useQuery({
-    queryKey: queryKeys.overview,
-    queryFn: fetchOverview,
-  });
+  return useQuery({ queryKey: queryKeys.overview, queryFn: fetchOverview });
 }
 
 export function useByType() {
-  return useQuery({
-    queryKey: queryKeys.byType,
-    queryFn: fetchByType,
-  });
+  return useQuery({ queryKey: queryKeys.byType, queryFn: fetchByType });
 }
 
 export function useByDay(days = 30) {
-  return useQuery({
-    queryKey: queryKeys.byDay(days),
-    queryFn: () => fetchByDay(days),
-  });
+  return useQuery({ queryKey: queryKeys.byDay(days), queryFn: () => fetchByDay(days) });
 }
 
 export function useLogs(page = 1, limit = 10) {
   return useQuery({
     queryKey: queryKeys.logs(page, limit),
     queryFn: () => fetchLogs(page, limit),
-    placeholderData: (prev) => prev, // giữ data cũ khi đổi page
+    placeholderData: (prev) => prev,
   });
 }
 
@@ -125,26 +133,19 @@ export function useFeedback(page = 1, limit = 20, onlyWrong = false) {
 }
 
 export function useFeedbackStats() {
-  return useQuery({
-    queryKey: queryKeys.feedbackStats,
-    queryFn: fetchFeedbackStats,
-  });
+  return useQuery({ queryKey: queryKeys.feedbackStats, queryFn: fetchFeedbackStats });
 }
 
 export function useReviewFeedback() {
   const qc = useQueryClient();
   return useMutation({
     mutationFn: ({ id, correctLabel }) => reviewFeedback(id, correctLabel),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["feedback"] });
-    },
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["feedback"] }),
   });
 }
 
 export function useExportDataset() {
-  return useMutation({
-    mutationFn: exportFeedbackDataset,
-  });
+  return useMutation({ mutationFn: exportFeedbackDataset });
 }
 
 // ─── Broadcast ──────────────────────────────
@@ -172,7 +173,7 @@ export function useHeatmap(type = "danger", days = 30) {
   return useQuery({
     queryKey: queryKeys.heatmap(type, days),
     queryFn: () => fetchHeatmap(type, days),
-    staleTime: 60_000, // heatmap ít thay đổi
+    staleTime: 60_000,
   });
 }
 
@@ -239,5 +240,86 @@ export function useUserEmergencyContacts(userId) {
     queryKey: queryKeys.userEmergencyContacts(userId),
     queryFn: () => fetchUserEmergencyContacts(userId),
     enabled: !!userId,
+  });
+}
+
+// ─── AI Models ──────────────────────────────
+
+export function useAiModels() {
+  return useQuery({ queryKey: queryKeys.aiModels, queryFn: fetchAiModels });
+}
+
+export function useAiLogs(page = 1, limit = 10) {
+  return useQuery({
+    queryKey: queryKeys.aiLogs(page, limit),
+    queryFn: () => fetchAiLogs(page, limit),
+    placeholderData: (prev) => prev,
+  });
+}
+
+export function useSwitchAiModel() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ modelId }) => switchAiModel(modelId),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["ai"] }),
+  });
+}
+
+// ─── Analytics ──────────────────────────────
+
+export function useAccuracyTrend(days = 7) {
+  return useQuery({
+    queryKey: queryKeys.accuracyTrend(days),
+    queryFn: () => fetchAccuracyTrend(days),
+  });
+}
+
+export function usePeakHours() {
+  return useQuery({
+    queryKey: queryKeys.peakHours,
+    queryFn: fetchPeakHours,
+    staleTime: 60_000,
+  });
+}
+
+// ─── System ─────────────────────────────────
+
+export function useSystemHealth() {
+  return useQuery({
+    queryKey: queryKeys.systemHealth,
+    queryFn: fetchSystemHealth,
+    refetchInterval: 30_000,
+  });
+}
+
+export function useSystemMetrics() {
+  return useQuery({
+    queryKey: queryKeys.systemMetrics,
+    queryFn: fetchSystemMetrics,
+    refetchInterval: 10_000,
+  });
+}
+
+// ─── Settings ───────────────────────────────
+
+export function useSystemSettings() {
+  return useQuery({ queryKey: queryKeys.systemSettings, queryFn: fetchSystemSettings });
+}
+
+export function useUpdateSystemSetting() {
+  const qc = useQueryClient();
+  return useMutation({
+    mutationFn: ({ key, value }) => updateSystemSetting(key, value),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["system", "settings"] }),
+  });
+}
+
+// ─── Activity Logs ──────────────────────────
+
+export function useAuditLogs(page = 1, limit = 20, filters = {}) {
+  return useQuery({
+    queryKey: queryKeys.auditLogs(page, limit, JSON.stringify(filters)),
+    queryFn: () => fetchAuditLogs(page, limit, filters),
+    placeholderData: (prev) => prev,
   });
 }

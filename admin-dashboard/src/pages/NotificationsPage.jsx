@@ -2,8 +2,10 @@ import { Bell, Clock, ShieldAlert, CheckCircle2, Trash2, Search, Filter } from "
 import PageHeader from "../components/ui/PageHeader";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
+import { useNotificationContext } from "../providers/NotificationProvider";
 
-export default function NotificationsPage({ notifications, handleMarkAllRead }) {
+export default function NotificationsPage() {
+  const { notifications, handleMarkAllRead } = useNotificationContext();
   const [filter, setFilter] = useState("all"); // all, SOS, INFO
   const [search, setSearch] = useState("");
 
