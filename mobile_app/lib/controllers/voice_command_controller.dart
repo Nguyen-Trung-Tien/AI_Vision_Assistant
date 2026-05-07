@@ -38,9 +38,9 @@ class VoiceCommandController {
   void startListening() => _voiceCommandService.startListening();
   void stopListening() => _voiceCommandService.stopListening();
 
-  // IMPORTANT: All Vietnamese keywords MUST be without diacritics (không dấu)
-  // because TextUtils.normalizeCommand strips all Vietnamese diacritics
-  // before matching. E.g. "khẩn cấp" → "khan cap", "đúng" → "dung".
+  // Keywords can include Vietnamese diacritics.
+  // TextUtils.containsAny automatically normalizes both the input and the keywords
+  // to be without diacritics before matching. E.g. "khẩn cấp" matches "khan cap".
   void onCommandRecognized(String command) {
     final cmd = TextUtils.normalizeCommand(command);
 

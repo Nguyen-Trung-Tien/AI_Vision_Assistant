@@ -93,8 +93,9 @@ class TextUtils {
   }
 
   static bool containsAny(String text, List<String> keywords) {
+    final normalizedText = normalizeCommand(text);
     for (final kw in keywords) {
-      if (text.contains(kw)) return true;
+      if (normalizedText.contains(normalizeCommand(kw))) return true;
     }
     return false;
   }
