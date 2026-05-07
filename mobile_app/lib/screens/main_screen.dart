@@ -20,6 +20,7 @@ import 'package:mobile_app/widgets/danger_banner.dart';
 import 'package:mobile_app/widgets/status_overlay.dart';
 import 'package:mobile_app/widgets/mode_carousel.dart';
 import 'package:mobile_app/widgets/visual_qa_button.dart';
+import 'package:mobile_app/widgets/voice_listening_overlay.dart';
 
 class MainScreen extends StatefulWidget {
   final List<CameraDescription>? cameras;
@@ -55,6 +56,7 @@ class _MainScreenState extends State<MainScreen>
     _voiceCtrl = VoiceCommandController(
       ctrl: _ctrl,
       walkingCtrl: _walkingCtrl,
+      onStateChanged: _refresh,
       onNavigationRequested: () =>
           _ctrl.openNavigationScreen(context, onReturn: _refresh),
       onFaceRegisterRequested: () {},
@@ -307,18 +309,25 @@ class _MainScreenState extends State<MainScreen>
     _ctrl.accessibilityManager.speak(
       _ctrl.settings.language == 'vi' ? 'Đang nghe...' : 'Listening...',
     );
-    _voiceCtrl.startListening();
+    _voiceCtrl.startListening(isVisualQA: true);
   }
 
   Future<void> _stopVisualQA(BuildContext context) async {
-    _voiceCtrl.stopListening();
+    final question = await _voiceCtrl.stopListeningAndGetText();
     final frameBytes = await _ctrl.captureCurrentFrame();
     if (frameBytes != null) {
       _ctrl.accessibilityManager.speak('Đang phân tích hình ảnh...');
+      
+      final finalQuestion = question.isNotEmpty
+          ? question
+          : (_ctrl.settings.language == 'vi'
+              ? 'Hãy mô tả chi tiết bức ảnh này.'
+              : 'Please describe this image in detail.');
+
       _ctrl.wsService.sendVisualQA(
         frame: frameBytes,
         lang: _ctrl.settings.language,
-        question: 'Hãy mô tả chi tiết bức ảnh này.',
+        question: finalQuestion,
       );
     } else {
       _ctrl.accessibilityManager.speak('Không thể chụp ảnh.');
@@ -680,6 +689,10 @@ class _MainScreenState extends State<MainScreen>
               ),
             ),
           ),
+
+          // Voice Listening Overlay
+          if (_voiceCtrl.isListening)
+            const VoiceListeningOverlay(),
 
           // SOS Success Overlay
           if (_sosCtrl.isSosSent)

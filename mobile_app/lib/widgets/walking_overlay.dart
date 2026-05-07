@@ -68,7 +68,7 @@ class WalkingOverlay extends StatelessWidget {
 
         // Status card
         Positioned(
-          top: topPadding + 46,
+          top: topPadding + 150,
           left: 16,
           child: Container(
             padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
@@ -107,7 +107,7 @@ class WalkingOverlay extends StatelessWidget {
           Positioned(
             left: 16,
             right: 16,
-            top: topPadding + 120,
+            top: topPadding + 230,
             child: Wrap(
               spacing: 8,
               runSpacing: 8,

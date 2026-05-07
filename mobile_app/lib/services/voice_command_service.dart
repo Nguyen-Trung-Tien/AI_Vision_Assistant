@@ -10,10 +10,22 @@ class VoiceCommandService {
 
   bool _isListening = false;
   bool _isInitialized = false;
+  bool _isVisualQAMode = false;
+  String _currentRecognizedText = '';
+
+  bool get isListening => _isListening;
 
   final Function(String command) onCommandRecognized;
+  final VoidCallback? onListeningStateChanged;
 
-  VoiceCommandService({required this.onCommandRecognized});
+  VoiceCommandService({required this.onCommandRecognized, this.onListeningStateChanged});
+
+  void _setListening(bool value) {
+    if (_isListening != value) {
+      _isListening = value;
+      onListeningStateChanged?.call();
+    }
+  }
 
   /// Map ngôn ngữ app → locale ID cho speech_to_text.
   static String _langToLocale(String lang) {
@@ -32,12 +44,12 @@ class VoiceCommandService {
         onStatus: (status) {
           debugPrint('Speech status: $status');
           if (status == 'done' || status == 'notListening') {
-            _isListening = false;
+            _setListening(false);
           }
         },
         onError: (errorNotification) {
           debugPrint('Speech error: $errorNotification');
-          _isListening = false;
+          _setListening(false);
           // Chỉ thông báo nếu không phải lỗi thông thường khi dừng
           if (errorNotification.errorMsg != 'error_speech_timeout' &&
               errorNotification.errorMsg != 'error_no_match') {
@@ -55,12 +67,15 @@ class VoiceCommandService {
     }
   }
 
-  Future<void> startListening() async {
+  Future<void> startListening({bool isVisualQA = false}) async {
     // Nếu đang nghe thì dừng lại
     if (_isListening) {
       await stopListening();
       return;
     }
+
+    _isVisualQAMode = isVisualQA;
+    _currentRecognizedText = '';
 
     // Thử khởi tạo lại nếu chưa sẵn sàng
     if (!_isInitialized || !_speechToText.isAvailable) {
@@ -73,7 +88,7 @@ class VoiceCommandService {
       }
     }
 
-    _isListening = true;
+    _setListening(true);
     _accessibilityManager.triggerSuccessVibration();
     _accessibilityManager.speak('Tôi đang nghe...');
 
@@ -90,7 +105,7 @@ class VoiceCommandService {
       localeId: locale,
       listenOptions: SpeechListenOptions(
         listenMode: ListenMode.confirmation,
-        partialResults: false,
+        partialResults: isVisualQA,
         cancelOnError: false,
         autoPunctuation: false,
       ),
@@ -100,13 +115,17 @@ class VoiceCommandService {
         final recognizedWords = result.recognizedWords.trim();
         if (recognizedWords.isEmpty) return;
 
+        _currentRecognizedText = recognizedWords;
+
         if (result.finalResult) {
-          _isListening = false;
+          _setListening(false);
           final command = recognizedWords.toLowerCase();
           debugPrint(
             'Command recognized: $command (confidence: ${result.confidence})',
           );
-          onCommandRecognized(command);
+          if (!_isVisualQAMode) {
+            onCommandRecognized(command);
+          }
         }
       },
     );
@@ -114,12 +133,18 @@ class VoiceCommandService {
 
   Future<void> stopListening() async {
     await _speechToText.stop();
-    _isListening = false;
+    _setListening(false);
+  }
+
+  Future<String> stopListeningAndGetText() async {
+    final text = _currentRecognizedText;
+    await stopListening();
+    return text;
   }
 
   /// Đặt lại service khi cần thiết (ví dụ: sau khi app resume)
   Future<void> reset() async {
-    _isListening = false;
+    _setListening(false);
     _isInitialized = false;
     await _speechToText.cancel();
     await init();

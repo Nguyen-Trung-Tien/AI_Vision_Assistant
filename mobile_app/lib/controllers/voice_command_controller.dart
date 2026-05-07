@@ -16,6 +16,7 @@ class VoiceCommandController {
     required this.onOpenSettings,
     required this.onOpenHistory,
     required this.onSosTriggered,
+    this.onStateChanged,
   });
 
   final MainController ctrl;
@@ -25,18 +26,25 @@ class VoiceCommandController {
   final VoidCallback onOpenSettings;
   final VoidCallback onOpenHistory;
   final VoidCallback onSosTriggered;
+  final VoidCallback? onStateChanged;
 
   late VoiceCommandService _voiceCommandService;
+
+  bool get isListening => _voiceCommandService.isListening;
 
   void init() {
     _voiceCommandService = VoiceCommandService(
       onCommandRecognized: onCommandRecognized,
+      onListeningStateChanged: onStateChanged,
     );
     _voiceCommandService.init();
   }
 
-  void startListening() => _voiceCommandService.startListening();
+  void startListening({bool isVisualQA = false}) =>
+      _voiceCommandService.startListening(isVisualQA: isVisualQA);
   void stopListening() => _voiceCommandService.stopListening();
+  Future<String> stopListeningAndGetText() =>
+      _voiceCommandService.stopListeningAndGetText();
 
   // Keywords can include Vietnamese diacritics.
   // TextUtils.containsAny automatically normalizes both the input and the keywords
@@ -163,6 +171,14 @@ class VoiceCommandController {
       'người quen',
       'face recognition',
       'identify person',
+      'ai',
+      'ai đó',
+      'ai đây',
+      'ai vậy',
+      'ai thế',
+      'ai đang đứng',
+      'who is this',
+      'who is that',
     ])) {
       ctrl.goToMode(2);
     } else if (TextUtils.containsAny(cmd, [

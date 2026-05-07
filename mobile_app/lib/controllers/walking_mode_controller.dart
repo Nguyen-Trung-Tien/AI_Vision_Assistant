@@ -121,8 +121,7 @@ class WalkingModeController {
           '$label ${distance != null ? '${distance.toStringAsFixed(1)}m' : ''}'
               .trim();
     }
-
-    safeDirection = _deriveSafeDirection(position);
+    safeDirection = _deriveSafeDirection(position, dangerAlerts);
 
     // Trigger Spatial Audio for the nearest obstacle
     if (dangerAlerts.isNotEmpty) {
@@ -154,7 +153,15 @@ class WalkingModeController {
     onStateChanged();
   }
 
-  String _deriveSafeDirection(String positionText) {
+  String _deriveSafeDirection(String positionText, List<Map<String, dynamic>> dangerAlerts) {
+    bool leftBlocked = dangerAlerts.any((a) => (a['position']?.toString().toLowerCase() ?? '').contains('trái') || (a['position']?.toString().toLowerCase() ?? '').contains('left'));
+    bool rightBlocked = dangerAlerts.any((a) => (a['position']?.toString().toLowerCase() ?? '').contains('phải') || (a['position']?.toString().toLowerCase() ?? '').contains('right'));
+    bool centerBlocked = dangerAlerts.any((a) => (a['position']?.toString().toLowerCase() ?? '').contains('giữa') || (a['position']?.toString().toLowerCase() ?? '').contains('center') || (a['position']?.toString().toLowerCase() ?? '').contains('front'));
+
+    if (centerBlocked || (leftBlocked && rightBlocked)) {
+      return _settings.language == 'vi' ? 'Dừng lại' : 'Stop';
+    }
+
     final lowered = positionText.toLowerCase();
     if (lowered.contains('trái') || lowered.contains('left')) {
       return _settings.language == 'vi' ? 'Đi phải' : 'Go right';
@@ -163,8 +170,8 @@ class WalkingModeController {
       return _settings.language == 'vi' ? 'Đi trái' : 'Go left';
     }
     return _settings.language == 'vi'
-        ? 'Đi chậm, giữ giữa'
-        : 'Slow down, keep center';
+        ? 'Cẩn thận'
+        : 'Be careful';
   }
 
   Future<void> toggleCamera() async {

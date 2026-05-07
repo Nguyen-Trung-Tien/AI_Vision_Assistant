@@ -18,6 +18,7 @@ class NavigationService {
   bool _isSpeechInitialized = false;
   StreamSubscription<CompassEvent>? _compassSub;
   StreamSubscription<Position>? _positionSub;
+  String? _lastSpokenDirKey;
 
   // To avoid spamming TTS
   DateTime _lastSpokenTime = DateTime.now().subtract(
@@ -302,7 +303,6 @@ class NavigationService {
 
   void _announceDirection(double heading) {
     final now = DateTime.now();
-    if (now.difference(_lastSpokenTime).inSeconds < 5) return;
 
     final lang = _settings.language;
     final directions = {
@@ -323,12 +323,29 @@ class NavigationService {
       dirKey = 'west';
     }
 
-    if (dirKey.isNotEmpty) {
+    if (dirKey.isEmpty) return;
+
+    bool shouldSpeak = false;
+    
+    if (dirKey != _lastSpokenDirKey) {
+       // Only allow direction change to speak if at least 5 seconds passed since last spoke (debounce)
+       if (now.difference(_lastSpokenTime).inSeconds >= 5) {
+           shouldSpeak = true;
+       }
+    } else {
+       // Same direction, speak every 30 seconds to remind
+       if (now.difference(_lastSpokenTime).inSeconds >= 30) {
+           shouldSpeak = true;
+       }
+    }
+
+    if (shouldSpeak) {
       final dir = directions[dirKey]!;
       _accessibilityManager.speak(
         AppLocalizations.t('nav_heading', lang).replaceAll('{dir}', dir),
       );
       _lastSpokenTime = now;
+      _lastSpokenDirKey = dirKey;
     }
   }
 
