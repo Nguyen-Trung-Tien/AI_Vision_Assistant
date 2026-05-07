@@ -89,7 +89,7 @@ class DepthEstimator:
         f = np.poly1d(c)
         return float(f(depth_value))
 
-    def get_distance_at_bbox(self, depth_map: np.ndarray, bbox: list[int]) -> float | None:
+    def get_distance_at_bbox(self, depth_map: np.ndarray, bbox: list[int], label: str = None) -> float | None:
         """Calculate the median depth within the bounding box and map to meters."""
         if depth_map is None:
             return None
@@ -104,7 +104,27 @@ class DepthEstimator:
         if x1 >= x2 or y1 >= y2:
             return None
 
-        region = depth_map[y1:y2, x1:x2]
+        # Tối ưu hóa vùng lấy mẫu (Sampling Region Optimization)
+        # Nếu là địa hình phức tạp, lấy vùng trung tâm để đo chiều sâu thực tế
+        if label in ["o_ga", "cau_thang", "nap_cong", "ong_cong"]:
+            h = y2 - y1
+            w = x2 - x1
+            y1_opt = int(y1 + h * 0.25)
+            y2_opt = int(y2 - h * 0.25)
+            x1_opt = int(x1 + w * 0.25)
+            x2_opt = int(x2 - w * 0.25)
+            region = depth_map[y1_opt:y2_opt, x1_opt:x2_opt]
+        # Nếu là vật thể đứng/giao thông, lấy 25% phía dưới cùng (chân tiếp xúc đất)
+        elif label in ["nguoi", "xe_may", "xe_lon", "xe_dap", "vat_can", "cot_dien", "thung_rac", "rao_chan"]:
+            h = y2 - y1
+            y1_opt = int(y2 - h * 0.25)
+            region = depth_map[y1_opt:y2, x1:x2]
+        else:
+            region = depth_map[y1:y2, x1:x2]
+
+        if region.size == 0:
+            region = depth_map[y1:y2, x1:x2]
+
         median_depth = np.median(region)
 
         # Convert to absolute meters

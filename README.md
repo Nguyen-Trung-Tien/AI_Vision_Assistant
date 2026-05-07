@@ -22,7 +22,7 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 <br/>
 
-![Version](https://img.shields.io/badge/Version-1.7.0-blue?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.7.1-blue?style=flat-square)
 ![License](https://img.shields.io/badge/License-UNLICENSED-gray?style=flat-square)
 ![Status](https://img.shields.io/badge/Status-In_Development-orange?style=flat-square)
 [![CI/CD](https://github.com/Nguyen-Trung-Tien/AI_Vision_Assistant/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/Nguyen-Trung-Tien/AI_Vision_Assistant/actions/workflows/ci-cd.yml)
@@ -75,10 +75,11 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 ## 📰 Cập nhật mới nhất
 
-### 🗓️ Tháng 5/2026 — v1.7.0 (Current)
+### 🗓️ Tháng 5/2026 — v1.7.1 (Current)
 
 | Ngày      | Cập nhật                        | Mô tả                                                                                                                                  |
 | --------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| **07/05** | 🚨 SOS Success UI               | Cập nhật giao diện thông báo trạng thái "Đã gửi cảnh báo SOS" kèm tính năng đếm ngược 10 giây Hủy báo động giả trực quan trên Mobile |
 | **01/05** | 📖 Layout Analysis              | Tích hợp Gemini 1.5 Flash cho phân tích bố cục menu, sách và tài liệu phức tạp, trả về cấu trúc chi tiết và đọc qua TTS                |
 | **01/05** | 🚀 CI/CD Automation             | Thiết lập GitHub Actions tự động hóa quy trình Lint, Test và Build cho toàn bộ thành phần (Backend, AI, Admin, Mobile)                 |
 | **01/05** | 📱 Admin Dashboard PWA          | Chuyển đổi Admin Dashboard sang Progressive Web App (PWA), cho phép cài đặt và hoạt động ổn định trên nhiều thiết bị                   |
@@ -152,11 +153,15 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 ---
 
-## 🚀 Các tính năng nổi bật vừa cập nhật (v1.7.0)
+## 🚀 Các tính năng nổi bật vừa cập nhật (v1.7.1)
 
-Để mang lại trải nghiệm tốt nhất cho người dùng khiếm thị, phiên bản v1.7.0 tập trung vào **phân tích dữ liệu thông minh** và **ổn định hệ thống**:
+Để mang lại trải nghiệm tốt nhất cho người dùng khiếm thị, phiên bản v1.7.1 tập trung vào **phân tích dữ liệu thông minh**, **ổn định hệ thống** và **trải nghiệm an toàn (SOS)**:
 
-1.  **📖 Layout Analysis (Mới)**:
+1.  **🚨 Nâng cấp Trải nghiệm SOS (Mới)**:
+    - Cập nhật giao diện thông báo trạng thái trực quan khi kích hoạt thành công cảnh báo SOS.
+    - Bổ sung nút "Hủy báo động giả" kèm theo đồng hồ đếm ngược 10 giây để người dùng dễ dàng thu hồi thao tác nếu nhấn nhầm, tăng cường tính an toàn.
+
+2.  **📖 Layout Analysis**:
     - Tích hợp Gemini 1.5 Flash cho phân tích bố cục menu, sách và tài liệu phức tạp, trả về cấu trúc chi tiết và đọc qua TTS.
 
 2.  **🚀 CI/CD Automation (Mới)**:

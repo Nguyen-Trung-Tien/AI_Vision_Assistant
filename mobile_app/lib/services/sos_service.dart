@@ -22,10 +22,11 @@ class SosService {
     final lang = _settings.language;
     final numbers = _settings.emergencyNumbers;
 
-    if (numbers.isEmpty) {
-      _accessibilityManager.speak(AppLocalizations.t('sos_no_numbers', lang));
-      return;
-    }
+    // --- DEMO MODE: Bỏ qua check số điện thoại để luôn hiển thị giao diện đếm ngược ---
+    // if (numbers.isEmpty) {
+    //   _accessibilityManager.speak(AppLocalizations.t('sos_no_numbers', lang));
+    //   return;
+    // }
 
     // Nếu đang đếm ngược rồi thì không kích hoạt thêm
     if (_isCounting) return;
@@ -99,21 +100,21 @@ class SosService {
       );
 
       _accessibilityManager.speak(AppLocalizations.t('sos_sending_sms', lang));
-      if (await canLaunchUrl(smsUri)) {
-        await launchUrl(smsUri);
-      }
+      
+      // --- DEMO MODE: Bỏ qua mở app nhắn tin và gọi điện ---
+      // if (await canLaunchUrl(smsUri)) {
+      //   await launchUrl(smsUri);
+      // }
 
-      // Follow up with a phone call to FIRST number
-      final Uri phoneUri = Uri(scheme: 'tel', path: numbers.first);
-      if (await canLaunchUrl(phoneUri)) {
-        await launchUrl(phoneUri);
-      }
+      // final Uri phoneUri = Uri(scheme: 'tel', path: numbers.first);
+      // if (await canLaunchUrl(phoneUri)) {
+      //   await launchUrl(phoneUri);
+      // }
+      
+      print('[SosService] DEMO MODE: Đã giả lập gửi SMS/Call tới: $allNumbers');
+      
     } catch (e) {
-      _accessibilityManager.speak(AppLocalizations.t('sos_call_direct', lang));
-      final Uri phoneUri = Uri(scheme: 'tel', path: numbers.first);
-      if (await canLaunchUrl(phoneUri)) {
-        await launchUrl(phoneUri);
-      }
+      print('[SosService] Lỗi khi lấy vị trí: $e');
     }
   }
 

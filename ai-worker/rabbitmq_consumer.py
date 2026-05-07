@@ -197,7 +197,7 @@ def on_message(channel, method, properties, body):
         elif task_type == "CAPTION":
             ai_result = AIService.process_captioning(frame_data, client_id=client_id, lang=lang)
             detections = ai_result.get("raw_detections", [])
-            ai_result["danger_alerts"] = detect_dangers(detections, threshold_m=warning_m, lang=lang)
+            ai_result["danger_alerts"] = detect_dangers(client_id, detections, threshold_m=warning_m, lang=lang)
         elif task_type == "SMART_OCR":
             sub_mode = data.get("subMode", "general")
             ai_result = smart_ocr.process(frame_data, sub_mode=sub_mode, lang=lang)

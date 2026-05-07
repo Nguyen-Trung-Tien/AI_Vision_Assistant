@@ -38,6 +38,8 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "tl_yellow_solution": "Chú ý! Có đèn vàng phía trước cách {distance} mét, hãy đi chậm lại.",
         "tl_green_solution": "Đèn xanh phía trước cách {distance} mét, có thể đi tiếp an toàn.",
         "tl_unknown_solution": "Có đèn giao thông ở {position}, cách {distance} mét. Hãy đi chậm và quan sát kỹ.",
+        "fast_vehicle": "Nguy hiểm! Có {label} đang lao tới rất nhanh từ {position}!",
+        "falling_object": "Cảnh báo! Có {label} đang rơi từ trên cao xuống!",
     },
     "en": {
         "detecting": "Detecting...",
@@ -78,6 +80,8 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
         "tl_unknown_solution": (
             "Traffic light {position}, about {distance} meters away. Slow down and observe carefully."
         ),
+        "fast_vehicle": "Danger! A {label} is approaching rapidly from {position}!",
+        "falling_object": "Warning! A {label} is falling from above!",
     },
 }
 

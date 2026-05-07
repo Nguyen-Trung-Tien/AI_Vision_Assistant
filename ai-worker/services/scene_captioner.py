@@ -179,7 +179,7 @@ def process_captioning(image_base64: str, client_id: str = "default", lang: str 
 
         # Ước tính khoảng cách
         if depth_map is not None:
-            dist = depth_estimator.get_distance_at_bbox(depth_map, d["box"])
+            dist = depth_estimator.get_distance_at_bbox(depth_map, d["box"], label=label)
         else:
             dist = estimate_distance(label, abs(d["box"][3] - d["box"][1]), img_h)
 

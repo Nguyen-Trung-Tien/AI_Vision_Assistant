@@ -15,6 +15,7 @@ import 'package:mobile_app/theme/app_theme.dart';
 import 'package:mobile_app/widgets/camera_preview_widget.dart';
 import 'package:mobile_app/widgets/walking_overlay.dart';
 import 'package:mobile_app/widgets/sos_button.dart';
+import 'package:mobile_app/widgets/sos_success_overlay.dart';
 import 'package:mobile_app/widgets/danger_banner.dart';
 import 'package:mobile_app/widgets/status_overlay.dart';
 import 'package:mobile_app/widgets/mode_carousel.dart';
@@ -679,6 +680,14 @@ class _MainScreenState extends State<MainScreen>
               ),
             ),
           ),
+
+          // SOS Success Overlay
+          if (_sosCtrl.isSosSent)
+            SosSuccessOverlay(
+              countdown: _sosCtrl.sosCountdown,
+              onCancel: _sosCtrl.cancelFalseAlarm,
+              language: lang,
+            ),
         ],
       ),
     );

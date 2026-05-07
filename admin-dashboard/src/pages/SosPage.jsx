@@ -226,6 +226,15 @@ export default function SosPage() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/80 backdrop-blur-md animate-in fade-in duration-300">
           <div className="bg-red-950/90 border-2 border-red-500 rounded-[2.5rem] p-8 max-w-sm w-full text-center shadow-[0_0_50px_rgba(239,68,68,0.3)] relative overflow-hidden group">
             <div className="absolute inset-0 bg-gradient-to-b from-red-500/10 to-transparent opacity-50" />
+            
+            {/* Nút đóng popup tạm thời */}
+            <button 
+              onClick={() => setIncoming(null)}
+              className="absolute top-4 right-4 p-2 rounded-full bg-white/5 text-white/50 hover:bg-white/10 hover:text-white transition-all z-20"
+            >
+              <X className="w-5 h-5" />
+            </button>
+
             <div className="relative z-10">
               <div className="flex justify-center mb-6">
                 <div className="w-20 h-20 rounded-full bg-red-500/20 flex items-center justify-center border-2 border-red-500/50 animate-pulse">
@@ -233,28 +242,28 @@ export default function SosPage() {
                 </div>
               </div>
               <div className="flex flex-col gap-1 mb-8">
-                <h1 className="text-2xl font-bold tracking-tight text-text-primary uppercase">SOS <span className="text-red-600">KHẨN CẤP</span></h1>
-                <p className="text-text-secondary font-medium text-sm">Phát hiện yêu cầu trợ giúp từ người dùng Vision Assistant</p>
+                <h1 className="text-2xl font-bold tracking-tight text-white uppercase">SOS <span className="text-red-500">KHẨN CẤP</span></h1>
+                <p className="text-red-200/80 font-medium text-sm">Phát hiện yêu cầu trợ giúp từ người dùng Vision Assistant</p>
               </div>
               <div className="space-y-4 mb-8">
                 <button 
                   onClick={() => setViewingUser({ email: incoming.userEmail || "Unknown", contacts: incoming.emergencyContacts || [] })}
-                  className="w-full flex items-center justify-center gap-2 text-text-primary/70 text-sm font-bold bg-text-primary/5 rounded-xl py-2 px-4 border border-border-primary hover:bg-indigo-500/20 hover:border-indigo-500/30 transition-all group/user"
+                  className="w-full flex items-center justify-center gap-2 text-white/90 text-sm font-bold bg-white/5 rounded-xl py-2 px-4 border border-white/10 hover:bg-white/10 hover:border-white/20 transition-all group/user"
                 >
-                  <UserIcon className="w-4 h-4 text-red-400 group-hover/user:text-indigo-400" />
+                  <UserIcon className="w-4 h-4 text-red-400 group-hover/user:text-white" />
                   <span className="truncate max-w-[200px] underline decoration-dotted underline-offset-4">{incoming.userEmail ?? incoming.userId ?? "Unknown User"}</span>
                 </button>
-                <div className="flex flex-col gap-2 text-text-secondary text-xs font-medium">
+                <div className="flex flex-col gap-2 text-red-200/80 text-xs font-medium">
                   <a 
                     href={`https://www.google.com/maps?q=${incoming.latitude},${incoming.longitude}`}
                     target="_blank"
                     rel="noopener noreferrer"
-                    className="flex items-center justify-center gap-2 py-2 px-4 bg-red-500/10 border border-red-500/20 rounded-xl text-red-400 hover:bg-red-500 hover:text-white transition-all group"
+                    className="flex items-center justify-center gap-2 py-2 px-4 bg-red-500/20 border border-red-500/30 rounded-xl text-red-300 hover:bg-red-500 hover:text-white transition-all group"
                   >
                     <MapPin className="w-4 h-4 group-hover:animate-bounce" /> 
                     <span className="font-mono font-black">{incoming.latitude?.toFixed(5)}, {incoming.longitude?.toFixed(5)}</span>
                   </a>
-                  <div className="flex items-center justify-center gap-2 opacity-50"><Clock className="w-3.5 h-3.5" /> <span>{incoming.timestamp}</span></div>
+                  <div className="flex items-center justify-center gap-2 opacity-70"><Clock className="w-3.5 h-3.5" /> <span>{incoming.timestamp}</span></div>
                 </div>
               </div>
               {incoming.imageBase64 && (
@@ -264,7 +273,7 @@ export default function SosPage() {
                 </div>
               )}
               <div className="grid grid-cols-2 gap-4">
-                <button onClick={() => handleAckDirect(incoming.sosId ?? incoming.id)} className="min-h-[42px] rounded-xl bg-text-primary/10 border border-border-primary text-text-primary text-[10px] font-bold uppercase tracking-[0.1em] hover:bg-text-primary/20 active:scale-95 transition-all">Xác nhận</button>
+                <button onClick={() => handleAckDirect(incoming.sosId ?? incoming.id)} className="min-h-[42px] rounded-xl bg-white/10 border border-white/20 text-white text-[10px] font-bold uppercase tracking-[0.1em] hover:bg-white/20 active:scale-95 transition-all">Xác nhận</button>
                 <button onClick={() => handleResolveDirect(incoming.sosId ?? incoming.id)} className="min-h-[42px] rounded-xl bg-red-600 text-white text-[10px] font-bold uppercase tracking-[0.1em] hover:bg-red-500 shadow-md shadow-red-600/20 active:scale-95 transition-all">Đã xử lý</button>
               </div>
             </div>

@@ -16,7 +16,7 @@ class SettingsService {
   List<String> get emergencyNumbers {
     final list = _prefs?.getStringList('emergency_numbers');
     if (list != null && list.isNotEmpty) {
-      return list;
+      return List<String>.from(list);
     }
     // Fallback: check if old single string exists
     final oldNum = _prefs?.getString('emergency_number') ?? '';

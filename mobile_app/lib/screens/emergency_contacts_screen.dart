@@ -43,6 +43,11 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
   Future<void> _loadContacts() async {
     setState(() => _isLoading = true);
     final contacts = await _contactService.getContacts();
+    
+    // Sync to local settings
+    final phoneNumbers = contacts.where((c) => c.notifySms).map((c) => c.phone).toList();
+    await _settings.setEmergencyNumbers(phoneNumbers);
+
     if (!mounted) return;
     setState(() {
       _contacts = contacts;
@@ -69,6 +74,11 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
 
   Future<void> _syncContactsSilently() async {
     final contacts = await _contactService.getContacts();
+    
+    // Sync to local settings
+    final phoneNumbers = contacts.where((c) => c.notifySms).map((c) => c.phone).toList();
+    await _settings.setEmergencyNumbers(phoneNumbers);
+
     if (!mounted) return;
     setState(() {
       _contacts = contacts;
@@ -293,7 +303,7 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
     final added = await _contactService.addContact(newContact);
 
     if (added != null) {
-      _accessibility.speak('Đã thêm liên hệ thủ công');
+      _accessibility.speak('Lưu số điện thoại thành công');
       _upsertLocalContact(added);
 
       final currentNumbers = _settings.emergencyNumbers;
@@ -330,7 +340,7 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
         );
 
         if (added != null) {
-          _accessibility.speak('Đã thêm $name');
+          _accessibility.speak('Lưu số điện thoại thành công');
           _upsertLocalContact(added);
 
           final currentNumbers = _settings.emergencyNumbers;
@@ -373,6 +383,7 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
   Future<void> _updateContact(EmergencyContact contact) async {
     setState(() => _isLoading = true);
     await _contactService.updateContact(contact);
+    _accessibility.speak('Lưu số điện thoại thành công');
     await _loadContacts();
   }
 }
