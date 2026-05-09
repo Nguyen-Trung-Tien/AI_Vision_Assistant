@@ -21,6 +21,7 @@ import 'package:mobile_app/widgets/status_overlay.dart';
 import 'package:mobile_app/widgets/mode_carousel.dart';
 import 'package:mobile_app/widgets/visual_qa_button.dart';
 import 'package:mobile_app/widgets/voice_listening_overlay.dart';
+import 'package:mobile_app/widgets/mode_processing_overlay.dart';
 
 class MainScreen extends StatefulWidget {
   final List<CameraDescription>? cameras;
@@ -121,7 +122,12 @@ class _MainScreenState extends State<MainScreen>
       },
     );
     _ctrl.aiService.onProcessingStateChanged = (isProcessing) {
-      if (mounted) setState(() => _ctrl.isProcessing = isProcessing);
+      if (mounted) {
+        setState(() {
+          _ctrl.isProcessing = isProcessing;
+          if (!isProcessing) _ctrl.activeProcessingMode = null;
+        });
+      }
     };
     _ctrl.aiService.onDangerAlertDetected = (message, level) {
       if (mounted) {
@@ -254,10 +260,16 @@ class _MainScreenState extends State<MainScreen>
     }
     switch (_ctrl.currentModeIndex) {
       case 0:
+        _ctrl.activeProcessingMode = 'money';
+        setState(() {});
         _ctrl.aiService.requestMoneyDetection();
       case 1:
+        _ctrl.activeProcessingMode = 'caption';
+        setState(() {});
         _ctrl.aiService.requestCaptioning();
       case 2:
+        _ctrl.activeProcessingMode = 'face';
+        setState(() {});
         _ctrl.aiService.requestFaceRecognition();
       case 3:
         _ctrl.accessibilityManager.speak(
@@ -266,12 +278,23 @@ class _MainScreenState extends State<MainScreen>
         _ctrl.navigationService.startNavigation();
         _ctrl.openNavigationScreen(context);
       case 4:
+        _ctrl.activeProcessingMode = 'online_ocr';
+        setState(() {});
         _ctrl.aiService.requestOnlineOCR();
       case 5:
-        _ctrl.pickAndReadFile();
+        _ctrl.activeProcessingMode = 'file_read';
+        setState(() {});
+        _ctrl.pickAndReadFile().whenComplete(() {
+          if (mounted) setState(() => _ctrl.activeProcessingMode = null);
+        });
       case 6:
+        _ctrl.activeProcessingMode = 'offline_ocr';
+        setState(() {});
         await _ctrl.scanWithMLKit();
+        if (mounted) setState(() => _ctrl.activeProcessingMode = null);
       case 7:
+        _ctrl.activeProcessingMode = 'layout_analysis';
+        setState(() {});
         _ctrl.aiService.requestLayoutAnalysis();
     }
   }
@@ -405,46 +428,13 @@ class _MainScreenState extends State<MainScreen>
             ),
 
           // Processing overlay
-          if (_ctrl.isProcessing || _ctrl.isScanningMLKit)
+          if (_ctrl.activeProcessingMode != null || _ctrl.isProcessing || _ctrl.isScanningMLKit)
             Positioned.fill(
-              child: Container(
-                color: Colors.black.withValues(alpha: 0.5),
-                child: Center(
-                  child: Container(
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 32,
-                      vertical: 28,
-                    ),
-                    decoration: AppTheme.glassDecoration(
-                      borderRadius: 24,
-                      opacity: 0.6,
-                    ),
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        const SizedBox(
-                          width: 48,
-                          height: 48,
-                          child: CircularProgressIndicator(
-                            color: AppTheme.accentCyan,
-                            strokeWidth: 3,
-                          ),
-                        ),
-                        const SizedBox(height: 16),
-                        Text(
-                          _ctrl.isScanningMLKit
-                              ? AppLocalizations.t('main_scanning', lang)
-                              : AppLocalizations.t('main_processing', lang),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 18,
-                            fontWeight: FontWeight.w500,
-                          ),
-                        ),
-                      ],
-                    ),
-                  ),
-                ),
+              child: ModeProcessingOverlay(
+                mode: _ctrl.activeProcessingMode,
+                statusText: _ctrl.isScanningMLKit
+                    ? AppLocalizations.t('main_scanning', lang)
+                    : AppLocalizations.t('main_processing', lang),
               ),
             ),
 
@@ -675,17 +665,26 @@ class _MainScreenState extends State<MainScreen>
               mainAxisAlignment: MainAxisAlignment.center,
               children: List.generate(
                 modes.length,
-                (index) => Container(
-                  margin: const EdgeInsets.symmetric(horizontal: 4),
-                  width: _ctrl.currentModeIndex == index ? 24 : 8,
-                  height: 8,
-                  decoration: BoxDecoration(
-                    color: _ctrl.currentModeIndex == index
-                        ? AppTheme.accentPurple
-                        : AppTheme.whiteAlpha(0.5),
-                    borderRadius: BorderRadius.circular(4),
-                  ),
-                ),
+                (index) {
+                  final isActive = _ctrl.currentModeIndex == index;
+                  final dotColor = isActive
+                      ? ModeCarousel.modeColors[index]
+                      : AppTheme.whiteAlpha(0.35);
+                  return AnimatedContainer(
+                    duration: const Duration(milliseconds: 300),
+                    curve: Curves.easeOut,
+                    margin: const EdgeInsets.symmetric(horizontal: 4),
+                    width: isActive ? 24 : 8,
+                    height: 8,
+                    decoration: BoxDecoration(
+                      color: dotColor,
+                      borderRadius: BorderRadius.circular(4),
+                      boxShadow: isActive
+                          ? [BoxShadow(color: dotColor.withValues(alpha: 0.5), blurRadius: 8)]
+                          : null,
+                    ),
+                  );
+                },
               ),
             ),
           ),

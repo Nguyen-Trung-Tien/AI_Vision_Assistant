@@ -53,6 +53,10 @@ class MainController {
   bool isScanningMLKit = false;
   Future<void>? stopImageStreamFuture;
 
+  /// Which mode triggered the current processing (for mode-specific animations)
+  /// null = generic, 'online_ocr', 'offline_ocr', 'file_read', 'layout_analysis'
+  String? activeProcessingMode;
+
   // ── Mode State ────────────────────────────────────────────────────────
   final PageController pageController = PageController();
   int currentModeIndex = 0;

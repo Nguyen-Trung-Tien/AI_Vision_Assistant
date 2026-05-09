@@ -1,11 +1,10 @@
 """Constants and label normalization for AI Vision Assistant."""
 
-CANONICAL_CLASSES: list[str] = [
-    # 15 Object Classes
-    "vat_can",
-    "cot_dien",
+# ── Object Detection Model — 13 classes ──
+OBJECT_CLASSES: list[str] = [
+    "bang_hieu",
+    "cau_thang",
     "den_do",
-    "den_vang",
     "den_xanh",
     "nap_cong",
     "nguoi",
@@ -16,8 +15,10 @@ CANONICAL_CLASSES: list[str] = [
     "xe_dap",
     "xe_lon",
     "xe_may",
-    "cau_thang",
-    # 9 Money Classes
+]
+
+# ── Money Detection Model — 9 classes ──
+MONEY_CLASSES: list[str] = [
     "1000",
     "2000",
     "5000",
@@ -28,6 +29,9 @@ CANONICAL_CLASSES: list[str] = [
     "200000",
     "500000",
 ]
+
+# Combined canonical set (backward compat)
+CANONICAL_CLASSES: list[str] = OBJECT_CLASSES + MONEY_CLASSES
 
 # Legacy labels are mapped into canonical classes before app logic consumes detections.
 LEGACY_LABEL_ALIASES: dict[str, str] = {
@@ -46,18 +50,25 @@ LEGACY_LABEL_ALIASES: dict[str, str] = {
     "open_manhole": "nap_cong",
     "ong_cong": "nap_cong",
     "traffic_light_red": "den_do",
-    "traffic_light_yellow": "den_vang",
+    "traffic_light_yellow": "den_do",
     "traffic_light_green": "den_xanh",
     "red_light": "den_do",
-    "yellow_light": "den_vang",
+    "yellow_light": "den_do",
     "green_light": "den_xanh",
     "red": "den_do",
-    "yellow": "den_vang",
+    "yellow": "den_do",
     "green": "den_xanh",
     "den_do": "den_do",
-    "den_vang": "den_vang",
     "den_xanh": "den_xanh",
     "crosswalk": "vach_qua_duong",
+    "sign": "bang_hieu",
+    "signboard": "bang_hieu",
+    "bien_bao": "bang_hieu",
+    # Retired classes → nearest canonical
+    "vat_can": "rao_chan",
+    "cot_dien": "rao_chan",
+    "den_vang": "den_do",
+    # Money legacy aliases
     "tien_1k": "1000",
     "tien_2k": "2000",
     "tien_5k": "5000",
@@ -78,17 +89,7 @@ def canonicalize_label(label: str) -> str:
 
 
 # --- Money labels ---
-MONEY_LABELS: set[str] = {
-    "1000",
-    "2000",
-    "5000",
-    "10000",
-    "20000",
-    "50000",
-    "100000",
-    "200000",
-    "500000",
-}
+MONEY_LABELS: set[str] = set(MONEY_CLASSES)
 
 # --- Average object heights (meters) for rough distance estimation ---
 OBJECT_REAL_HEIGHTS: dict[str, float] = {
@@ -96,16 +97,15 @@ OBJECT_REAL_HEIGHTS: dict[str, float] = {
     "xe_may": 1.1,
     "xe_lon": 2.6,
     "xe_dap": 1.0,
-    "vat_can": 1.5,
-    "cot_dien": 5.0,
+    "bang_hieu": 2.0,
     "den_do": 2.5,
-    "den_vang": 2.5,
     "den_xanh": 2.5,
     "cau_thang": 0.5,
     "nap_cong": 0.1,
     "o_ga": 0.1,
     "rao_chan": 1.2,
     "thung_rac": 0.8,
+    "vach_qua_duong": 0.05,
 }
 
 # --- Money denomination aliases ---

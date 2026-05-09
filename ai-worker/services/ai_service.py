@@ -7,7 +7,7 @@ Giữ backward-compatible API cho tất cả consumer hiện tại
 Logic thực tế được delegate sang các module chuyên biệt:
 - constants: labels, translations, color ranges, features
 - image_utils: decode, blur, color extraction
-- model_manager: YOLO load & detect
+- model_manager: façade → object_model_manager + money_model_manager
 - money_detector: OCR/money recognition
 - scene_captioner: street scene captioning
 - stabilizer: temporal stabilization
@@ -18,6 +18,8 @@ from .constants import (
     DENOMINATION_ALIASES,
     DENOMINATION_FEATURES,
     MONEY_LABELS,
+    OBJECT_CLASSES,
+    MONEY_CLASSES,
     OBJECT_REAL_HEIGHTS,
 )
 from .translations import LABEL_TRANSLATIONS_MULTI

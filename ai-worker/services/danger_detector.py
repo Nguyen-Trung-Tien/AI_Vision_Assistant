@@ -6,6 +6,7 @@ from .translations import t, translate_label
 from .tracker import ObjectTracker
 
 DANGER_LABELS = {
+    "bang_hieu",
     "xe_lon",
     "xe_may",
     "xe_dap",
@@ -14,10 +15,7 @@ DANGER_LABELS = {
     "cau_thang",
     "den_do",
     "den_xanh",
-    "vat_can",
-    "cot_dien",
     "thung_rac",
-    "cay_co",
     "nguoi",
     "rao_chan",
 }

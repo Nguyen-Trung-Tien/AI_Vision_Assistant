@@ -115,7 +115,7 @@ class DepthEstimator:
             x2_opt = int(x2 - w * 0.25)
             region = depth_map[y1_opt:y2_opt, x1_opt:x2_opt]
         # Nếu là vật thể đứng/giao thông, lấy 25% phía dưới cùng (chân tiếp xúc đất)
-        elif label in ["nguoi", "xe_may", "xe_lon", "xe_dap", "vat_can", "cot_dien", "thung_rac", "rao_chan"]:
+        elif label in ["nguoi", "xe_may", "xe_lon", "xe_dap", "bang_hieu", "thung_rac", "rao_chan"]:
             h = y2 - y1
             y1_opt = int(y2 - h * 0.25)
             region = depth_map[y1_opt:y2, x1:x2]

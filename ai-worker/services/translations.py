@@ -88,6 +88,7 @@ TRANSLATIONS: dict[str, dict[str, str]] = {
 
 LABEL_TRANSLATIONS_MULTI: dict[str, dict[str, str]] = {
     "vi": {
+        "bang_hieu": "biển hiệu",
         "nguoi": "người",
         "xe_may": "xe máy",
         "xe_lon": "xe lớn",
@@ -116,6 +117,7 @@ LABEL_TRANSLATIONS_MULTI: dict[str, dict[str, str]] = {
         "500000": "500 nghìn",
     },
     "en": {
+        "bang_hieu": "signboard",
         "nguoi": "person",
         "xe_may": "motorbike",
         "xe_lon": "large vehicle",
