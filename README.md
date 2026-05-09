@@ -22,7 +22,7 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 <br/>
 
-![Version](https://img.shields.io/badge/Version-1.7.1-blue?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.8.0-blue?style=flat-square)
 ![License](https://img.shields.io/badge/License-UNLICENSED-gray?style=flat-square)
 ![Status](https://img.shields.io/badge/Status-In_Development-orange?style=flat-square)
 [![CI/CD](https://github.com/Nguyen-Trung-Tien/AI_Vision_Assistant/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/Nguyen-Trung-Tien/AI_Vision_Assistant/actions/workflows/ci-cd.yml)
@@ -75,10 +75,13 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 ## 📰 Cập nhật mới nhất
 
-### 🗓️ Tháng 5/2026 — v1.7.1 (Current)
+### 🗓️ Tháng 5/2026 — v1.8.0 (Current)
 
 | Ngày      | Cập nhật                        | Mô tả                                                                                                                                  |
 | --------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| **10/05** | 🎨 Mode Animations              | Animation riêng cho 7 chế độ AI (Money/Caption/Face/OCR/File/Layout) với CustomPaint và màu sắc khác biệt                              |
+| **10/05** | 🔊 Speaking Overlay              | Hiệu ứng sóng âm waveform khi TTS đang đọc kết quả, overlay giữ nguyên cho đến khi đọc xong                                           |
+| **10/05** | 🎯 Mode Color System             | Hệ thống màu riêng cho mỗi chế độ (Gold/Blue/Teal/Cyan/Orange/Green/Pink) trên carousel, icon và indicator dots                        |
 | **07/05** | 🚨 SOS Success UI               | Cập nhật giao diện thông báo trạng thái "Đã gửi cảnh báo SOS" kèm tính năng đếm ngược 10 giây Hủy báo động giả trực quan trên Mobile |
 | **01/05** | 📖 Layout Analysis              | Tích hợp Gemini 1.5 Flash cho phân tích bố cục menu, sách và tài liệu phức tạp, trả về cấu trúc chi tiết và đọc qua TTS                |
 | **01/05** | 🚀 CI/CD Automation             | Thiết lập GitHub Actions tự động hóa quy trình Lint, Test và Build cho toàn bộ thành phần (Backend, AI, Admin, Mobile)                 |
@@ -153,54 +156,33 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 ---
 
-## 🚀 Các tính năng nổi bật vừa cập nhật (v1.7.1)
+## 🚀 Các tính năng nổi bật vừa cập nhật (v1.8.0)
 
-Để mang lại trải nghiệm tốt nhất cho người dùng khiếm thị, phiên bản v1.7.1 tập trung vào **phân tích dữ liệu thông minh**, **ổn định hệ thống** và **trải nghiệm an toàn (SOS)**:
+Phiên bản v1.8.0 nâng cấp trải nghiệm người dùng với **hệ thống phản hồi thị giác chuyên biệt** cho từng chế độ AI:
 
-1.  **🚨 Nâng cấp Trải nghiệm SOS (Mới)**:
-    - Cập nhật giao diện thông báo trạng thái trực quan khi kích hoạt thành công cảnh báo SOS.
-    - Bổ sung nút "Hủy báo động giả" kèm theo đồng hồ đếm ngược 10 giây để người dùng dễ dàng thu hồi thao tác nếu nhấn nhầm, tăng cường tính an toàn.
+1.  **🎨 Mode-Specific Animations (Mới)**:
+    - Mỗi chế độ AI có animation `CustomPaint` riêng biệt với màu sắc và hiệu ứng đặc trưng.
+    - 7 animation: Golden Ripples (Tiền) • Scan Wave (Caption) • Face Outline (Khuôn mặt) • Laser OCR (Online) • Grid Matrix (Offline) • Page Flip (File) • Layout Reveal (Bố cục).
 
-2.  **📖 Layout Analysis**:
-    - Tích hợp Gemini 1.5 Flash cho phân tích bố cục menu, sách và tài liệu phức tạp, trả về cấu trúc chi tiết và đọc qua TTS.
+2.  **🔊 Speaking Overlay (Mới)**:
+    - Hiệu ứng sóng âm waveform hiển thị khi TTS đang đọc kết quả.
+    - Overlay giữ nguyên suốt quá trình xử lý AI → đọc kết quả → tự đóng khi hoàn tất.
 
-2.  **🚀 CI/CD Automation (Mới)**:
-    - Thiết lập GitHub Actions tự động hóa quy trình Lint, Test và Build cho toàn bộ thành phần (Backend, AI, Admin, Mobile).
+3.  **🎯 Mode Color System (Mới)**:
+    - Hệ thống 7 màu riêng: 🟡 Gold (Tiền) • 🔵 Blue (Caption) • 🩵 Teal (Face) • 🔹 Cyan (OCR Online) • 🟠 Orange (File) • 🟢 Green (OCR Offline) • 🩷 Pink (Layout).
+    - Áp dụng đồng nhất trên carousel, icon, indicator dots, và processing overlay.
 
-3.  **📱 Admin Dashboard PWA (Mới)**:
-    - Chuyển đổi Admin Dashboard sang Progressive Web App (PWA), cho phép cài đặt và hoạt động ổn định trên nhiều thiết bị.
+4.  **🚨 Nâng cấp Trải nghiệm SOS**:
+    - Giao diện thông báo SOS trực quan kèm đếm ngược 10 giây "Hủy báo động giả".
 
-4.  **🐳 Docker Compose Deployment**:
-    - Toàn bộ hạ tầng Backend, AI, Web Dashboard, Database được đóng gói Container, triển khai dễ dàng chỉ với một dòng lệnh.
+5.  **📖 Layout Analysis**:
+    - Phân tích bố cục menu, sách, tài liệu phức tạp bằng Gemini 1.5 Flash.
 
-2.  **🔄 Cập nhật mô hình AI OTA (Mới)**:
-    - Cơ chế cập nhật (OTA - Over The Air) cho phép nâng cấp thuật toán nhận diện ngoại tuyến (`.tflite`) cho ứng dụng di động mà không cần phải cập nhật App qua Store.
+6.  **🧠 Nhận diện khuôn mặt (InsightFace)**:
+    - Nhận diện người quen qua model `Buffalo_L`, phản hồi rung và giọng nói.
 
-3.  **🌐 Smart OCR Dịch Thuật (Mới)**:
-    - Chế độ OCR được tích hợp chức năng dịch thuật. Gemini AI sẽ đọc, tóm tắt và dịch mọi văn bản ngoại ngữ từ luồng ảnh sang tiếng Việt một cách tự nhiên.
-
-4.  **🧠 Nhận diện khuôn mặt người quen (InsightFace)**:
-    - Tích hợp model `Buffalo_L` cho độ chính xác cao.
-    - Thông báo tên người quen ngay khi họ xuất hiện trước camera.
-    - Quy trình đăng ký đơn giản kèm phản hồi rung và giọng nói.
-
-2.  **📏 Ước lượng chiều sâu MiDaS**:
-    - Sử dụng AI (`MiDaS Small`) để tính toán khoảng cách vật cản từ ảnh đơn mục.
-    - Giúp cảnh báo nguy hiểm chính xác hơn (sai số được cải thiện đáng kể).
-
-3.  **🚶 Walking Mode (Continuous Stream)**:
-    - Luồng xử lý liên tục 3–5 FPS mà không cần chạm màn hình.
-    - Cơ chế **Smart Throttle**: Tự động điều chỉnh FPS dựa trên tốc độ di chuyển và dung lượng pin.
-
-4.  **🔊 Spatial Audio 3D (Âm thanh nổi)**:
-    - Phát âm thanh cảnh báo theo hướng vật thể (Trái/Phải/Giữa).
-    - Giúp người dùng hình dung không gian 3D chỉ qua tai nghe.
-
-5.  **📄 Smart OCR (Gemini Vision)**:
-    - Vượt xa OCR truyền thống, Gemini AI có thể phân tích và tóm tắt thực đơn, đọc biển báo giao thông hoặc hóa đơn phức tạp.
-
-6.  **🚨 Mạng lưới liên hệ khẩn cấp (SOS)**:
-    - Tự động gửi tin nhắn SMS kèm vị trí GPS và thực hiện cuộc gọi đến người thân khi người dùng gặp sự cố.
+7.  **🚶 Walking Mode + Spatial Audio 3D**:
+    - Stream 3–5 FPS liên tục, cảnh báo vật cản theo hướng trái/phải qua tai nghe stereo.
 
 ---
 
@@ -359,15 +341,17 @@ sequenceDiagram
 
 ## 📱 Các chế độ trên Mobile App
 
-| Chế độ         | Tên               | Mô tả                                                    | Online/Offline |
-| -------------- | ----------------- | -------------------------------------------------------- | -------------- |
-| **Mode 0**     | Nhận diện vật thể | YOLO online, TFLite offline nếu có model cục bộ          | Both           |
-| **Mode 1**     | OCR Online        | Đọc văn bản qua Tesseract (General) / Gemini (Smart OCR) | Online         |
-| **Mode 2**     | OCR Offline       | ML Kit Text Recognition + Barcode Scanner                | Offline        |
-| **Mode 3**     | Mô tả cảnh        | Mô tả không gian + MiDaS Depth + cảnh báo nguy hiểm      | Online         |
-| **Mode 4**     | Điều hướng        | GPS + la bàn + chỉ đường OSRM/OSM                        | Online         |
-| **Mode 5**     | Đi bộ (Walking)   | Continuous Stream 3–5 FPS, tích hợp Face Recognition     | Online         |
-| **Visual Q&A** | Hỏi đáp           | Hỏi đáp trực quan bằng giọng nói (Gemini AI)             | Online         |
+| Chế độ         | Tên               | Màu           | Mô tả                                                    | Online/Offline |
+| -------------- | ----------------- | ------------- | -------------------------------------------------------- | -------------- |
+| **Mode 0**     | Nhận diện tiền    | 🟡 Gold       | Nhận diện tiền VNĐ và vật thể (YOLO/TFLite)              | Both           |
+| **Mode 1**     | Mô tả cảnh        | 🔵 Blue       | Mô tả không gian + MiDaS Depth + cảnh báo nguy hiểm      | Online         |
+| **Mode 2**     | Nhận diện mặt     | 🩵 Teal       | Nhận diện người quen đã đăng ký (InsightFace)             | Online         |
+| **Mode 3**     | Điều hướng GPS    | 💜 Purple     | GPS + la bàn + chỉ đường OSRM/OSM                        | Online         |
+| **Mode 4**     | OCR Online        | 🔹 Cyan       | Đọc văn bản qua Tesseract / Gemini (Smart OCR)           | Online         |
+| **Mode 5**     | Đọc tệp           | 🟠 Orange     | Đọc file PDF, TXT, DOCX bằng TTS                         | Offline        |
+| **Mode 6**     | OCR Offline       | 🟢 Green      | ML Kit Text Recognition + Barcode Scanner                | Offline        |
+| **Mode 7**     | Phân tích bố cục  | 🩷 Pink       | Phân tích layout trang/tài liệu (Gemini)                 | Online         |
+| **Visual Q&A** | Hỏi đáp           | —             | Hỏi đáp trực quan bằng giọng nói (Gemini AI)             | Online         |
 
 ### Các thành phần Mobile App
 
@@ -736,8 +720,11 @@ Dashboard quản trị cung cấp các trang:
 
 ## 📌 Roadmap
 
-### Đã hoàn thành (v1.7.0)
+### Đã hoàn thành (v1.8.0)
 
+- [x] **Mode-Specific Animations** — 7 animation CustomPaint riêng cho mỗi chế độ AI
+- [x] **Speaking Overlay** — Waveform khi TTS đọc kết quả, overlay giữ đến khi hoàn tất
+- [x] **Mode Color System** — Hệ thống 7 màu riêng trên carousel, icon, dots
 - [x] Smart OCR nâng cao (dịch thuật trực tiếp nội dung biển báo)
 - [x] Offline-First Mode hoàn chỉnh (auto-switch online/offline)
 - [x] Cloud deployment (Docker Compose full stack)

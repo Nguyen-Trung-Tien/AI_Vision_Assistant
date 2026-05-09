@@ -75,6 +75,16 @@ class _MainScreenState extends State<MainScreen>
   }
 
   void _initServices() {
+    // TTS speaking callback — keep overlay while reading
+    _ctrl.accessibilityManager.onSpeakingChanged = (speaking) {
+      if (!mounted) return;
+      setState(() {
+        if (!speaking && !_ctrl.isProcessing && !_ctrl.isScanningMLKit) {
+          _ctrl.activeProcessingMode = null;
+        }
+      });
+    };
+
     // WebSocket
     _ctrl.wsService = WebSocketService();
     if (_ctrl.settings.authToken.isNotEmpty) {
@@ -125,7 +135,9 @@ class _MainScreenState extends State<MainScreen>
       if (mounted) {
         setState(() {
           _ctrl.isProcessing = isProcessing;
-          if (!isProcessing) _ctrl.activeProcessingMode = null;
+          if (!isProcessing && !_ctrl.accessibilityManager.isSpeaking) {
+            _ctrl.activeProcessingMode = null;
+          }
         });
       }
     };
@@ -284,9 +296,7 @@ class _MainScreenState extends State<MainScreen>
       case 5:
         _ctrl.activeProcessingMode = 'file_read';
         setState(() {});
-        _ctrl.pickAndReadFile().whenComplete(() {
-          if (mounted) setState(() => _ctrl.activeProcessingMode = null);
-        });
+        unawaited(_ctrl.pickAndReadFile());
       case 6:
         _ctrl.activeProcessingMode = 'offline_ocr';
         setState(() {});
@@ -432,9 +442,12 @@ class _MainScreenState extends State<MainScreen>
             Positioned.fill(
               child: ModeProcessingOverlay(
                 mode: _ctrl.activeProcessingMode,
-                statusText: _ctrl.isScanningMLKit
-                    ? AppLocalizations.t('main_scanning', lang)
-                    : AppLocalizations.t('main_processing', lang),
+                isSpeaking: _ctrl.accessibilityManager.isSpeaking,
+                statusText: _ctrl.accessibilityManager.isSpeaking
+                    ? (lang == 'vi' ? 'Đang đọc kết quả...' : 'Reading result...')
+                    : _ctrl.isScanningMLKit
+                        ? AppLocalizations.t('main_scanning', lang)
+                        : AppLocalizations.t('main_processing', lang),
               ),
             ),
 

@@ -8,6 +8,9 @@
 
 | Ngày | Cập nhật | Chi tiết |
 | --- | --- | --- |
+| **10/05** | 🎨 Mode Animations | Animation riêng cho 7 chế độ (Money/Caption/Face/OCR/File/Layout) với màu sắc và hiệu ứng khác biệt. |
+| **10/05** | 🔊 Speaking Overlay | Hiệu ứng sóng âm waveform khi TTS đang đọc kết quả, giữ overlay cho đến khi đọc xong. |
+| **10/05** | 🎯 Mode Color System | Mỗi chế độ có màu riêng (Gold/Blue/Teal/Cyan/Orange/Green/Pink) trên carousel, icon và indicator. |
 | **17/04** | 🧠 Face Registration | Thêm phản hồi giọng nói & rung khi đăng ký khuôn mặt thành công. |
 | **17/04** | 📄 File Reader Fix | Sửa lỗi OCR Offline, trích xuất văn bản từ file PDF và .txt. |
 | **15/04** | 📺 Visual Feedback | Hiển thị Bounding Boxes + Object Chips trực tiếp trên camera preview. |
@@ -19,8 +22,10 @@
 
 ---
 
-## 🌟 Tính năng nổi bật (v1.5.0)
+## 🌟 Tính năng nổi bật (v1.8.0)
 
+- **Mode-Specific Animations**: Mỗi chế độ có animation và màu sắc riêng biệt (Gold/Blue/Teal/Cyan/Orange/Green/Pink).
+- **Speaking Overlay**: Hiệu ứng sóng âm waveform hiển thị trong suốt quá trình TTS đọc kết quả.
 - **Continuous Stream (Walking Mode)**: Chế độ đi bộ 3-5 FPS, phân tích môi trường liên tục mà không cần thao tác tay.
 - **Face Recognition**: Nhận diện người thân, bạn bè đã đăng ký và phát tên qua giọng nói.
 - **MiDaS Depth Estimation**: Ước lượng khoảng cách vật cản chính xác hơn bằng mô hình chiều sâu chuyên dụng.
@@ -33,15 +38,17 @@
 
 ## 🧭 Các chế độ hoạt động
 
-| Chế độ | Tên | Chức năng |
-| --- | --- | --- |
-| **Mode 0** | Nhận diện vật thể | Nhận diện 20 lớp đối tượng và tiền VNĐ. |
-| **Mode 1** | OCR Online | Đọc văn bản tiếng Việt qua máy chủ (Tesseract/Gemini). |
-| **Mode 2** | OCR Offline | Đọc nhanh văn bản và mã vạch (Google ML Kit). |
-| **Mode 3** | Mô tả cảnh | Phân tích không gian, vật cản và đo khoảng cách MiDaS. |
-| **Mode 4** | Điều hướng GPS | Chỉ đường bằng giọng nói qua OSRM & OpenStreetMap. |
-| **Mode 5** | Chế độ đi bộ | **Walking Mode**: Stream liên tục, tích hợp Face Recognition. |
-| **Q&A** | Hỏi đáp AI | Trò chuyện trực tiếp với Gemini về hình ảnh trước mặt. |
+| Chế độ | Tên | Màu | Chức năng |
+| --- | --- | --- | --- |
+| **Mode 0** | Nhận diện tiền | 🟡 Gold | Nhận diện tiền VNĐ và vật thể. |
+| **Mode 1** | Mô tả cảnh | 🔵 Blue | Phân tích không gian, vật cản và khoảng cách. |
+| **Mode 2** | Nhận diện mặt | 🩵 Teal | Nhận diện người thân đã đăng ký. |
+| **Mode 3** | Điều hướng GPS | 💜 Purple | Chỉ đường bằng giọng nói qua OSRM & OSM. |
+| **Mode 4** | OCR Online | 🔹 Cyan | Đọc văn bản tiếng Việt qua máy chủ AI. |
+| **Mode 5** | Đọc tệp | 🟠 Orange | Đọc file PDF, TXT, DOCX. |
+| **Mode 6** | OCR Offline | 🟢 Green | Đọc nhanh văn bản (Google ML Kit). |
+| **Mode 7** | Phân tích bố cục | 🩷 Pink | Phân tích layout trang/tài liệu. |
+| **Q&A** | Hỏi đáp AI | — | Trò chuyện với Gemini về hình ảnh. |
 
 ---
 

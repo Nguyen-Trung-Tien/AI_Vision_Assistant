@@ -387,25 +387,36 @@ class MainController {
   // ── File reading ──────────────────────────────────────────────────────
   Future<void> pickAndReadFile() async {
     final lang = settings.language;
-    accessibilityManager.speak(AppLocalizations.t('main_reading_file', lang));
+    isProcessing = true;
+    await accessibilityManager.speak(AppLocalizations.t('main_reading_file', lang));
 
     try {
       final text = await documentReaderService.pickAndExtractText();
-      if (text == null) return;
-      if (text.isEmpty) {
-        accessibilityManager.speak(AppLocalizations.t('main_file_empty', lang));
+      if (text == null) {
+        isProcessing = false;
+        activeProcessingMode = null;
         return;
       }
-      accessibilityManager.speak(sanitizeForTts(text));
+      if (text.isEmpty) {
+        await accessibilityManager.speak(AppLocalizations.t('main_file_empty', lang));
+        isProcessing = false;
+        activeProcessingMode = null;
+        return;
+      }
+      isProcessing = false;
+      // TTS will keep overlay via isSpeaking → onSpeakingChanged handles cleanup
+      await accessibilityManager.speak(sanitizeForTts(text));
     } catch (e) {
       debugPrint('Lỗi đọc file: $e');
       if (e.toString().contains('Unsupported format')) {
-        accessibilityManager.speak(
+        await accessibilityManager.speak(
           AppLocalizations.t('main_file_unsupported', lang),
         );
       } else {
-        accessibilityManager.speak(AppLocalizations.t('main_file_error', lang));
+        await accessibilityManager.speak(AppLocalizations.t('main_file_error', lang));
       }
+      isProcessing = false;
+      activeProcessingMode = null;
     }
   }
 

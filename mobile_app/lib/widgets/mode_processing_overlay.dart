@@ -5,7 +5,13 @@ import 'package:mobile_app/theme/app_theme.dart';
 class ModeProcessingOverlay extends StatefulWidget {
   final String? mode;
   final String statusText;
-  const ModeProcessingOverlay({super.key, this.mode, required this.statusText});
+  final bool isSpeaking;
+  const ModeProcessingOverlay({
+    super.key,
+    this.mode,
+    required this.statusText,
+    this.isSpeaking = false,
+  });
 
   @override
   State<ModeProcessingOverlay> createState() => _ModeProcessingOverlayState();
@@ -18,9 +24,11 @@ class _ModeProcessingOverlayState extends State<ModeProcessingOverlay>
   late final AnimationController _s =
       AnimationController(vsync: this, duration: const Duration(milliseconds: 1600))
         ..repeat(reverse: true);
+  late final AnimationController _wave =
+      AnimationController(vsync: this, duration: const Duration(milliseconds: 800))..repeat();
 
   @override
-  void dispose() { _p.dispose(); _s.dispose(); super.dispose(); }
+  void dispose() { _p.dispose(); _s.dispose(); _wave.dispose(); super.dispose(); }
 
   static const _modeColors = {
     'money': Color(0xFFFFD700),
@@ -49,7 +57,7 @@ class _ModeProcessingOverlayState extends State<ModeProcessingOverlay>
     return Container(
       color: Colors.black.withValues(alpha: 0.55),
       child: AnimatedBuilder(
-        animation: Listenable.merge([_p, _s]),
+        animation: Listenable.merge([_p, _s, _wave]),
         builder: (context, _) => Stack(
           children: [
             Positioned.fill(child: CustomPaint(painter: _buildPainter())),
@@ -61,8 +69,8 @@ class _ModeProcessingOverlayState extends State<ModeProcessingOverlay>
   }
 
   CustomPainter _buildPainter() {
-    final t = _p.value;
-    final t2 = _s.value;
+    if (widget.isSpeaking) return _SpeakingWavePainter(_wave.value, _color);
+    final t = _p.value, t2 = _s.value;
     switch (widget.mode) {
       case 'money':       return _MoneyPainter(t, t2);
       case 'caption':     return _CaptionPainter(t, t2);
@@ -97,23 +105,81 @@ class _ModeProcessingOverlayState extends State<ModeProcessingOverlay>
               borderRadius: BorderRadius.circular(16),
               border: Border.all(color: c.withValues(alpha: 0.3)),
             ),
-            child: Icon(_icon, color: c, size: 30),
+            child: Icon(
+              widget.isSpeaking ? Icons.volume_up_rounded : _icon,
+              color: c, size: 30,
+            ),
           ),
         ),
         const SizedBox(height: 18),
-        SizedBox(
-          width: 160, height: 3,
-          child: ClipRRect(
-            borderRadius: BorderRadius.circular(2),
-            child: LinearProgressIndicator(value: null, backgroundColor: Colors.white.withValues(alpha: 0.1), color: c),
+        // Waveform or progress bar
+        if (widget.isSpeaking)
+          _buildWaveform(c)
+        else
+          SizedBox(
+            width: 160, height: 3,
+            child: ClipRRect(
+              borderRadius: BorderRadius.circular(2),
+              child: LinearProgressIndicator(value: null, backgroundColor: Colors.white.withValues(alpha: 0.1), color: c),
+            ),
           ),
-        ),
         const SizedBox(height: 14),
         Text(widget.statusText, textAlign: TextAlign.center,
           style: TextStyle(color: Colors.white.withValues(alpha: 0.9), fontSize: 16, fontWeight: FontWeight.w500)),
       ]),
     );
   }
+
+  Widget _buildWaveform(Color c) {
+    return SizedBox(
+      width: 160, height: 28,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: List.generate(12, (i) {
+          final h = 8.0 + 16 * sin(_wave.value * pi * 2 + i * 0.5).abs();
+          return AnimatedContainer(
+            duration: const Duration(milliseconds: 80),
+            margin: const EdgeInsets.symmetric(horizontal: 2),
+            width: 4,
+            height: h,
+            decoration: BoxDecoration(
+              color: c.withValues(alpha: 0.6 + 0.3 * sin(_wave.value * pi * 2 + i)),
+              borderRadius: BorderRadius.circular(2),
+            ),
+          );
+        }),
+      ),
+    );
+  }
+}
+
+// ── Speaking wave: ripple from center with mode color ────────────────────
+class _SpeakingWavePainter extends CustomPainter {
+  final double t;
+  final Color color;
+  _SpeakingWavePainter(this.t, this.color);
+  @override
+  void paint(Canvas canvas, Size size) {
+    final center = Offset(size.width / 2, size.height / 2);
+    for (int i = 0; i < 5; i++) {
+      final phase = (t + i * 0.2) % 1.0;
+      final r = phase * size.width * 0.5;
+      final a = (0.15 * (1.0 - phase)).clamp(0.0, 0.15);
+      canvas.drawCircle(center, r, Paint()..color = color.withValues(alpha: a)..style = PaintingStyle.stroke..strokeWidth = 2);
+    }
+    // Sound wave lines
+    for (int i = 0; i < 8; i++) {
+      final y = size.height * (0.2 + i * 0.08);
+      final amp = 20.0 * sin(t * pi * 2 + i * 0.7);
+      final path = Path()..moveTo(0, y);
+      for (double x = 0; x <= size.width; x += 4) {
+        path.lineTo(x, y + amp * sin(x / size.width * pi * 4 + t * pi * 6));
+      }
+      canvas.drawPath(path, Paint()..color = color.withValues(alpha: 0.06)..style = PaintingStyle.stroke..strokeWidth = 1);
+    }
+  }
+  @override
+  bool shouldRepaint(covariant CustomPainter o) => true;
 }
 
 // ── Money: Golden coin ripples ──────────────────────────────────────────
@@ -129,14 +195,12 @@ class _MoneyPainter extends CustomPainter {
       final a = (0.2 - i * 0.04).clamp(0.03, 0.2);
       canvas.drawCircle(center, r, Paint()..color = color.withValues(alpha: a)..style = PaintingStyle.stroke..strokeWidth = 2);
     }
-    // Sparkles
     final rng = Random(42);
     for (int i = 0; i < 8; i++) {
       final angle = t * pi * 2 + i * pi / 4;
       final dist = 80.0 + rng.nextDouble() * 60 + 15 * sin(t * pi * 4 + i);
       final p = center + Offset(cos(angle) * dist, sin(angle) * dist);
-      final sa = (0.3 + 0.3 * sin(t * pi * 3 + i)).clamp(0.0, 0.6);
-      canvas.drawCircle(p, 3, Paint()..color = color.withValues(alpha: sa));
+      canvas.drawCircle(p, 3, Paint()..color = color.withValues(alpha: (0.3 + 0.3 * sin(t * pi * 3 + i)).clamp(0.0, 0.6)));
     }
     _corners(canvas, size, color.withValues(alpha: 0.4));
   }
@@ -151,15 +215,12 @@ class _CaptionPainter extends CustomPainter {
   @override
   void paint(Canvas canvas, Size size) {
     const color = Color(0xFF42A5F5);
-    // Expanding scan wave from center
     final center = Offset(size.width / 2, size.height / 2);
     for (int i = 0; i < 3; i++) {
       final phase = (t + i * 0.33) % 1.0;
       final r = phase * size.width * 0.6;
-      final a = (0.25 * (1.0 - phase)).clamp(0.0, 0.25);
-      canvas.drawCircle(center, r, Paint()..color = color.withValues(alpha: a)..style = PaintingStyle.stroke..strokeWidth = 1.5);
+      canvas.drawCircle(center, r, Paint()..color = color.withValues(alpha: (0.25 * (1.0 - phase)).clamp(0.0, 0.25))..style = PaintingStyle.stroke..strokeWidth = 1.5);
     }
-    // Viewfinder crosshair
     final cp = Paint()..color = color.withValues(alpha: 0.3)..strokeWidth = 1;
     canvas.drawLine(Offset(center.dx, center.dy - 40), Offset(center.dx, center.dy + 40), cp);
     canvas.drawLine(Offset(center.dx - 40, center.dy), Offset(center.dx + 40, center.dy), cp);
@@ -169,7 +230,7 @@ class _CaptionPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter o) => true;
 }
 
-// ── Face: Rotating face outline + scan dots ─────────────────────────────
+// ── Face: Oval + scan dots ──────────────────────────────────────────────
 class _FacePainter extends CustomPainter {
   final double t, t2;
   _FacePainter(this.t, this.t2);
@@ -177,20 +238,14 @@ class _FacePainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     const color = Color(0xFF26C6DA);
     final cx = size.width / 2, cy = size.height / 2;
-    // Oval face outline
-    final ovalRect = Rect.fromCenter(center: Offset(cx, cy), width: 120, height: 160);
-    final ovalPaint = Paint()..color = color.withValues(alpha: 0.15 + 0.1 * sin(t * pi * 2))..style = PaintingStyle.stroke..strokeWidth = 2;
-    canvas.drawOval(ovalRect, ovalPaint);
-    // Scanning horizontal line
+    canvas.drawOval(Rect.fromCenter(center: Offset(cx, cy), width: 120, height: 160),
+      Paint()..color = color.withValues(alpha: 0.15 + 0.1 * sin(t * pi * 2))..style = PaintingStyle.stroke..strokeWidth = 2);
     final scanY = cy - 80 + 160 * t;
     canvas.drawLine(Offset(cx - 60, scanY), Offset(cx + 60, scanY),
       Paint()..color = color.withValues(alpha: 0.5)..strokeWidth = 1.5);
-    // Feature dots (eyes, nose, mouth)
-    final features = [Offset(cx - 20, cy - 25), Offset(cx + 20, cy - 25), Offset(cx, cy + 5), Offset(cx, cy + 30)];
-    for (int i = 0; i < features.length; i++) {
-      if (features[i].dy > scanY) continue;
-      final a = (0.5 * (1.0 - (scanY - features[i].dy) / 160)).clamp(0.1, 0.5);
-      canvas.drawCircle(features[i], 4, Paint()..color = color.withValues(alpha: a));
+    for (final f in [Offset(cx - 20, cy - 25), Offset(cx + 20, cy - 25), Offset(cx, cy + 5), Offset(cx, cy + 30)]) {
+      if (f.dy > scanY) continue;
+      canvas.drawCircle(f, 4, Paint()..color = color.withValues(alpha: (0.5 * (1.0 - (scanY - f.dy) / 160)).clamp(0.1, 0.5)));
     }
     _corners(canvas, size, color.withValues(alpha: 0.4));
   }
@@ -198,32 +253,28 @@ class _FacePainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter o) => true;
 }
 
-// ── Online OCR: Laser scan + text lines ─────────────────────────────────
+// ── Online OCR: Laser + text lines ──────────────────────────────────────
 class _OnlineOCRPainter extends CustomPainter {
   final double t, t2;
   _OnlineOCRPainter(this.t, this.t2);
   @override
   void paint(Canvas canvas, Size size) {
     final laserY = size.height * (0.15 + 0.7 * t);
-    final lp = Paint()..shader = LinearGradient(colors: [
-      Colors.transparent, AppTheme.accentCyan.withValues(alpha: 0.8), Colors.transparent,
-    ], stops: const [0, 0.5, 1]).createShader(Rect.fromLTWH(0, laserY - 1, size.width, 2));
-    canvas.drawRect(Rect.fromLTWH(0, laserY, size.width, 2), lp);
-    // Glow
+    canvas.drawRect(Rect.fromLTWH(0, laserY, size.width, 2), Paint()
+      ..shader = LinearGradient(colors: [Colors.transparent, AppTheme.accentCyan.withValues(alpha: 0.8), Colors.transparent],
+        stops: const [0, 0.5, 1]).createShader(Rect.fromLTWH(0, laserY - 1, size.width, 2)));
     canvas.drawRect(Rect.fromLTWH(0, laserY - 30, size.width, 60), Paint()
       ..shader = LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter,
         colors: [Colors.transparent, AppTheme.accentCyan.withValues(alpha: 0.08), Colors.transparent])
         .createShader(Rect.fromLTWH(0, laserY - 30, size.width, 60)));
-    // Text lines
     final rng = Random(42);
-    final linePaint = Paint()..strokeWidth = 1.5..strokeCap = StrokeCap.round;
+    final lp = Paint()..strokeWidth = 1.5..strokeCap = StrokeCap.round;
     for (int i = 0; i < 12; i++) {
       final y = size.height * (0.1 + i * 0.065);
       if (y > laserY) continue;
-      final a = (1.0 - (laserY - y) / size.height).clamp(0.05, 0.3);
-      linePaint.color = AppTheme.accentCyan.withValues(alpha: a);
+      lp.color = AppTheme.accentCyan.withValues(alpha: (1.0 - (laserY - y) / size.height).clamp(0.05, 0.3));
       canvas.drawLine(Offset(size.width * (0.08 + rng.nextDouble() * 0.1), y),
-        Offset(size.width * (0.5 + rng.nextDouble() * 0.4), y), linePaint);
+        Offset(size.width * (0.5 + rng.nextDouble() * 0.4), y), lp);
     }
     _corners(canvas, size, AppTheme.accentCyan.withValues(alpha: 0.4));
   }
@@ -231,7 +282,7 @@ class _OnlineOCRPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter o) => true;
 }
 
-// ── Offline OCR: Dot matrix + vertical beam ─────────────────────────────
+// ── Offline OCR: Dot matrix + beam ──────────────────────────────────────
 class _OfflineOCRPainter extends CustomPainter {
   final double t, t2;
   _OfflineOCRPainter(this.t, this.t2);
@@ -266,9 +317,10 @@ class _FileReadPainter extends CustomPainter {
   void paint(Canvas canvas, Size size) {
     final cx = size.width / 2, cy = size.height / 2;
     const color = Color(0xFFFF9800);
-    final pr = RRect.fromRectAndRadius(Rect.fromCenter(center: Offset(cx, cy), width: size.width * 0.55, height: size.height * 0.45), const Radius.circular(8));
-    canvas.drawRRect(pr, Paint()..color = color.withValues(alpha: 0.06));
-    canvas.drawRRect(pr, Paint()..color = color.withValues(alpha: 0.2)..style = PaintingStyle.stroke..strokeWidth = 1);
+    canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromCenter(center: Offset(cx, cy), width: size.width * 0.55, height: size.height * 0.45), const Radius.circular(8)),
+      Paint()..color = color.withValues(alpha: 0.06));
+    canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromCenter(center: Offset(cx, cy), width: size.width * 0.55, height: size.height * 0.45), const Radius.circular(8)),
+      Paint()..color = color.withValues(alpha: 0.2)..style = PaintingStyle.stroke..strokeWidth = 1);
     final rng = Random(99);
     final lp = Paint()..strokeWidth = 2..strokeCap = StrokeCap.round;
     final top = cy - size.height * 0.2;
@@ -279,7 +331,6 @@ class _FileReadPainter extends CustomPainter {
       lp.color = color.withValues(alpha: prog * 0.35);
       canvas.drawLine(Offset(xs, y), Offset(xs + size.width * (0.2 + rng.nextDouble() * 0.22) * prog, y), lp);
     }
-    // Highlight sweep
     final fy = top + size.height * 0.4 * t;
     canvas.drawRect(Rect.fromLTWH(cx - size.width * 0.25, fy - 15, size.width * 0.5, 30), Paint()
       ..shader = LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter,
@@ -290,7 +341,7 @@ class _FileReadPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter o) => true;
 }
 
-// ── Layout Analysis: Section boxes reveal ───────────────────────────────
+// ── Layout Analysis ─────────────────────────────────────────────────────
 class _LayoutPainter extends CustomPainter {
   final double t, t2;
   _LayoutPainter(this.t, this.t2);
@@ -325,7 +376,6 @@ class _LayoutPainter extends CustomPainter {
   bool shouldRepaint(covariant CustomPainter o) => true;
 }
 
-// ── Generic fallback ────────────────────────────────────────────────────
 class _GenericPainter extends CustomPainter {
   final double t;
   _GenericPainter(this.t);

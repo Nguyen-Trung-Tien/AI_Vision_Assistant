@@ -11,6 +11,9 @@ class AccessibilityManager {
   final SettingsService _settings = SettingsService();
   late final Future<void> _ttsInitFuture;
 
+  bool isSpeaking = false;
+  void Function(bool)? onSpeakingChanged;
+
   AccessibilityManager._internal() {
     _ttsInitFuture = _initTTS();
   }
@@ -23,6 +26,19 @@ class AccessibilityManager {
       await flutterTts.setSpeechRate(_settings.ttsSpeed);
       await flutterTts.setVolume(1.0);
       await flutterTts.awaitSpeakCompletion(true);
+
+      flutterTts.setStartHandler(() {
+        isSpeaking = true;
+        onSpeakingChanged?.call(true);
+      });
+      flutterTts.setCompletionHandler(() {
+        isSpeaking = false;
+        onSpeakingChanged?.call(false);
+      });
+      flutterTts.setCancelHandler(() {
+        isSpeaking = false;
+        onSpeakingChanged?.call(false);
+      });
     } catch (_) {
       // Keep app running even if TTS init fails on a specific device.
     }
