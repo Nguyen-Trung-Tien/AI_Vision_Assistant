@@ -13,6 +13,7 @@ class WalkingOverlay extends StatelessWidget {
     required this.safeDirection,
     required this.detections,
     required this.language,
+    required this.topOffset,
     this.frameWidth,
     this.frameHeight,
   });
@@ -26,6 +27,8 @@ class WalkingOverlay extends StatelessWidget {
   final String language;
   final int? frameWidth;
   final int? frameHeight;
+
+  final double topOffset;
 
   @override
   Widget build(BuildContext context) {
@@ -66,102 +69,108 @@ class WalkingOverlay extends StatelessWidget {
             ),
           ),
 
-        // Status card
+        // HUD Group (Status Card + Chips)
         Positioned(
-          top: topPadding + 150,
+          top: topPadding + topOffset,
           left: 16,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 6),
-            decoration: AppTheme.glassDecoration(
-              borderRadius: 12,
-              opacity: 0.6,
-            ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(
-                  '${language == 'vi' ? 'ĐI BỘ' : 'WALK'} - $currentFps FPS',
-                  style: const TextStyle(
-                    color: AppTheme.accentGreen,
-                    fontWeight: FontWeight.bold,
-                  ),
+          right: 16,
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              // Status card
+              Container(
+                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                decoration: AppTheme.glassDecoration(
+                  borderRadius: 12,
+                  opacity: 0.65,
                 ),
-                Text(
-                  '${language == 'vi' ? 'Vật cản gần nhất' : 'Nearest'}: $nearestObstacle',
-                  style: const TextStyle(color: Colors.white, fontSize: 12),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Text(
+                      '${language == 'vi' ? 'ĐI BỘ' : 'WALK'} - $currentFps FPS',
+                      style: const TextStyle(
+                        color: AppTheme.accentGreen,
+                        fontWeight: FontWeight.bold,
+                        fontSize: 13,
+                      ),
+                    ),
+                    const SizedBox(height: 2),
+                    Text(
+                      '${language == 'vi' ? 'Vật cản gần nhất' : 'Nearest'}: $nearestObstacle',
+                      style: const TextStyle(color: Colors.white, fontSize: 12),
+                    ),
+                    Text(
+                      '${language == 'vi' ? 'Hướng an toàn' : 'Safe'}: $safeDirection',
+                      style: const TextStyle(
+                        color: AppTheme.accentCyan,
+                        fontSize: 12,
+                      ),
+                    ),
+                  ],
                 ),
-                Text(
-                  '${language == 'vi' ? 'Hướng an toàn' : 'Safe'}: $safeDirection',
-                  style: const TextStyle(
-                    color: AppTheme.accentCyan,
-                    fontSize: 12,
-                  ),
+              ),
+
+              const SizedBox(height: 12),
+
+              // Detection chips
+              if (detections.isNotEmpty)
+                Wrap(
+                  spacing: 8,
+                  runSpacing: 8,
+                  children: detections.take(6).map((d) { // Limit to 6 to prevent overfilling screen
+                    final label = d['label']?.toString() ?? 'Object';
+                    final distance = (d['distance'] as num?)?.toDouble();
+                    final color = _getDistanceColor(distance);
+
+                    return Container(
+                      padding: const EdgeInsets.symmetric(
+                        horizontal: 10,
+                        vertical: 5,
+                      ),
+                      decoration: BoxDecoration(
+                        color: color.withValues(alpha: 0.8),
+                        borderRadius: BorderRadius.circular(20),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withValues(alpha: 0.2),
+                            blurRadius: 4,
+                            offset: const Offset(0, 2),
+                          ),
+                        ],
+                      ),
+                      child: Row(
+                        mainAxisSize: MainAxisSize.min,
+                        children: [
+                          Flexible(
+                            child: Text(
+                              label.toUpperCase(),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                          if (distance != null) ...[
+                            const SizedBox(width: 4),
+                            Text(
+                              '${distance.toStringAsFixed(1)}m',
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 10,
+                              ),
+                            ),
+                          ],
+                        ],
+                      ),
+                    );
+                  }).toList(),
                 ),
-              ],
-            ),
+            ],
           ),
         ),
-
-        // Detection chips
-        if (detections.isNotEmpty)
-          Positioned(
-            left: 16,
-            right: 16,
-            top: topPadding + 230,
-            child: Wrap(
-              spacing: 8,
-              runSpacing: 8,
-              children: detections.map((d) {
-                final label = d['label']?.toString() ?? 'Object';
-                final distance = (d['distance'] as num?)?.toDouble();
-                final color = _getDistanceColor(distance);
-
-                return Container(
-                  padding: const EdgeInsets.symmetric(
-                    horizontal: 10,
-                    vertical: 4,
-                  ),
-                  decoration: BoxDecoration(
-                    color: color.withValues(alpha: 0.8),
-                    borderRadius: BorderRadius.circular(20),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.black.withValues(alpha: 0.2),
-                        blurRadius: 4,
-                        offset: const Offset(0, 2),
-                      ),
-                    ],
-                  ),
-                  child: Row(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      Flexible(
-                        child: Text(
-                          label.toUpperCase(),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                            fontWeight: FontWeight.bold,
-                          ),
-                          overflow: TextOverflow.ellipsis,
-                        ),
-                      ),
-                      if (distance != null) ...[
-                        const SizedBox(width: 4),
-                        Text(
-                          '${distance.toStringAsFixed(1)}m',
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 10,
-                          ),
-                        ),
-                      ],
-                    ],
-                  ),
-                );
-              }).toList(),
-            ),
-          ),
       ],
     );
   }

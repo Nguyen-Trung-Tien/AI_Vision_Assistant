@@ -22,7 +22,7 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 <br/>
 
-![Version](https://img.shields.io/badge/Version-1.8.0-blue?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.9.0-blue?style=flat-square)
 ![License](https://img.shields.io/badge/License-UNLICENSED-gray?style=flat-square)
 ![Status](https://img.shields.io/badge/Status-In_Development-orange?style=flat-square)
 [![CI/CD](https://github.com/Nguyen-Trung-Tien/AI_Vision_Assistant/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/Nguyen-Trung-Tien/AI_Vision_Assistant/actions/workflows/ci-cd.yml)
@@ -75,10 +75,12 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 ## 📰 Cập nhật mới nhất
 
-### 🗓️ Tháng 5/2026 — v1.8.0 (Current)
+### 🗓️ Tháng 5/2026 — v1.9.0 (Current)
 
 | Ngày      | Cập nhật                        | Mô tả                                                                                                                                  |
 | --------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| **10/05** | 📱 Layout Optimization          | Tối ưu bố cục Mobile: sắp xếp HUD đi bộ, cảnh báo nguy hiểm và các nút chức năng động, tránh chồng chéo trên mọi kích thước màn hình   |
+| **10/05** | ⚙️ Modern Settings              | Giao diện Cài đặt mới dạng thẻ (Card-based), phân loại khoa học, tối ưu hóa vùng chạm ngón cái (Thumb Zone) và dễ truy cập hơn         |
 | **10/05** | 🎨 Mode Animations              | Animation riêng cho 7 chế độ AI (Money/Caption/Face/OCR/File/Layout) với CustomPaint và màu sắc khác biệt                              |
 | **10/05** | 🔊 Speaking Overlay              | Hiệu ứng sóng âm waveform khi TTS đang đọc kết quả, overlay giữ nguyên cho đến khi đọc xong                                           |
 | **10/05** | 🎯 Mode Color System             | Hệ thống màu riêng cho mỗi chế độ (Gold/Blue/Teal/Cyan/Orange/Green/Pink) trên carousel, icon và indicator dots                        |
@@ -156,11 +158,20 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 ---
 
-## 🚀 Các tính năng nổi bật vừa cập nhật (v1.8.0)
+## 🚀 Các tính năng nổi bật vừa cập nhật (v1.9.0)
 
-Phiên bản v1.8.0 nâng cấp trải nghiệm người dùng với **hệ thống phản hồi thị giác chuyên biệt** cho từng chế độ AI:
+Phiên bản v1.9.0 tập trung vào **tối ưu hóa trải nghiệm người dùng (UX)** và **hiện đại hóa giao diện**:
 
-1.  **🎨 Mode-Specific Animations (Mới)**:
+1.  **📱 Tối ưu hóa Bố cục (Mới)**:
+    *   Tự động tính toán vị trí các phần tử HUD để không chồng chéo lên Banner cảnh báo nguy hiểm.
+    *   Gom nhóm các nút chức năng (Cài đặt, Đăng ký mặt) vào vùng thuận tiện cho thao tác một tay.
+    *   Cải thiện phản hồi hình ảnh khi có va chạm vật cản.
+
+2.  **⚙️ Giao diện Cài đặt Hiện đại (Mới)**:
+    *   Cấu trúc dạng thẻ (Card) phân loại rõ ràng: Hành động nhanh, Giọng nói, AI, Đi bộ, Âm thanh.
+    *   Sử dụng hiệu ứng co giãn (Sliver) và thiết kế kính mờ (Glassmorphism) đồng nhất.
+
+3.  **🎨 Mode-Specific Animations**:
     - Mỗi chế độ AI có animation `CustomPaint` riêng biệt với màu sắc và hiệu ứng đặc trưng.
     - 7 animation: Golden Ripples (Tiền) • Scan Wave (Caption) • Face Outline (Khuôn mặt) • Laser OCR (Online) • Grid Matrix (Offline) • Page Flip (File) • Layout Reveal (Bố cục).
 

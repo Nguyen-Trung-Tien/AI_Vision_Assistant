@@ -8,6 +8,8 @@
 
 | Ngày | Cập nhật | Chi tiết |
 | --- | --- | --- |
+| **10/05** | 📱 Layout Optimization | Tối ưu bố cục: HUD và các nút chức năng không chồng chéo, tối ưu cho thao tác một tay. |
+| **10/05** | ⚙️ Modern Settings | Giao diện Cài đặt mới dạng Card, hiện đại và dễ truy cập hơn. |
 | **10/05** | 🎨 Mode Animations | Animation riêng cho 7 chế độ (Money/Caption/Face/OCR/File/Layout) với màu sắc và hiệu ứng khác biệt. |
 | **10/05** | 🔊 Speaking Overlay | Hiệu ứng sóng âm waveform khi TTS đang đọc kết quả, giữ overlay cho đến khi đọc xong. |
 | **10/05** | 🎯 Mode Color System | Mỗi chế độ có màu riêng (Gold/Blue/Teal/Cyan/Orange/Green/Pink) trên carousel, icon và indicator. |
@@ -22,8 +24,11 @@
 
 ---
 
-## 🌟 Tính năng nổi bật (v1.8.0)
+## 🌟 Tính năng nổi bật (v1.9.0)
 
+- **Layout Optimization**: Tự động sắp xếp các thành phần UI để tránh chồng chéo (HUD, Banners, Buttons).
+- **Modern Settings Screen**: Thiết kế card-based hiện đại, phân loại cài đặt khoa học và trực quan.
+- **Thumb Zone Design**: Các nút tương tác chính được đặt ở vị trí thuận tiện nhất cho thao tác một ngón cái.
 - **Mode-Specific Animations**: Mỗi chế độ có animation và màu sắc riêng biệt (Gold/Blue/Teal/Cyan/Orange/Green/Pink).
 - **Speaking Overlay**: Hiệu ứng sóng âm waveform hiển thị trong suốt quá trình TTS đọc kết quả.
 - **Continuous Stream (Walking Mode)**: Chế độ đi bộ 3-5 FPS, phân tích môi trường liên tục mà không cần thao tác tay.

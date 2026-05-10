@@ -103,7 +103,7 @@ class StatusOverlay extends StatelessWidget {
         ),
         if (isFlashOn || isNightMode)
           Positioned(
-            top: topPadding,
+            top: topPadding + 64, // Shifted down to avoid overlapping with the walk toggle
             right: 16,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),

@@ -371,6 +371,14 @@ class _MainScreenState extends State<MainScreen>
   Widget build(BuildContext context) {
     final lang = _ctrl.settings.language;
     final modes = _ctrl.getModes(lang);
+    final topPadding = MediaQuery.of(context).padding.top;
+    
+    final bool isDangerVisible = _ctrl.dangerMessage != null ||
+              (_ctrl.isWalkingModeEnabled &&
+                  _ctrl.walkingNearestObstacle != '-');
+    
+    // Calculate top offset for walking HUD to avoid danger banner
+    final double walkingHudTopOffset = isDangerVisible ? 165 : 85;
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -390,6 +398,7 @@ class _MainScreenState extends State<MainScreen>
             safeDirection: _ctrl.walkingSafeDirection,
             detections: _ctrl.currentDetections,
             language: lang,
+            topOffset: walkingHudTopOffset,
             frameWidth: _ctrl.lastFrameWidth,
             frameHeight: _ctrl.lastFrameHeight,
           ),
@@ -454,7 +463,7 @@ class _MainScreenState extends State<MainScreen>
           // Feedback prompt
           if (_ctrl.pendingFeedbackDetectionId != null)
             Positioned(
-              bottom: 180,
+              bottom: 220, // Moved up to clear bottom buttons
               left: 16,
               right: 16,
               child: Container(
@@ -465,34 +474,37 @@ class _MainScreenState extends State<MainScreen>
                 decoration:
                     AppTheme.glassDecoration(
                       borderRadius: 18,
-                      opacity: 0.75,
+                      opacity: 0.8,
                     ).copyWith(
                       border: Border.all(
-                        color: AppTheme.accentPurple.withValues(alpha: 0.3),
+                        color: AppTheme.accentPurple.withValues(alpha: 0.4),
+                        width: 1.2,
                       ),
                     ),
                 child: Row(
                   children: [
-                    Expanded(
-                      child: Text(
-                        'Kết quả AI có đúng không?',
-                        style: AppTheme.bodyMedium.copyWith(
-                          color: Colors.white,
-                          fontSize: 14,
-                        ),
-                      ),
-                    ),
-                    const SizedBox(width: 10),
                     _FeedbackChip(
-                      label: 'Đúng',
+                      label: lang == 'vi' ? 'Đúng' : 'Yes',
                       color: AppTheme.accentGreen,
                       onTap: () => _ctrl.submitFeedback(true, _refresh),
                     ),
                     const SizedBox(width: 8),
                     _FeedbackChip(
-                      label: 'Sai',
+                      label: lang == 'vi' ? 'Sai' : 'No',
                       color: AppTheme.accentRed,
                       onTap: () => _ctrl.submitFeedback(false, _refresh),
+                    ),
+                    const SizedBox(width: 12),
+                    Expanded(
+                      child: Text(
+                        lang == 'vi' ? 'Kết quả AI có đúng không?' : 'Is the AI result correct?',
+                        textAlign: TextAlign.right,
+                        style: AppTheme.bodyMedium.copyWith(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontWeight: FontWeight.w600,
+                        ),
+                      ),
                     ),
                   ],
                 ),
@@ -576,73 +588,75 @@ class _MainScreenState extends State<MainScreen>
             ),
           ),
 
-          // Face register button
-          Positioned(
-            bottom: 210,
-            right: 16,
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () => unawaited(_openFaceRegister()),
-                borderRadius: BorderRadius.circular(28),
-                child: Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.5),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: Colors.teal.withValues(alpha: 0.4),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: Colors.teal.withValues(alpha: 0.3),
-                        blurRadius: 14,
-                        spreadRadius: 1,
-                      ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.person_add_alt_1_rounded,
-                    color: Colors.tealAccent,
-                    size: 26,
-                  ),
-                ),
-              ),
-            ),
-          ),
-
-          // Settings button
+          // Action buttons column (Right side)
           Positioned(
             bottom: 130,
             right: 16,
-            child: Material(
-              color: Colors.transparent,
-              child: InkWell(
-                onTap: () => _ctrl.openSettings(context, onReturn: _refresh),
-                borderRadius: BorderRadius.circular(28),
-                child: Container(
-                  padding: const EdgeInsets.all(14),
-                  decoration: BoxDecoration(
-                    color: Colors.black.withValues(alpha: 0.5),
-                    shape: BoxShape.circle,
-                    border: Border.all(
-                      color: AppTheme.accentPurple.withValues(alpha: 0.4),
-                    ),
-                    boxShadow: [
-                      BoxShadow(
-                        color: AppTheme.accentPurple.withValues(alpha: 0.3),
-                        blurRadius: 14,
-                        spreadRadius: 1,
+            child: Column(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                // Face register button
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => unawaited(_openFaceRegister()),
+                    borderRadius: BorderRadius.circular(28),
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.5),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: Colors.teal.withValues(alpha: 0.4),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.teal.withValues(alpha: 0.3),
+                            blurRadius: 14,
+                            spreadRadius: 1,
+                          ),
+                        ],
                       ),
-                    ],
-                  ),
-                  child: const Icon(
-                    Icons.settings_rounded,
-                    color: AppTheme.accentCyan,
-                    size: 26,
+                      child: const Icon(
+                        Icons.person_add_alt_1_rounded,
+                        color: Colors.tealAccent,
+                        size: 26,
+                      ),
+                    ),
                   ),
                 ),
-              ),
+                const SizedBox(height: 16),
+                // Settings button
+                Material(
+                  color: Colors.transparent,
+                  child: InkWell(
+                    onTap: () => _ctrl.openSettings(context, onReturn: _refresh),
+                    borderRadius: BorderRadius.circular(28),
+                    child: Container(
+                      padding: const EdgeInsets.all(14),
+                      decoration: BoxDecoration(
+                        color: Colors.black.withValues(alpha: 0.5),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: AppTheme.accentPurple.withValues(alpha: 0.4),
+                        ),
+                        boxShadow: [
+                          BoxShadow(
+                            color: AppTheme.accentPurple.withValues(alpha: 0.3),
+                            blurRadius: 14,
+                            spreadRadius: 1,
+                          ),
+                        ],
+                      ),
+                      child: const Icon(
+                        Icons.settings_rounded,
+                        color: AppTheme.accentCyan,
+                        size: 26,
+                      ),
+                    ),
+                  ),
+                ),
+              ],
             ),
           ),
 
