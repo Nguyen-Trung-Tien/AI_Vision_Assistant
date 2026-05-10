@@ -446,8 +446,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
             children: [
               Icon(icon, color: iconColor, size: 20),
               const SizedBox(width: 12),
-              Text(title, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500)),
-              const Spacer(),
+              Expanded(
+                child: Text(
+                  title,
+                  style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500),
+                  maxLines: 1,
+                  overflow: TextOverflow.ellipsis,
+                ),
+              ),
+              const SizedBox(width: 8),
               Text(label, style: TextStyle(color: iconColor, fontWeight: FontWeight.bold)),
             ],
           ),
