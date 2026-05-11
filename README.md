@@ -77,18 +77,22 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 ### 🗓️ Tháng 5/2026 — v1.9.0 (Current)
 
-| Ngày      | Cập nhật                        | Mô tả                                                                                                                                  |
-| --------- | ------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
-| **10/05** | 📱 Layout Optimization          | Tối ưu bố cục Mobile: sắp xếp HUD đi bộ, cảnh báo nguy hiểm và các nút chức năng động, tránh chồng chéo trên mọi kích thước màn hình   |
-| **10/05** | ⚙️ Modern Settings              | Giao diện Cài đặt mới dạng thẻ (Card-based), phân loại khoa học, tối ưu hóa vùng chạm ngón cái (Thumb Zone) và dễ truy cập hơn         |
-| **10/05** | 🎨 Mode Animations              | Animation riêng cho 7 chế độ AI (Money/Caption/Face/OCR/File/Layout) với CustomPaint và màu sắc khác biệt                              |
-| **10/05** | 🔊 Speaking Overlay              | Hiệu ứng sóng âm waveform khi TTS đang đọc kết quả, overlay giữ nguyên cho đến khi đọc xong                                           |
-| **10/05** | 🎯 Mode Color System             | Hệ thống màu riêng cho mỗi chế độ (Gold/Blue/Teal/Cyan/Orange/Green/Pink) trên carousel, icon và indicator dots                        |
-| **07/05** | 🚨 SOS Success UI               | Cập nhật giao diện thông báo trạng thái "Đã gửi cảnh báo SOS" kèm tính năng đếm ngược 10 giây Hủy báo động giả trực quan trên Mobile |
-| **01/05** | 📖 Layout Analysis              | Tích hợp Gemini 1.5 Flash cho phân tích bố cục menu, sách và tài liệu phức tạp, trả về cấu trúc chi tiết và đọc qua TTS                |
-| **01/05** | 🚀 CI/CD Automation             | Thiết lập GitHub Actions tự động hóa quy trình Lint, Test và Build cho toàn bộ thành phần (Backend, AI, Admin, Mobile)                 |
-| **01/05** | 📱 Admin Dashboard PWA          | Chuyển đổi Admin Dashboard sang Progressive Web App (PWA), cho phép cài đặt và hoạt động ổn định trên nhiều thiết bị                   |
-| **01/05** | 🛡️ Stability & Type Safety      | Hoàn thiện dọn dẹp linting (flake8, ESLint) và thắt chặt kiểu dữ liệu (Strict Typing) cho toàn bộ hệ thống                             |
+| Ngày      | Cập nhật                   | Mô tả                                                                                                                                |
+| --------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| **10/05** | 📱 Layout Optimization     | Tối ưu bố cục Mobile: sắp xếp HUD đi bộ, cảnh báo nguy hiểm và các nút chức năng động, tránh chồng chéo trên mọi kích thước màn hình |
+| **10/05** | ⚙️ Modern Settings         | Giao diện Cài đặt mới dạng thẻ (Card-based), phân loại khoa học, tối ưu hóa vùng chạm ngón cái (Thumb Zone) và dễ truy cập hơn       |
+| **10/05** | 🎨 Mode Animations         | Animation riêng cho 7 chế độ AI (Money/Caption/Face/OCR/File/Layout) với CustomPaint và màu sắc khác biệt                            |
+| **10/05** | 🔊 Speaking Overlay        | Hiệu ứng sóng âm waveform khi TTS đang đọc kết quả, overlay giữ nguyên cho đến khi đọc xong                                          |
+| **10/05** | 🎯 Mode Color System       | Hệ thống màu riêng cho mỗi chế độ (Gold/Blue/Teal/Cyan/Orange/Green/Pink) trên carousel, icon và indicator dots                      |
+| **07/05** | 🚨 SOS Success UI          | Cập nhật giao diện thông báo trạng thái "Đã gửi cảnh báo SOS" kèm tính năng đếm ngược 10 giây Hủy báo động giả trực quan trên Mobile |
+| **01/05** | 📖 Layout Analysis         | Tích hợp Gemini 1.5 Flash cho phân tích bố cục menu, sách và tài liệu phức tạp, trả về cấu trúc chi tiết và đọc qua TTS              |
+| **01/05** | 🚀 CI/CD Automation        | Thiết lập GitHub Actions tự động hóa quy trình Lint, Test và Build cho toàn bộ thành phần (Backend, AI, Admin, Mobile)               |
+| **01/05** | 📱 Admin Dashboard PWA     | Chuyển đổi Admin Dashboard sang Progressive Web App (PWA), cho phép cài đặt và hoạt động ổn định trên nhiều thiết bị                 |
+| **01/05** | 🛡️ Stability & Type Safety | Hoàn thiện dọn dẹp linting (flake8, ESLint) và thắt chặt kiểu dữ liệu (Strict Typing) cho toàn bộ hệ thống                           |
+
+### 🗓️ Tháng 5/2026 — v1.8.0
+
+### 🗓️ Tháng 5/2026 — v1.7.0
 
 ### 🗓️ Tháng 4/2026 — v1.6.0
 
@@ -163,36 +167,36 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 Phiên bản v1.9.0 tập trung vào **tối ưu hóa trải nghiệm người dùng (UX)** và **hiện đại hóa giao diện**:
 
 1.  **📱 Tối ưu hóa Bố cục (Mới)**:
-    *   Tự động tính toán vị trí các phần tử HUD để không chồng chéo lên Banner cảnh báo nguy hiểm.
-    *   Gom nhóm các nút chức năng (Cài đặt, Đăng ký mặt) vào vùng thuận tiện cho thao tác một tay.
-    *   Cải thiện phản hồi hình ảnh khi có va chạm vật cản.
+    - Tự động tính toán vị trí các phần tử HUD để không chồng chéo lên Banner cảnh báo nguy hiểm.
+    - Gom nhóm các nút chức năng (Cài đặt, Đăng ký mặt) vào vùng thuận tiện cho thao tác một tay.
+    - Cải thiện phản hồi hình ảnh khi có va chạm vật cản.
 
 2.  **⚙️ Giao diện Cài đặt Hiện đại (Mới)**:
-    *   Cấu trúc dạng thẻ (Card) phân loại rõ ràng: Hành động nhanh, Giọng nói, AI, Đi bộ, Âm thanh.
-    *   Sử dụng hiệu ứng co giãn (Sliver) và thiết kế kính mờ (Glassmorphism) đồng nhất.
+    - Cấu trúc dạng thẻ (Card) phân loại rõ ràng: Hành động nhanh, Giọng nói, AI, Đi bộ, Âm thanh.
+    - Sử dụng hiệu ứng co giãn (Sliver) và thiết kế kính mờ (Glassmorphism) đồng nhất.
 
 3.  **🎨 Mode-Specific Animations**:
     - Mỗi chế độ AI có animation `CustomPaint` riêng biệt với màu sắc và hiệu ứng đặc trưng.
     - 7 animation: Golden Ripples (Tiền) • Scan Wave (Caption) • Face Outline (Khuôn mặt) • Laser OCR (Online) • Grid Matrix (Offline) • Page Flip (File) • Layout Reveal (Bố cục).
 
-2.  **🔊 Speaking Overlay (Mới)**:
+4.  **🔊 Speaking Overlay (Mới)**:
     - Hiệu ứng sóng âm waveform hiển thị khi TTS đang đọc kết quả.
     - Overlay giữ nguyên suốt quá trình xử lý AI → đọc kết quả → tự đóng khi hoàn tất.
 
-3.  **🎯 Mode Color System (Mới)**:
+5.  **🎯 Mode Color System (Mới)**:
     - Hệ thống 7 màu riêng: 🟡 Gold (Tiền) • 🔵 Blue (Caption) • 🩵 Teal (Face) • 🔹 Cyan (OCR Online) • 🟠 Orange (File) • 🟢 Green (OCR Offline) • 🩷 Pink (Layout).
     - Áp dụng đồng nhất trên carousel, icon, indicator dots, và processing overlay.
 
-4.  **🚨 Nâng cấp Trải nghiệm SOS**:
+6.  **🚨 Nâng cấp Trải nghiệm SOS**:
     - Giao diện thông báo SOS trực quan kèm đếm ngược 10 giây "Hủy báo động giả".
 
-5.  **📖 Layout Analysis**:
+7.  **📖 Layout Analysis**:
     - Phân tích bố cục menu, sách, tài liệu phức tạp bằng Gemini 1.5 Flash.
 
-6.  **🧠 Nhận diện khuôn mặt (InsightFace)**:
+8.  **🧠 Nhận diện khuôn mặt (InsightFace)**:
     - Nhận diện người quen qua model `Buffalo_L`, phản hồi rung và giọng nói.
 
-7.  **🚶 Walking Mode + Spatial Audio 3D**:
+9.  **🚶 Walking Mode + Spatial Audio 3D**:
     - Stream 3–5 FPS liên tục, cảnh báo vật cản theo hướng trái/phải qua tai nghe stereo.
 
 ---
@@ -352,17 +356,17 @@ sequenceDiagram
 
 ## 📱 Các chế độ trên Mobile App
 
-| Chế độ         | Tên               | Màu           | Mô tả                                                    | Online/Offline |
-| -------------- | ----------------- | ------------- | -------------------------------------------------------- | -------------- |
-| **Mode 0**     | Nhận diện tiền    | 🟡 Gold       | Nhận diện tiền VNĐ và vật thể (YOLO/TFLite)              | Both           |
-| **Mode 1**     | Mô tả cảnh        | 🔵 Blue       | Mô tả không gian + MiDaS Depth + cảnh báo nguy hiểm      | Online         |
-| **Mode 2**     | Nhận diện mặt     | 🩵 Teal       | Nhận diện người quen đã đăng ký (InsightFace)             | Online         |
-| **Mode 3**     | Điều hướng GPS    | 💜 Purple     | GPS + la bàn + chỉ đường OSRM/OSM                        | Online         |
-| **Mode 4**     | OCR Online        | 🔹 Cyan       | Đọc văn bản qua Tesseract / Gemini (Smart OCR)           | Online         |
-| **Mode 5**     | Đọc tệp           | 🟠 Orange     | Đọc file PDF, TXT, DOCX bằng TTS                         | Offline        |
-| **Mode 6**     | OCR Offline       | 🟢 Green      | ML Kit Text Recognition + Barcode Scanner                | Offline        |
-| **Mode 7**     | Phân tích bố cục  | 🩷 Pink       | Phân tích layout trang/tài liệu (Gemini)                 | Online         |
-| **Visual Q&A** | Hỏi đáp           | —             | Hỏi đáp trực quan bằng giọng nói (Gemini AI)             | Online         |
+| Chế độ         | Tên              | Màu       | Mô tả                                               | Online/Offline |
+| -------------- | ---------------- | --------- | --------------------------------------------------- | -------------- |
+| **Mode 0**     | Nhận diện tiền   | 🟡 Gold   | Nhận diện tiền VNĐ và vật thể (YOLO/TFLite)         | Both           |
+| **Mode 1**     | Mô tả cảnh       | 🔵 Blue   | Mô tả không gian + MiDaS Depth + cảnh báo nguy hiểm | Online         |
+| **Mode 2**     | Nhận diện mặt    | 🩵 Teal   | Nhận diện người quen đã đăng ký (InsightFace)       | Online         |
+| **Mode 3**     | Điều hướng GPS   | 💜 Purple | GPS + la bàn + chỉ đường OSRM/OSM                   | Online         |
+| **Mode 4**     | OCR Online       | 🔹 Cyan   | Đọc văn bản qua Tesseract / Gemini (Smart OCR)      | Online         |
+| **Mode 5**     | Đọc tệp          | 🟠 Orange | Đọc file PDF, TXT, DOCX bằng TTS                    | Offline        |
+| **Mode 6**     | OCR Offline      | 🟢 Green  | ML Kit Text Recognition + Barcode Scanner           | Offline        |
+| **Mode 7**     | Phân tích bố cục | 🩷 Pink   | Phân tích layout trang/tài liệu (Gemini)            | Online         |
+| **Visual Q&A** | Hỏi đáp          | —         | Hỏi đáp trực quan bằng giọng nói (Gemini AI)        | Online         |
 
 ### Các thành phần Mobile App
 
@@ -684,18 +688,21 @@ GEMINI_MAX_OUTPUT_TOKENS=256             # Optional: limit response length
 ### Danh sách 20 lớp đối tượng (canonical classes)
 
 ```
- Tiền VN (9):                Vật thể & giao thông (11):
+ Tiền VN (9):                Vật thể & giao thông (13):
   0: tien_1k                  9: xe_may (motorbike)
   1: tien_2k                 10: cau_thang (stairs)
   2: tien_5k                 11: o_ga (pothole)
-  3: tien_10k                12: ong_cong (manhole)
+  3: tien_10k                12: nap_cong (manhole_cover)
   4: tien_20k                13: xe_lon (car/truck/bus)
   5: tien_50k                14: nguoi (person/male/female)
   6: tien_100k               15: den_do (traffic_light_red)
-  7: tien_200k               16: den_vang (traffic_light_yellow)
+  7: tien_200k               16: bang_hieu (sign)
   8: tien_500k               17: den_xanh (traffic_light_green)
-                             18: den_giao_thong (traffic_light)
-                             19: vach_qua_duong (crosswalk)
+                             18: vach_qua_duong (crosswalk)
+                             19: thung_rac (trash_can)
+                             20: xe_dap (bicycle)
+                             21: rao_chan (barrier)
+
 ```
 
 > [!NOTE]
@@ -752,15 +759,8 @@ Dashboard quản trị cung cấp các trang:
 - [x] CI/CD pipeline tự động hóa (GitHub Actions)
 - [x] Progressive Web App cho Admin Dashboard
 
-### Đang phát triển
-
-- [ ] Tối ưu hóa depth estimation cho các loại địa hình phức tạp
-- [ ] Nhận diện hành vi nguy hiểm (xe phóng nhanh, vật rơi)
-
 ### Kế hoạch tương lai
 
-- [ ] Tối ưu hóa depth estimation cho các loại địa hình phức tạp
-- [ ] Nhận diện hành vi nguy hiểm (xe phóng nhanh, vật rơi)
 - [ ] Tích hợp mô hình ngôn ngữ lớn (LLM) cho hội thoại tư vấn offline
 
 ---
@@ -863,4 +863,3 @@ _Đồ án tốt nghiệp — Đại học Giao thông Vận tải TP. Hồ Chí
 **⭐ Nếu dự án hữu ích, hãy cho một star trên GitHub! ⭐**
 
 </div>
-```

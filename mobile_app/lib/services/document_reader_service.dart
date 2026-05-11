@@ -9,7 +9,7 @@ class DocumentReaderService {
     script: TextRecognitionScript.latin,
   );
 
-  Future<String?> pickAndExtractText() async {
+  Future<String?> pickAndExtractText({void Function()? onFilePicked}) async {
     try {
       FilePickerResult? result = await FilePicker.platform.pickFiles(
         type: FileType.custom,
@@ -20,6 +20,9 @@ class DocumentReaderService {
         // Canceled
         return null;
       }
+
+      // Trigger callback as soon as file is picked
+      onFilePicked?.call();
 
       String path = result.files.single.path!;
       String extension = result.files.single.extension?.toLowerCase() ?? '';

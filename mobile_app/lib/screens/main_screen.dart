@@ -44,7 +44,7 @@ class _MainScreenState extends State<MainScreen>
   void initState() {
     super.initState();
 
-    _ctrl = MainController(cameras: widget.cameras);
+    _ctrl = MainController(cameras: widget.cameras, onStateChanged: _refresh);
     _pulseController = AnimationController(
       vsync: this,
       duration: const Duration(seconds: 2),
@@ -294,8 +294,6 @@ class _MainScreenState extends State<MainScreen>
         setState(() {});
         _ctrl.aiService.requestOnlineOCR();
       case 5:
-        _ctrl.activeProcessingMode = 'file_read';
-        setState(() {});
         unawaited(_ctrl.pickAndReadFile());
       case 6:
         _ctrl.activeProcessingMode = 'offline_ocr';

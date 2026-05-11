@@ -22,9 +22,10 @@ import 'package:mobile_app/l10n/app_localizations.dart';
 
 /// Central controller that owns all services and shared state for MainScreen.
 class MainController {
-  MainController({required this.cameras});
+  MainController({required this.cameras, this.onStateChanged});
 
   final List<CameraDescription>? cameras;
+  final VoidCallback? onStateChanged;
 
   // ── Services ──────────────────────────────────────────────────────────
   late WebSocketService wsService;
@@ -387,24 +388,42 @@ class MainController {
   // ── File reading ──────────────────────────────────────────────────────
   Future<void> pickAndReadFile() async {
     final lang = settings.language;
-    isProcessing = true;
-    await accessibilityManager.speak(AppLocalizations.t('main_reading_file', lang));
+    // Don't set isProcessing = true yet to avoid early animation
+    await accessibilityManager.speak(
+      AppLocalizations.t('main_reading_file', lang),
+    );
 
     try {
-      final text = await documentReaderService.pickAndExtractText();
+      final text = await documentReaderService.pickAndExtractText(
+        onFilePicked: () {
+          // File selected, now show animation
+          isProcessing = true;
+          activeProcessingMode = 'file_read';
+          onStateChanged?.call();
+        },
+      );
+
       if (text == null) {
+        // Canceled or no file picked
         isProcessing = false;
         activeProcessingMode = null;
+        onStateChanged?.call();
         return;
       }
+
       if (text.isEmpty) {
-        await accessibilityManager.speak(AppLocalizations.t('main_file_empty', lang));
+        await accessibilityManager.speak(
+          AppLocalizations.t('main_file_empty', lang),
+        );
         isProcessing = false;
         activeProcessingMode = null;
+        onStateChanged?.call();
         return;
       }
+
+      // Keep animation while TTS is reading (onSpeakingChanged handles cleanup)
       isProcessing = false;
-      // TTS will keep overlay via isSpeaking → onSpeakingChanged handles cleanup
+      onStateChanged?.call();
       await accessibilityManager.speak(sanitizeForTts(text));
     } catch (e) {
       debugPrint('Lỗi đọc file: $e');
@@ -413,10 +432,13 @@ class MainController {
           AppLocalizations.t('main_file_unsupported', lang),
         );
       } else {
-        await accessibilityManager.speak(AppLocalizations.t('main_file_error', lang));
+        await accessibilityManager.speak(
+          AppLocalizations.t('main_file_error', lang),
+        );
       }
       isProcessing = false;
       activeProcessingMode = null;
+      onStateChanged?.call();
     }
   }
 
