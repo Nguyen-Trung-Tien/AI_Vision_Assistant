@@ -52,6 +52,20 @@ class _ModeProcessingOverlayState extends State<ModeProcessingOverlay>
   Color get _color => _modeColors[widget.mode] ?? AppTheme.accentCyan;
   IconData get _icon => _modeIcons[widget.mode] ?? Icons.auto_awesome;
 
+  CustomPainter _getModePainter() {
+    final t = _p.value, t2 = _s.value;
+    switch (widget.mode) {
+      case 'money':       return _MoneyPainter(t, t2, isSpeaking: widget.isSpeaking);
+      case 'caption':     return _CaptionPainter(t, t2, isSpeaking: widget.isSpeaking);
+      case 'face':        return _FacePainter(t, t2, isSpeaking: widget.isSpeaking);
+      case 'online_ocr':  return _OnlineOCRPainter(t, t2, isSpeaking: widget.isSpeaking);
+      case 'offline_ocr': return _OfflineOCRPainter(t, t2, isSpeaking: widget.isSpeaking);
+      case 'file_read':   return _FileReadPainter(t, t2, isSpeaking: widget.isSpeaking);
+      case 'layout_analysis': return _LayoutPainter(t, t2, isSpeaking: widget.isSpeaking);
+      default: return _GenericPainter(t);
+    }
+  }
+
   @override
   Widget build(BuildContext context) {
     return Container(
@@ -60,27 +74,14 @@ class _ModeProcessingOverlayState extends State<ModeProcessingOverlay>
         animation: Listenable.merge([_p, _s, _wave]),
         builder: (context, _) => Stack(
           children: [
-            Positioned.fill(child: CustomPaint(painter: _buildPainter())),
+            Positioned.fill(child: CustomPaint(painter: _getModePainter())),
+            if (widget.isSpeaking)
+              Positioned.fill(child: CustomPaint(painter: _SpeakingWavePainter(_wave.value, _color))),
             Center(child: _card()),
           ],
         ),
       ),
     );
-  }
-
-  CustomPainter _buildPainter() {
-    if (widget.isSpeaking) return _SpeakingWavePainter(_wave.value, _color);
-    final t = _p.value, t2 = _s.value;
-    switch (widget.mode) {
-      case 'money':       return _MoneyPainter(t, t2);
-      case 'caption':     return _CaptionPainter(t, t2);
-      case 'face':        return _FacePainter(t, t2);
-      case 'online_ocr':  return _OnlineOCRPainter(t, t2);
-      case 'offline_ocr': return _OfflineOCRPainter(t, t2);
-      case 'file_read':   return _FileReadPainter(t, t2);
-      case 'layout_analysis': return _LayoutPainter(t, t2);
-      default: return _GenericPainter(t);
-    }
   }
 
   Widget _card() {
@@ -185,7 +186,8 @@ class _SpeakingWavePainter extends CustomPainter {
 // ── Money: Golden coin ripples ──────────────────────────────────────────
 class _MoneyPainter extends CustomPainter {
   final double t, t2;
-  _MoneyPainter(this.t, this.t2);
+  final bool isSpeaking;
+  _MoneyPainter(this.t, this.t2, {this.isSpeaking = false});
   @override
   void paint(Canvas canvas, Size size) {
     final center = Offset(size.width / 2, size.height / 2);
@@ -211,7 +213,8 @@ class _MoneyPainter extends CustomPainter {
 // ── Caption: Camera viewfinder + scan wave ──────────────────────────────
 class _CaptionPainter extends CustomPainter {
   final double t, t2;
-  _CaptionPainter(this.t, this.t2);
+  final bool isSpeaking;
+  _CaptionPainter(this.t, this.t2, {this.isSpeaking = false});
   @override
   void paint(Canvas canvas, Size size) {
     const color = Color(0xFF42A5F5);
@@ -233,7 +236,8 @@ class _CaptionPainter extends CustomPainter {
 // ── Face: Oval + scan dots ──────────────────────────────────────────────
 class _FacePainter extends CustomPainter {
   final double t, t2;
-  _FacePainter(this.t, this.t2);
+  final bool isSpeaking;
+  _FacePainter(this.t, this.t2, {this.isSpeaking = false});
   @override
   void paint(Canvas canvas, Size size) {
     const color = Color(0xFF26C6DA);
@@ -256,7 +260,8 @@ class _FacePainter extends CustomPainter {
 // ── Online OCR: Laser + text lines ──────────────────────────────────────
 class _OnlineOCRPainter extends CustomPainter {
   final double t, t2;
-  _OnlineOCRPainter(this.t, this.t2);
+  final bool isSpeaking;
+  _OnlineOCRPainter(this.t, this.t2, {this.isSpeaking = false});
   @override
   void paint(Canvas canvas, Size size) {
     final laserY = size.height * (0.15 + 0.7 * t);
@@ -285,7 +290,8 @@ class _OnlineOCRPainter extends CustomPainter {
 // ── Offline OCR: Dot matrix + beam ──────────────────────────────────────
 class _OfflineOCRPainter extends CustomPainter {
   final double t, t2;
-  _OfflineOCRPainter(this.t, this.t2);
+  final bool isSpeaking;
+  _OfflineOCRPainter(this.t, this.t2, {this.isSpeaking = false});
   @override
   void paint(Canvas canvas, Size size) {
     final gp = Paint()..color = AppTheme.accentGreen.withValues(alpha: 0.06)..strokeWidth = 0.5;
@@ -312,30 +318,45 @@ class _OfflineOCRPainter extends CustomPainter {
 // ── File Read: Page + text cascade ──────────────────────────────────────
 class _FileReadPainter extends CustomPainter {
   final double t, t2;
-  _FileReadPainter(this.t, this.t2);
+  final bool isSpeaking;
+  _FileReadPainter(this.t, this.t2, {this.isSpeaking = false});
   @override
   void paint(Canvas canvas, Size size) {
     final cx = size.width / 2, cy = size.height / 2;
     const color = Color(0xFFFF9800);
+    
+    // Page background pulse when speaking
+    final alphaBase = isSpeaking ? 0.08 + 0.04 * sin(t * pi * 4) : 0.06;
     canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromCenter(center: Offset(cx, cy), width: size.width * 0.55, height: size.height * 0.45), const Radius.circular(8)),
-      Paint()..color = color.withValues(alpha: 0.06));
+      Paint()..color = color.withValues(alpha: alphaBase));
+    
     canvas.drawRRect(RRect.fromRectAndRadius(Rect.fromCenter(center: Offset(cx, cy), width: size.width * 0.55, height: size.height * 0.45), const Radius.circular(8)),
       Paint()..color = color.withValues(alpha: 0.2)..style = PaintingStyle.stroke..strokeWidth = 1);
+      
     final rng = Random(99);
     final lp = Paint()..strokeWidth = 2..strokeCap = StrokeCap.round;
     final top = cy - size.height * 0.2;
+    
     for (int i = 0; i < 14; i++) {
-      final prog = ((t * 16 - i) / 2).clamp(0.0, 1.0);
+      // If speaking, all lines are visible but pulse
+      final prog = isSpeaking 
+          ? (0.8 + 0.2 * sin(t * pi * 5 + i)) 
+          : ((t * 16 - i) / 2).clamp(0.0, 1.0);
+          
       if (prog <= 0) continue;
       final y = top + i * 18, xs = cx - size.width * 0.22;
       lp.color = color.withValues(alpha: prog * 0.35);
       canvas.drawLine(Offset(xs, y), Offset(xs + size.width * (0.2 + rng.nextDouble() * 0.22) * prog, y), lp);
     }
-    final fy = top + size.height * 0.4 * t;
-    canvas.drawRect(Rect.fromLTWH(cx - size.width * 0.25, fy - 15, size.width * 0.5, 30), Paint()
-      ..shader = LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter,
-        colors: [Colors.transparent, color.withValues(alpha: 0.12), Colors.transparent])
-        .createShader(Rect.fromLTWH(cx - size.width * 0.25, fy - 15, size.width * 0.5, 30)));
+    
+    // Scan beam only visible when not speaking (during extraction)
+    if (!isSpeaking) {
+      final fy = top + size.height * 0.4 * t;
+      canvas.drawRect(Rect.fromLTWH(cx - size.width * 0.25, fy - 15, size.width * 0.5, 30), Paint()
+        ..shader = LinearGradient(begin: Alignment.topCenter, end: Alignment.bottomCenter,
+          colors: [Colors.transparent, color.withValues(alpha: 0.12), Colors.transparent])
+          .createShader(Rect.fromLTWH(cx - size.width * 0.25, fy - 15, size.width * 0.5, 30)));
+    }
   }
   @override
   bool shouldRepaint(covariant CustomPainter o) => true;
@@ -344,7 +365,8 @@ class _FileReadPainter extends CustomPainter {
 // ── Layout Analysis ─────────────────────────────────────────────────────
 class _LayoutPainter extends CustomPainter {
   final double t, t2;
-  _LayoutPainter(this.t, this.t2);
+  final bool isSpeaking;
+  _LayoutPainter(this.t, this.t2, {this.isSpeaking = false});
   @override
   void paint(Canvas canvas, Size size) {
     const c = AppTheme.accentPink;
@@ -378,7 +400,8 @@ class _LayoutPainter extends CustomPainter {
 
 class _GenericPainter extends CustomPainter {
   final double t;
-  _GenericPainter(this.t);
+  final bool isSpeaking;
+  _GenericPainter(this.t, {this.isSpeaking = false});
   @override
   void paint(Canvas canvas, Size size) {
     final c = Offset(size.width / 2, size.height / 2);

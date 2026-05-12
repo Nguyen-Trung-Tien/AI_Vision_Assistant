@@ -47,7 +47,7 @@ flutter:
   uses-material-design: true
   assets:
     - assets/models/
-    - assets/models/money
+    - assets/models/money/
     - assets/audio/
     - assets/image/
 

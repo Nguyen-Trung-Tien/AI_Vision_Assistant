@@ -212,6 +212,10 @@ class AppLocalizations {
       'vi': 'Hết thời gian chờ phản hồi.',
       'en': 'Response timeout.',
     },
+    'ai_face_no_match': {
+      'vi': 'Không nhận diện được người quen nào.',
+      'en': 'No known people recognized.',
+    },
 
     // --- Splash & Onboarding ---
     'onboarding_title_1': {'vi': 'Chào mừng bạn', 'en': 'Welcome'},

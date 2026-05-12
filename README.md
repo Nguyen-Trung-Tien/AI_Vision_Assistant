@@ -49,7 +49,7 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 > [!WARNING]
 > **🎯 Độ chính xác AI**
 >
-> - YOLO model (`yolo11n`) là phiên bản **nano** — ưu tiên tốc độ hơn độ chính xác.
+> - YOLO model (`yolo11m`) là phiên bản **Medium** — ưu tiên sự ổn định và độ chính xác.
 > - Nhận diện tiền VN phụ thuộc điều kiện ánh sáng, góc chụp, độ mới của tờ tiền.
 > - Ước lượng khoảng cách dựa trên **MiDaS Small (Depth Estimation)** và công thức hình học — sai số ±20%.
 > - Hallucination Guard cảnh báo khi confidence < 85%, nhưng **không đảm bảo 100% chính xác**.
@@ -79,6 +79,8 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 | Ngày      | Cập nhật                   | Mô tả                                                                                                                                |
 | --------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| **12/05** | 📖 Enhanced File Reading   | Nâng cấp hiệu ứng đọc tệp: nền trang nhấp nháy (pulsing) và các dòng văn bản hoạt họa theo nhịp đọc của TTS, tăng tính tương tác     |
+| **11/05** | 🔧 File Selection UX       | Tối ưu quy trình đọc tệp: chỉ hiển thị overlay xử lý sau khi đã chọn tệp thành công, tránh gây nhầm lẫn cho người dùng               |
 | **10/05** | 📱 Layout Optimization     | Tối ưu bố cục Mobile: sắp xếp HUD đi bộ, cảnh báo nguy hiểm và các nút chức năng động, tránh chồng chéo trên mọi kích thước màn hình |
 | **10/05** | ⚙️ Modern Settings         | Giao diện Cài đặt mới dạng thẻ (Card-based), phân loại khoa học, tối ưu hóa vùng chạm ngón cái (Thumb Zone) và dễ truy cập hơn       |
 | **10/05** | 🎨 Mode Animations         | Animation riêng cho 7 chế độ AI (Money/Caption/Face/OCR/File/Layout) với CustomPaint và màu sắc khác biệt                            |
@@ -91,6 +93,8 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 | **01/05** | 🛡️ Stability & Type Safety | Hoàn thiện dọn dẹp linting (flake8, ESLint) và thắt chặt kiểu dữ liệu (Strict Typing) cho toàn bộ hệ thống                           |
 
 ### 🗓️ Tháng 5/2026 — v1.8.0
+
+### 🗓️ Tháng 5/2026 — v1.7.1
 
 ### 🗓️ Tháng 5/2026 — v1.7.0
 
@@ -196,8 +200,9 @@ Phiên bản v1.9.0 tập trung vào **tối ưu hóa trải nghiệm người d
 8.  **🧠 Nhận diện khuôn mặt (InsightFace)**:
     - Nhận diện người quen qua model `Buffalo_L`, phản hồi rung và giọng nói.
 
-9.  **🚶 Walking Mode + Spatial Audio 3D**:
-    - Stream 3–5 FPS liên tục, cảnh báo vật cản theo hướng trái/phải qua tai nghe stereo.
+9.  **📖 Enhanced File Reading (Mới)**:
+    - Hiệu ứng trang giấy pulsing và các dòng văn bản "chạy" theo nhịp đọc của TTS.
+    - Animation chỉ kích hoạt sau khi chọn tệp, tạo luồng tương tác mượt mà và trực quan.
 
 ---
 
@@ -738,8 +743,10 @@ Dashboard quản trị cung cấp các trang:
 
 ## 📌 Roadmap
 
-### Đã hoàn thành (v1.8.0)
+### Đã hoàn thành (v1.9.0)
 
+- [x] **Enhanced File Reading** — Animation trang giấy và dòng văn bản đồng bộ với TTS
+- [x] **File Selection UX** — Tối ưu hóa thời điểm hiển thị overlay xử lý tệp
 - [x] **Mode-Specific Animations** — 7 animation CustomPaint riêng cho mỗi chế độ AI
 - [x] **Speaking Overlay** — Waveform khi TTS đọc kết quả, overlay giữ đến khi hoàn tất
 - [x] **Mode Color System** — Hệ thống 7 màu riêng trên carousel, icon, dots

@@ -55,6 +55,7 @@ class VoiceCommandController {
     // Emergency
     if (TextUtils.containsAny(cmd, [
       'khẩn cấp',
+      'cứu',
       'cứu tôi',
       'cứu với',
       'giúp tôi',

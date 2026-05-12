@@ -65,6 +65,15 @@ class EdgeAIService {
       // Kết thúc trạng thái loading
       _setProcessing(false);
 
+      if ((taskType == 'FACE_RECOGNITION' || taskType == 'FACE') &&
+          text.isEmpty) {
+        final lang = SettingsService().language;
+        _accessibilityManager.speak(
+          AppLocalizations.t('ai_face_no_match', lang),
+        );
+        return;
+      }
+
       // Haptic feedback for every detection
       _accessibilityManager.triggerSuccessVibration();
 
