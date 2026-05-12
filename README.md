@@ -87,7 +87,7 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 | **10/05** | 🔊 Speaking Overlay        | Hiệu ứng sóng âm waveform khi TTS đang đọc kết quả, overlay giữ nguyên cho đến khi đọc xong                                          |
 | **10/05** | 🎯 Mode Color System       | Hệ thống màu riêng cho mỗi chế độ (Gold/Blue/Teal/Cyan/Orange/Green/Pink) trên carousel, icon và indicator dots                      |
 | **07/05** | 🚨 SOS Success UI          | Cập nhật giao diện thông báo trạng thái "Đã gửi cảnh báo SOS" kèm tính năng đếm ngược 10 giây Hủy báo động giả trực quan trên Mobile |
-| **01/05** | 📖 Layout Analysis         | Tích hợp Gemini 1.5 Flash cho phân tích bố cục menu, sách và tài liệu phức tạp, trả về cấu trúc chi tiết và đọc qua TTS              |
+| **01/05** | 📖 Layout Analysis         | Tích hợp Gemini-3-flash-preview cho phân tích bố cục menu, sách và tài liệu phức tạp, trả về cấu trúc chi tiết và đọc qua TTS              |
 | **01/05** | 🚀 CI/CD Automation        | Thiết lập GitHub Actions tự động hóa quy trình Lint, Test và Build cho toàn bộ thành phần (Backend, AI, Admin, Mobile)               |
 | **01/05** | 📱 Admin Dashboard PWA     | Chuyển đổi Admin Dashboard sang Progressive Web App (PWA), cho phép cài đặt và hoạt động ổn định trên nhiều thiết bị                 |
 | **01/05** | 🛡️ Stability & Type Safety | Hoàn thiện dọn dẹp linting (flake8, ESLint) và thắt chặt kiểu dữ liệu (Strict Typing) cho toàn bộ hệ thống                           |
@@ -195,7 +195,7 @@ Phiên bản v1.9.0 tập trung vào **tối ưu hóa trải nghiệm người d
     - Giao diện thông báo SOS trực quan kèm đếm ngược 10 giây "Hủy báo động giả".
 
 7.  **📖 Layout Analysis**:
-    - Phân tích bố cục menu, sách, tài liệu phức tạp bằng Gemini 1.5 Flash.
+    - Phân tích bố cục menu, sách, tài liệu phức tạp bằng Gemini-3-flash-preview.
 
 8.  **🧠 Nhận diện khuôn mặt (InsightFace)**:
     - Nhận diện người quen qua model `Buffalo_L`, phản hồi rung và giọng nói.
@@ -762,7 +762,7 @@ Dashboard quản trị cung cấp các trang:
 - [x] Âm thanh không gian 3D (trái/phải) theo vị trí vật cản
 - [x] Visual Feedback (Bounding Boxes + Object Labels) trên preview
 - [x] Admin Dashboard mở rộng (System Monitor, Analytics, RBAC, Activity Log)
-- [x] Layout analysis (đọc menu/sách) bằng Gemini 1.5 Flash
+- [x] Layout analysis (đọc menu/sách) bằng Gemini-3-flash-preview
 - [x] CI/CD pipeline tự động hóa (GitHub Actions)
 - [x] Progressive Web App cho Admin Dashboard
 

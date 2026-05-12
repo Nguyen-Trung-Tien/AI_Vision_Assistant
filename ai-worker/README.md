@@ -6,16 +6,16 @@
 
 ## 🗓️ Lịch sử cập nhật (AI Engine)
 
-| Ngày | Cập nhật | Chi tiết |
-| --- | --- | --- |
-| **17/04** | 👤 InsightFace | Tích hợp nhận diện khuôn mặt Buffalo_L cho người quen. |
-| **17/04** | 📏 MiDaS Depth | Triển khai mô hình ước lượng chiều sâu đơn mục MiDaS Small. |
-| **17/04** | 📄 Gemini Smart OCR | Chế độ đọc thông minh (menu, hóa đơn) qua Gemini AI. |
-| **04/04** | 🚶 Smart Throttle | Tối ưu hóa hàng đợi Latest-only cho Continuous Stream. |
-| **28/03** | 🚦 Traffic Lights | Mở rộng dataset YOLO lên 29 lớp (thêm đèn giao thông, ổ gà, nắp cống). |
-| **27/03** | 🎓 YOLO Pipeline | Hoàn thiện quy trình training tự động: Roboflow → Colab → Deploy. |
-| **26/02** | 🤖 Visual Q&A | Tích hợp Google Gemini Vision API cho hỏi đáp tự nhiên. |
-| **25/02** | 🗣️ TTS Cache | Sử dụng Redis để lưu trữ kết quả TTS, giảm latency phát giọng nói. |
+| Ngày      | Cập nhật            | Chi tiết                                                               |
+| --------- | ------------------- | ---------------------------------------------------------------------- |
+| **17/04** | 👤 InsightFace      | Tích hợp nhận diện khuôn mặt Buffalo_L cho người quen.                 |
+| **17/04** | 📏 MiDaS Depth      | Triển khai mô hình ước lượng chiều sâu đơn mục MiDaS Small.            |
+| **17/04** | 📄 Gemini Smart OCR | Chế độ đọc thông minh (menu, hóa đơn) qua Gemini AI.                   |
+| **04/04** | 🚶 Smart Throttle   | Tối ưu hóa hàng đợi Latest-only cho Continuous Stream.                 |
+| **28/03** | 🚦 Traffic Lights   | Mở rộng dataset YOLO lên 29 lớp (thêm đèn giao thông, ổ gà, nắp cống). |
+| **27/03** | 🎓 YOLO Pipeline    | Hoàn thiện quy trình training tự động: Roboflow → Colab → Deploy.      |
+| **26/02** | 🤖 Visual Q&A       | Tích hợp Google Gemini Vision API cho hỏi đáp tự nhiên.                |
+| **25/02** | 🗣️ TTS Cache        | Sử dụng Redis để lưu trữ kết quả TTS, giảm latency phát giọng nói.     |
 
 ---
 
@@ -38,7 +38,7 @@
 - **InsightFace**: Thư viện nhận diện khuôn mặt chuyên sâu.
 - **Pika**: Kết nối và tiêu thụ task từ RabbitMQ.
 - **Redis**: Cache audio TTS để giảm độ trễ phản hồi.
-- **Google GenAI**: Tích hợp mô hình Gemini 1.5 Flash.
+- **Google GenAI**: Tích hợp mô hình Gemini-3-flash-preview.
 
 ---
 
@@ -82,6 +82,7 @@ GEMINI_API_KEY=your_gemini_api_key_here
 Có 2 cách chạy:
 
 - **Cách 1: Chỉ chạy Worker (Consumer)**
+
   ```bash
   python rabbitmq_consumer.py
   ```
