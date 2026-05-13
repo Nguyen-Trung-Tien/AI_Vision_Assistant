@@ -22,7 +22,7 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 <br/>
 
-![Version](https://img.shields.io/badge/Version-1.9.0-blue?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.9.1-blue?style=flat-square)
 ![License](https://img.shields.io/badge/License-UNLICENSED-gray?style=flat-square)
 ![Status](https://img.shields.io/badge/Status-In_Development-orange?style=flat-square)
 [![CI/CD](https://github.com/Nguyen-Trung-Tien/AI_Vision_Assistant/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/Nguyen-Trung-Tien/AI_Vision_Assistant/actions/workflows/ci-cd.yml)
@@ -75,10 +75,13 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 ## 📰 Cập nhật mới nhất
 
-### 🗓️ Tháng 5/2026 — v1.9.0 (Current)
+### 🗓️ Tháng 5/2026 — v1.9.1 (Current)
 
 | Ngày      | Cập nhật                   | Mô tả                                                                                                                                |
 | --------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| **13/05** | 📦 Recognition Overlay     | Bổ sung `RecognitionOverlay` cho chế độ nhận diện tổng hợp: hiển thị thẻ thông tin trên camera, highlight vật thể chính và vẽ bounding box trực tiếp trên preview |
+| **13/05** | 🔗 Detection Payload Sync  | Đồng bộ dữ liệu detection end-to-end giữa AI Worker → Gateway → Mobile: thêm `raw_detections`, `primary_detection`, `frame_width`, `frame_height`, `recognition_title` |
+| **13/05** | 💯 Confidence UX           | Chuẩn hóa cách đọc và hiển thị độ tin cậy theo phần trăm thân thiện hơn, ví dụ `90%` thay cho `0.9` trong nhận diện tiền |
 | **12/05** | 📖 Enhanced File Reading   | Nâng cấp hiệu ứng đọc tệp: nền trang nhấp nháy (pulsing) và các dòng văn bản hoạt họa theo nhịp đọc của TTS, tăng tính tương tác     |
 | **11/05** | 🔧 File Selection UX       | Tối ưu quy trình đọc tệp: chỉ hiển thị overlay xử lý sau khi đã chọn tệp thành công, tránh gây nhầm lẫn cho người dùng               |
 | **10/05** | 📱 Layout Optimization     | Tối ưu bố cục Mobile: sắp xếp HUD đi bộ, cảnh báo nguy hiểm và các nút chức năng động, tránh chồng chéo trên mọi kích thước màn hình |
@@ -166,43 +169,33 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 ---
 
-## 🚀 Các tính năng nổi bật vừa cập nhật (v1.9.0)
+## 🚀 Các tính năng nổi bật vừa cập nhật (v1.9.1)
 
-Phiên bản v1.9.0 tập trung vào **tối ưu hóa trải nghiệm người dùng (UX)** và **hiện đại hóa giao diện**:
+Phiên bản v1.9.1 tập trung vào **tăng cường phản hồi trực quan theo thời gian thực** cho chế độ nhận diện tổng hợp và **đồng bộ hóa dữ liệu detection** giữa AI Worker, Gateway và Mobile:
 
-1.  **📱 Tối ưu hóa Bố cục (Mới)**:
-    - Tự động tính toán vị trí các phần tử HUD để không chồng chéo lên Banner cảnh báo nguy hiểm.
-    - Gom nhóm các nút chức năng (Cài đặt, Đăng ký mặt) vào vùng thuận tiện cho thao tác một tay.
-    - Cải thiện phản hồi hình ảnh khi có va chạm vật cản.
+1.  **📦 Recognition Overlay (Mới)**:
+    - Hiển thị thẻ thông tin ngay trên camera khi phát hiện vật thể trong chế độ nhận diện tổng hợp.
+    - Tự động chọn vật thể chính để highlight và giữ thông tin trực quan hơn cho người dùng.
+    - Vẽ bounding box trực tiếp trên preview để người dùng biết AI đang nhận diện đúng vật thể nào.
 
-2.  **⚙️ Giao diện Cài đặt Hiện đại (Mới)**:
-    - Cấu trúc dạng thẻ (Card) phân loại rõ ràng: Hành động nhanh, Giọng nói, AI, Đi bộ, Âm thanh.
-    - Sử dụng hiệu ứng co giãn (Sliver) và thiết kế kính mờ (Glassmorphism) đồng nhất.
+2.  **🔗 Detection Payload End-to-End**:
+    - AI Worker nay trả thêm `raw_detections`, `primary_detection`, `frame_width`, `frame_height`, `recognition_title`.
+    - Backend Gateway forward nguyên các trường detection cần thiết về mobile app qua `ai_result`.
+    - Mobile dùng cùng một nguồn dữ liệu để dựng card thông tin và box nhận diện.
 
-3.  **🎨 Mode-Specific Animations**:
-    - Mỗi chế độ AI có animation `CustomPaint` riêng biệt với màu sắc và hiệu ứng đặc trưng.
-    - 7 animation: Golden Ripples (Tiền) • Scan Wave (Caption) • Face Outline (Khuôn mặt) • Laser OCR (Online) • Grid Matrix (Offline) • Page Flip (File) • Layout Reveal (Bố cục).
+3.  **💯 Confidence Display Improvement**:
+    - Câu đọc và text nhận diện tiền đổi sang định dạng phần trăm dễ hiểu hơn, ví dụ `90%`.
+    - Vẫn giữ `confidence_score` nội bộ dạng số thực để không ảnh hưởng thống kê và logic hệ thống.
 
-4.  **🔊 Speaking Overlay (Mới)**:
-    - Hiệu ứng sóng âm waveform hiển thị khi TTS đang đọc kết quả.
-    - Overlay giữ nguyên suốt quá trình xử lý AI → đọc kết quả → tự đóng khi hoàn tất.
+4.  **🧼 Overlay State Management**:
+    - Tự động xóa recognition overlay khi rời khỏi chế độ nhận diện tổng hợp hoặc khi không còn detection hợp lệ.
+    - Có fallback từ `boxes` sang detection card để UI vẫn hoạt động khi payload chỉ có bounding boxes.
 
-5.  **🎯 Mode Color System (Mới)**:
-    - Hệ thống 7 màu riêng: 🟡 Gold (Tiền) • 🔵 Blue (Caption) • 🩵 Teal (Face) • 🔹 Cyan (OCR Online) • 🟠 Orange (File) • 🟢 Green (OCR Offline) • 🩷 Pink (Layout).
-    - Áp dụng đồng nhất trên carousel, icon, indicator dots, và processing overlay.
+5.  **🧭 Nền tảng cho bước nâng cấp tiếp theo**:
+    - Sẵn sàng mở rộng thêm metadata cho QR, sản phẩm và tinh chỉnh box theo `front camera` hoặc `BoxFit.cover`.
 
-6.  **🚨 Nâng cấp Trải nghiệm SOS**:
-    - Giao diện thông báo SOS trực quan kèm đếm ngược 10 giây "Hủy báo động giả".
-
-7.  **📖 Layout Analysis**:
-    - Phân tích bố cục menu, sách, tài liệu phức tạp bằng Gemini-3-flash-preview.
-
-8.  **🧠 Nhận diện khuôn mặt (InsightFace)**:
-    - Nhận diện người quen qua model `Buffalo_L`, phản hồi rung và giọng nói.
-
-9.  **📖 Enhanced File Reading (Mới)**:
-    - Hiệu ứng trang giấy pulsing và các dòng văn bản "chạy" theo nhịp đọc của TTS.
-    - Animation chỉ kích hoạt sau khi chọn tệp, tạo luồng tương tác mượt mà và trực quan.
+6.  **📱 Vẫn giữ nguyên nền UX trước đó**:
+    - Các cải tiến gần đây như HUD động, speaking overlay, file reading animation và mode color system vẫn được giữ nguyên trong bản vá này.
 
 ---
 
@@ -743,8 +736,11 @@ Dashboard quản trị cung cấp các trang:
 
 ## 📌 Roadmap
 
-### Đã hoàn thành (v1.9.0)
+### Đã hoàn thành (v1.9.1)
 
+- [x] Recognition Overlay cho chế độ nhận diện tổng hợp: card thông tin + bounding box trên camera preview
+- [x] Đồng bộ detection payload AI Worker → Gateway → Mobile với `raw_detections`, `primary_detection`, `frame_width`, `frame_height`
+- [x] Chuẩn hóa cách đọc và hiển thị confidence theo phần trăm cho nhận diện tiền
 - [x] **Enhanced File Reading** — Animation trang giấy và dòng văn bản đồng bộ với TTS
 - [x] **File Selection UX** — Tối ưu hóa thời điểm hiển thị overlay xử lý tệp
 - [x] **Mode-Specific Animations** — 7 animation CustomPaint riêng cho mỗi chế độ AI

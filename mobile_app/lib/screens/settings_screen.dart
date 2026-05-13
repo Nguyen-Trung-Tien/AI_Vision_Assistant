@@ -93,7 +93,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
             flexibleSpace: FlexibleSpaceBar(
               title: Text(
                 AppLocalizations.t('settings_title', _language),
-                style: AppTheme.titleLarge.copyWith(fontWeight: FontWeight.bold),
+                style:
+                    AppTheme.titleLarge.copyWith(fontWeight: FontWeight.bold),
               ),
               centerTitle: false,
               titlePadding: const EdgeInsets.only(left: 56, bottom: 16),
@@ -124,13 +125,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
             sliver: SliverList(
               delegate: SliverChildListDelegate([
                 // --- QUICK ACTIONS ---
-                _buildCategoryHeader(AppLocalizations.t('settings_emergency', _language)),
+                _buildCategoryHeader(
+                    AppLocalizations.t('settings_emergency', _language)),
                 _buildSettingCard(
                   children: [
                     _buildActionTile(
                       icon: Icons.contacts_rounded,
                       iconColor: AppTheme.accentCyan,
-                      title: AppLocalizations.t('settings_emergency_add_contact', _language),
+                      title: AppLocalizations.t(
+                          'settings_emergency_add_contact', _language),
                       onTap: () {
                         _accessibility.speak('Mở quản lý liên hệ khẩn cấp');
                         Navigator.push(
@@ -147,11 +150,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 24),
 
                 // --- VOICE & LANGUAGE ---
-                _buildCategoryHeader(AppLocalizations.t('settings_language', _language)),
+                _buildCategoryHeader(
+                    AppLocalizations.t('settings_language', _language)),
                 _buildSettingCard(
                   children: [
                     Padding(
-                      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 16, vertical: 8),
                       child: Row(
                         children: [
                           _buildLangOption('vi', 'Tiếng Việt'),
@@ -160,11 +165,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         ],
                       ),
                     ),
-                    const Divider(color: Colors.white10, height: 1, indent: 16, endIndent: 16),
+                    const Divider(
+                        color: Colors.white10,
+                        height: 1,
+                        indent: 16,
+                        endIndent: 16),
                     _buildSliderTile(
                       icon: Icons.speed_rounded,
                       iconColor: AppTheme.accentPurple,
-                      title: AppLocalizations.t('settings_tts_speed', _language),
+                      title:
+                          AppLocalizations.t('settings_tts_speed', _language),
                       value: _ttsSpeed,
                       label: '${(_ttsSpeed * 100).toInt()}%',
                       onChanged: (v) => setState(() => _ttsSpeed = v),
@@ -172,8 +182,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                         await _settings.setTtsSpeed(v);
                         await _accessibility.refreshTtsSpeed();
                         _accessibility.speak(
-                          '${AppLocalizations.t('settings_tts_speed_spoken', _language)} ${(v * 100).toInt()}%'
-                        );
+                            '${AppLocalizations.t('settings_tts_speed_spoken', _language)} ${(v * 100).toInt()}%');
                       },
                     ),
                   ],
@@ -182,13 +191,16 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 24),
 
                 // --- AI & VISION ---
-                _buildCategoryHeader(_language == 'vi' ? 'Trợ lý AI & Thị giác' : 'AI & Vision Assistant'),
+                _buildCategoryHeader(_language == 'vi'
+                    ? 'Trợ lý AI & Thị giác'
+                    : 'AI & Vision Assistant'),
                 _buildSettingCard(
                   children: [
                     _buildActionTile(
                       icon: Icons.psychology_rounded,
                       iconColor: AppTheme.accentPink,
-                      title: AppLocalizations.t('settings_default_mode', _language),
+                      title: AppLocalizations.t(
+                          'settings_default_mode', _language),
                       subtitle: modeNames[_defaultMode],
                       onTap: () => _showModeSelectionDialog(context, modeNames),
                     ),
@@ -196,20 +208,26 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     _buildToggleTile(
                       icon: Icons.face_retouching_natural_rounded,
                       iconColor: Colors.tealAccent,
-                      title: _language == 'vi' ? 'Nhận diện khuôn mặt' : 'Face Recognition',
-                      subtitle: _language == 'vi' ? 'Thông báo tên người thân' : 'Announce known people',
+                      title: _language == 'vi'
+                          ? 'Nhận diện khuôn mặt'
+                          : 'Face Recognition',
+                      subtitle: _language == 'vi'
+                          ? 'Thông báo tên người thân'
+                          : 'Announce known people',
                       value: _faceRecognitionEnabled,
                       onChanged: (v) async {
                         setState(() => _faceRecognitionEnabled = v);
                         await _settings.setFaceRecognitionEnabled(v);
-                        _accessibility.speak(v ? 'Đã bật nhận diện' : 'Đã tắt nhận diện');
+                        _accessibility
+                            .speak(v ? 'Đã bật nhận diện' : 'Đã tắt nhận diện');
                       },
                     ),
                     const Divider(color: Colors.white10, height: 1, indent: 56),
                     _buildSliderTile(
                       icon: Icons.wb_sunny_rounded,
                       iconColor: Colors.amber,
-                      title: AppLocalizations.t('settings_light_threshold', _language),
+                      title: AppLocalizations.t(
+                          'settings_light_threshold', _language),
                       value: _lightThreshold,
                       min: 5,
                       max: 50,
@@ -218,8 +236,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       onChangeEnd: (v) async {
                         await _settings.setLightThresholdKB(v);
                         _accessibility.speak(
-                          '${AppLocalizations.t('settings_light_threshold_spoken', _language)} ${v.toStringAsFixed(0)}KB'
-                        );
+                            '${AppLocalizations.t('settings_light_threshold_spoken', _language)} ${v.toStringAsFixed(0)}KB');
                       },
                     ),
                   ],
@@ -228,13 +245,15 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 24),
 
                 // --- WALKING MODE ---
-                _buildCategoryHeader(_language == 'vi' ? 'Chế độ đi bộ' : 'Walking Mode'),
+                _buildCategoryHeader(
+                    _language == 'vi' ? 'Chế độ đi bộ' : 'Walking Mode'),
                 _buildSettingCard(
                   children: [
                     _buildSliderTile(
                       icon: Icons.shutter_speed_rounded,
                       iconColor: AppTheme.accentGreen,
-                      title: _language == 'vi' ? 'Khung hình quét:' : 'Scan FPS:',
+                      title:
+                          _language == 'vi' ? 'Khung hình quét:' : 'Scan FPS:',
                       value: _fpsLimit.toDouble(),
                       min: 1,
                       max: 5,
@@ -244,20 +263,27 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       onChangeEnd: (v) async {
                         final intFps = v.toInt();
                         await _settings.setFpsLimit(intFps);
-                        _accessibility.speak('Giới hạn $intFps khung hình mỗi giây');
+                        _accessibility
+                            .speak('Giới hạn $intFps khung hình mỗi giây');
                       },
                     ),
                     const Divider(color: Colors.white10, height: 1, indent: 56),
                     _buildToggleTile(
                       icon: Icons.battery_saver_rounded,
                       iconColor: AppTheme.accentOrange,
-                      title: _language == 'vi' ? 'Tiết kiệm pin' : 'Battery Saving',
-                      subtitle: _language == 'vi' ? 'Giảm FPS khi pin < 20%' : 'Drop FPS when battery < 20%',
+                      title: _language == 'vi'
+                          ? 'Tiết kiệm pin'
+                          : 'Battery Saving',
+                      subtitle: _language == 'vi'
+                          ? 'Giảm FPS khi pin < 20%'
+                          : 'Drop FPS when battery < 20%',
                       value: _autoFpsBatterySaving,
                       onChanged: (v) async {
                         setState(() => _autoFpsBatterySaving = v);
                         await _settings.setAutoFpsBatterySaving(v);
-                        _accessibility.speak(v ? 'Đã bật tiết kiệm pin' : 'Đã tắt tiết kiệm pin');
+                        _accessibility.speak(v
+                            ? 'Đã bật tiết kiệm pin'
+                            : 'Đã tắt tiết kiệm pin');
                       },
                     ),
                   ],
@@ -266,48 +292,59 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 24),
 
                 // --- AUDIO EXPERIENCE ---
-                _buildCategoryHeader(AppLocalizations.t('settings_spatial_audio', _language)),
+                _buildCategoryHeader(
+                    AppLocalizations.t('settings_spatial_audio', _language)),
                 _buildSettingCard(
                   children: [
                     _buildToggleTile(
                       icon: Icons.spatial_audio_rounded,
                       iconColor: AppTheme.accentCyan,
-                      title: _language == 'vi' ? 'Âm thanh 3D' : 'Spatial Audio',
-                      subtitle: AppLocalizations.t('settings_spatial_audio_desc', _language),
+                      title:
+                          _language == 'vi' ? 'Âm thanh 3D' : 'Spatial Audio',
+                      subtitle: AppLocalizations.t(
+                          'settings_spatial_audio_desc', _language),
                       value: _spatialAudioEnabled,
                       onChanged: (v) async {
                         setState(() => _spatialAudioEnabled = v);
                         await _settings.setSpatialAudioEnabled(v);
-                        _accessibility.speak(v ? 'Đã bật âm thanh 3D' : 'Đã tắt âm thanh 3D');
+                        _accessibility.speak(
+                            v ? 'Đã bật âm thanh 3D' : 'Đã tắt âm thanh 3D');
                       },
                     ),
                     if (_spatialAudioEnabled) ...[
-                      const Divider(color: Colors.white10, height: 1, indent: 56),
+                      const Divider(
+                          color: Colors.white10, height: 1, indent: 56),
                       _buildSliderTile(
                         icon: Icons.volume_up_rounded,
                         iconColor: AppTheme.accentCyan,
-                        title: AppLocalizations.t('settings_spatial_volume', _language),
+                        title: AppLocalizations.t(
+                            'settings_spatial_volume', _language),
                         value: _spatialAudioVolume,
                         label: '${(_spatialAudioVolume * 100).toInt()}%',
-                        onChanged: (v) => setState(() => _spatialAudioVolume = v),
+                        onChanged: (v) =>
+                            setState(() => _spatialAudioVolume = v),
                         onChangeEnd: (v) async {
                           await _settings.setSpatialAudioVolume(v);
                           _accessibility.speak(
-                            '${AppLocalizations.t('settings_spatial_volume_spoken', _language)} ${(v * 100).toInt()}%'
-                          );
+                              '${AppLocalizations.t('settings_spatial_volume_spoken', _language)} ${(v * 100).toInt()}%');
                         },
                       ),
-                      const Divider(color: Colors.white10, height: 1, indent: 56),
+                      const Divider(
+                          color: Colors.white10, height: 1, indent: 56),
                       _buildToggleTile(
                         icon: Icons.headphones_rounded,
                         iconColor: Colors.white70,
-                        title: AppLocalizations.t('settings_headphones_only', _language),
-                        subtitle: AppLocalizations.t('settings_headphones_only_desc', _language),
+                        title: AppLocalizations.t(
+                            'settings_headphones_only', _language),
+                        subtitle: AppLocalizations.t(
+                            'settings_headphones_only_desc', _language),
                         value: _headphonesOnlyMode,
                         onChanged: (v) async {
                           setState(() => _headphonesOnlyMode = v);
                           await _settings.setHeadphonesOnlyMode(v);
-                          _accessibility.speak(v ? 'Đã bật chế độ tai nghe' : 'Đã tắt chế độ tai nghe');
+                          _accessibility.speak(v
+                              ? 'Đã bật chế độ tai nghe'
+                              : 'Đã tắt chế độ tai nghe');
                         },
                       ),
                     ],
@@ -320,27 +357,34 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 Center(
                   child: TextButton.icon(
                     onPressed: () => _handleLogout(context),
-                    icon: const Icon(Icons.logout_rounded, color: AppTheme.accentRed),
+                    icon: const Icon(Icons.logout_rounded,
+                        color: AppTheme.accentRed),
                     label: Text(
                       AppLocalizations.t('settings_logout', _language),
-                      style: const TextStyle(color: AppTheme.accentRed, fontWeight: FontWeight.bold),
+                      style: const TextStyle(
+                          color: AppTheme.accentRed,
+                          fontWeight: FontWeight.bold),
                     ),
                     style: TextButton.styleFrom(
-                      padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 16),
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 32, vertical: 16),
                       shape: RoundedRectangleBorder(
                         borderRadius: BorderRadius.circular(16),
-                        side: BorderSide(color: AppTheme.accentRed.withValues(alpha: 0.3)),
+                        side: BorderSide(
+                            color: AppTheme.accentRed.withValues(alpha: 0.3)),
                       ),
-                      backgroundColor: AppTheme.accentRed.withValues(alpha: 0.05),
+                      backgroundColor:
+                          AppTheme.accentRed.withValues(alpha: 0.05),
                     ),
                   ),
                 ),
-                
+
                 const SizedBox(height: 20),
                 Center(
                   child: Text(
-                    'Vision Assistant v1.9.0',
-                    style: AppTheme.bodySmall.copyWith(color: AppTheme.whiteAlpha(0.3)),
+                    'Vision Assistant v1.9.1',
+                    style: AppTheme.bodySmall
+                        .copyWith(color: AppTheme.whiteAlpha(0.3)),
                   ),
                 ),
               ]),
@@ -392,8 +436,13 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         child: Icon(icon, color: iconColor, size: 22),
       ),
-      title: Text(title, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500)),
-      subtitle: subtitle != null ? Text(subtitle, style: const TextStyle(color: Colors.white54, fontSize: 13)) : null,
+      title: Text(title,
+          style: const TextStyle(
+              color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500)),
+      subtitle: subtitle != null
+          ? Text(subtitle,
+              style: const TextStyle(color: Colors.white54, fontSize: 13))
+          : null,
       trailing: const Icon(Icons.chevron_right_rounded, color: Colors.white24),
       onTap: onTap,
     );
@@ -416,8 +465,11 @@ class _SettingsScreenState extends State<SettingsScreen> {
         ),
         child: Icon(icon, color: iconColor, size: 22),
       ),
-      title: Text(title, style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500)),
-      subtitle: Text(subtitle, style: const TextStyle(color: Colors.white54, fontSize: 12)),
+      title: Text(title,
+          style: const TextStyle(
+              color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500)),
+      subtitle: Text(subtitle,
+          style: const TextStyle(color: Colors.white54, fontSize: 12)),
       value: value,
       activeColor: AppTheme.accentCyan,
       activeTrackColor: AppTheme.accentCyan.withValues(alpha: 0.3),
@@ -449,13 +501,18 @@ class _SettingsScreenState extends State<SettingsScreen> {
               Expanded(
                 child: Text(
                   title,
-                  style: const TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.w500),
+                  style: const TextStyle(
+                      color: Colors.white,
+                      fontSize: 16,
+                      fontWeight: FontWeight.w500),
                   maxLines: 1,
                   overflow: TextOverflow.ellipsis,
                 ),
               ),
               const SizedBox(width: 8),
-              Text(label, style: TextStyle(color: iconColor, fontWeight: FontWeight.bold)),
+              Text(label,
+                  style:
+                      TextStyle(color: iconColor, fontWeight: FontWeight.bold)),
             ],
           ),
           SliderTheme(
@@ -489,16 +546,22 @@ class _SettingsScreenState extends State<SettingsScreen> {
           setState(() => _language = langCode);
           await _settings.setLanguage(langCode);
           await _accessibility.refreshTtsSpeed();
-          _accessibility.speak(langCode == 'vi' ? 'Đã chuyển sang tiếng Việt' : 'Switched to English');
+          _accessibility.speak(langCode == 'vi'
+              ? 'Đã chuyển sang tiếng Việt'
+              : 'Switched to English');
         },
         child: AnimatedContainer(
           duration: const Duration(milliseconds: 200),
           padding: const EdgeInsets.symmetric(vertical: 12),
           decoration: BoxDecoration(
-            color: isSelected ? AppTheme.accentPurple.withValues(alpha: 0.2) : Colors.white.withValues(alpha: 0.05),
+            color: isSelected
+                ? AppTheme.accentPurple.withValues(alpha: 0.2)
+                : Colors.white.withValues(alpha: 0.05),
             borderRadius: BorderRadius.circular(12),
             border: Border.all(
-              color: isSelected ? AppTheme.accentPurple : Colors.white.withValues(alpha: 0.1),
+              color: isSelected
+                  ? AppTheme.accentPurple
+                  : Colors.white.withValues(alpha: 0.1),
               width: 1.5,
             ),
           ),
@@ -519,7 +582,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
     showModalBottomSheet(
       context: context,
       backgroundColor: AppTheme.bgCard,
-      shape: const RoundedRectangleBorder(borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
+      shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.vertical(top: Radius.circular(24))),
       builder: (context) {
         return Container(
           padding: const EdgeInsets.symmetric(vertical: 24),
@@ -539,19 +603,25 @@ class _SettingsScreenState extends State<SettingsScreen> {
                     final isSelected = _defaultMode == index;
                     return ListTile(
                       leading: Icon(
-                        isSelected ? Icons.radio_button_checked_rounded : Icons.radio_button_off_rounded,
-                        color: isSelected ? AppTheme.accentCyan : Colors.white24,
+                        isSelected
+                            ? Icons.radio_button_checked_rounded
+                            : Icons.radio_button_off_rounded,
+                        color:
+                            isSelected ? AppTheme.accentCyan : Colors.white24,
                       ),
                       title: Text(
                         modeNames[index],
-                        style: TextStyle(color: isSelected ? Colors.white : Colors.white70, fontWeight: isSelected ? FontWeight.bold : FontWeight.normal),
+                        style: TextStyle(
+                            color: isSelected ? Colors.white : Colors.white70,
+                            fontWeight: isSelected
+                                ? FontWeight.bold
+                                : FontWeight.normal),
                       ),
                       onTap: () async {
                         setState(() => _defaultMode = index);
                         await _settings.setDefaultModeIndex(index);
                         _accessibility.speak(
-                          '${AppLocalizations.t('settings_default_mode_spoken', _language)} ${AppLocalizations.t(_modeSpokenByIndex(index), _language)}'
-                        );
+                            '${AppLocalizations.t('settings_default_mode_spoken', _language)} ${AppLocalizations.t(_modeSpokenByIndex(index), _language)}');
                         Navigator.pop(context);
                       },
                     );

@@ -19,8 +19,8 @@ class FaceRegisterScreen extends StatefulWidget {
 }
 
 class _FaceRegisterScreenState extends State<FaceRegisterScreen> {
-  late CameraController _controller;
-  late Future<void> _initializeControllerFuture;
+  CameraController? _controller;
+  Future<void>? _initializeControllerFuture;
   final TextEditingController _nameController = TextEditingController();
   final AccessibilityManager _accessibilityManager = AccessibilityManager();
   final MlKitService _mlKitService = MlKitService();
@@ -30,6 +30,7 @@ class _FaceRegisterScreenState extends State<FaceRegisterScreen> {
   bool _isFrontCamera = true;
   List<dynamic> _registeredFaces = [];
   bool _isLoadingFaces = true;
+  bool _registrationSucceeded = false;
 
   @override
   void initState() {
@@ -52,6 +53,7 @@ class _FaceRegisterScreenState extends State<FaceRegisterScreen> {
       final name = data['name'] ?? '';
 
       if (success) {
+        _registrationSucceeded = true;
         _accessibilityManager.speak(
           'Đã đăng ký thành công khuôn mặt của $name.',
         );
@@ -110,13 +112,14 @@ class _FaceRegisterScreenState extends State<FaceRegisterScreen> {
         orElse: () => cameras.first,
       );
 
-      _controller = CameraController(
+      final controller = CameraController(
         camera,
         ResolutionPreset.medium,
         enableAudio: false,
       );
 
-      _initializeControllerFuture = _controller.initialize();
+      _controller = controller;
+      _initializeControllerFuture = controller.initialize();
       await _initializeControllerFuture;
 
       if (mounted) {
@@ -133,14 +136,16 @@ class _FaceRegisterScreenState extends State<FaceRegisterScreen> {
   }
 
   Future<void> _toggleCamera() async {
-    if (_isRegistering) return;
+    if (_isRegistering || _controller == null) return;
 
     setState(() {
       _isCameraReady = false;
       _isFrontCamera = !_isFrontCamera;
     });
 
-    await _controller.dispose();
+    final oldController = _controller;
+    _controller = null;
+    await oldController?.dispose();
     await _initializeCamera();
 
     final msg = _isFrontCamera
@@ -151,7 +156,7 @@ class _FaceRegisterScreenState extends State<FaceRegisterScreen> {
 
   @override
   void dispose() {
-    _controller.dispose();
+    _controller?.dispose();
     _nameController.dispose();
     _mlKitService.dispose();
     // Clean up WS listener
@@ -166,11 +171,18 @@ class _FaceRegisterScreenState extends State<FaceRegisterScreen> {
       _accessibilityManager.speak('Vui lòng nhập tên người cần đăng ký.');
       return;
     }
+    if (_controller == null ||
+        !_isCameraReady ||
+        _initializeControllerFuture == null) {
+      _accessibilityManager.speak('Camera chưa sẵn sàng. Vui lòng thử lại sau vài giây.');
+      return;
+    }
 
     setState(() {
       _isRegistering = true;
       _registrationStep = 'Bắt đầu đăng ký';
     });
+    _registrationSucceeded = false;
     _accessibilityManager.speak('Bắt đầu quá trình đăng ký khuôn mặt.');
 
     try {
@@ -179,8 +191,8 @@ class _FaceRegisterScreenState extends State<FaceRegisterScreen> {
         _accessibilityManager.speak('Bước 1: Đang chụp ảnh.');
       }
 
-      await _initializeControllerFuture;
-      final image = await _controller.takePicture();
+      await _initializeControllerFuture!;
+      final image = await _controller!.takePicture();
 
       if (mounted) {
         setState(() => _registrationStep = 'Đang kiểm tra khuôn mặt...');
@@ -221,6 +233,7 @@ class _FaceRegisterScreenState extends State<FaceRegisterScreen> {
 
       // Call API
       final response = await FaceService.registerFace(name, base64Image);
+      _registrationSucceeded = true;
 
       if (mounted) {
         setState(() => _registrationStep = 'Đang chờ AI phản hồi...');
@@ -266,7 +279,9 @@ class _FaceRegisterScreenState extends State<FaceRegisterScreen> {
         );
       }
     } finally {
-      _accessibilityManager.triggerErrorVibration();
+      if (!_registrationSucceeded) {
+        _accessibilityManager.triggerErrorVibration();
+      }
       if (mounted) setState(() => _isRegistering = false);
     }
   }
@@ -471,7 +486,7 @@ class _FaceRegisterScreenState extends State<FaceRegisterScreen> {
                 ? Stack(
                     alignment: Alignment.center,
                     children: [
-                      CameraPreview(_controller),
+                      CameraPreview(_controller!),
                       // Face guide overlay
                       Container(
                         width: 160,

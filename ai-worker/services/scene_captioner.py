@@ -98,7 +98,14 @@ def process_captioning(image_base64: str, client_id: str = "default", lang: str 
     """
     image = decode_base64_image(image_base64)
     if image is None:
-        return {"text": t("no_frame", lang), "confidence_score": 0.0, "stable": False}
+        return {
+            "text": t("no_frame", lang),
+            "confidence_score": 0.0,
+            "stable": False,
+            "frame_width": None,
+            "frame_height": None,
+            "raw_detections": [],
+        }
 
     img_h, img_w, _ = image.shape
     # Occasional debug frame save
@@ -110,7 +117,13 @@ def process_captioning(image_base64: str, client_id: str = "default", lang: str 
         detections = ModelManager.detect_object(image)
     except Exception as exc:
         print(f"[AI Worker Caption] Model error: {exc}", flush=True)
-        return {"text": f"Lỗi model: {exc}", "confidence_score": 0.0}
+        return {
+            "text": f"Lỗi model: {exc}",
+            "confidence_score": 0.0,
+            "frame_width": img_w,
+            "frame_height": img_h,
+            "raw_detections": [],
+        }
 
     if detections:
         print(f"[AI Worker Caption] Found {len(detections)} objects:", flush=True)
@@ -138,6 +151,9 @@ def process_captioning(image_base64: str, client_id: str = "default", lang: str 
             "text": t("empty_road", lang),
             "confidence_score": 0.0,
             "stable": False,
+            "frame_width": img_w,
+            "frame_height": img_h,
+            "raw_detections": [],
         }
         Stabilizer.stabilize_caption(client_id, "empty")
         return result
@@ -164,6 +180,8 @@ def process_captioning(image_base64: str, client_id: str = "default", lang: str 
 
         label = d["label"]
         translated = translate_label(label, lang)
+        d["display_name"] = translated
+        d["category"] = "object"
         pos = get_spatial_position(d["box"], img_w, lang)  # pass lang
 
         d["position"] = (
@@ -222,6 +240,9 @@ def process_captioning(image_base64: str, client_id: str = "default", lang: str 
             "text": t("no_objects", lang),
             "confidence_score": 0.0,
             "stable": False,
+            "frame_width": img_w,
+            "frame_height": img_h,
+            "raw_detections": [],
         }
         Stabilizer.stabilize_caption(client_id, "none")
         return result
@@ -250,11 +271,22 @@ def process_captioning(image_base64: str, client_id: str = "default", lang: str 
     scene_key = "-".join(sorted(significant_objects))
     stable = Stabilizer.stabilize_caption(client_id, scene_key)
 
+    raw_detections = [d for d in detections if "distance" in d]
+    primary_detection = None
+    if raw_detections:
+        primary_detection = min(
+            raw_detections,
+            key=lambda item: item.get("distance", 999),
+        )
+
     return {
         "text": base_text,
         "confidence_score": conf,
         "boxes": [d["box"] for d in detections],
         "object_count": total_objects,
         "stable": stable,
-        "raw_detections": [d for d in detections if "distance" in d],
+        "raw_detections": raw_detections,
+        "primary_detection": primary_detection,
+        "frame_width": img_w,
+        "frame_height": img_h,
     }

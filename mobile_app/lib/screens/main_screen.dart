@@ -13,6 +13,7 @@ import 'package:mobile_app/services/offline_ota_service.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
 import 'package:mobile_app/theme/app_theme.dart';
 import 'package:mobile_app/widgets/camera_preview_widget.dart';
+import 'package:mobile_app/widgets/recognition_overlay.dart';
 import 'package:mobile_app/widgets/walking_overlay.dart';
 import 'package:mobile_app/widgets/sos_button.dart';
 import 'package:mobile_app/widgets/sos_success_overlay.dart';
@@ -39,6 +40,7 @@ class _MainScreenState extends State<MainScreen>
   late final VoiceCommandController _voiceCtrl;
   late final SosController _sosCtrl;
   late final AnimationController _pulseController;
+  bool _isOpeningFaceRegister = false;
 
   @override
   void initState() {
@@ -74,6 +76,96 @@ class _MainScreenState extends State<MainScreen>
     if (mounted) setState(() {});
   }
 
+  void _clearRecognitionOverlay() {
+    _ctrl.currentRecognitionDetections = [];
+    _ctrl.primaryRecognitionDetection = null;
+    _ctrl.recognitionTitle = null;
+    _ctrl.recognitionSubtitle = null;
+    _ctrl.recognitionFrameWidth = null;
+    _ctrl.recognitionFrameHeight = null;
+  }
+
+  List<Map<String, dynamic>> _extractRecognitionDetections(
+    Map<String, dynamic> result,
+    String taskType,
+  ) {
+    final rawDetections = (result['raw_detections'] as List<dynamic>? ?? [])
+        .whereType<Map>()
+        .map((item) => Map<String, dynamic>.from(item))
+        .toList();
+    if (rawDetections.isNotEmpty) return rawDetections;
+
+    final rawBoxes = (result['boxes'] as List<dynamic>? ?? []);
+    final fallbackLabel =
+        result['recognition_title']?.toString() ??
+        result['text']?.toString() ??
+        'Object';
+    final fallbackCategory = taskType == 'OCR' ? 'money' : 'object';
+
+    return rawBoxes
+        .whereType<List>()
+        .map(
+          (box) => <String, dynamic>{
+            'box': List<dynamic>.from(box),
+            'label': fallbackLabel,
+            'display_name': fallbackLabel,
+            'category': fallbackCategory,
+          },
+        )
+        .toList();
+  }
+
+  void _updateRecognitionOverlayFromResult(Map<String, dynamic> result) {
+    final taskType =
+        result['taskType']?.toString() ??
+        result['task_type']?.toString() ??
+        '';
+    final isGeneralMode = _ctrl.currentModeIndex == 0;
+    final isSupportedTask = taskType == 'CONTINUOUS' || taskType == 'OCR';
+
+    if (!isGeneralMode || !isSupportedTask) {
+      if (taskType == 'OCR' && !isGeneralMode) {
+        _clearRecognitionOverlay();
+      }
+      return;
+    }
+
+    final detections = _extractRecognitionDetections(result, taskType);
+    if (detections.isEmpty) {
+      _clearRecognitionOverlay();
+      return;
+    }
+
+    final rawPrimary = result['primary_detection'];
+    Map<String, dynamic>? primary;
+    if (rawPrimary is Map) {
+      primary = Map<String, dynamic>.from(rawPrimary);
+    } else {
+      primary = detections.first;
+    }
+
+    final rawTitle = result['recognition_title']?.toString();
+    final title =
+        rawTitle != null && rawTitle.trim().isNotEmpty
+        ? rawTitle.trim()
+        : primary['display_name']?.toString() ??
+              primary['label']?.toString() ??
+              result['text']?.toString();
+
+    final rawText = result['text']?.toString();
+    final text = rawText?.trim();
+    final subtitle = (text != null && text.isNotEmpty && text != title)
+        ? text
+        : null;
+
+    _ctrl.currentRecognitionDetections = detections;
+    _ctrl.primaryRecognitionDetection = primary;
+    _ctrl.recognitionTitle = title;
+    _ctrl.recognitionSubtitle = subtitle;
+    _ctrl.recognitionFrameWidth = (result['frame_width'] as num?)?.toInt();
+    _ctrl.recognitionFrameHeight = (result['frame_height'] as num?)?.toInt();
+  }
+
   void _initServices() {
     // TTS speaking callback — keep overlay while reading
     _ctrl.accessibilityManager.onSpeakingChanged = (speaking) {
@@ -102,7 +194,8 @@ class _MainScreenState extends State<MainScreen>
       }
     };
     _ctrl.wsService.onTtsBroadcast = (data) {
-      final message = data['message']?.toString().trim() ?? '';
+      final rawMessage = data['message']?.toString();
+      final message = rawMessage?.trim() ?? '';
       final priority = data['priority']?.toString().toLowerCase() ?? 'normal';
       if (message.isNotEmpty) {
         _ctrl.accessibilityManager.speakSystemMessage(
@@ -175,6 +268,8 @@ class _MainScreenState extends State<MainScreen>
           _ctrl.accessibilityManager.speak(_ctrl.sanitizeForTts(text));
         }
       }
+      _updateRecognitionOverlayFromResult(result);
+      _refresh();
       _ctrl.continuousStreamService.onFrameResultReceived(
         taskType: taskType,
         frameSeq: (result['frameSeq'] as num?)?.toInt(),
@@ -253,6 +348,9 @@ class _MainScreenState extends State<MainScreen>
   void _onPageChanged(int index) {
     final lang = _ctrl.settings.language;
     setState(() => _ctrl.currentModeIndex = index);
+    if (index != 0) {
+      _clearRecognitionOverlay();
+    }
     _ctrl.accessibilityManager.triggerSuccessVibration();
     _ctrl.accessibilityManager.speak(
       AppLocalizations.t(_ctrl.modeSpokenKey(index), lang),
@@ -308,32 +406,45 @@ class _MainScreenState extends State<MainScreen>
   }
 
   Future<void> _openFaceRegister() async {
+    if (_isOpeningFaceRegister) return;
+    _isOpeningFaceRegister = true;
     _ctrl.accessibilityManager.speak(
       _ctrl.settings.language == 'vi'
           ? 'Mở màn hình đăng ký khuôn mặt. Tạm dừng camera chính.'
           : 'Opening face registration. Pausing main camera.',
     );
-    final wasWalking = _ctrl.isWalkingModeEnabled;
-    if (wasWalking) await _walkingCtrl.setWalkingMode(false, announce: false);
-    if (_ctrl.stopImageStreamFuture != null) {
-      await _ctrl.stopImageStreamFuture;
-    }
-    await _ctrl.cameraController?.dispose();
-    _ctrl.cameraController = null;
-    await Future.delayed(const Duration(milliseconds: 300));
-    if (!mounted) return;
-    await Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder: (_) => FaceRegisterScreen(
-          wsService: _ctrl.wsService,
-          cameras: widget.cameras,
+    try {
+      final wasWalking = _ctrl.isWalkingModeEnabled;
+      if (wasWalking) {
+        await _walkingCtrl.setWalkingMode(false, announce: false);
+      } else {
+        await _ctrl.stopContinuousImageStream();
+      }
+      _ctrl.lightSensor.stop();
+      if (_ctrl.stopImageStreamFuture != null) {
+        await _ctrl.stopImageStreamFuture;
+      }
+      final oldController = _ctrl.cameraController;
+      _ctrl.cameraController = null;
+      if (mounted) setState(() {});
+      await oldController?.dispose();
+      await Future.delayed(const Duration(milliseconds: 300));
+      if (!mounted) return;
+      await Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => FaceRegisterScreen(
+            wsService: _ctrl.wsService,
+            cameras: widget.cameras,
+          ),
         ),
-      ),
-    );
-    await Future.delayed(const Duration(milliseconds: 500));
-    await _ctrl.restartCamera();
-    if (wasWalking && mounted) await _walkingCtrl.setWalkingMode(true);
+      );
+      await Future.delayed(const Duration(milliseconds: 500));
+      await _ctrl.restartCamera();
+      if (wasWalking && mounted) await _walkingCtrl.setWalkingMode(true);
+    } finally {
+      _isOpeningFaceRegister = false;
+    }
   }
 
   Future<void> _startVisualQA(BuildContext context) async {
@@ -377,6 +488,11 @@ class _MainScreenState extends State<MainScreen>
     
     // Calculate top offset for walking HUD to avoid danger banner
     final double walkingHudTopOffset = isDangerVisible ? 165 : 85;
+    final double recognitionTopOffset = isDangerVisible ? 165 : 85;
+    final bool showRecognitionOverlay =
+        _ctrl.currentModeIndex == 0 &&
+        (_ctrl.currentRecognitionDetections.isNotEmpty ||
+            (_ctrl.recognitionTitle?.isNotEmpty ?? false));
 
     return Scaffold(
       backgroundColor: Colors.black,
@@ -399,6 +515,17 @@ class _MainScreenState extends State<MainScreen>
             topOffset: walkingHudTopOffset,
             frameWidth: _ctrl.lastFrameWidth,
             frameHeight: _ctrl.lastFrameHeight,
+          ),
+
+          RecognitionOverlay(
+            isEnabled: showRecognitionOverlay,
+            detections: _ctrl.currentRecognitionDetections,
+            primaryDetection: _ctrl.primaryRecognitionDetection,
+            title: _ctrl.recognitionTitle,
+            subtitle: _ctrl.recognitionSubtitle,
+            frameWidth: _ctrl.recognitionFrameWidth,
+            frameHeight: _ctrl.recognitionFrameHeight,
+            topOffset: recognitionTopOffset,
           ),
 
           // Mode carousel

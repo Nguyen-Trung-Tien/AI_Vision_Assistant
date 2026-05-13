@@ -43,6 +43,12 @@ export interface AIResultPayload {
     message: string;
     position: string;
   }[];
+  boxes?: number[][];
+  raw_detections?: Record<string, unknown>[];
+  primary_detection?: Record<string, unknown> | null;
+  frame_width?: number;
+  frame_height?: number;
+  recognition_title?: string;
   encoding?: number[];
   name?: string;
   knownFaces?: { name: string; embedding: number[] }[];
@@ -325,6 +331,12 @@ export class TaskQueueService {
           audio_url: result.audio_url,
           stable: result.stable,
           danger_alerts: dangerAlerts,
+          boxes: result.boxes || [],
+          raw_detections: result.raw_detections || [],
+          primary_detection: result.primary_detection || null,
+          frame_width: result.frame_width,
+          frame_height: result.frame_height,
+          recognition_title: result.recognition_title,
         });
       }
 

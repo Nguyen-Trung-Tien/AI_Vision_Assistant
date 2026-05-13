@@ -88,6 +88,11 @@ def validate_aspect_ratio(box: list[int]) -> bool:
     return 1.8 <= ratio <= 2.8
 
 
+def format_confidence_percent(confidence: float) -> str:
+    """Convert 0.0-1.0 confidence to a user-friendly percentage string."""
+    return f"{round(confidence * 100)}%"
+
+
 def process_ocr(image_base64: str, client_id: str = "default", lang: str = "vi") -> dict:
     """
     Detect money/objects từ frame thực với temporal stabilization.
@@ -98,7 +103,12 @@ def process_ocr(image_base64: str, client_id: str = "default", lang: str = "vi")
             "text": t("no_frame", lang=lang),
             "confidence_score": 0.0,
             "boxes": [],
+            "raw_detections": [],
+            "frame_width": None,
+            "frame_height": None,
         }
+
+    img_h, img_w = image.shape[:2]
 
     # 1. Kiểm tra độ nhòe
     if is_blurry(image):
@@ -107,6 +117,9 @@ def process_ocr(image_base64: str, client_id: str = "default", lang: str = "vi")
             "confidence_score": 0.3,
             "boxes": [],
             "is_blurry": True,
+            "raw_detections": [],
+            "frame_width": img_w,
+            "frame_height": img_h,
         }
 
     try:
@@ -117,6 +130,9 @@ def process_ocr(image_base64: str, client_id: str = "default", lang: str = "vi")
             "text": f"Lỗi model: {exc}",
             "confidence_score": 0.0,
             "boxes": [],
+            "raw_detections": [],
+            "frame_width": img_w,
+            "frame_height": img_h,
         }
 
     print(f"[AI Worker OCR] Total detections: {len(detections)}", flush=True)
@@ -169,6 +185,7 @@ def process_ocr(image_base64: str, client_id: str = "default", lang: str = "vi")
             best_item, denomination, final_score = max(final_money_results, key=lambda x: x[2])
 
             conf = round(float(best_item["confidence"]), 2)
+            conf_text = format_confidence_percent(conf)
             label = best_item["label"]
 
             # Format display text according to language
@@ -200,23 +217,26 @@ def process_ocr(image_base64: str, client_id: str = "default", lang: str = "vi")
                     display_text=display_text,
                     feature=feature_text,
                     color=color_info,
-                    conf=conf,
+                    conf=conf_text,
                 ),
                 "confidence_score": conf,
                 "boxes": [d["box"] for d in money_detections],
                 "denomination": denomination,
                 "stable": False,
+                "recognition_title": display_text,
             }
         else:
             # Có money_detections chung chung
             best = max(money_detections, key=lambda x: x["confidence"])
             conf = round(float(best["confidence"]), 2)
+            conf_text = format_confidence_percent(conf)
             result = {
-                "text": t("unknown_money", lang=lang, conf=conf),
+                "text": t("unknown_money", lang=lang, conf=conf_text),
                 "confidence_score": conf,
                 "boxes": [d["box"] for d in money_detections],
                 "denomination": "unknown_money",
                 "stable": False,
+                "recognition_title": t("unknown_money", lang=lang, conf=conf_text),
             }
     else:
         best_conf = round(max((d["confidence"] for d in detections), default=0.0), 2)
@@ -226,7 +246,48 @@ def process_ocr(image_base64: str, client_id: str = "default", lang: str = "vi")
             "boxes": [d["box"] for d in detections],
             "denomination": None,
             "stable": False,
+            "recognition_title": t("no_money", lang=lang),
         }
+
+    raw_detections = []
+    source_detections = money_detections if money_detections else detections
+    for detection in source_detections:
+        label = detection.get("label", "")
+        denomination = extract_denomination(label)
+        display_name = translate_label(label, lang)
+        if display_name == label and denomination:
+            display_name = (
+                f"{denomination} đồng" if lang == "vi" else f"{denomination} VND"
+            )
+
+        raw_detections.append(
+            {
+                "label": label,
+                "display_name": display_name,
+                "category": "money"
+                if denomination or normalize_label(label) in MONEY_LABELS
+                else "object",
+                "confidence": detection.get("confidence", 0.0),
+                "box": detection.get("box", []),
+                "denomination": denomination,
+            }
+        )
+
+    primary_detection = raw_detections[0] if raw_detections else None
+    if result.get("denomination") and raw_detections:
+        primary_detection = next(
+            (
+                item
+                for item in raw_detections
+                if item.get("denomination") == result.get("denomination")
+            ),
+            raw_detections[0],
+        )
+
+    result["raw_detections"] = raw_detections
+    result["primary_detection"] = primary_detection
+    result["frame_width"] = img_w
+    result["frame_height"] = img_h
 
     # --- Temporal Stabilization ---
     stable = Stabilizer.stabilize_ocr(client_id, result.get("denomination"))

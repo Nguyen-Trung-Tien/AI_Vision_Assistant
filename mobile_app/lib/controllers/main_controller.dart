@@ -82,6 +82,14 @@ class MainController {
   int? lastFrameWidth;
   int? lastFrameHeight;
 
+  // Recognition overlay state
+  List<Map<String, dynamic>> currentRecognitionDetections = [];
+  Map<String, dynamic>? primaryRecognitionDetection;
+  String? recognitionTitle;
+  String? recognitionSubtitle;
+  int? recognitionFrameWidth;
+  int? recognitionFrameHeight;
+
   // ── Danger State ──────────────────────────────────────────────────────
   String? dangerMessage;
   Timer? dangerTimer;
