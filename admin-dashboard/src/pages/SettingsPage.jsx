@@ -1,5 +1,10 @@
 import { useState, useEffect } from "react";
-import { fetchSystemSettings, updateSystemSetting, getStoredRole } from "../services/api";
+import {
+  fetchSystemSettings,
+  updateSystemSetting,
+  getStoredRole,
+} from "../services/api";
+import { useAiModels } from "../hooks/use-queries";
 import { useToast } from "../components/Toast";
 import {
   Settings as SettingsIcon,
@@ -7,16 +12,11 @@ import {
   Save,
   RefreshCw,
   AlertCircle,
-  Info,
   ShieldCheck,
-  Zap,
   Bell,
   HardDrive,
   Cpu,
   Shield,
-  Activity,
-  Globe,
-  CheckCircle2,
   BookOpen,
   ArrowRight,
 } from "lucide-react";
@@ -42,6 +42,7 @@ export default function SettingsPage() {
   const toast = useToast();
   const myRole = getStoredRole();
   const isSuperAdmin = myRole === "SUPER_ADMIN";
+  const { data: aiModels = [] } = useAiModels();
   const [settings, setSettings] = useState([]);
   const [localValues, setLocalValues] = useState({});
   const [loading, setLoading] = useState(true);
@@ -107,13 +108,22 @@ export default function SettingsPage() {
       return <HardDrive className="w-4 h-4 text-cyan-400" />;
     if (key.includes("SECURITY") || key.includes("AUTH"))
       return <ShieldCheck className="w-4 h-4 text-emerald-400" />;
-    if (key.includes("AI") || key.includes("CONFIDENCE"))
+    if (
+      key.includes("AI") ||
+      key.includes("CONFIDENCE") ||
+      key.includes("CLASSES")
+    )
       return <Cpu className="w-4 h-4 text-pink-400" />;
     return <Sliders className="w-4 h-4 text-indigo-400" />;
   };
 
   const getCategory = (key) => {
-    if (key.includes("AI") || key.includes("CONFIDENCE")) return "ai";
+    if (
+      key.includes("AI") ||
+      key.includes("CONFIDENCE") ||
+      key.includes("CLASSES")
+    )
+      return "ai";
     if (key.includes("SOS") || key.includes("RADIUS") || key.includes("ALERT"))
       return "sos";
     if (key.includes("NOTIF") || key.includes("PUSH")) return "notif";
@@ -204,15 +214,15 @@ export default function SettingsPage() {
                 return (
                   <div
                     key={s.id}
-                    className={`group flex items-center justify-between p-3 px-4 rounded-2xl border transition-all ${
+                    className={`group flex flex-col sm:flex-row sm:items-center justify-between gap-4 p-3 px-4 rounded-2xl border transition-all ${
                       hasChanged
                         ? "bg-indigo-500/5 border-indigo-500/30 ring-1 ring-indigo-500/10"
                         : "bg-bg-card border-border-primary hover:border-text-primary/20"
                     }`}
                   >
-                    <div className="flex items-center gap-4 flex-1">
+                    <div className="flex items-start sm:items-center gap-4 flex-1">
                       <div
-                        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${
+                        className={`w-10 h-10 shrink-0 rounded-xl flex items-center justify-center transition-all ${
                           hasChanged
                             ? "bg-indigo-500 text-white scale-110 shadow-lg shadow-indigo-500/20"
                             : "bg-bg-primary border border-border-primary text-text-secondary group-hover:border-indigo-500/30 group-hover:text-indigo-500"
@@ -230,10 +240,42 @@ export default function SettingsPage() {
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-4">
-                      {options ? (
+                    <div
+                      className={`flex gap-4 w-full sm:w-auto justify-end ${s.key.includes("CLASSES") ? "items-start" : "items-center"}`}
+                    >
+                      {s.key === "ACTIVE_OBJECT_MODEL" || s.key === "ACTIVE_MONEY_MODEL" || s.key === "ACTIVE_AI_MODEL" ? (
                         <select
-                          value={localValues[s.key] || s.value}
+                          value={localValues[s.key] ?? s.value ?? ""}
+                          disabled={!isSuperAdmin}
+                          onChange={(e) =>
+                            setLocalValues({
+                              ...localValues,
+                              [s.key]: e.target.value,
+                            })
+                          }
+                          className={`h-9 w-full sm:w-64 bg-bg-primary border border-border-primary text-text-primary text-[11px] font-black rounded-lg px-3 outline-none focus:border-indigo-500 transition-all appearance-none ${isSuperAdmin ? "cursor-pointer" : "cursor-not-allowed opacity-50"}`}
+                        >
+                          {aiModels.length === 0 && (
+                            <option value={localValues[s.key] ?? s.value ?? ""}>
+                              {localValues[s.key] ?? s.value ?? "Loading..."}
+                            </option>
+                          )}
+                          {aiModels
+                            .filter(m => s.key === "ACTIVE_OBJECT_MODEL" ? m.category === 'object' : s.key === "ACTIVE_MONEY_MODEL" ? m.category === 'money' : true)
+                            .map((m) => (
+                              <option key={m.id} value={m.id}>
+                                {m.name}
+                              </option>
+                            ))}
+                          {aiModels.length > 0 && !(aiModels.some(m => m.id === (localValues[s.key] ?? s.value))) && (
+                            <option value={localValues[s.key] ?? s.value ?? ""}>
+                              {localValues[s.key] ?? s.value} (Không xác định)
+                            </option>
+                          )}
+                        </select>
+                      ) : options ? (
+                        <select
+                          value={localValues[s.key] ?? s.value}
                           disabled={!isSuperAdmin}
                           onChange={(e) =>
                             setLocalValues({
@@ -253,10 +295,23 @@ export default function SettingsPage() {
                             </option>
                           ))}
                         </select>
+                      ) : s.key.includes("CLASSES") ? (
+                        <textarea
+                          value={localValues[s.key] ?? s.value ?? ""}
+                          disabled={!isSuperAdmin}
+                          onChange={(e) =>
+                            setLocalValues({
+                              ...localValues,
+                              [s.key]: e.target.value,
+                            })
+                          }
+                          rows={3}
+                          className={`w-full sm:w-64 bg-bg-primary border border-border-primary text-text-primary text-[11px] font-medium rounded-lg p-2 outline-none focus:border-indigo-500 transition-all ${isSuperAdmin ? "" : "cursor-not-allowed opacity-50"}`}
+                        />
                       ) : (
                         <input
                           type="text"
-                          value={localValues[s.key] || s.value}
+                          value={localValues[s.key] ?? s.value ?? ""}
                           disabled={!isSuperAdmin}
                           onChange={(e) =>
                             setLocalValues({
@@ -269,7 +324,9 @@ export default function SettingsPage() {
                       )}
 
                       <button
-                        disabled={!hasChanged || saving === s.key || !isSuperAdmin}
+                        disabled={
+                          !hasChanged || saving === s.key || !isSuperAdmin
+                        }
                         onClick={() =>
                           initiateUpdate(s.key, localValues[s.key])
                         }
@@ -278,7 +335,11 @@ export default function SettingsPage() {
                             ? "bg-indigo-500 text-white shadow-lg shadow-indigo-500/20 hover:scale-105 active:scale-95"
                             : "bg-text-primary/5 text-text-secondary opacity-30 grayscale cursor-not-allowed"
                         }`}
-                        title={isSuperAdmin ? "Lưu thay đổi" : "Bạn không có quyền thay đổi"}
+                        title={
+                          isSuperAdmin
+                            ? "Lưu thay đổi"
+                            : "Bạn không có quyền thay đổi"
+                        }
                       >
                         {saving === s.key ? (
                           <Loading variant="inline" size="xs" />
@@ -328,11 +389,18 @@ export default function SettingsPage() {
                 title="Maintenance Mode"
                 content="Khi bật (True), hệ thống sẽ từ chối các yêu cầu mới từ app mobile để thực hiện bảo trì. Chỉ nên sử dụng khi cần nâng cấp hạ tầng quan trọng."
               />
+              <DocItem
+                title="Object Detection Classes"
+                content="13 Lớp: bang_hieu, cau_thang, den_xanh, den_do, nap_cong, nguoi, o_ga, rao_chan, thung_rac, vach_qua_duong, xe_may, xe_dap, xe_lon."
+              />
+              <DocItem
+                title="Currency Recognition Classes"
+                content="9 Mệnh giá: 1000, 2000, 5000, 10000, 20000, 50000, 100000, 200000, 500000."
+              />
             </div>
           </div>
         </div>
       </div>
-
     </div>
   );
 }

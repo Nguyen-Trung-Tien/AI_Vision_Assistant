@@ -22,7 +22,7 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 <br/>
 
-![Version](https://img.shields.io/badge/Version-1.9.1-blue?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.9.2-blue?style=flat-square)
 ![License](https://img.shields.io/badge/License-UNLICENSED-gray?style=flat-square)
 ![Status](https://img.shields.io/badge/Status-In_Development-orange?style=flat-square)
 [![CI/CD](https://github.com/Nguyen-Trung-Tien/AI_Vision_Assistant/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/Nguyen-Trung-Tien/AI_Vision_Assistant/actions/workflows/ci-cd.yml)
@@ -75,7 +75,7 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 ## 📰 Cập nhật mới nhất
 
-### 🗓️ Tháng 5/2026 — v1.9.1 (Current)
+### 🗓️ Tháng 5/2026 — v1.9.2 (Current)
 
 | Ngày      | Cập nhật                   | Mô tả                                                                                                                                |
 | --------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
@@ -169,9 +169,9 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 ---
 
-## 🚀 Các tính năng nổi bật vừa cập nhật (v1.9.1)
+## 🚀 Các tính năng nổi bật vừa cập nhật (v1.9.2)
 
-Phiên bản v1.9.1 tập trung vào **tăng cường phản hồi trực quan theo thời gian thực** cho chế độ nhận diện tổng hợp và **đồng bộ hóa dữ liệu detection** giữa AI Worker, Gateway và Mobile:
+Phiên bản v1.9.2 tập trung vào **tăng cường phản hồi trực quan theo thời gian thực** cho chế độ nhận diện tổng hợp và **đồng bộ hóa dữ liệu detection** giữa AI Worker, Gateway và Mobile:
 
 1.  **📦 Recognition Overlay (Mới)**:
     - Hiển thị thẻ thông tin ngay trên camera khi phát hiện vật thể trong chế độ nhận diện tổng hợp.
@@ -736,7 +736,7 @@ Dashboard quản trị cung cấp các trang:
 
 ## 📌 Roadmap
 
-### Đã hoàn thành (v1.9.1)
+### Đã hoàn thành (v1.9.2)
 
 - [x] Recognition Overlay cho chế độ nhận diện tổng hợp: card thông tin + bounding box trên camera preview
 - [x] Đồng bộ detection payload AI Worker → Gateway → Mobile với `raw_detections`, `primary_detection`, `frame_width`, `frame_height`

@@ -21,33 +21,57 @@ export class AiService {
   ) {}
 
   async getModels() {
-    const activeModelId =
-      (await this.settingsService.getByKey('ACTIVE_AI_MODEL')) || 'v1.0.0';
+    const activeObjectId =
+      (await this.settingsService.getByKey('ACTIVE_OBJECT_MODEL')) ||
+      'object-v11m-best';
+    const activeMoneyId =
+      (await this.settingsService.getByKey('ACTIVE_MONEY_MODEL')) ||
+      'money-v11m-best';
 
     return [
       {
-        id: 'v1.0.0',
-        name: 'VisionCore Standard (v11)',
-        status: activeModelId === 'v1.0.0' ? 'ACTIVE' : 'AVAILABLE',
-        type: 'YOLOv11',
-        accuracy: '92%',
-        objectPath: 'models/model-object-recognition/best.pt',
+        id: 'object-v11m-best',
+        name: 'YOLOv11m (PyTorch)',
+        version: 'v1.1.0-beta',
+        status: activeObjectId === 'object-v11m-best' ? 'ACTIVE' : 'AVAILABLE',
+        type: 'YOLOv11m',
+        category: 'object',
+        accuracy: '98%',
+        path: 'models/object-recognition/best.pt',
+        classes: 13,
       },
       {
-        id: 'v1.1.0-beta',
-        name: 'VisionCore Pro (v11.1 Beta)',
-        status: activeModelId === 'v1.1.0-beta' ? 'ACTIVE' : 'AVAILABLE',
-        type: 'YOLOv11',
-        accuracy: '95%',
-        objectPath: 'models/model-object-recognition/pro_beta.pt',
+        id: 'object-v11m-onnx',
+        name: 'YOLOv11m (ONNX)',
+        version: 'v1.1.0-beta',
+        status: activeObjectId === 'object-v11m-onnx' ? 'ACTIVE' : 'AVAILABLE',
+        type: 'ONNX',
+        category: 'object',
+        accuracy: '98%',
+        path: 'models/object-recognition/onnx/best.onnx',
+        classes: 13,
       },
       {
-        id: 'v0.9.0',
-        name: 'VisionCore Lite (v11 Nano)',
-        status: activeModelId === 'v0.9.0' ? 'ACTIVE' : 'AVAILABLE',
-        type: 'YOLOv11',
-        accuracy: '88%',
-        objectPath: 'models/model-object-recognition/legacy.pt',
+        id: 'money-v11m-best',
+        name: 'YOLOv11m (PyTorch)',
+        version: 'v1.1.0-beta',
+        status: activeMoneyId === 'money-v11m-best' ? 'ACTIVE' : 'AVAILABLE',
+        type: 'YOLOv11m',
+        category: 'money',
+        accuracy: '99%',
+        path: 'models/money/best.pt',
+        classes: 9,
+      },
+      {
+        id: 'money-v11m-onnx',
+        name: 'YOLOv11m (ONNX)',
+        version: 'v1.1.0-beta',
+        status: activeMoneyId === 'money-v11m-onnx' ? 'ACTIVE' : 'AVAILABLE',
+        type: 'ONNX',
+        category: 'money',
+        accuracy: '99%',
+        path: 'models/money/onnx/best.onnx',
+        classes: 9,
       },
     ];
   }
@@ -59,17 +83,31 @@ export class AiService {
     const models = await this.getModels();
     const model = models.find((m) => m.id === modelId);
 
-    const updated = await this.settingsService.update(
-      'ACTIVE_AI_MODEL',
-      modelId,
+    if (!model) {
+      throw new Error(`Model ${modelId} not found`);
+    }
+
+    const key =
+      model.category === 'object'
+        ? 'ACTIVE_OBJECT_MODEL'
+        : 'ACTIVE_MONEY_MODEL';
+    const updated = await this.settingsService.update(key, modelId);
+
+    const newModels = await this.getModels();
+    const activeObject = newModels.find(
+      (m) => m.category === 'object' && m.status === 'ACTIVE',
+    );
+    const activeMoney = newModels.find(
+      (m) => m.category === 'money' && m.status === 'ACTIVE',
     );
 
     // Dispatch reload command to AI worker
     this.aiClient.emit('ai_tasks_queue', {
       taskType: 'RELOAD_MODEL',
       data: {
-        modelId: modelId,
-        objectPath: model?.objectPath,
+        modelId: `${activeObject?.id}_${activeMoney?.id}`,
+        objectPath: activeObject?.path,
+        moneyPath: activeMoney?.path,
       },
     });
 
@@ -150,11 +188,16 @@ export class AiService {
   }
 
   async getLatestOtaModel() {
-    const activeModelId =
-      (await this.settingsService.getByKey('ACTIVE_AI_MODEL')) || 'v1.0.0';
+    const activeObjectId =
+      (await this.settingsService.getByKey('ACTIVE_OBJECT_MODEL')) ||
+      'object-v11m';
 
     const models = await this.getModels();
-    const activeModel = models.find((m) => m.id === activeModelId) || models[0];
+    const activeModel =
+      models.find((m) => m.id === activeObjectId) ||
+      models.find((m) => m.category === 'object');
+
+    if (!activeModel) return null;
 
     // Cung cấp URL download giả định (hoặc thực tế) tới file .tflite cho Mobile tải về
     return {

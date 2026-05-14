@@ -13,7 +13,7 @@ export class GeminiService {
     if (apiKey) {
       this.genAI = new GoogleGenerativeAI(apiKey);
       this.model = this.genAI.getGenerativeModel({
-        model: 'gemini-1.5-flash-latest',
+        model: 'gemini-3-flash-preview',
       });
       this.logger.log('Gemini Service initialized');
     } else {

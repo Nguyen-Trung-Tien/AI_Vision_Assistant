@@ -125,13 +125,13 @@ export default function RealtimeStatsBar() {
             {
               label: "Tổng nhận diện",
               value: overview.totalDetections?.toLocaleString() ?? "—",
-              color: "#6C63FF",
+              bgGrad: "bg-gradient-to-br from-indigo-500 to-purple-600 shadow-indigo-500/20",
               icon: Activity,
             },
             {
               label: "Người dùng",
               value: overview.totalUsers?.toLocaleString() ?? "—",
-              color: "#00D4FF",
+              bgGrad: "bg-gradient-to-br from-cyan-500 to-blue-600 shadow-blue-500/20",
               icon: Users,
             },
             {
@@ -139,23 +139,19 @@ export default function RealtimeStatsBar() {
               value: overview.avgConfidence
                 ? `${Math.round(overview.avgConfidence * 100)}%`
                 : "—",
-              color: "#00E676",
+              bgGrad: "bg-gradient-to-br from-emerald-500 to-teal-600 shadow-emerald-500/20",
               icon: Target,
             },
-          ].map(({ label, value, color, icon: Icon }) => (
+          ].map(({ label, value, bgGrad, icon: Icon }) => (
             <div
               key={label}
-              className="relative overflow-hidden rounded-xl p-3 border transition-all hover:translate-y-[-4px] group/card"
-              style={{
-                background: `${color}05`,
-                borderColor: `${color}15`,
-              }}
+              className={`relative overflow-hidden rounded-xl p-4 border-none shadow-lg transition-all duration-300 hover:translate-y-[-4px] hover:shadow-xl group/card text-white ${bgGrad}`}
             >
-              <div className="absolute top-0 right-0 p-3 opacity-10 group-hover/card:opacity-20 transition-opacity">
-                <Icon className="w-10 h-10" style={{ color }} />
+              <div className="absolute -top-2 -right-2 p-4 opacity-20 group-hover/card:opacity-40 group-hover/card:scale-110 transition-all duration-500">
+                <Icon className="w-16 h-16" />
               </div>
-              <p className="text-[10px] font-bold uppercase tracking-[0.2em] opacity-50 mb-1" style={{ color }}>{label}</p>
-              <p className="text-xl font-bold tracking-tighter" style={{ color }}>
+              <p className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-white/80 mb-1 z-10 relative">{label}</p>
+              <p className="text-2xl font-black tracking-tighter text-white drop-shadow-sm z-10 relative">
                 {value}
               </p>
             </div>

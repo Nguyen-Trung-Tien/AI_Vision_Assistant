@@ -37,41 +37,41 @@ class TfliteService {
     'xe_lon',
     'xe_may',
     'cau_thang',
-    'tien_1k',
-    'tien_2k',
-    'tien_5k',
-    'tien_10k',
-    'tien_20k',
-    'tien_50k',
-    'tien_100k',
-    'tien_200k',
-    'tien_500k',
+    '1000',
+    '10000',
+    '100000',
+    '2000',
+    '20000',
+    '200000',
+    '5000',
+    '50000',
+    '500000',
   ];
 
   /// Danh sách 9 nhãn khi dùng model chỉ có tiền (Money only).
   static const List<String> _moneyOnlyLabels = [
-    'tien_1k',
-    'tien_2k',
-    'tien_5k',
-    'tien_10k',
-    'tien_20k',
-    'tien_50k',
-    'tien_100k',
-    'tien_200k',
-    'tien_500k',
+    '1000',
+    '10000',
+    '100000',
+    '2000',
+    '20000',
+    '200000',
+    '5000',
+    '50000',
+    '500000',
   ];
 
   /// Map nhãn model -> text hiển thị.
   static const Map<String, String> _labelMap = {
-    'tien_1k': '1.000 đồng',
-    'tien_2k': '2.000 đồng',
-    'tien_5k': '5.000 đồng',
-    'tien_10k': '10.000 đồng',
-    'tien_20k': '20.000 đồng',
-    'tien_50k': '50.000 đồng',
-    'tien_100k': '100.000 đồng',
-    'tien_200k': '200.000 đồng',
-    'tien_500k': '500.000 đồng',
+    '1000': '1.000 đồng',
+    '10000': '10.000 đồng',
+    '100000': '100.000 đồng',
+    '2000': '2.000 đồng',
+    '20000': '20.000 đồng',
+    '200000': '200.000 đồng',
+    '5000': '5.000 đồng',
+    '50000': '50.000 đồng',
+    '500000': '500.000 đồng',
     'vat_can': 'vật cản',
     'cot_dien': 'cột điện',
     'den_do': 'đèn đỏ',
@@ -343,7 +343,7 @@ class TfliteService {
       if (outputShape.length == 3) {
         final first = outputShape[1];
         final second = outputShape[2];
-        final channels = first < 1000 ? first : second;
+        final channels = first < second ? first : second;
         final numClasses = channels - 4;
         if (numClasses == 24) {
           currentLabels = _unifiedLabels;
@@ -426,7 +426,7 @@ class TfliteService {
     final second = shape[2];
 
     // Format A: [1, channels, anchors], ví dụ [1, 28, 8400].
-    if (first >= expected) {
+    if (first < second && first >= expected) {
       final channels = first;
       final anchors = second;
       final probs = List<double>.filled(currentLabels.length, 0);
@@ -443,7 +443,7 @@ class TfliteService {
     }
 
     // Format B: [1, anchors, channels].
-    if (second >= expected) {
+    if (second < first && second >= expected) {
       final anchors = first;
       final channels = second;
       final probs = List<double>.filled(currentLabels.length, 0);

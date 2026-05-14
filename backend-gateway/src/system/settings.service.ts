@@ -17,6 +17,16 @@ export class SettingsService implements OnModuleInit {
   private async seedSettings() {
     const defaults = [
       {
+        key: 'ACTIVE_OBJECT_MODEL',
+        value: 'object-v11m-best',
+        description: 'Mô hình nhận diện vật thể',
+      },
+      {
+        key: 'ACTIVE_MONEY_MODEL',
+        value: 'money-v11m-best',
+        description: 'Mô hình nhận diện tiền',
+      },
+      {
         key: 'AI_FPS_LIMIT',
         value: '2',
         description: 'Giới hạn số khung hình xử lý mỗi giây',
@@ -25,6 +35,17 @@ export class SettingsService implements OnModuleInit {
         key: 'AI_CONFIDENCE_THRESHOLD',
         value: '0.5',
         description: 'Ngưỡng tin cậy tối thiểu của model',
+      },
+      {
+        key: 'OBJECT_CLASSES',
+        value:
+          'bang_hieu,cau_thang,den_xanh,den_do,nap_cong,nguoi,o_ga,rao_chan,thung_rac,vach_qua_duong,xe_may,xe_dap,xe_lon',
+        description: 'Nhận diện vật thể (13 classes)',
+      },
+      {
+        key: 'CURRENCY_CLASSES',
+        value: '1000,2000,5000,10000,20000,50000,100000,200000,500000',
+        description: 'Nhận diện mệnh giá tiền (9 classes)',
       },
       {
         key: 'MAX_SOS_RADIUS_KM',
@@ -36,12 +57,15 @@ export class SettingsService implements OnModuleInit {
         value: 'false',
         description: 'Chế độ bảo trì hệ thống',
       },
-      {
-        key: 'ACTIVE_AI_MODEL',
-        value: 'v1.0.0',
-        description: 'Phiên bản AI Model đang hoạt động',
-      },
     ];
+
+    // Remove legacy key if it exists
+    const legacyKey = await this.settingsRepo.findOneBy({
+      key: 'ACTIVE_AI_MODEL',
+    });
+    if (legacyKey) {
+      await this.settingsRepo.remove(legacyKey);
+    }
 
     for (const setting of defaults) {
       const exists = await this.settingsRepo.findOneBy({ key: setting.key });
