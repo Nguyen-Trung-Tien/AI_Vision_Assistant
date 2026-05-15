@@ -92,7 +92,7 @@ npm run start:dev
 ### REST API Endpoints
 - `/api/auth`: Đăng ký, đăng nhập.
 - `/api/sos`: Quản lý danh sách cảnh báo khẩn cấp.
-- `/api/emergency-contact`: Quản lý danh bạ liên hệ khi có sự cố.
+- `/api/emergency-contacts`: Quản lý danh bạ liên hệ khi có sự cố.
 - `/api/feedback`: Ghi nhận và xử lý phản hồi người dùng.
 - `/api/stats`: Thống kê dữ liệu cho dashboard.
 
@@ -103,5 +103,4 @@ npm run start:dev
 - **Lỗi kết nối RabbitMQ**: Đảm bảo Docker container đã chạy và cổng 5672 không bị chặn.
 - **Lỗi Database**: Kiểm tra cổng PostgreSQL (mặc định trong code là 5433).
 - **WebSocket Disconnected**: Đảm bảo gửi token JWT hợp lệ trong handshake.
-
 

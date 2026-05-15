@@ -17,7 +17,7 @@
 | **17/04** | 📄 File Reader Fix | Sửa lỗi OCR Offline, trích xuất văn bản từ file PDF và .txt. |
 | **15/04** | 📺 Visual Feedback | Hiển thị Bounding Boxes + Object Chips trực tiếp trên camera preview. |
 | **15/04** | 🔊 Spatial Audio 3D | Cảnh báo vật cản trái/phải qua tai nghe stereo. |
-| **04/04** | 🚨 Emergency Network | Tự động SMS + cuộc gọi đến người thân khi SOS. |
+| **04/04** | 🚨 Emergency Network | Gửi cảnh báo SOS lên backend/dashboard; backend có thể gửi SMS đến liên hệ khẩn cấp. |
 | **04/04** | 🚶 Walking Mode | Hoàn thiện luồng stream 3-5 FPS liên tục. |
 | **27/02** | 🗺️ OSM Migration | Chuyển từ Google Maps sang OpenStreetMap & OSRM. |
 | **25/02** | 🎤 Voice Commands | Điều khiển ứng dụng bằng giọng nói (STT). |
@@ -35,7 +35,7 @@
 - **Face Recognition**: Nhận diện người thân, bạn bè đã đăng ký và phát tên qua giọng nói.
 - **MiDaS Depth Estimation**: Ước lượng khoảng cách vật cản chính xác hơn bằng mô hình chiều sâu chuyên dụng.
 - **Smart OCR**: Sử dụng Gemini AI để đọc thực đơn, hóa đơn và biển báo phức tạp.
-- **Emergency Network**: Tự động liên hệ người thân (SMS/Cuộc gọi) khi kích hoạt SOS.
+- **Emergency Network**: Gửi cảnh báo SOS kèm vị trí lên backend; SMS cho liên hệ khẩn cấp do backend xử lý.
 - **Spatial Audio 3D**: Cảnh báo hướng vật cản (Trái/Phải/Giữa) qua âm thanh nổi (Stereo).
 - **Visual Feedback**: Hiển thị khung bao vật thể (Bounding Boxes) ngay trên màn hình preview.
 
@@ -45,15 +45,17 @@
 
 | Chế độ | Tên | Màu | Chức năng |
 | --- | --- | --- | --- |
-| **Mode 0** | Nhận diện tiền | 🟡 Gold | Nhận diện tiền VNĐ và vật thể. |
-| **Mode 1** | Mô tả cảnh | 🔵 Blue | Phân tích không gian, vật cản và khoảng cách. |
-| **Mode 2** | Nhận diện mặt | 🩵 Teal | Nhận diện người thân đã đăng ký. |
-| **Mode 3** | Điều hướng GPS | 💜 Purple | Chỉ đường bằng giọng nói qua OSRM & OSM. |
-| **Mode 4** | OCR Online | 🔹 Cyan | Đọc văn bản tiếng Việt qua máy chủ AI. |
-| **Mode 5** | Đọc tệp | 🟠 Orange | Đọc file PDF, TXT, DOCX. |
-| **Mode 6** | OCR Offline | 🟢 Green | Đọc nhanh văn bản (Google ML Kit). |
-| **Mode 7** | Phân tích bố cục | 🩷 Pink | Phân tích layout trang/tài liệu. |
+| **Mode 0** | Nhận diện tổng hợp | 🟡 Gold | Nhận diện vật thể và tiền VNĐ. |
+| **Mode 1** | Mô tả không gian | 🔵 Blue | Phân tích cảnh, vật cản và khoảng cách gần đúng. |
+| **Mode 2** | Nhận diện người | 🩵 Teal | Nhận diện người quen đã đăng ký. |
+| **Mode 3** | Chỉ hướng | 💜 Purple | Chỉ đường bằng giọng nói qua OSRM & OSM. |
+| **Mode 4** | Đọc văn bản (Online) | 🔹 Cyan | OCR ảnh qua máy chủ AI. |
+| **Mode 5** | Đọc tệp | 🟠 Orange | Đọc file PDF, TXT, DOC, DOCX và ảnh. |
+| **Mode 6** | Đọc chữ nhanh (Offline) | 🟢 Green | Đọc nhanh văn bản và mã vạch bằng ML Kit. |
+| **Mode 7** | Phân tích bố cục | 🩷 Pink | Phân tích bố cục trang/tài liệu. |
 | **Q&A** | Hỏi đáp AI | — | Trò chuyện với Gemini về hình ảnh. |
+
+`Walking Mode` là luồng stream liên tục 3-5 FPS được bật/tắt trong màn hình chính, không phải một mode độc lập trên carousel.
 
 ---
 
@@ -80,7 +82,7 @@ flutter run --dart-define=BACKEND_URL=http://192.168.1.X:3000
 
 ## 📂 Cài đặt Offline Model (TFLite)
 
-Để ứng dụng hoạt động khi không có Internet (Mode 0 & Mode 2), hãy đặt các file mô hình vào:
+Để ứng dụng hoạt động khi không có Internet cho phần nhận diện TFLite, hãy đặt các file mô hình vào:
 - `mobile_app/assets/models/best_float32.tflite`
 - `mobile_app/assets/models/best_float16.tflite`
 
@@ -92,6 +94,5 @@ flutter run --dart-define=BACKEND_URL=http://192.168.1.X:3000
 
 - **Lỗi kết nối Backend**: Kiểm tra `BACKEND_URL` trong lệnh chạy. Đảm bảo điện thoại và máy tính cùng mạng WiFi.
 - **Không nghe thấy giọng nói**: Kiểm tra âm lượng Media và cài đặt TTS trên điện thoại.
-- **SOS không hoạt động**: Đảm bảo đã cấp quyền gửi SMS và quản lý danh bạ.
+- **SOS không hoạt động**: Đảm bảo đã cấp quyền vị trí, mạng và kết nối backend; luồng gửi SMS trực tiếp trên mobile hiện không phải luồng chính.
 - **Lag/Giật**: Kiểm tra dung lượng pin. Chế độ Walking Mode sẽ tự động giảm FPS khi pin yếu để tiết kiệm năng lượng.
-

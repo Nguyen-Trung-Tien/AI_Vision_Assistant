@@ -49,7 +49,7 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 > [!WARNING]
 > **🎯 Độ chính xác AI**
 >
-> - YOLO model (`yolo11m`) là phiên bản **Medium** — ưu tiên sự ổn định và độ chính xác.
+> - Hệ thống đang dùng các trọng số YOLOv11 nạp từ thư mục `ai-worker/models` hoặc biến môi trường cấu hình; loại model cụ thể có thể thay đổi theo môi trường triển khai.
 > - Nhận diện tiền VN phụ thuộc điều kiện ánh sáng, góc chụp, độ mới của tờ tiền.
 > - Ước lượng khoảng cách dựa trên **MiDaS Small (Depth Estimation)** và công thức hình học — sai số ±20%.
 > - Hallucination Guard cảnh báo khi confidence < 85%, nhưng **không đảm bảo 100% chính xác**.
@@ -115,7 +115,7 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 | **15/04** | 📺 Visual Feedback              | Hiển thị Bounding Boxes + Object Chips trên mobile, tăng độ nhạy AI (480x480)                                                          |
 | **15/04** | 🔊 Spatial Audio 3D             | Tích hợp âm thanh 3D: xác định hướng vật cản qua tai nghe stereo                                                                       |
 | **08/04** | 🔧 Fix offline model            | Sửa lỗi mobile không nhận model TFLite offline đã có sẵn trên máy                                                                      |
-| **04/04** | 🚨 Emergency Contact Network    | Tích hợp mạng lưới liên hệ khẩn cấp: tự động SMS + cuộc gọi khi SOS                                                                    |
+| **04/04** | 🚨 Emergency Contact Network    | Tích hợp mạng lưới liên hệ khẩn cấp: gửi SMS qua backend đến liên hệ SOS và đẩy cảnh báo thời gian thực lên Admin Dashboard             |
 | **04/04** | 🚶 Continuous Stream hoàn thiện | Walking Mode 3–5 FPS: adaptive FPS, latest-only queue, smart throttle, battery saving                                                  |
 
 ### 🗓️ Tháng 4/2026 — v1.4.0
@@ -127,7 +127,7 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 | **08/04** | 🔧 Fix offline model            | Sửa lỗi mobile không nhận model TFLite offline đã có sẵn trên máy                     |
 | **06/04** | 📦 Kaggle dataset               | Chuẩn bị và upload dataset lên Kaggle cho training model                              |
 | **05/04** | 🚶 Continuous Stream fix        | Sửa lỗi UI đồng bộ ModeCarousel khi chuyển Walking Mode                               |
-| **04/04** | 🚨 Emergency Contact Network    | Tích hợp mạng lưới liên hệ khẩn cấp: tự động SMS + cuộc gọi khi SOS                   |
+| **04/04** | 🚨 Emergency Contact Network    | Tích hợp mạng lưới liên hệ khẩn cấp: gửi SMS qua backend đến liên hệ SOS và đẩy cảnh báo thời gian thực lên Admin Dashboard |
 | **04/04** | 🚶 Continuous Stream hoàn thiện | Walking Mode 3–5 FPS: adaptive FPS, latest-only queue, smart throttle, battery saving |
 | **01/04** | 🛡️ System Integrity Audit       | Kiểm tra sức khỏe toàn bộ hệ thống, dọn dẹp code thừa                                 |
 
@@ -234,7 +234,7 @@ Phiên bản v1.9.3 tập trung vào **tăng cường phản hồi trực quan t
 | --- | ---------------------- | ---------------------------------- | ----------------------------------------------------------------------------------- |
 | 1   | **📱 Mobile App**      | Flutter, Camera, TTS, GPS          | Ứng dụng cho người dùng cuối — chụp ảnh, nhận kết quả AI, phát giọng nói tiếng Việt |
 | 2   | **🔗 Backend Gateway** | NestJS, PostgreSQL, RabbitMQ       | API server trung tâm — xác thực JWT, tiếp nhận WebSocket, quản lý message queue     |
-| 3   | **🧠 AI Worker**       | Python, FastAPI, YOLO, OCR, Gemini | Xử lý AI — nhận diện vật thể, tiền, mô tả cảnh, hỏi đáp Visual Q&A                  |
+| 3   | **🧠 AI Worker**       | Python, FastAPI, YOLO, OCR, Gemini | Xử lý AI — nhận diện vật thể, tiền, mô tả cảnh và các tác vụ Gemini theo cấu hình   |
 | 4   | **📊 Admin Dashboard** | React 19, Vite, Tailwind CSS v4    | Bảng quản trị — thống kê, SOS, heatmap nguy hiểm, feedback AI, broadcast TTS        |
 
 ---
@@ -245,11 +245,11 @@ Phiên bản v1.9.3 tập trung vào **tăng cường phản hồi trực quan t
 
 | Tính năng               | Mô tả                                                                        | Xử lý                                         |
 | ----------------------- | ---------------------------------------------------------------------------- | --------------------------------------------- |
-| **Nhận diện vật thể**   | 20 lớp đối tượng: xe cộ, người, cầu thang, ổ gà, nắp cống, vạch qua đường... | YOLO v11 (online) + TFLite (offline fallback) |
+| **Nhận diện vật thể**   | 13 lớp đối tượng đường phố chính: người, cầu thang, ổ gà, nắp cống, rào chắn, vạch qua đường, xe... | YOLO v11 (online) + TFLite (offline fallback khi có model) |
 | **Nhận diện tiền VN**   | 9 mệnh giá: 1K → 500K VNĐ, kèm xác minh màu sắc HSV & đặc trưng landmark     | YOLO + color validation + OCR                 |
 | **Đọc văn bản (OCR)**   | Đọc nhãn mác, biển báo, tài liệu (General/Smart Mode)                        | Tesseract + Gemini Vision (Smart OCR)         |
 | **Mô tả cảnh**          | Mô tả không gian: vị trí trái/giữa/phải, ước lượng khoảng cách, gợi ý lối đi | YOLO + spatial analysis + MiDaS Depth         |
-| **Visual Q&A**          | Hỏi đáp bằng giọng nói về ảnh camera                                         | Google Gemini Vision API                      |
+| **Visual Q&A**          | Luồng hỏi đáp ảnh đã có ở mức giao tiếp mobile/gateway; cần hoàn thiện đầy đủ ở worker để ổn định | Google Gemini Vision API |
 | **Nhận diện khuôn mặt** | Nhận diện người quen, bạn bè đã đăng ký                                      | InsightFace (Buffalo_L)                       |
 
 ### 🛡️ An toàn & Hỗ trợ
@@ -262,7 +262,7 @@ Phiên bản v1.9.3 tập trung vào **tăng cường phản hồi trực quan t
 | **Flash tự động**      | Cảm biến ánh sáng tự bật/tắt đèn flash camera                                         |
 | **Rung phản hồi**      | Haptic feedback theo loại sự kiện (nguy hiểm, xác nhận tiền, SOS)                     |
 | **Continuous Stream**  | Chế độ đi bộ 3–5 FPS: phân tích liên tục, adaptive FPS, tiết kiệm pin                 |
-| **Liên hệ khẩn cấp**   | SMS + cuộc gọi tự động đến người thân khi SOS, CRUD danh bạ khẩn cấp                  |
+| **Liên hệ khẩn cấp**   | CRUD danh bạ khẩn cấp; backend gửi SMS tới liên hệ SOS khi có cảnh báo từ người dùng |
 | **Visual Feedback**    | Hiển thị khung bao (Bounding Boxes) + nhãn vật thể thời gian thực trên camera preview |
 | **Spatial Audio 3D**   | Cảnh báo vật cản theo hướng (Trái/Phải/Giữa) qua tai nghe stereo theo thời gian thực  |
 
@@ -349,12 +349,15 @@ sequenceDiagram
 
 ### Chi tiết xử lý theo `task_type`
 
-| Task Type   | Trigger           | AI Service                               | Kết quả                                            | TTS          |
-| ----------- | ----------------- | ---------------------------------------- | -------------------------------------------------- | ------------ |
-| `OCR`       | Double-tap mode 0 | YOLO → Money Detector                    | Nhận diện tiền/vật thể + confidence + denomination | ✅ Server    |
-| `TEXT_OCR`  | Mode 1            | Tesseract OCR                            | Văn bản trích xuất                                 | ✅ Server    |
-| `CAPTION`   | Mode 3            | YOLO → Scene Captioner + Danger Detector | Mô tả cảnh + cảnh báo nguy hiểm                    | ✅ Server    |
-| `visual_qa` | Nút Q&A           | Gemini Vision API                        | Câu trả lời tự nhiên                               | ✅ On-device |
+| Task Type            | Trigger hiện tại                     | AI Service                                        | Kết quả                                                          | TTS       |
+| -------------------- | ------------------------------------ | ------------------------------------------------- | ---------------------------------------------------------------- | --------- |
+| `OCR`                | Nhấn đúp ở mode 0                    | YOLO object + money detector                      | Nhận diện tổng hợp, có thể trả về vật thể hoặc mệnh giá tiền     | ✅ Server |
+| `CAPTION`            | Nhấn đúp ở mode 1 hoặc Walking Mode  | YOLO + Scene Captioner + Danger Detector + MiDaS | Mô tả không gian, khoảng cách gần đúng và cảnh báo nguy hiểm     | ✅ Server |
+| `FACE_RECOGNITION`   | Nhấn đúp ở mode 2 hoặc stream phụ    | InsightFace                                       | Nhận diện người quen đã đăng ký                                  | ✅ Server |
+| `TEXT_OCR`           | Nhấn đúp ở mode 4                    | Tesseract OCR                                     | Văn bản trích xuất từ ảnh camera                                 | ✅ Server |
+| `SMART_OCR`          | Lệnh giọng nói theo ngữ cảnh         | Gemini Vision                                     | Đọc hiểu menu, biển báo, hóa đơn theo ngữ cảnh                   | ✅ Server |
+| `LAYOUT_ANALYSIS`    | Nhấn đúp ở mode 7                    | Gemini Vision                                     | Phân tích bố cục tài liệu/trang                                  | ✅ Server |
+| `visual_qa`          | Nút Q&A                              | Luồng socket đã có, cần hoàn thiện worker riêng   | Tác vụ hỏi đáp trực quan đang ở trạng thái tích hợp/chưa ổn định | ⚠️ Khác nhau theo build |
 
 ---
 
@@ -362,15 +365,17 @@ sequenceDiagram
 
 | Chế độ         | Tên              | Màu       | Mô tả                                               | Online/Offline |
 | -------------- | ---------------- | --------- | --------------------------------------------------- | -------------- |
-| **Mode 0**     | Nhận diện tiền   | 🟡 Gold   | Nhận diện tiền VNĐ và vật thể (YOLO/TFLite)         | Both           |
-| **Mode 1**     | Mô tả cảnh       | 🔵 Blue   | Mô tả không gian + MiDaS Depth + cảnh báo nguy hiểm | Online         |
-| **Mode 2**     | Nhận diện mặt    | 🩵 Teal   | Nhận diện người quen đã đăng ký (InsightFace)       | Online         |
-| **Mode 3**     | Điều hướng GPS   | 💜 Purple | GPS + la bàn + chỉ đường OSRM/OSM                   | Online         |
-| **Mode 4**     | OCR Online       | 🔹 Cyan   | Đọc văn bản qua Tesseract / Gemini (Smart OCR)      | Online         |
-| **Mode 5**     | Đọc tệp          | 🟠 Orange | Đọc file PDF, TXT, DOCX bằng TTS                    | Offline        |
-| **Mode 6**     | OCR Offline      | 🟢 Green  | ML Kit Text Recognition + Barcode Scanner           | Offline        |
-| **Mode 7**     | Phân tích bố cục | 🩷 Pink   | Phân tích layout trang/tài liệu (Gemini)            | Online         |
+| **Mode 0**     | Nhận diện tổng hợp | 🟡 Gold | Nhận diện vật thể và tiền VNĐ; có thể chạy offline nếu máy có model TFLite | Both    |
+| **Mode 1**     | Mô tả không gian   | 🔵 Blue | Mô tả cảnh, vật cản, khoảng cách gần đúng và cảnh báo nguy hiểm             | Online  |
+| **Mode 2**     | Nhận diện người    | 🩵 Teal | Nhận diện người quen đã đăng ký                                                  | Online  |
+| **Mode 3**     | Chỉ hướng          | 💜 Purple | GPS + la bàn + chỉ đường OSRM/OSM                                              | Online  |
+| **Mode 4**     | Đọc văn bản (Online) | 🔹 Cyan | OCR ảnh qua server; Smart OCR là nhánh tác vụ riêng dùng Gemini               | Online  |
+| **Mode 5**     | Đọc tệp            | 🟠 Orange | Đọc PDF, TXT, DOC, DOCX, ảnh từ bộ nhớ máy                                     | Offline |
+| **Mode 6**     | Đọc chữ nhanh (Offline) | 🟢 Green | ML Kit Text Recognition + Barcode Scanner                                  | Offline |
+| **Mode 7**     | Phân tích bố cục   | 🩷 Pink | Phân tích bố cục trang/tài liệu bằng Gemini                                    | Online  |
 | **Visual Q&A** | Hỏi đáp          | —         | Hỏi đáp trực quan bằng giọng nói (Gemini AI)        | Online         |
+
+> `Walking Mode` hiện là chế độ stream liên tục 3-5 FPS bật/tắt trong màn hình chính, không phải một ô riêng trên carousel mode.
 
 ### Các thành phần Mobile App
 
@@ -761,7 +766,7 @@ Dashboard quản trị cung cấp các trang:
 - [x] Ước lượng chiều sâu đơn mục (Monocular Depth Estimation với MiDaS)
 - [x] Chế độ OCR thông minh (Smart OCR: biển báo, menu, hóa đơn qua Gemini)
 - [x] Stream liên tục 3–5 FPS cho chế độ đi bộ (walking mode + adaptive FPS)
-- [x] Mạng lưới liên hệ khẩn cấp (SMS + cuộc gọi tự động khi SOS)
+- [x] Mạng lưới liên hệ khẩn cấp (backend gửi SMS và phát cảnh báo SOS real-time)
 - [x] Âm thanh không gian 3D (trái/phải) theo vị trí vật cản
 - [x] Visual Feedback (Bounding Boxes + Object Labels) trên preview
 - [x] Admin Dashboard mở rộng (System Monitor, Analytics, RBAC, Activity Log)

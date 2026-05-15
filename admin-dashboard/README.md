@@ -38,7 +38,7 @@ Bảng điều khiển quản trị tập trung cho hệ thống AI Vision Assis
 | **Feedback Management** | Đánh giá độ chính xác của AI từ phản hồi người dùng. |
 | **AI Model Management** | (Beta) Quản lý trạng thái và triển khai các mô hình AI. |
 | **Broadcast TTS** | Gửi thông báo bằng giọng nói đến toàn bộ người dùng đang online. |
-| **User Management** | Quản lý tài khoản, vai trò (Super Admin/Admin) và phiên đăng nhập. |
+| **User Management** | Quản lý tài khoản, vai trò và phiên đăng nhập. |
 
 ---
 
@@ -67,9 +67,10 @@ Dashboard sẽ chạy tại địa chỉ: `http://localhost:4200`
 
 ## 🔐 Phân quyền (RBAC)
 
-Hệ thống hỗ trợ 2 vai trò quản trị:
-- **SUPER_ADMIN**: Toàn quyền hệ thống, quản lý admin khác.
-- **ADMIN**: Xem báo cáo, xử lý SOS, quản lý feedback và broadcast.
+Hệ thống hiện hỗ trợ 3 vai trò truy cập dashboard:
+- **SUPER_ADMIN**: Toàn quyền hệ thống, quản lý cài đặt và mô hình.
+- **ADMIN**: Theo dõi vận hành, xử lý SOS, feedback, broadcast và báo cáo.
+- **MODERATOR**: Quyền hạn giới hạn cho các màn hình giám sát như Dashboard, SOS, Heatmap, Feedback, Notifications.
 
 ---
 

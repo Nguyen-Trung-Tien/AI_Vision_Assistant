@@ -14,20 +14,20 @@
 | **04/04** | 🚶 Smart Throttle   | Tối ưu hóa hàng đợi Latest-only cho Continuous Stream.                 |
 | **28/03** | 🚦 Traffic Lights   | Mở rộng dataset YOLO lên 29 lớp (thêm đèn giao thông, ổ gà, nắp cống). |
 | **27/03** | 🎓 YOLO Pipeline    | Hoàn thiện quy trình training tự động: Roboflow → Colab → Deploy.      |
-| **26/02** | 🤖 Visual Q&A       | Tích hợp Google Gemini Vision API cho hỏi đáp tự nhiên.                |
+| **26/02** | 🤖 Gemini Vision    | Tích hợp các tác vụ Gemini Vision phục vụ Smart OCR và luồng ảnh dùng AI. |
 | **25/02** | 🗣️ TTS Cache        | Sử dụng Redis để lưu trữ kết quả TTS, giảm latency phát giọng nói.     |
 
 ---
 
 ## 🧠 Các dịch vụ AI tích hợp
 
-- **Object Detection (YOLO v11)**: Nhận diện xe cộ, người, vật cản với mô hình Nano tối ưu tốc độ.
+- **Object Detection (YOLO v11)**: Nhận diện xe cộ, người và vật cản bằng các trọng số YOLO nạp từ thư mục `models/`.
 - **Face Recognition (InsightFace)**: Nhận diện người quen sử dụng model Buffalo_L.
 - **Depth Estimation (MiDaS)**: Ước lượng khoảng cách từ camera đến vật thể bằng mô hình MiDaS Small.
 - **Smart OCR (Gemini Vision)**: Đọc thông minh thực đơn, hóa đơn và biển báo phức tạp.
 - **Scene Captioning**: Phân tích không gian và đưa ra mô tả bằng ngôn ngữ tự nhiên.
 - **Money Detector**: Nhận diện các mệnh giá tiền Việt Nam kèm xác minh màu sắc (HSV).
-- **Visual Q&A**: Hỏi đáp về hình ảnh thông qua Google Gemini API.
+- **Gemini Vision Services**: Smart OCR, phân tích bố cục và các tác vụ ảnh dùng Gemini trong worker.
 
 ---
 
@@ -106,5 +106,5 @@ Có 2 cách chạy:
 ## 🚨 Lưu ý quan trọng
 
 - **GPU**: Nếu có NVIDIA GPU, hãy cài đặt `torch` phiên bản CUDA để tăng tốc độ xử lý gấp 5-10 lần.
-- **Gemini API**: Cần có API Key từ Google AI Studio để sử dụng các tính năng Smart OCR và Visual Q&A.
+- **Gemini API**: Cần có API Key từ Google AI Studio để sử dụng các tính năng Gemini như Smart OCR và phân tích bố cục.
 - **Face Registration**: Ảnh khuôn mặt đăng ký nên được chụp rõ nét, chính diện.
