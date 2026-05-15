@@ -8,6 +8,8 @@ import 'package:mobile_app/services/sos_service.dart';
 import 'package:mobile_app/services/volume_button_service.dart';
 
 /// Handles SOS hold-to-trigger, hardware button detection, and alert sending.
+enum SosOverlayStatus { hidden, countdown, sending, sent, error }
+
 class SosController {
   SosController({required this.ctrl, required this.onStateChanged});
 
@@ -21,27 +23,28 @@ class SosController {
   double sosHoldProgress = 0;
   Timer? _sosHoldProgressTimer;
   Timer? _sosHoldCompleteTimer;
+  Timer? _overlayDismissTimer;
 
-  bool isSosSent = false;
+  SosOverlayStatus overlayStatus = SosOverlayStatus.hidden;
   int sosCountdown = 0;
+
+  bool get isOverlayVisible => overlayStatus != SosOverlayStatus.hidden;
 
   void init() {
     _sosService.onCountdownTick = (secondsLeft) async {
       if (secondsLeft == null) {
-        // Hủy bỏ
-        isSosSent = false;
+        overlayStatus = SosOverlayStatus.hidden;
         sosCountdown = 0;
       } else if (secondsLeft <= 0) {
-        // Hết thời gian đếm ngược
-        isSosSent = false; // Đóng thông báo
+        overlayStatus = SosOverlayStatus.sending;
         sosCountdown = 0;
-        
-        // Gửi SOS lên admin
+        onStateChanged();
+
         final frame = await ctrl.captureCurrentFrame();
         await _sendLocationToBackend(frame);
       } else {
-        // Đang đếm ngược
-        isSosSent = true;
+        _overlayDismissTimer?.cancel();
+        overlayStatus = SosOverlayStatus.countdown;
         sosCountdown = secondsLeft;
       }
       onStateChanged();
@@ -98,7 +101,6 @@ class SosController {
   }
 
   Future<void> _triggerSosAlert() async {
-    // Kích hoạt giao diện đếm ngược ngay lập tức
     _sosService.triggerEmergency(countdownSeconds: 10);
     sosHoldProgress = 0;
     onStateChanged();
@@ -113,16 +115,14 @@ class SosController {
       }
       if (permission != LocationPermission.denied &&
           permission != LocationPermission.deniedForever) {
-        // Thêm timeout để không bị treo
         position = await Geolocator.getCurrentPosition(
           locationSettings: const LocationSettings(
             accuracy: LocationAccuracy.bestForNavigation,
-            timeLimit: Duration(seconds: 4), 
+            timeLimit: Duration(seconds: 4),
           ),
         );
       }
     } catch (_) {
-      // Fallback to last known if timeout
       position = await Geolocator.getLastKnownPosition();
     }
 
@@ -133,21 +133,37 @@ class SosController {
         imageBase64: frame != null ? base64Encode(frame) : null,
       );
       ctrl.accessibilityManager.speak('Đã gửi cảnh báo SOS');
+      overlayStatus = SosOverlayStatus.sent;
     } else {
       ctrl.accessibilityManager.speak('Không lấy được vị trí SOS');
+      overlayStatus = SosOverlayStatus.error;
     }
+
+    _scheduleOverlayDismiss();
+    onStateChanged();
   }
 
   void cancelFalseAlarm() {
     _sosService.cancelEmergency();
-    isSosSent = false;
+    _overlayDismissTimer?.cancel();
+    overlayStatus = SosOverlayStatus.hidden;
     sosCountdown = 0;
     onStateChanged();
+  }
+
+  void _scheduleOverlayDismiss() {
+    _overlayDismissTimer?.cancel();
+    _overlayDismissTimer = Timer(const Duration(seconds: 4), () {
+      overlayStatus = SosOverlayStatus.hidden;
+      sosCountdown = 0;
+      onStateChanged();
+    });
   }
 
   void dispose() {
     _sosHoldProgressTimer?.cancel();
     _sosHoldCompleteTimer?.cancel();
+    _overlayDismissTimer?.cancel();
     _powerButtonService.stopListening();
     _volumeButtonService.stopListening();
   }

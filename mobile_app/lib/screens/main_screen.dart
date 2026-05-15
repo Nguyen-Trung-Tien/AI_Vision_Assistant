@@ -845,9 +845,10 @@ class _MainScreenState extends State<MainScreen>
           if (_voiceCtrl.isListening)
             const VoiceListeningOverlay(),
 
-          // SOS Success Overlay
-          if (_sosCtrl.isSosSent)
+          // SOS status overlay
+          if (_sosCtrl.isOverlayVisible)
             SosSuccessOverlay(
+              status: _sosCtrl.overlayStatus,
               countdown: _sosCtrl.sosCountdown,
               onCancel: _sosCtrl.cancelFalseAlarm,
               language: lang,

@@ -12,7 +12,7 @@ export const env = {
   // App
   appTitle:
     import.meta.env.VITE_APP_TITLE || "AI Vision Assistant — Admin Dashboard",
-  appVersion: import.meta.env.VITE_APP_VERSION || "1.9.2",
+  appVersion: import.meta.env.VITE_APP_VERSION || "1.9.3",
   port: Number(import.meta.env.VITE_PORT) || 4200,
 
   // React Query

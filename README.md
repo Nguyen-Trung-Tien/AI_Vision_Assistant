@@ -22,7 +22,7 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 <br/>
 
-![Version](https://img.shields.io/badge/Version-1.9.2-blue?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.9.3-blue?style=flat-square)
 ![License](https://img.shields.io/badge/License-UNLICENSED-gray?style=flat-square)
 ![Status](https://img.shields.io/badge/Status-In_Development-orange?style=flat-square)
 [![CI/CD](https://github.com/Nguyen-Trung-Tien/AI_Vision_Assistant/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/Nguyen-Trung-Tien/AI_Vision_Assistant/actions/workflows/ci-cd.yml)
@@ -75,10 +75,11 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 ## 📰 Cập nhật mới nhất
 
-### 🗓️ Tháng 5/2026 — v1.9.2 (Current)
+### 🗓️ Tháng 5/2026 — v1.9.3 (Current)
 
 | Ngày      | Cập nhật                   | Mô tả                                                                                                                                |
 | --------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| **15/05** | 🚨 SOS Status Overlay      | Nâng cấp thông báo SOS trên Mobile thành overlay đa trạng thái: `countdown` → `sending` → `sent/error`, thêm vòng đếm ngược, hướng dẫn hủy báo động giả và tự đóng sau khi hoàn tất |
 | **13/05** | 📦 Recognition Overlay     | Bổ sung `RecognitionOverlay` cho chế độ nhận diện tổng hợp: hiển thị thẻ thông tin trên camera, highlight vật thể chính và vẽ bounding box trực tiếp trên preview |
 | **13/05** | 🔗 Detection Payload Sync  | Đồng bộ dữ liệu detection end-to-end giữa AI Worker → Gateway → Mobile: thêm `raw_detections`, `primary_detection`, `frame_width`, `frame_height`, `recognition_title` |
 | **13/05** | 💯 Confidence UX           | Chuẩn hóa cách đọc và hiển thị độ tin cậy theo phần trăm thân thiện hơn, ví dụ `90%` thay cho `0.9` trong nhận diện tiền |
@@ -169,9 +170,9 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 ---
 
-## 🚀 Các tính năng nổi bật vừa cập nhật (v1.9.2)
+## 🚀 Các tính năng nổi bật vừa cập nhật (v1.9.3)
 
-Phiên bản v1.9.2 tập trung vào **tăng cường phản hồi trực quan theo thời gian thực** cho chế độ nhận diện tổng hợp và **đồng bộ hóa dữ liệu detection** giữa AI Worker, Gateway và Mobile:
+Phiên bản v1.9.3 tập trung vào **tăng cường phản hồi trực quan theo thời gian thực** cho chế độ nhận diện tổng hợp, **nâng cấp UX trạng thái SOS trên Mobile**, và **đồng bộ hóa dữ liệu detection** giữa AI Worker, Gateway và Mobile:
 
 1.  **📦 Recognition Overlay (Mới)**:
     - Hiển thị thẻ thông tin ngay trên camera khi phát hiện vật thể trong chế độ nhận diện tổng hợp.
@@ -187,14 +188,19 @@ Phiên bản v1.9.2 tập trung vào **tăng cường phản hồi trực quan t
     - Câu đọc và text nhận diện tiền đổi sang định dạng phần trăm dễ hiểu hơn, ví dụ `90%`.
     - Vẫn giữ `confidence_score` nội bộ dạng số thực để không ảnh hưởng thống kê và logic hệ thống.
 
-4.  **🧼 Overlay State Management**:
+4.  **🚨 SOS Status Overlay Upgrade**:
+    - Thay màn hình “đã gửi SOS” đơn giản bằng luồng trạng thái đầy đủ: `countdown`, `sending`, `sent`, `error`.
+    - Bổ sung vòng đếm ngược trực quan, vùng hướng dẫn rõ ràng và nút **Hủy báo động giả** nổi bật hơn trên mobile.
+    - Overlay tự đóng sau khi gửi xong hoặc khi lỗi lấy vị trí, giúp trải nghiệm SOS mạch lạc hơn.
+
+5.  **🧼 Overlay State Management**:
     - Tự động xóa recognition overlay khi rời khỏi chế độ nhận diện tổng hợp hoặc khi không còn detection hợp lệ.
     - Có fallback từ `boxes` sang detection card để UI vẫn hoạt động khi payload chỉ có bounding boxes.
 
-5.  **🧭 Nền tảng cho bước nâng cấp tiếp theo**:
+6.  **🧭 Nền tảng cho bước nâng cấp tiếp theo**:
     - Sẵn sàng mở rộng thêm metadata cho QR, sản phẩm và tinh chỉnh box theo `front camera` hoặc `BoxFit.cover`.
 
-6.  **📱 Vẫn giữ nguyên nền UX trước đó**:
+7.  **📱 Vẫn giữ nguyên nền UX trước đó**:
     - Các cải tiến gần đây như HUD động, speaking overlay, file reading animation và mode color system vẫn được giữ nguyên trong bản vá này.
 
 ---
@@ -736,11 +742,12 @@ Dashboard quản trị cung cấp các trang:
 
 ## 📌 Roadmap
 
-### Đã hoàn thành (v1.9.2)
+### Đã hoàn thành (v1.9.3)
 
 - [x] Recognition Overlay cho chế độ nhận diện tổng hợp: card thông tin + bounding box trên camera preview
 - [x] Đồng bộ detection payload AI Worker → Gateway → Mobile với `raw_detections`, `primary_detection`, `frame_width`, `frame_height`
 - [x] Chuẩn hóa cách đọc và hiển thị confidence theo phần trăm cho nhận diện tiền
+- [x] Nâng cấp **SOS Status Overlay** trên Mobile: đếm ngược trực quan, trạng thái gửi vị trí và thông báo thành công/lỗi tự đóng
 - [x] **Enhanced File Reading** — Animation trang giấy và dòng văn bản đồng bộ với TTS
 - [x] **File Selection UX** — Tối ưu hóa thời điểm hiển thị overlay xử lý tệp
 - [x] **Mode-Specific Animations** — 7 animation CustomPaint riêng cho mỗi chế độ AI
