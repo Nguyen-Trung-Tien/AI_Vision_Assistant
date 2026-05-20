@@ -500,6 +500,7 @@ class MainController {
     }
 
     isProcessing = true;
+    onStateChanged?.call();
     final lang = settings.language;
     accessibilityManager.triggerSuccessVibration();
     accessibilityManager.speak(
@@ -510,6 +511,8 @@ class MainController {
       final bytes = await captureCurrentFrame();
       if (bytes == null) {
         accessibilityManager.speak(AppLocalizations.t('main_no_capture', lang));
+        isProcessing = false;
+        onStateChanged?.call();
         return;
       }
 
@@ -528,6 +531,7 @@ class MainController {
       );
     } finally {
       isProcessing = false;
+      onStateChanged?.call();
     }
   }
 

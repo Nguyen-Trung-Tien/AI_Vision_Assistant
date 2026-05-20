@@ -37,7 +37,6 @@ class VoiceCommandController {
       onCommandRecognized: onCommandRecognized,
       onListeningStateChanged: onStateChanged,
     );
-    _voiceCommandService.init();
   }
 
   void startListening({bool isVisualQA = false}) =>

@@ -38,6 +38,9 @@ class EdgeAIService {
   Uint8List? _lastFrameForFeedback;
   Uint8List? get lastFrameForFeedback => _lastFrameForFeedback;
 
+  Position? _cachedPosition;
+  DateTime? _lastLocationFetchTime;
+
   EdgeAIService(this._wsService, this._captureFrame) {
     _wsService.onDangerAlert = (data) {
       final distance = ((data['distance'] as num?) ?? 2.0).toDouble();
@@ -229,8 +232,8 @@ class EdgeAIService {
       subMode: subMode,
     );
 
-    // Timeout: auto-reset processing state after 15 seconds
-    Future.delayed(const Duration(seconds: 15), () {
+    // Timeout: auto-reset processing state after 30 seconds
+    Future.delayed(const Duration(seconds: 30), () {
       if (_isProcessing) {
         _setProcessing(false);
         _accessibilityManager.speak(
@@ -242,21 +245,53 @@ class EdgeAIService {
 
   Future<Position?> _getCurrentLocation() async {
     try {
+      final now = DateTime.now();
+      if (_cachedPosition != null &&
+          _lastLocationFetchTime != null &&
+          now.difference(_lastLocationFetchTime!).inSeconds < 30) {
+        return _cachedPosition;
+      }
+
       var permission = await Geolocator.checkPermission();
       if (permission == LocationPermission.denied) {
         permission = await Geolocator.requestPermission();
       }
       if (permission == LocationPermission.denied ||
           permission == LocationPermission.deniedForever) {
-        return null;
+        return _cachedPosition;
       }
-      return Geolocator.getCurrentPosition(
+
+      final lastKnown = await Geolocator.getLastKnownPosition();
+      if (lastKnown != null) {
+        _cachedPosition = lastKnown;
+        _lastLocationFetchTime = now;
+        _updateLocationInBackground();
+        return lastKnown;
+      }
+
+      final position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
-          accuracy: LocationAccuracy.bestForNavigation,
+          accuracy: LocationAccuracy.low,
+        ),
+      ).timeout(const Duration(milliseconds: 500));
+
+      _cachedPosition = position;
+      _lastLocationFetchTime = now;
+      return position;
+    } catch (_) {
+      return _cachedPosition;
+    }
+  }
+
+  void _updateLocationInBackground() async {
+    try {
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.low,
         ),
       ).timeout(const Duration(seconds: 2));
-    } catch (_) {
-      return null;
-    }
+      _cachedPosition = position;
+      _lastLocationFetchTime = DateTime.now();
+    } catch (_) {}
   }
 }

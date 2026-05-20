@@ -22,7 +22,7 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 <br/>
 
-![Version](https://img.shields.io/badge/Version-1.9.3-blue?style=flat-square)
+![Version](https://img.shields.io/badge/Version-1.9.4-blue?style=flat-square)
 ![License](https://img.shields.io/badge/License-UNLICENSED-gray?style=flat-square)
 ![Status](https://img.shields.io/badge/Status-In_Development-orange?style=flat-square)
 [![CI/CD](https://github.com/Nguyen-Trung-Tien/AI_Vision_Assistant/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/Nguyen-Trung-Tien/AI_Vision_Assistant/actions/workflows/ci-cd.yml)
@@ -75,10 +75,11 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 ## 📰 Cập nhật mới nhất
 
-### 🗓️ Tháng 5/2026 — v1.9.3 (Current)
+### 🗓️ Tháng 5/2026 — v1.9.4 (Current)
 
 | Ngày      | Cập nhật                   | Mô tả                                                                                                                                |
 | --------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
+| **20/05** | 📱 TFLite Offline Money Fix | Tối ưu hóa ngoại tuyến: Sửa lỗi nạp mô hình TFLite offline (`best_float32.tflite`), tích hợp bộ lọc mệnh giá nghiêm ngặt (chỉ nhận diện 9 mệnh giá tiền Việt Nam từ 1.000đ đến 500.000đ khi offline), tự động định tuyến thông minh khi mất kết nối. |
 | **15/05** | 🚨 SOS Status Overlay      | Nâng cấp thông báo SOS trên Mobile thành overlay đa trạng thái: `countdown` → `sending` → `sent/error`, thêm vòng đếm ngược, hướng dẫn hủy báo động giả và tự đóng sau khi hoàn tất |
 | **13/05** | 📦 Recognition Overlay     | Bổ sung `RecognitionOverlay` cho chế độ nhận diện tổng hợp: hiển thị thẻ thông tin trên camera, highlight vật thể chính và vẽ bounding box trực tiếp trên preview |
 | **13/05** | 🔗 Detection Payload Sync  | Đồng bộ dữ liệu detection end-to-end giữa AI Worker → Gateway → Mobile: thêm `raw_detections`, `primary_detection`, `frame_width`, `frame_height`, `recognition_title` |
@@ -170,37 +171,42 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 ---
 
-## 🚀 Các tính năng nổi bật vừa cập nhật (v1.9.3)
+## 🚀 Các tính năng nổi bật vừa cập nhật (v1.9.4)
 
-Phiên bản v1.9.3 tập trung vào **tăng cường phản hồi trực quan theo thời gian thực** cho chế độ nhận diện tổng hợp, **nâng cấp UX trạng thái SOS trên Mobile**, và **đồng bộ hóa dữ liệu detection** giữa AI Worker, Gateway và Mobile:
+Phiên bản v1.9.4 tập trung vào **tối ưu hóa hoạt động ngoại tuyến (Offline Mode)**, sửa lỗi nạp mô hình TFLite và giới hạn nhận dạng chỉ tập trung vào tiền mặt:
 
-1.  **📦 Recognition Overlay (Mới)**:
+1.  **📱 TFLite Offline Money Fix (Mới)**:
+    - Sửa lỗi nạp mô hình TFLite ngoại tuyến do sai đường dẫn asset, chuyển thành công sang đường dẫn `assets/models/money/best_float32.tflite`.
+    - Tích hợp bộ lọc mệnh giá tiền cực kỳ nghiêm ngặt: khi chạy ngoại tuyến, chỉ tính điểm cho 9 mệnh giá tiền mục tiêu (`1000` - `500000`), bỏ qua toàn bộ vật thể thông thường (cột điện, ổ gà, rào chắn,...) và trả về phản hồi mặc định tiếng Việt `"Không nhận diện rõ đối tượng."`.
+    - Thiết lập cơ chế tự động định tuyến thông minh sang `detectMoneyOffline()` khi nhấn đúp màn hình ở trạng thái không có kết nối internet (`isConnected == false`).
+
+2.  **📦 Recognition Overlay**:
     - Hiển thị thẻ thông tin ngay trên camera khi phát hiện vật thể trong chế độ nhận diện tổng hợp.
     - Tự động chọn vật thể chính để highlight và giữ thông tin trực quan hơn cho người dùng.
     - Vẽ bounding box trực tiếp trên preview để người dùng biết AI đang nhận diện đúng vật thể nào.
 
-2.  **🔗 Detection Payload End-to-End**:
+3.  **🔗 Detection Payload End-to-End**:
     - AI Worker nay trả thêm `raw_detections`, `primary_detection`, `frame_width`, `frame_height`, `recognition_title`.
     - Backend Gateway forward nguyên các trường detection cần thiết về mobile app qua `ai_result`.
     - Mobile dùng cùng một nguồn dữ liệu để dựng card thông tin và box nhận diện.
 
-3.  **💯 Confidence Display Improvement**:
+4.  **💯 Confidence Display Improvement**:
     - Câu đọc và text nhận diện tiền đổi sang định dạng phần trăm dễ hiểu hơn, ví dụ `90%`.
     - Vẫn giữ `confidence_score` nội bộ dạng số thực để không ảnh hưởng thống kê và logic hệ thống.
 
-4.  **🚨 SOS Status Overlay Upgrade**:
+5.  **🚨 SOS Status Overlay Upgrade**:
     - Thay màn hình “đã gửi SOS” đơn giản bằng luồng trạng thái đầy đủ: `countdown`, `sending`, `sent`, `error`.
     - Bổ sung vòng đếm ngược trực quan, vùng hướng dẫn rõ ràng và nút **Hủy báo động giả** nổi bật hơn trên mobile.
     - Overlay tự đóng sau khi gửi xong hoặc khi lỗi lấy vị trí, giúp trải nghiệm SOS mạch lạc hơn.
 
-5.  **🧼 Overlay State Management**:
+6.  **🧼 Overlay State Management**:
     - Tự động xóa recognition overlay khi rời khỏi chế độ nhận diện tổng hợp hoặc khi không còn detection hợp lệ.
     - Có fallback từ `boxes` sang detection card để UI vẫn hoạt động khi payload chỉ có bounding boxes.
 
-6.  **🧭 Nền tảng cho bước nâng cấp tiếp theo**:
+7.  **🧭 Nền tảng cho bước nâng cấp tiếp theo**:
     - Sẵn sàng mở rộng thêm metadata cho QR, sản phẩm và tinh chỉnh box theo `front camera` hoặc `BoxFit.cover`.
 
-7.  **📱 Vẫn giữ nguyên nền UX trước đó**:
+8.  **📱 Vẫn giữ nguyên nền UX trước đó**:
     - Các cải tiến gần đây như HUD động, speaking overlay, file reading animation và mode color system vẫn được giữ nguyên trong bản vá này.
 
 ---
@@ -209,7 +215,7 @@ Phiên bản v1.9.3 tập trung vào **tăng cường phản hồi trực quan t
 
 - [Giới thiệu](#-giới-thiệu)
 - [Tính năng chính](#-tính-năng-chính)
-- [Các tính năng vừa cập nhật](#-các-tính-năng-nổi-bật-vừa-cập-nhật-v170)
+- [Các tính năng vừa cập nhật](#-các-tính-năng-nổi-bật-vừa-cập-nhật-v194)
 - [Kiến trúc hệ thống](#-kiến-trúc-hệ-thống)
 - [Luồng xử lý chính](#-luồng-xử-lý-chính)
 - [Các chế độ trên Mobile App](#-các-chế-độ-trên-mobile-app)
@@ -747,8 +753,9 @@ Dashboard quản trị cung cấp các trang:
 
 ## 📌 Roadmap
 
-### Đã hoàn thành (v1.9.3)
+### Đã hoàn thành (v1.9.4)
 
+- [x] TFLite Offline Money Fix: Sửa lỗi nạp mô hình offline, giới hạn nhận diện 9 mệnh giá tiền Việt Nam khi không có Internet, tự động định tuyến thông minh.
 - [x] Recognition Overlay cho chế độ nhận diện tổng hợp: card thông tin + bounding box trên camera preview
 - [x] Đồng bộ detection payload AI Worker → Gateway → Mobile với `raw_detections`, `primary_detection`, `frame_width`, `frame_height`
 - [x] Chuẩn hóa cách đọc và hiển thị confidence theo phần trăm cho nhận diện tiền

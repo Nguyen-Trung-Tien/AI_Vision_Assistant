@@ -372,7 +372,12 @@ class _MainScreenState extends State<MainScreen>
       case 0:
         _ctrl.activeProcessingMode = 'money';
         setState(() {});
-        _ctrl.aiService.requestMoneyDetection();
+        if (!_ctrl.isConnected) {
+          await _ctrl.detectMoneyOffline();
+          if (mounted) setState(() => _ctrl.activeProcessingMode = null);
+        } else {
+          _ctrl.aiService.requestMoneyDetection();
+        }
       case 1:
         _ctrl.activeProcessingMode = 'caption';
         setState(() {});

@@ -290,8 +290,9 @@ class ContinuousStreamService {
   Future<PosData?> _getCurrentLocationFast() async {
     try {
       final now = DateTime.now();
+      // Cache position for 30 seconds to drastically improve stream rate and latency
       if (_lastPosition != null &&
-          now.difference(_lastPositionTime).inSeconds < 5) {
+          now.difference(_lastPositionTime).inSeconds < 30) {
         return PosData(
           latitude: _lastPosition!.latitude,
           longitude: _lastPosition!.longitude,
@@ -305,14 +306,33 @@ class ContinuousStreamService {
       }
       if (permission == LocationPermission.denied ||
           permission == LocationPermission.deniedForever) {
+        if (_lastPosition != null) {
+          return PosData(
+            latitude: _lastPosition!.latitude,
+            longitude: _lastPosition!.longitude,
+            speed: _lastPosition!.speed,
+          );
+        }
         return null;
+      }
+
+      final lastKnown = await Geolocator.getLastKnownPosition();
+      if (lastKnown != null) {
+        _lastPosition = lastKnown;
+        _lastPositionTime = now;
+        _updateLocationInBackgroundFast();
+        return PosData(
+          latitude: lastKnown.latitude,
+          longitude: lastKnown.longitude,
+          speed: lastKnown.speed,
+        );
       }
 
       final position = await Geolocator.getCurrentPosition(
         locationSettings: const LocationSettings(
           accuracy: LocationAccuracy.low,
         ),
-      ).timeout(const Duration(seconds: 1));
+      ).timeout(const Duration(milliseconds: 500));
 
       _lastPosition = position;
       _lastPositionTime = now;
@@ -332,6 +352,18 @@ class ContinuousStreamService {
       }
       return null;
     }
+  }
+
+  void _updateLocationInBackgroundFast() async {
+    try {
+      final position = await Geolocator.getCurrentPosition(
+        locationSettings: const LocationSettings(
+          accuracy: LocationAccuracy.low,
+        ),
+      ).timeout(const Duration(seconds: 2));
+      _lastPosition = position;
+      _lastPositionTime = DateTime.now();
+    } catch (_) {}
   }
 }
 

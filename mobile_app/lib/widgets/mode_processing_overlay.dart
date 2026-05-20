@@ -1,4 +1,5 @@
 import 'dart:math';
+import 'dart:ui';
 import 'package:flutter/material.dart';
 import 'package:mobile_app/theme/app_theme.dart';
 
@@ -83,19 +84,24 @@ class _ModeProcessingOverlayState extends State<ModeProcessingOverlay>
 
   @override
   Widget build(BuildContext context) {
-    return Container(
-      color: Colors.black.withValues(alpha: 0.55),
-      child: AnimatedBuilder(
-        animation: Listenable.merge([_p, _s, _wave]),
-        builder: (context, _) => Stack(
-          children: [
-            Positioned.fill(child: CustomPaint(painter: _getModePainter())),
-            if (widget.isSpeaking)
-              Positioned.fill(
-                  child: CustomPaint(
-                      painter: _SpeakingWavePainter(_wave.value, _color))),
-            Center(child: _card()),
-          ],
+    return ClipRect(
+      child: BackdropFilter(
+        filter: ImageFilter.blur(sigmaX: 4.0, sigmaY: 4.0),
+        child: Container(
+          color: Colors.black.withValues(alpha: 0.15),
+          child: AnimatedBuilder(
+            animation: Listenable.merge([_p, _s, _wave]),
+            builder: (context, _) => Stack(
+              children: [
+                Positioned.fill(child: CustomPaint(painter: _getModePainter())),
+                if (widget.isSpeaking)
+                  Positioned.fill(
+                      child: CustomPaint(
+                          painter: _SpeakingWavePainter(_wave.value, _color))),
+                Center(child: _card()),
+              ],
+            ),
+          ),
         ),
       ),
     );

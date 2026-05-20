@@ -7,12 +7,13 @@ import 'package:http/http.dart' as http;
 import 'package:mobile_app/l10n/app_localizations.dart';
 import 'package:mobile_app/services/accessibility_manager.dart';
 import 'package:mobile_app/services/settings_service.dart';
+import 'package:mobile_app/services/voice_command_service.dart';
 import 'package:speech_to_text/speech_to_text.dart';
 
 class NavigationService {
   final AccessibilityManager _accessibilityManager = AccessibilityManager();
   final SettingsService _settings = SettingsService();
-  final SpeechToText _speechToText = SpeechToText();
+  final SpeechToText _speechToText = VoiceCommandService.sharedSpeech;
 
   bool _isNavigating = false;
   bool _isSpeechInitialized = false;
@@ -30,19 +31,22 @@ class NavigationService {
 
   Future<void> initSpeech() async {
     _isSpeechInitialized = await _speechToText.initialize(
-      onError: (val) => debugPrint('Speech error: $val'),
-      onStatus: (val) => debugPrint('Speech status: $val'),
+      onError: (val) => debugPrint('Speech error (Nav): $val'),
+      onStatus: (val) => debugPrint('Speech status (Nav): $val'),
     );
   }
 
   Future<String?> listenForDestination() async {
-    if (!_isSpeechInitialized) {
-      await initSpeech();
-    }
-    if (!_isSpeechInitialized) return null;
-
+    // Đảm bảo dừng mọi hoạt động nhận diện đang chạy dở dang trên đối tượng dùng chung
     if (_speechToText.isListening) {
-      await _speechToText.stop();
+      await _speechToText.cancel();
+      await Future.delayed(const Duration(milliseconds: 200));
+    }
+
+    // Luôn khởi tạo lại để liên kết đúng callback cho NavigationService
+    await initSpeech();
+    if (!_isSpeechInitialized) {
+      _accessibilityManager.speak("Không thể khởi tạo nhận diện giọng nói.");
       return null;
     }
 
@@ -61,6 +65,9 @@ class NavigationService {
     while (_speechToText.isListening) {
       await Future.delayed(const Duration(milliseconds: 100));
     }
+
+    // Giải phóng micro ngay sau khi kết thúc việc nghe
+    await _speechToText.cancel();
 
     if (recognizedText.isNotEmpty) {
       _accessibilityManager.speak("Đang tìm đường đến $recognizedText");

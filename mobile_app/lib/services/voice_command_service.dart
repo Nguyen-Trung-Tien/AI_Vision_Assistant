@@ -4,7 +4,9 @@ import 'package:mobile_app/services/accessibility_manager.dart';
 import 'package:mobile_app/services/settings_service.dart';
 
 class VoiceCommandService {
-  final SpeechToText _speechToText = SpeechToText();
+  static final SpeechToText sharedSpeech = SpeechToText();
+  SpeechToText get _speechToText => sharedSpeech;
+
   final AccessibilityManager _accessibilityManager = AccessibilityManager();
   final SettingsService _settings = SettingsService();
 
@@ -46,11 +48,15 @@ class VoiceCommandService {
           debugPrint('Speech status: $status');
           if (status == 'done' || status == 'notListening') {
             _setListening(false);
+            // Đóng hẳn kết nối micro khi kết thúc phiên nhận diện tự nhiên
+            _speechToText.cancel();
           }
         },
         onError: (errorNotification) {
           debugPrint('Speech error: $errorNotification');
           _setListening(false);
+          // Đảm bảo đóng kết nối micro khi có lỗi
+          _speechToText.cancel();
           // Chỉ thông báo nếu không phải lỗi thông thường khi dừng
           if (errorNotification.errorMsg != 'error_speech_timeout' &&
               errorNotification.errorMsg != 'error_no_match') {
@@ -69,24 +75,22 @@ class VoiceCommandService {
   }
 
   Future<void> startListening({bool isVisualQA = false}) async {
-    // Nếu đang nghe thì dừng lại
-    if (_isListening) {
-      await stopListening();
-      return;
+    // Đảm bảo không có phiên nhận diện nào đang chạy dở dang trên đối tượng dùng chung
+    if (_speechToText.isListening) {
+      await _speechToText.cancel();
+      await Future.delayed(const Duration(milliseconds: 200));
     }
 
     _isVisualQAMode = isVisualQA;
     _currentRecognizedText = '';
 
-    // Thử khởi tạo lại nếu chưa sẵn sàng
+    // Luôn khởi tạo lại để đăng ký lại callback đúng cho VoiceCommandService
+    await init();
     if (!_isInitialized || !_speechToText.isAvailable) {
-      await init();
-      if (!_isInitialized || !_speechToText.isAvailable) {
-        _accessibilityManager.speak(
-          'Thiết bị không hỗ trợ nhận diện giọng nói.',
-        );
-        return;
-      }
+      _accessibilityManager.speak(
+        'Thiết bị không hỗ trợ hoặc không thể khởi tạo nhận diện giọng nói.',
+      );
+      return;
     }
 
     _setListening(true);
@@ -120,6 +124,8 @@ class VoiceCommandService {
 
         if (result.finalResult) {
           _setListening(false);
+          // Hủy nhận diện và giải phóng micro ngay khi có kết quả cuối cùng
+          _speechToText.cancel();
           final command = recognizedWords.toLowerCase();
           debugPrint(
             'Command recognized: $command (confidence: ${result.confidence})',
@@ -133,7 +139,7 @@ class VoiceCommandService {
   }
 
   Future<void> stopListening() async {
-    await _speechToText.stop();
+    await _speechToText.cancel();
     _setListening(false);
   }
 

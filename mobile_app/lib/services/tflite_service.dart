@@ -168,6 +168,7 @@ class TfliteService {
 
   Future<List<String>> _candidateAssetModels() async {
     const priorityCandidates = <String>[
+      'assets/models/money/best_float32.tflite',
       'assets/models/best_float32.tflite',
       'assets/models/best_float16.tflite',
       'assets/models/money_detector.tflite',
@@ -375,20 +376,23 @@ class TfliteService {
         return 'Lỗi: Model không tương thích với chế độ nhận diện offline.';
       }
 
-      double maxProb = probabilities[0];
-      int maxIndex = 0;
-      for (int i = 1; i < probabilities.length; i++) {
-        if (probabilities[i] > maxProb) {
-          maxProb = probabilities[i];
-          maxIndex = i;
+      double maxProb = -1.0;
+      int maxIndex = -1;
+      for (int i = 0; i < probabilities.length; i++) {
+        final label = currentLabels[i];
+        if (_moneyOnlyLabels.contains(label)) {
+          if (probabilities[i] > maxProb) {
+            maxProb = probabilities[i];
+            maxIndex = i;
+          }
         }
       }
 
       debugPrint(
-        '[TFLite] Inference done. Max prob: $maxProb at index $maxIndex (Label: ${currentLabels[maxIndex]})',
+        '[TFLite] Inference done. Max prob: $maxProb at index $maxIndex (Label: ${maxIndex != -1 ? currentLabels[maxIndex] : "None"})',
       );
 
-      if (maxProb > 0.35) {
+      if (maxIndex != -1 && maxProb > 0.35) {
         final label = currentLabels[maxIndex];
         return labelToDenomination(label);
       }
