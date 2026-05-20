@@ -134,15 +134,13 @@ class MlKitService {
 
   Future<String?> _lookupFromEndpoint(String endpoint) async {
     final uri = Uri.parse(endpoint);
-    final response = await http
-        .get(
-          uri,
-          headers: const {
-            'User-Agent': 'AIVisionAssistant/1.0 (mobile)',
-            'Accept': 'application/json',
-          },
-        )
-        .timeout(const Duration(seconds: 5));
+    final response = await http.get(
+      uri,
+      headers: const {
+        'User-Agent': 'AIVisionAssistant/1.0 (mobile)',
+        'Accept': 'application/json',
+      },
+    ).timeout(const Duration(seconds: 5));
 
     if (response.statusCode != 200) return null;
 
@@ -160,15 +158,13 @@ class MlKitService {
     final uri = Uri.parse(
       'https://api.upcitemdb.com/prod/trial/lookup?upc=$barcode',
     );
-    final response = await http
-        .get(
-          uri,
-          headers: const {
-            'User-Agent': 'AIVisionAssistant/1.0 (mobile)',
-            'Accept': 'application/json',
-          },
-        )
-        .timeout(const Duration(seconds: 5));
+    final response = await http.get(
+      uri,
+      headers: const {
+        'User-Agent': 'AIVisionAssistant/1.0 (mobile)',
+        'Accept': 'application/json',
+      },
+    ).timeout(const Duration(seconds: 5));
 
     if (response.statusCode != 200) return null;
 

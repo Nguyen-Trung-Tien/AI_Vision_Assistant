@@ -103,9 +103,8 @@ class _FaceRegisterScreenState extends State<FaceRegisterScreen> {
       final cameras = widget.cameras ?? await availableCameras();
       if (cameras.isEmpty) return;
 
-      final targetDirection = _isFrontCamera
-          ? CameraLensDirection.front
-          : CameraLensDirection.back;
+      final targetDirection =
+          _isFrontCamera ? CameraLensDirection.front : CameraLensDirection.back;
 
       final camera = cameras.firstWhere(
         (camera) => camera.lensDirection == targetDirection,
@@ -174,7 +173,8 @@ class _FaceRegisterScreenState extends State<FaceRegisterScreen> {
     if (_controller == null ||
         !_isCameraReady ||
         _initializeControllerFuture == null) {
-      _accessibilityManager.speak('Camera chưa sẵn sàng. Vui lòng thử lại sau vài giây.');
+      _accessibilityManager
+          .speak('Camera chưa sẵn sàng. Vui lòng thử lại sau vài giây.');
       return;
     }
 
@@ -221,7 +221,8 @@ class _FaceRegisterScreenState extends State<FaceRegisterScreen> {
 
       // Local check success
       _accessibilityManager.triggerSuccessVibration();
-      _accessibilityManager.speak('Đã phát hiện khuôn mặt. Đang tải ảnh lên máy chủ.');
+      _accessibilityManager
+          .speak('Đã phát hiện khuôn mặt. Đang tải ảnh lên máy chủ.');
 
       if (mounted) {
         setState(() => _registrationStep = 'Đang gửi lên máy chủ...');

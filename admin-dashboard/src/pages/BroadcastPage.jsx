@@ -1,5 +1,10 @@
 import { useEffect, useState } from "react";
-import { fetchBroadcasts, sendBroadcast, deleteBroadcast, bulkDeleteBroadcasts } from "../services/api";
+import {
+  fetchBroadcasts,
+  sendBroadcast,
+  deleteBroadcast,
+  bulkDeleteBroadcasts,
+} from "../services/api";
 import { useToast } from "../components/Toast";
 import ConfirmDialog from "../components/ConfirmDialog";
 import PageHeader from "../components/ui/PageHeader";
@@ -20,7 +25,8 @@ const PRIORITIES = [
   {
     value: "high",
     label: "🟡 Cao",
-    color: "text-yellow-600 dark:text-yellow-300 border-yellow-500/30 bg-yellow-500/10",
+    color:
+      "text-yellow-600 dark:text-yellow-300 border-yellow-500/30 bg-yellow-500/10",
   },
   {
     value: "urgent",
@@ -28,7 +34,6 @@ const PRIORITIES = [
     color: "text-red-600 dark:text-red-300 border-red-500/30 bg-red-500/10",
   },
 ];
-
 
 export default function BroadcastPage() {
   const toast = useToast();
@@ -43,7 +48,7 @@ export default function BroadcastPage() {
   const [targetEmails, setTargetEmails] = useState("");
   const [charCount, setCharCount] = useState(0);
   const [showConfirmSend, setShowConfirmSend] = useState(false);
-  
+
   // Selection & Deletion
   const [selectedIds, setSelectedIds] = useState([]);
   const [deletingId, setDeletingId] = useState(null);
@@ -113,8 +118,8 @@ export default function BroadcastPage() {
   };
 
   const toggleSelect = (id) => {
-    setSelectedIds(prev => 
-      prev.includes(id) ? prev.filter(i => i !== id) : [...prev, id]
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id],
     );
   };
 
@@ -122,7 +127,7 @@ export default function BroadcastPage() {
     if (selectedIds.length === history.length) {
       setSelectedIds([]);
     } else {
-      setSelectedIds(history.map(b => b.id));
+      setSelectedIds(history.map((b) => b.id));
     }
   };
 
@@ -143,7 +148,10 @@ export default function BroadcastPage() {
                 : `${parsedEmails.length} user cụ thể`}
             </strong>{" "}
             với mức độ{" "}
-            <strong className="text-text-primary">{selectedPriority?.label}</strong>.
+            <strong className="text-text-primary">
+              {selectedPriority?.label}
+            </strong>
+            .
           </span>
         }
         confirmLabel="Gửi ngay 📢"
@@ -175,12 +183,11 @@ export default function BroadcastPage() {
         onCancel={() => setShowConfirmBulkDelete(false)}
       />
 
-      <PageHeader 
-        title="THÔNG BÁO" 
-        highlight="BROADCAST" 
+      <PageHeader
+        title="THÔNG BÁO"
+        highlight="BROADCAST"
         description="Gửi thông báo giọng nói tức thì đến toàn bộ ứng dụng người dùng"
       />
-
 
       {/* Compose */}
       <div className="bg-bg-card border border-border-primary rounded-2xl p-5 shadow-sm space-y-4">
@@ -330,14 +337,14 @@ export default function BroadcastPage() {
             onClick={() => load(page)}
             className="flex items-center gap-1.5 text-xs text-text-secondary hover:text-text-primary transition-colors"
           >
-            <RefreshCw className={`w-3 h-3 ${loading ? 'animate-spin' : ''}`} />
+            <RefreshCw className={`w-3 h-3 ${loading ? "animate-spin" : ""}`} />
             Làm mới
           </button>
         </div>
 
         <div className="bg-bg-card border border-border-primary rounded-2xl overflow-hidden shadow-sm">
           <div className="bg-text-primary/5 border-b border-border-primary p-3 flex items-center gap-4">
-            <button 
+            <button
               onClick={toggleSelectAll}
               className="text-text-secondary hover:text-purple-500 transition-colors"
             >
@@ -369,9 +376,9 @@ export default function BroadcastPage() {
                 return (
                   <div
                     key={b.id}
-                    className={`p-3 flex items-start gap-4 transition-all ${isSelected ? 'bg-purple-500/5' : 'hover:bg-text-primary/5'}`}
+                    className={`p-3 flex items-start gap-4 transition-all ${isSelected ? "bg-purple-500/5" : "hover:bg-text-primary/5"}`}
                   >
-                    <button 
+                    <button
                       onClick={() => toggleSelect(b.id)}
                       className="mt-0.5 text-text-secondary hover:text-purple-500 transition-colors"
                     >
@@ -383,19 +390,27 @@ export default function BroadcastPage() {
                     </button>
 
                     <div className="flex-1 min-w-0">
-                      <p className="text-text-primary/80 text-sm font-medium leading-relaxed">{b.message}</p>
+                      <p className="text-text-primary/80 text-sm font-medium leading-relaxed">
+                        {b.message}
+                      </p>
                       <div className="flex flex-wrap gap-x-6 gap-y-1 mt-2.5">
                         <span className="text-text-secondary text-[11px] flex items-center gap-1.5">
-                          <span className="opacity-40">👤 Gửi bởi:</span> 
-                          <span className="text-text-primary/60 font-medium">{b.admin?.email ?? "admin"}</span>
+                          <span className="opacity-40">👤 Gửi bởi:</span>
+                          <span className="text-text-primary/60 font-medium">
+                            {b.admin?.email ?? "admin"}
+                          </span>
                         </span>
                         <span className="text-text-secondary text-[11px] flex items-center gap-1.5">
-                          <span className="opacity-40">👥 Đối tượng:</span> 
-                          <span className="text-text-primary/60 font-medium">{b.target_type === "all" ? "Tất cả" : "Cụ thể"}</span>
+                          <span className="opacity-40">👥 Đối tượng:</span>
+                          <span className="text-text-primary/60 font-medium">
+                            {b.target_type === "all" ? "Tất cả" : "Cụ thể"}
+                          </span>
                         </span>
                         <span className="text-text-secondary text-[11px] flex items-center gap-1.5">
                           <span className="opacity-40">⏰ Lúc:</span>
-                          <span className="text-text-primary/60 font-medium">{new Date(b.created_at).toLocaleString("vi-VN")}</span>
+                          <span className="text-text-primary/60 font-medium">
+                            {new Date(b.created_at).toLocaleString("vi-VN")}
+                          </span>
                         </span>
                       </div>
                     </div>

@@ -22,23 +22,23 @@ class AppTheme {
 
   // ── Typography ─────────────────────────────────────────────────────────
   static TextStyle get headlineLarge => const TextStyle(
-    color: Colors.white,
-    fontSize: 28,
-    fontWeight: FontWeight.bold,
-    letterSpacing: 0.5,
-  );
+        color: Colors.white,
+        fontSize: 28,
+        fontWeight: FontWeight.bold,
+        letterSpacing: 0.5,
+      );
 
   static TextStyle get headlineMedium => const TextStyle(
-    color: Colors.white,
-    fontSize: 22,
-    fontWeight: FontWeight.w600,
-  );
+        color: Colors.white,
+        fontSize: 22,
+        fontWeight: FontWeight.w600,
+      );
 
   static TextStyle get titleLarge => const TextStyle(
-    color: Colors.white,
-    fontSize: 18,
-    fontWeight: FontWeight.w600,
-  );
+        color: Colors.white,
+        fontSize: 18,
+        fontWeight: FontWeight.w600,
+      );
 
   static TextStyle get bodyLarge =>
       TextStyle(color: whiteAlpha(0.9), fontSize: 16, height: 1.4);
@@ -50,10 +50,10 @@ class AppTheme {
       TextStyle(color: whiteAlpha(0.6), fontSize: 12);
 
   static TextStyle get labelChip => TextStyle(
-    color: whiteAlpha(0.85),
-    fontSize: 13,
-    fontWeight: FontWeight.w500,
-  );
+        color: whiteAlpha(0.85),
+        fontSize: 13,
+        fontWeight: FontWeight.w500,
+      );
 
   // ── Decoration helpers ─────────────────────────────────────────────────
   static BoxDecoration cardDecoration({

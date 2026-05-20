@@ -44,7 +44,13 @@ export const queryKeys = {
   byDay: (days) => ["stats", "byDay", days],
   logs: (page, limit) => ["stats", "logs", page, limit],
   sosAlerts: (page, limit) => ["sos", "alerts", page, limit],
-  feedback: (page, limit, onlyWrong) => ["feedback", "list", page, limit, onlyWrong],
+  feedback: (page, limit, onlyWrong) => [
+    "feedback",
+    "list",
+    page,
+    limit,
+    onlyWrong,
+  ],
   feedbackStats: ["feedback", "stats"],
   broadcasts: (page, limit) => ["broadcast", "list", page, limit],
   heatmap: (type, days) => ["heatmap", type, days],
@@ -85,7 +91,10 @@ export function useByType() {
 }
 
 export function useByDay(days = 30) {
-  return useQuery({ queryKey: queryKeys.byDay(days), queryFn: () => fetchByDay(days) });
+  return useQuery({
+    queryKey: queryKeys.byDay(days),
+    queryFn: () => fetchByDay(days),
+  });
 }
 
 export function useLogs(page = 1, limit = 10) {
@@ -133,7 +142,10 @@ export function useFeedback(page = 1, limit = 20, onlyWrong = false) {
 }
 
 export function useFeedbackStats() {
-  return useQuery({ queryKey: queryKeys.feedbackStats, queryFn: fetchFeedbackStats });
+  return useQuery({
+    queryKey: queryKeys.feedbackStats,
+    queryFn: fetchFeedbackStats,
+  });
 }
 
 export function useReviewFeedback() {
@@ -190,7 +202,8 @@ export function useUsers(page = 1, limit = 20, search = "") {
 export function useCreateUser() {
   const qc = useQueryClient();
   return useMutation({
-    mutationFn: ({ email, password, role }) => createUser(email, password, role),
+    mutationFn: ({ email, password, role }) =>
+      createUser(email, password, role),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["users"] }),
   });
 }
@@ -303,7 +316,10 @@ export function useSystemMetrics() {
 // ─── Settings ───────────────────────────────
 
 export function useSystemSettings() {
-  return useQuery({ queryKey: queryKeys.systemSettings, queryFn: fetchSystemSettings });
+  return useQuery({
+    queryKey: queryKeys.systemSettings,
+    queryFn: fetchSystemSettings,
+  });
 }
 
 export function useUpdateSystemSetting() {

@@ -34,7 +34,8 @@ const PAGE_TITLES = {
 
 export default function Header({ sidebarOpen, setSidebarOpen }) {
   const { email } = useAuth();
-  const { notifications, unreadCount, handleMarkAllRead } = useNotificationContext();
+  const { notifications, unreadCount, handleMarkAllRead } =
+    useNotificationContext();
   const { isDarkMode, setIsDarkMode } = useTheme();
   const navigate = useNavigate();
   const location = useLocation();
@@ -61,7 +62,11 @@ export default function Header({ sidebarOpen, setSidebarOpen }) {
           onClick={() => setSidebarOpen(!sidebarOpen)}
           className="p-2.5 hover:bg-text-primary/5 rounded-lg text-text-secondary transition-colors"
         >
-          {sidebarOpen ? <Menu className="w-5 h-5" /> : <ChevronRight className="w-5 h-5" />}
+          {sidebarOpen ? (
+            <Menu className="w-5 h-5" />
+          ) : (
+            <ChevronRight className="w-5 h-5" />
+          )}
         </button>
 
         <h2 className="text-lg font-bold tracking-tight uppercase">
@@ -83,7 +88,9 @@ export default function Header({ sidebarOpen, setSidebarOpen }) {
         <button
           onClick={() => setIsDarkMode(!isDarkMode)}
           className="p-2.5 hover:bg-text-primary/5 rounded-xl text-text-secondary transition-all group"
-          title={isDarkMode ? "Chuyển sang Chế độ sáng" : "Chuyển sang Chế độ tối"}
+          title={
+            isDarkMode ? "Chuyển sang Chế độ sáng" : "Chuyển sang Chế độ tối"
+          }
         >
           {isDarkMode ? (
             <Sun className="w-5 h-5 group-hover:rotate-45 transition-transform" />
@@ -140,7 +147,7 @@ export default function Header({ sidebarOpen, setSidebarOpen }) {
                         key={n.id}
                         className={cn(
                           "px-6 py-4 flex gap-4 hover:bg-text-primary/5 transition-colors group cursor-pointer border-b border-border-primary last:border-0",
-                          !n.isRead && "bg-indigo-500/5"
+                          !n.isRead && "bg-indigo-500/5",
                         )}
                       >
                         <div
@@ -148,7 +155,7 @@ export default function Header({ sidebarOpen, setSidebarOpen }) {
                             "w-10 h-10 rounded-full flex items-center justify-center shrink-0",
                             n.type === "SOS"
                               ? "bg-red-500/20 text-red-500"
-                              : "bg-indigo-500/20 text-indigo-500"
+                              : "bg-indigo-500/20 text-indigo-500",
                           )}
                         >
                           {n.type === "SOS" ? (
@@ -162,7 +169,9 @@ export default function Header({ sidebarOpen, setSidebarOpen }) {
                             <p
                               className={cn(
                                 "text-sm truncate",
-                                !n.isRead ? "font-black" : "font-medium text-text-secondary"
+                                !n.isRead
+                                  ? "font-black"
+                                  : "font-medium text-text-secondary",
                               )}
                             >
                               {n.title}

@@ -32,10 +32,13 @@ export const visionUploadSchema = z.object({
       message: "Each file must be less than 5MB",
     })
     .refine(
-      (files) => files.every((file) => ["image/jpeg", "image/png", "image/webp"].includes(file.type)),
+      (files) =>
+        files.every((file) =>
+          ["image/jpeg", "image/png", "image/webp"].includes(file.type),
+        ),
       {
         message: "Only .jpg, .png, and .webp formats are supported",
-      }
+      },
     ),
 });
 

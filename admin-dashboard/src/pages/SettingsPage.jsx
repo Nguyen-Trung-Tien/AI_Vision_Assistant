@@ -243,7 +243,9 @@ export default function SettingsPage() {
                     <div
                       className={`flex gap-4 w-full sm:w-auto justify-end ${s.key.includes("CLASSES") ? "items-start" : "items-center"}`}
                     >
-                      {s.key === "ACTIVE_OBJECT_MODEL" || s.key === "ACTIVE_MONEY_MODEL" || s.key === "ACTIVE_AI_MODEL" ? (
+                      {s.key === "ACTIVE_OBJECT_MODEL" ||
+                      s.key === "ACTIVE_MONEY_MODEL" ||
+                      s.key === "ACTIVE_AI_MODEL" ? (
                         <select
                           value={localValues[s.key] ?? s.value ?? ""}
                           disabled={!isSuperAdmin}
@@ -261,17 +263,28 @@ export default function SettingsPage() {
                             </option>
                           )}
                           {aiModels
-                            .filter(m => s.key === "ACTIVE_OBJECT_MODEL" ? m.category === 'object' : s.key === "ACTIVE_MONEY_MODEL" ? m.category === 'money' : true)
+                            .filter((m) =>
+                              s.key === "ACTIVE_OBJECT_MODEL"
+                                ? m.category === "object"
+                                : s.key === "ACTIVE_MONEY_MODEL"
+                                  ? m.category === "money"
+                                  : true,
+                            )
                             .map((m) => (
                               <option key={m.id} value={m.id}>
                                 {m.name}
                               </option>
                             ))}
-                          {aiModels.length > 0 && !(aiModels.some(m => m.id === (localValues[s.key] ?? s.value))) && (
-                            <option value={localValues[s.key] ?? s.value ?? ""}>
-                              {localValues[s.key] ?? s.value} (Không xác định)
-                            </option>
-                          )}
+                          {aiModels.length > 0 &&
+                            !aiModels.some(
+                              (m) => m.id === (localValues[s.key] ?? s.value),
+                            ) && (
+                              <option
+                                value={localValues[s.key] ?? s.value ?? ""}
+                              >
+                                {localValues[s.key] ?? s.value} (Không xác định)
+                              </option>
+                            )}
                         </select>
                       ) : options ? (
                         <select

@@ -51,9 +51,7 @@ class DangerBanner extends StatelessWidget {
       child: Row(
         children: [
           Icon(
-            isDanger
-                ? Icons.warning_amber_rounded
-                : Icons.info_outline_rounded,
+            isDanger ? Icons.warning_amber_rounded : Icons.info_outline_rounded,
             color: Colors.white,
             size: 32,
           ),

@@ -23,16 +23,10 @@ export default function AuthenticatedLayout() {
   return (
     <ToastProvider>
       <div className="flex h-screen bg-bg-primary text-text-primary overflow-hidden font-sans">
-        <Sidebar
-          sidebarOpen={sidebarOpen}
-          setSidebarOpen={setSidebarOpen}
-        />
+        <Sidebar sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
         <main className="flex-1 flex flex-col min-w-0 overflow-hidden relative">
-          <Header
-            sidebarOpen={sidebarOpen}
-            setSidebarOpen={setSidebarOpen}
-          />
+          <Header sidebarOpen={sidebarOpen} setSidebarOpen={setSidebarOpen} />
 
           <div className="flex-1 overflow-y-auto p-10 scrollbar-thin">
             <AnimatePresence mode="wait">

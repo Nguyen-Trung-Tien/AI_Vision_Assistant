@@ -115,7 +115,8 @@ class SosSuccessOverlay extends StatelessWidget {
           decoration: BoxDecoration(
             color: theme.borderColor.withValues(alpha: 0.16),
             borderRadius: BorderRadius.circular(999),
-            border: Border.all(color: theme.borderColor.withValues(alpha: 0.42)),
+            border:
+                Border.all(color: theme.borderColor.withValues(alpha: 0.42)),
           ),
           child: Text(
             _isVietnamese ? 'SOS khẩn cấp' : 'Emergency SOS',
@@ -216,7 +217,8 @@ class SosSuccessOverlay extends StatelessWidget {
       ),
       child: Row(
         children: [
-          const Icon(Icons.info_outline_rounded, color: Colors.white70, size: 20),
+          const Icon(Icons.info_outline_rounded,
+              color: Colors.white70, size: 20),
           const SizedBox(width: 10),
           Expanded(
             child: Text(
@@ -314,13 +316,17 @@ class SosSuccessOverlay extends StatelessWidget {
   String get _title {
     switch (status) {
       case SosOverlayStatus.countdown:
-        return _isVietnamese ? 'Sắp gửi cảnh báo SOS' : 'SOS alert about to send';
+        return _isVietnamese
+            ? 'Sắp gửi cảnh báo SOS'
+            : 'SOS alert about to send';
       case SosOverlayStatus.sending:
         return _isVietnamese ? 'Đang gửi cảnh báo SOS' : 'Sending SOS alert';
       case SosOverlayStatus.sent:
         return _isVietnamese ? 'Đã gửi cảnh báo SOS' : 'SOS alert sent';
       case SosOverlayStatus.error:
-        return _isVietnamese ? 'Không thể gửi vị trí SOS' : 'Unable to send SOS location';
+        return _isVietnamese
+            ? 'Không thể gửi vị trí SOS'
+            : 'Unable to send SOS location';
       case SosOverlayStatus.hidden:
         return '';
     }

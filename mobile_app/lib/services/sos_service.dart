@@ -100,7 +100,7 @@ class SosService {
       );
 
       _accessibilityManager.speak(AppLocalizations.t('sos_sending_sms', lang));
-      
+
       // --- DEMO MODE: Bỏ qua mở app nhắn tin và gọi điện ---
       // if (await canLaunchUrl(smsUri)) {
       //   await launchUrl(smsUri);
@@ -110,9 +110,8 @@ class SosService {
       // if (await canLaunchUrl(phoneUri)) {
       //   await launchUrl(phoneUri);
       // }
-      
+
       print('[SosService] DEMO MODE: Đã giả lập gửi SMS/Call tới: $allNumbers');
-      
     } catch (e) {
       print('[SosService] Lỗi khi lấy vị trí: $e');
     }

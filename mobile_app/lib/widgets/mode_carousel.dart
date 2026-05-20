@@ -34,9 +34,8 @@ class ModeCarousel extends StatelessWidget {
       onPageChanged: onPageChanged,
       itemCount: modes.length,
       itemBuilder: (context, index) {
-        final color = index < modeColors.length
-            ? modeColors[index]
-            : AppTheme.accentCyan;
+        final color =
+            index < modeColors.length ? modeColors[index] : AppTheme.accentCyan;
 
         return Container(
           color: Colors.transparent,

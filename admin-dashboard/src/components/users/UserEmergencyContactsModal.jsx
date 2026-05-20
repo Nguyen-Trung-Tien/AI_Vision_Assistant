@@ -23,15 +23,13 @@ export default function UserEmergencyContactsModal({ user, onClose }) {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/60 backdrop-blur-sm">
-      <div
-        className="fixed inset-0"
-        onClick={onClose}
-        aria-hidden="true"
-      />
+      <div className="fixed inset-0" onClick={onClose} aria-hidden="true" />
       <div className="relative w-full max-w-lg bg-bg-card rounded-2xl border border-border-primary shadow-2xl p-6">
         <div className="flex justify-between items-center mb-6">
           <div>
-            <h3 className="text-xl font-bold text-text-primary">Liên hệ khẩn cấp</h3>
+            <h3 className="text-xl font-bold text-text-primary">
+              Liên hệ khẩn cấp
+            </h3>
             <p className="text-sm text-text-secondary mt-1">{user.email}</p>
           </div>
           <button
@@ -74,7 +72,9 @@ export default function UserEmergencyContactsModal({ user, onClose }) {
                     {contact.name || contact.phone}
                   </h4>
                   {contact.name && (
-                    <p className="text-text-secondary text-sm mt-0.5">{contact.phone}</p>
+                    <p className="text-text-secondary text-sm mt-0.5">
+                      {contact.phone}
+                    </p>
                   )}
                   <p className="text-[10px] text-text-secondary/40 uppercase font-bold tracking-wider mt-1">
                     Tạo: {new Date(contact.created_at).toLocaleString("vi-VN")}

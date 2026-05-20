@@ -22,8 +22,7 @@ class ProductLookupService {
           final product = data['product'];
 
           // Lấy tên sản phẩm
-          String? name =
-              product['product_name_$lang'] ??
+          String? name = product['product_name_$lang'] ??
               product['product_name'] ??
               product['generic_name'];
 

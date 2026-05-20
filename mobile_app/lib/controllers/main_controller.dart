@@ -463,8 +463,8 @@ class MainController {
 
     try {
       final file = await cameraController!.takePicture().timeout(
-        captureTimeout,
-      );
+            captureTimeout,
+          );
       await mlKitService.processImageFile(file.path);
     } on TimeoutException catch (_) {
       debugPrint('[Camera] MLKit capture timeout');
@@ -547,9 +547,8 @@ class MainController {
     if (detectionId == null) return;
 
     final frame = aiService.lastFrameForFeedback;
-    final imageBase64 = (!isCorrect && frame != null)
-        ? base64Encode(frame)
-        : null;
+    final imageBase64 =
+        (!isCorrect && frame != null) ? base64Encode(frame) : null;
 
     try {
       await feedbackService.submitFeedback(

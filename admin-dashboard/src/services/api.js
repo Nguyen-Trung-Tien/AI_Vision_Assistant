@@ -1,11 +1,11 @@
 import apiClient from "@/lib/api-client";
-import { 
-  setSession as setSessionLocal, 
-  clearSessionLocal, 
+import {
+  setSession as setSessionLocal,
+  clearSessionLocal,
   getStoredEmail as getStoredEmailLocal,
   getStoredRole as getStoredRoleLocal,
   getStoredToken as getStoredTokenLocal,
-  isAuthenticated as isAuthenticatedLocal
+  isAuthenticated as isAuthenticatedLocal,
 } from "@/lib/auth-storage";
 
 export function getApiUrl() {
@@ -55,13 +55,21 @@ export async function loginAdmin(email, password) {
     password,
   });
 
-  setSession(payload?.user?.email || email, payload.access_token, payload?.user?.role);
+  setSession(
+    payload?.user?.email || email,
+    payload.access_token,
+    payload?.user?.role,
+  );
   return payload;
 }
 
 export async function registerAdmin(email, password) {
   const payload = await apiClient.post("/auth/register", { email, password });
-  setSession(payload?.user?.email || email, payload.access_token, payload?.user?.role);
+  setSession(
+    payload?.user?.email || email,
+    payload.access_token,
+    payload?.user?.role,
+  );
   return payload;
 }
 
@@ -262,10 +270,13 @@ export async function fetchPeakHours() {
 }
 
 export async function fetchAiLogs(page = 1, limit = 10, filters = {}) {
-  const query = new URLSearchParams({ page: String(page), limit: String(limit) });
+  const query = new URLSearchParams({
+    page: String(page),
+    limit: String(limit),
+  });
   if (filters.actionType) query.append("actionType", filters.actionType);
   if (filters.modelVersion) query.append("modelVersion", filters.modelVersion);
-  
+
   return apiClient.get(`/ai/logs?${query.toString()}`).catch(() => ({
     items: [],
     total: 0,
@@ -280,7 +291,9 @@ export async function fetchNotifications() {
 }
 
 export async function markNotificationsReadAll() {
-  return apiClient.patch("/notification/read-all").catch(() => ({ success: false }));
+  return apiClient
+    .patch("/notification/read-all")
+    .catch(() => ({ success: false }));
 }
 
 /**

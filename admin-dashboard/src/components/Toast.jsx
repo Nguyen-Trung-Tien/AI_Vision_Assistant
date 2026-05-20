@@ -72,9 +72,11 @@ const ICONS = {
 };
 
 const STYLES = {
-  success: "bg-green-500/15 border-green-500/30 text-green-600 dark:text-green-300",
+  success:
+    "bg-green-500/15 border-green-500/30 text-green-600 dark:text-green-300",
   error: "bg-red-500/15   border-red-500/30   text-red-600 dark:text-red-300",
-  warning: "bg-yellow-500/15 border-yellow-500/30 text-yellow-600 dark:text-yellow-300",
+  warning:
+    "bg-yellow-500/15 border-yellow-500/30 text-yellow-600 dark:text-yellow-300",
   info: "bg-purple-500/15 border-purple-500/30 text-purple-600 dark:text-purple-300",
 };
 

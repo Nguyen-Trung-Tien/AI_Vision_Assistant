@@ -1,8 +1,19 @@
 import { cn } from "@/lib/utils";
 
-export default function PageHeader({ title, highlight, description, children, className }) {
+export default function PageHeader({
+  title,
+  highlight,
+  description,
+  children,
+  className,
+}) {
   return (
-    <div className={cn("flex flex-col lg:flex-row lg:items-center justify-between gap-6", className)}>
+    <div
+      className={cn(
+        "flex flex-col lg:flex-row lg:items-center justify-between gap-6",
+        className,
+      )}
+    >
       <div className="flex flex-col gap-1">
         <h1 className="text-3xl font-bold tracking-tight text-text-primary uppercase">
           {title} <span className="text-indigo-500">{highlight}</span>

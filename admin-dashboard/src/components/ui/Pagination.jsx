@@ -1,11 +1,18 @@
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-export default function Pagination({ page, totalPages, onPageChange, className }) {
+export default function Pagination({
+  page,
+  totalPages,
+  onPageChange,
+  className,
+}) {
   if (totalPages <= 1) return null;
 
   return (
-    <div className={cn("flex items-center justify-center gap-6 mt-10", className)}>
+    <div
+      className={cn("flex items-center justify-center gap-6 mt-10", className)}
+    >
       <button
         onClick={() => onPageChange(Math.max(1, page - 1))}
         disabled={page <= 1}
@@ -17,8 +24,12 @@ export default function Pagination({ page, totalPages, onPageChange, className }
 
       <div className="flex items-center gap-2">
         <span className="text-sm font-black text-text-primary">{page}</span>
-        <span className="text-sm font-bold text-text-secondary opacity-30">/</span>
-        <span className="text-sm font-bold text-text-secondary/60">{totalPages}</span>
+        <span className="text-sm font-bold text-text-secondary opacity-30">
+          /
+        </span>
+        <span className="text-sm font-bold text-text-secondary/60">
+          {totalPages}
+        </span>
       </div>
 
       <button

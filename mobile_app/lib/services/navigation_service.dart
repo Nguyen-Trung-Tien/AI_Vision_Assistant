@@ -288,17 +288,16 @@ class NavigationService {
     });
 
     // GPS — đọc tên đường mỗi khi di chuyển > 10m
-    _positionSub =
-        Geolocator.getPositionStream(
-          locationSettings: const LocationSettings(
-            accuracy: LocationAccuracy.best,
-            distanceFilter: 10,
-          ),
-        ).listen((Position position) async {
-          if (!_isNavigating) return;
-          _accessibilityManager.triggerSuccessVibration();
-          await _announceStreetName(position, lang);
-        });
+    _positionSub = Geolocator.getPositionStream(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.best,
+        distanceFilter: 10,
+      ),
+    ).listen((Position position) async {
+      if (!_isNavigating) return;
+      _accessibilityManager.triggerSuccessVibration();
+      await _announceStreetName(position, lang);
+    });
   }
 
   void _announceDirection(double heading) {
@@ -326,17 +325,17 @@ class NavigationService {
     if (dirKey.isEmpty) return;
 
     bool shouldSpeak = false;
-    
+
     if (dirKey != _lastSpokenDirKey) {
-       // Only allow direction change to speak if at least 5 seconds passed since last spoke (debounce)
-       if (now.difference(_lastSpokenTime).inSeconds >= 5) {
-           shouldSpeak = true;
-       }
+      // Only allow direction change to speak if at least 5 seconds passed since last spoke (debounce)
+      if (now.difference(_lastSpokenTime).inSeconds >= 5) {
+        shouldSpeak = true;
+      }
     } else {
-       // Same direction, speak every 30 seconds to remind
-       if (now.difference(_lastSpokenTime).inSeconds >= 30) {
-           shouldSpeak = true;
-       }
+      // Same direction, speak every 30 seconds to remind
+      if (now.difference(_lastSpokenTime).inSeconds >= 30) {
+        shouldSpeak = true;
+      }
     }
 
     if (shouldSpeak) {
@@ -363,21 +362,19 @@ class NavigationService {
         '&format=json&accept-language=${lang == "vi" ? "vi" : "en"}',
       );
 
-      final response = await http
-          .get(uri, headers: {'User-Agent': 'AIVisionAssistant/1.0'})
-          .timeout(const Duration(seconds: 5));
+      final response = await http.get(uri, headers: {
+        'User-Agent': 'AIVisionAssistant/1.0'
+      }).timeout(const Duration(seconds: 5));
 
       if (response.statusCode == 200) {
         final data = jsonDecode(response.body) as Map<String, dynamic>;
         final address = data['address'] as Map<String, dynamic>?;
 
         if (address != null) {
-          final road =
-              address['road'] as String? ??
+          final road = address['road'] as String? ??
               address['pedestrian'] as String? ??
               address['footway'] as String?;
-          final suburb =
-              address['suburb'] as String? ??
+          final suburb = address['suburb'] as String? ??
               address['neighbourhood'] as String?;
 
           if (road != null) {

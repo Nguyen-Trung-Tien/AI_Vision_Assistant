@@ -3,10 +3,15 @@ import { MapContainer, TileLayer, useMap } from "react-leaflet";
 import L from "leaflet";
 import "leaflet.heat";
 import { fetchHeatmap } from "../services/api";
-
 import PageHeader from "../components/ui/PageHeader";
 import StatsCard from "../components/ui/StatsCard";
-import { MapIcon, Thermometer, MapPin, Calendar, RefreshCw } from "lucide-react";
+import {
+  MapIcon,
+  Thermometer,
+  MapPin,
+  Calendar,
+  RefreshCw,
+} from "lucide-react";
 
 // ── Heatmap layer (uses leaflet.heat) ─────────────────────────────────────────
 function HeatLayer({ points }) {
@@ -56,7 +61,9 @@ function HeatLayer({ points }) {
 function Stat({ label, value, color = "text-text-primary" }) {
   return (
     <div className="bg-bg-card border border-border-primary rounded-xl px-4 py-3 shadow-sm">
-      <p className="text-text-secondary/40 text-[10px] uppercase font-bold tracking-widest mb-1">{label}</p>
+      <p className="text-text-secondary/40 text-[10px] uppercase font-bold tracking-widest mb-1">
+        {label}
+      </p>
       <p className={`text-xl font-bold ${color}`}>{value}</p>
     </div>
   );
@@ -69,13 +76,18 @@ export default function HeatmapPage() {
   const [type, setType] = useState("danger");
   const [days, setDays] = useState(30);
   const [loading, setLoading] = useState(false);
-  const [isDark, setIsDark] = useState(document.documentElement.classList.contains("dark"));
+  const [isDark, setIsDark] = useState(
+    document.documentElement.classList.contains("dark"),
+  );
 
   useEffect(() => {
     const observer = new MutationObserver(() => {
       setIsDark(document.documentElement.classList.contains("dark"));
     });
-    observer.observe(document.documentElement, { attributes: true, attributeFilter: ["class"] });
+    observer.observe(document.documentElement, {
+      attributes: true,
+      attributeFilter: ["class"],
+    });
     return () => observer.disconnect();
   }, []);
 
@@ -107,9 +119,9 @@ export default function HeatmapPage() {
 
   return (
     <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-700">
-      <PageHeader 
-        title="DANGER" 
-        highlight="HEATMAP" 
+      <PageHeader
+        title="DANGER"
+        highlight="HEATMAP"
         description={`${points.length} vị trí · ${totalHits} lượt phát hiện · ${days} ngày qua`}
       >
         <button
@@ -117,7 +129,7 @@ export default function HeatmapPage() {
           disabled={loading}
           className="h-11 px-5 rounded-2xl bg-text-primary/5 border border-border-primary text-text-secondary text-[11px] font-bold uppercase tracking-widest hover:bg-text-primary/10 hover:text-text-primary transition-all disabled:opacity-40 flex items-center gap-2"
         >
-          <RefreshCw className={`w-4 h-4 ${loading ? 'animate-spin' : ''}`} />
+          <RefreshCw className={`w-4 h-4 ${loading ? "animate-spin" : ""}`} />
           Làm mới
         </button>
       </PageHeader>
@@ -148,7 +160,6 @@ export default function HeatmapPage() {
           color="text-purple-500"
         />
       </div>
-
 
       {/* ── Filters ─────────────────────────────────────────────── */}
       <div className="flex flex-wrap gap-6">
@@ -226,9 +237,10 @@ export default function HeatmapPage() {
           >
             {/* Dark tile layer */}
             <TileLayer
-              url={isDark 
-                ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
-                : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
+              url={
+                isDark
+                  ? "https://{s}.basemaps.cartocdn.com/dark_all/{z}/{x}/{y}{r}.png"
+                  : "https://{s}.basemaps.cartocdn.com/rastertiles/voyager/{z}/{x}/{y}{r}.png"
               }
               attribution='&copy; <a href="https://carto.com/">CARTO</a> | &copy; <a href="https://www.openstreetmap.org/copyright">OSM</a>'
               subdomains="abcd"
@@ -248,7 +260,10 @@ export default function HeatmapPage() {
           </h3>
           <div className="space-y-3.5">
             {[
-              { color: "bg-white", label: "Cực kỳ nguy hiểm (SOS/Vật cản sát bên)" },
+              {
+                color: "bg-white",
+                label: "Cực kỳ nguy hiểm (SOS/Vật cản sát bên)",
+              },
               { color: "bg-red-500", label: "Nguy hiểm cao" },
               { color: "bg-amber-400", label: "Cảnh báo trung bình" },
               { color: "bg-blue-500", label: "Ghi nhận có vật cản" },
@@ -268,7 +283,9 @@ export default function HeatmapPage() {
                 "linear-gradient(to right, #3b82f6, #f59e0b, #ef4444, #ffffff)",
             }}
           />
-          <p className="mt-4 text-[10px] text-text-secondary italic">Dữ liệu được tổng hợp từ AI và tín hiệu SOS của người dùng.</p>
+          <p className="mt-4 text-[10px] text-text-secondary italic">
+            Dữ liệu được tổng hợp từ AI và tín hiệu SOS của người dùng.
+          </p>
         </div>
 
         {/* Top hotspots */}
@@ -288,7 +305,7 @@ export default function HeatmapPage() {
                     {i + 1}
                   </span>
                   <div className="flex-1 min-w-0">
-                    <a 
+                    <a
                       href={`https://www.google.com/maps?q=${p.lat},${p.lng}`}
                       target="_blank"
                       rel="noopener noreferrer"

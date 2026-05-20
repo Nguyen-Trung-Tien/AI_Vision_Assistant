@@ -57,8 +57,7 @@ class EdgeAIService {
       final isStable = data['stable'] == true;
       final dangerAlerts =
           (data['danger_alerts'] as List<dynamic>? ?? const []);
-      final taskType =
-          data['taskType']?.toString() ??
+      final taskType = data['taskType']?.toString() ??
           data['task_type']?.toString() ??
           'detection';
 
@@ -79,9 +78,8 @@ class EdgeAIService {
 
       // Voice feedback logic
       final now = DateTime.now();
-      final timeSinceLastSpeakMs = now
-          .difference(_lastSpokenTime)
-          .inMilliseconds;
+      final timeSinceLastSpeakMs =
+          now.difference(_lastSpokenTime).inMilliseconds;
 
       final shouldSkipSpeechForContinuousDanger =
           taskType == 'CONTINUOUS' && dangerAlerts.isNotEmpty;
@@ -98,12 +96,12 @@ class EdgeAIService {
           final historyType = taskType == 'CAPTION'
               ? 'caption'
               : taskType == 'OCR'
-              ? 'money'
-              : taskType == 'TEXT_OCR'
-              ? 'text'
-              : taskType == 'LAYOUT_ANALYSIS'
-              ? 'text'
-              : 'detection';
+                  ? 'money'
+                  : taskType == 'TEXT_OCR'
+                      ? 'text'
+                      : taskType == 'LAYOUT_ANALYSIS'
+                          ? 'text'
+                          : 'detection';
           _historyService.addEntry(historyType, text);
         }
       }

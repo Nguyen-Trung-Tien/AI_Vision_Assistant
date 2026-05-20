@@ -88,9 +88,9 @@ class _LoginScreenState extends State<LoginScreen> {
       final message = e is HttpException
           ? e.message
           : e
-                .toString()
-                .replaceFirst(RegExp(r'^Exception:\s*'), '')
-                .replaceFirst(RegExp(r'^HttpException:\s*'), '');
+              .toString()
+              .replaceFirst(RegExp(r'^Exception:\s*'), '')
+              .replaceFirst(RegExp(r'^HttpException:\s*'), '');
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text(message)));

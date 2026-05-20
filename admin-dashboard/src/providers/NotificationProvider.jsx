@@ -1,4 +1,10 @@
-import { createContext, useContext, useState, useEffect, useCallback } from "react";
+import {
+  createContext,
+  useContext,
+  useState,
+  useEffect,
+  useCallback,
+} from "react";
 import { socket } from "../services/socket";
 import {
   fetchNotifications as fetchNotificationsApi,
@@ -65,7 +71,12 @@ export function NotificationProvider({ children }) {
 
   return (
     <NotificationContext.Provider
-      value={{ notifications, unreadCount, handleMarkAllRead, fetchNotifications }}
+      value={{
+        notifications,
+        unreadCount,
+        handleMarkAllRead,
+        fetchNotifications,
+      }}
     >
       {children}
     </NotificationContext.Provider>
@@ -74,6 +85,9 @@ export function NotificationProvider({ children }) {
 
 export function useNotificationContext() {
   const ctx = useContext(NotificationContext);
-  if (!ctx) throw new Error("useNotificationContext must be used within NotificationProvider");
+  if (!ctx)
+    throw new Error(
+      "useNotificationContext must be used within NotificationProvider",
+    );
   return ctx;
 }

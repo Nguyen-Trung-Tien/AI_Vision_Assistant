@@ -32,7 +32,8 @@ class RecognitionOverlay extends StatelessWidget {
     if (!isEnabled || !hasOverlayData) return const SizedBox.shrink();
 
     final topPadding = MediaQuery.of(context).padding.top;
-    final primary = primaryDetection ?? (detections.isNotEmpty ? detections.first : null);
+    final primary =
+        primaryDetection ?? (detections.isNotEmpty ? detections.first : null);
     final accent = _colorForDetection(primary);
 
     return Stack(
@@ -188,7 +189,8 @@ class _RecognitionPainter extends CustomPainter {
     final sourceHeight = frameHeight.toDouble();
     if (sourceWidth <= 0 || sourceHeight <= 0) return;
 
-    final scale = math.max(size.width / sourceWidth, size.height / sourceHeight);
+    final scale =
+        math.max(size.width / sourceWidth, size.height / sourceHeight);
     final fittedWidth = sourceWidth * scale;
     final fittedHeight = sourceHeight * scale;
     final dx = (size.width - fittedWidth) / 2;
@@ -205,7 +207,8 @@ class _RecognitionPainter extends CustomPainter {
       final rect = Rect.fromLTRB(left, top, right, bottom);
       final isPrimary = identical(detection, primaryDetection) ||
           (primaryDetection != null &&
-              detection['box'].toString() == primaryDetection!['box'].toString());
+              detection['box'].toString() ==
+                  primaryDetection!['box'].toString());
 
       final color = RecognitionOverlay._colorForDetection(detection);
       final paint = Paint()
@@ -234,10 +237,12 @@ class _RecognitionPainter extends CustomPainter {
         textDirection: TextDirection.ltr,
       )..layout(maxWidth: math.max(0, rect.width));
 
-      final labelTop = math.max(
-        0.0,
-        top - labelPainter.height - 4,
-      ).toDouble();
+      final labelTop = math
+          .max(
+            0.0,
+            top - labelPainter.height - 4,
+          )
+          .toDouble();
       labelPainter.paint(canvas, Offset(left, labelTop));
     }
   }

@@ -26,8 +26,9 @@ class FeedbackService {
         'imageBase64': imageBase64,
       });
 
-      final ok = await _post(client, '$_baseUrl/api/feedback', token, payload) ||
-          await _post(client, '$_baseUrl/feedback', token, payload);
+      final ok =
+          await _post(client, '$_baseUrl/api/feedback', token, payload) ||
+              await _post(client, '$_baseUrl/feedback', token, payload);
       if (!ok) throw HttpException('Feedback request failed');
     } finally {
       client.close(force: true);

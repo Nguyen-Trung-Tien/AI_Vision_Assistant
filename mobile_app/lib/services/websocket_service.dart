@@ -207,7 +207,8 @@ class WebSocketService {
       'mode': mode,
       'priority': priority,
       'frame_seq': frameSeq,
-      'sub_mode': subMode, // Note: Python worker usually uses sub_mode or subMode, but DTO uses sub_mode
+      'sub_mode':
+          subMode, // Note: Python worker usually uses sub_mode or subMode, but DTO uses sub_mode
       'is_front_camera': isFrontCamera,
     });
   }

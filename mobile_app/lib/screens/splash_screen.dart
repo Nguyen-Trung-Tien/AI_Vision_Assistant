@@ -66,10 +66,10 @@ class _SplashScreenState extends State<SplashScreen>
       begin: 0.0,
       end: 1.0,
     ).animate(CurvedAnimation(parent: _textController, curve: Curves.easeIn));
-    _textSlide = Tween<Offset>(begin: const Offset(0, 0.5), end: Offset.zero)
-        .animate(
-          CurvedAnimation(parent: _textController, curve: Curves.easeOutCubic),
-        );
+    _textSlide =
+        Tween<Offset>(begin: const Offset(0, 0.5), end: Offset.zero).animate(
+      CurvedAnimation(parent: _textController, curve: Curves.easeOutCubic),
+    );
 
     // Sequence animations
     _logoController.forward();
@@ -85,7 +85,7 @@ class _SplashScreenState extends State<SplashScreen>
     // 1. Voice welcome
     await Future.delayed(const Duration(milliseconds: 800));
     if (!mounted) return;
-    
+
     final String lang = _settings.language;
     if (_settings.isFirstLaunch) {
       _accessibility.speak(AppLocalizations.t('splash_welcome_tts', lang));
@@ -98,11 +98,9 @@ class _SplashScreenState extends State<SplashScreen>
     // We request them in parallel but wait for all
     try {
       if (_settings.isFirstLaunch) {
-        _accessibility.speak(
-          lang == 'vi' 
+        _accessibility.speak(lang == 'vi'
             ? 'Ứng dụng cần quyền truy cập Camera, Micro và Vị trí để hoạt động. Vui lòng nhấn Cho phép khi có yêu cầu.'
-            : 'The app needs Camera, Microphone, and Location access. Please tap Allow when prompted.'
-        );
+            : 'The app needs Camera, Microphone, and Location access. Please tap Allow when prompted.');
       }
 
       await [
@@ -110,7 +108,7 @@ class _SplashScreenState extends State<SplashScreen>
         Permission.microphone,
         Permission.location,
       ].request();
-      
+
       if (_settings.isFirstLaunch) {
         _settings.setFirstLaunchDone();
       }
@@ -124,10 +122,9 @@ class _SplashScreenState extends State<SplashScreen>
       Navigator.of(context).pushReplacement(
         PageRouteBuilder(
           pageBuilder: (context, animation1, animation2) => widget.nextScreen,
-          transitionsBuilder:
-              (context, animation, secondaryAnimation, child) {
-                return FadeTransition(opacity: animation, child: child);
-              },
+          transitionsBuilder: (context, animation, secondaryAnimation, child) {
+            return FadeTransition(opacity: animation, child: child);
+          },
           transitionDuration: const Duration(milliseconds: 800),
         ),
       );

@@ -27,7 +27,10 @@ export function setSession(email, token, role) {
 }
 
 export function isAuthenticated() {
-  return localStorage.getItem(AUTH_KEY) === "true" && !!localStorage.getItem(TOKEN_KEY);
+  return (
+    localStorage.getItem(AUTH_KEY) === "true" &&
+    !!localStorage.getItem(TOKEN_KEY)
+  );
 }
 
 export function clearSessionLocal() {

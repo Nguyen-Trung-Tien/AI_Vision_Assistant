@@ -18,7 +18,8 @@ class VoiceCommandService {
   final Function(String command) onCommandRecognized;
   final VoidCallback? onListeningStateChanged;
 
-  VoiceCommandService({required this.onCommandRecognized, this.onListeningStateChanged});
+  VoiceCommandService(
+      {required this.onCommandRecognized, this.onListeningStateChanged});
 
   void _setListening(bool value) {
     if (_isListening != value) {

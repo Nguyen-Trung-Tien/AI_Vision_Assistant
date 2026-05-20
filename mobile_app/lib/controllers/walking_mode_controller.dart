@@ -153,10 +153,18 @@ class WalkingModeController {
     onStateChanged();
   }
 
-  String _deriveSafeDirection(String positionText, List<Map<String, dynamic>> dangerAlerts) {
-    bool leftBlocked = dangerAlerts.any((a) => (a['position']?.toString().toLowerCase() ?? '').contains('trái') || (a['position']?.toString().toLowerCase() ?? '').contains('left'));
-    bool rightBlocked = dangerAlerts.any((a) => (a['position']?.toString().toLowerCase() ?? '').contains('phải') || (a['position']?.toString().toLowerCase() ?? '').contains('right'));
-    bool centerBlocked = dangerAlerts.any((a) => (a['position']?.toString().toLowerCase() ?? '').contains('giữa') || (a['position']?.toString().toLowerCase() ?? '').contains('center') || (a['position']?.toString().toLowerCase() ?? '').contains('front'));
+  String _deriveSafeDirection(
+      String positionText, List<Map<String, dynamic>> dangerAlerts) {
+    bool leftBlocked = dangerAlerts.any((a) =>
+        (a['position']?.toString().toLowerCase() ?? '').contains('trái') ||
+        (a['position']?.toString().toLowerCase() ?? '').contains('left'));
+    bool rightBlocked = dangerAlerts.any((a) =>
+        (a['position']?.toString().toLowerCase() ?? '').contains('phải') ||
+        (a['position']?.toString().toLowerCase() ?? '').contains('right'));
+    bool centerBlocked = dangerAlerts.any((a) =>
+        (a['position']?.toString().toLowerCase() ?? '').contains('giữa') ||
+        (a['position']?.toString().toLowerCase() ?? '').contains('center') ||
+        (a['position']?.toString().toLowerCase() ?? '').contains('front'));
 
     if (centerBlocked || (leftBlocked && rightBlocked)) {
       return _settings.language == 'vi' ? 'Dừng lại' : 'Stop';
@@ -169,9 +177,7 @@ class WalkingModeController {
     if (lowered.contains('phải') || lowered.contains('right')) {
       return _settings.language == 'vi' ? 'Đi trái' : 'Go left';
     }
-    return _settings.language == 'vi'
-        ? 'Cẩn thận'
-        : 'Be careful';
+    return _settings.language == 'vi' ? 'Cẩn thận' : 'Be careful';
   }
 
   Future<void> toggleCamera() async {
@@ -198,11 +204,11 @@ class WalkingModeController {
 
     final msg = ctrl.isFrontCamera
         ? (lang == 'vi'
-              ? 'Đã chuyển sang camera trước'
-              : 'Switched to front camera')
+            ? 'Đã chuyển sang camera trước'
+            : 'Switched to front camera')
         : (lang == 'vi'
-              ? 'Đã chuyển sang camera sau'
-              : 'Switched to back camera');
+            ? 'Đã chuyển sang camera sau'
+            : 'Switched to back camera');
     ctrl.accessibilityManager.speak(msg);
   }
 }

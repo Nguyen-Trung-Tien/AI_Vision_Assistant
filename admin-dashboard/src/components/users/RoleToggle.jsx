@@ -5,22 +5,26 @@ export default function RoleToggle({ value, onChange }) {
         {
           v: "USER",
           label: "👤 User",
-          active: "bg-indigo-600 text-white border-indigo-700 shadow-lg shadow-indigo-600/20",
+          active:
+            "bg-indigo-600 text-white border-indigo-700 shadow-lg shadow-indigo-600/20",
         },
         {
           v: "MODERATOR",
           label: "🛡️ Moderator",
-          active: "bg-blue-600 text-white border-blue-700 shadow-lg shadow-blue-600/20",
+          active:
+            "bg-blue-600 text-white border-blue-700 shadow-lg shadow-blue-600/20",
         },
         {
           v: "ADMIN",
           label: "⚡ Admin",
-          active: "bg-purple-600 text-white border-purple-700 shadow-lg shadow-purple-600/20",
+          active:
+            "bg-purple-600 text-white border-purple-700 shadow-lg shadow-purple-600/20",
         },
         {
           v: "SUPER_ADMIN",
           label: "👑 Super Admin",
-          active: "bg-amber-500 text-white border-amber-600 shadow-lg shadow-amber-500/20",
+          active:
+            "bg-amber-500 text-white border-amber-600 shadow-lg shadow-amber-500/20",
         },
       ].map(({ v, label, active }) => (
         <button

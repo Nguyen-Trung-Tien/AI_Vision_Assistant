@@ -1,22 +1,29 @@
 import { cn } from "@/lib/utils";
 import Loading from "./Loading";
 
-export default function DataTable({ 
-  headers, 
-  children, 
-  loading, 
-  empty, 
+export default function DataTable({
+  headers,
+  children,
+  loading,
+  empty,
   emptyMessage = "Không có dữ liệu",
   className,
-  containerClassName
+  containerClassName,
 }) {
   return (
-    <div className={cn("bg-bg-card border border-border-primary rounded-[2.5rem] overflow-hidden shadow-2xl", containerClassName)}>
+    <div
+      className={cn(
+        "bg-bg-card border border-border-primary rounded-[2.5rem] overflow-hidden shadow-2xl",
+        containerClassName,
+      )}
+    >
       {loading && !children ? (
         <Loading size="lg" text="Đang xử lý dữ liệu..." className="py-24" />
       ) : empty ? (
         <div className="py-24 text-center text-text-secondary space-y-4">
-          <div className="font-bold text-lg opacity-40 italic">{emptyMessage}</div>
+          <div className="font-bold text-lg opacity-40 italic">
+            {emptyMessage}
+          </div>
         </div>
       ) : (
         <div className="overflow-x-auto">

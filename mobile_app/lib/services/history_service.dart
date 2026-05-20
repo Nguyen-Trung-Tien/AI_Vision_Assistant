@@ -14,16 +14,16 @@ class HistoryEntry {
   });
 
   Map<String, dynamic> toJson() => {
-    'timestamp': timestamp.toIso8601String(),
-    'type': type,
-    'result': result,
-  };
+        'timestamp': timestamp.toIso8601String(),
+        'type': type,
+        'result': result,
+      };
 
   factory HistoryEntry.fromJson(Map<String, dynamic> json) => HistoryEntry(
-    timestamp: DateTime.parse(json['timestamp'] as String),
-    type: json['type'] as String,
-    result: json['result'] as String,
-  );
+        timestamp: DateTime.parse(json['timestamp'] as String),
+        type: json['type'] as String,
+        result: json['result'] as String,
+      );
 }
 
 /// Service for saving and retrieving recognition history.

@@ -47,16 +47,14 @@ class StatusOverlay extends StatelessWidget {
                   height: 8,
                   decoration: BoxDecoration(
                     shape: BoxShape.circle,
-                    color: isConnected
-                        ? AppTheme.accentGreen
-                        : AppTheme.accentRed,
+                    color:
+                        isConnected ? AppTheme.accentGreen : AppTheme.accentRed,
                     boxShadow: [
                       BoxShadow(
-                        color:
-                            (isConnected
-                                    ? AppTheme.accentGreen
-                                    : AppTheme.accentRed)
-                                .withValues(alpha: 0.6),
+                        color: (isConnected
+                                ? AppTheme.accentGreen
+                                : AppTheme.accentRed)
+                            .withValues(alpha: 0.6),
                         blurRadius: 6,
                         spreadRadius: 1,
                       ),
@@ -103,7 +101,8 @@ class StatusOverlay extends StatelessWidget {
         ),
         if (isFlashOn || isNightMode)
           Positioned(
-            top: topPadding + 64, // Shifted down to avoid overlapping with the walk toggle
+            top: topPadding +
+                64, // Shifted down to avoid overlapping with the walk toggle
             right: 16,
             child: Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),

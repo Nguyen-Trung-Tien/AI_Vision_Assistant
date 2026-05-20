@@ -9,7 +9,8 @@ class FaceService {
     return prefs.getString('auth_token');
   }
 
-  static Future<Map<String, dynamic>> registerFace(String name, String base64Image) async {
+  static Future<Map<String, dynamic>> registerFace(
+      String name, String base64Image) async {
     final token = await _getToken();
     final response = await http.post(
       Uri.parse('${Constants.apiBaseUrl}/api/face/register'),

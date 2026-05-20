@@ -36,14 +36,16 @@ class _NavigationScreenState extends State<NavigationScreen> {
   @override
   void initState() {
     super.initState();
-    _currentInstruction = AppLocalizations.t('nav_mic_instruction', _settings.language);
+    _currentInstruction =
+        AppLocalizations.t('nav_mic_instruction', _settings.language);
     _initLocation();
   }
 
   Future<void> _initLocation() async {
     bool serviceEnabled = await Geolocator.isLocationServiceEnabled();
     if (!serviceEnabled) {
-      _accessibilityManager.speak(AppLocalizations.t('nav_gps_disabled', _settings.language));
+      _accessibilityManager
+          .speak(AppLocalizations.t('nav_gps_disabled', _settings.language));
       return;
     }
 
@@ -51,36 +53,37 @@ class _NavigationScreenState extends State<NavigationScreen> {
     if (permission == LocationPermission.denied) {
       permission = await Geolocator.requestPermission();
       if (permission == LocationPermission.denied) {
-        _accessibilityManager.speak(AppLocalizations.t('nav_permission_denied', _settings.language));
+        _accessibilityManager.speak(
+            AppLocalizations.t('nav_permission_denied', _settings.language));
         return;
       }
     }
 
     if (permission == LocationPermission.deniedForever) {
-      _accessibilityManager.speak(AppLocalizations.t('nav_permission_forever', _settings.language));
+      _accessibilityManager.speak(
+          AppLocalizations.t('nav_permission_forever', _settings.language));
       return;
     }
 
-    _positionSub =
-        Geolocator.getPositionStream(
-          locationSettings: const LocationSettings(
-            accuracy: LocationAccuracy.best,
-            distanceFilter: 5,
-          ),
-        ).listen((Position position) {
-          if (!mounted) return;
-          setState(() {
-            _currentPosition = position;
-          });
-          if (_pendingCenter == null) {
-            _moveCamera(LatLng(position.latitude, position.longitude));
-          }
-          if (_isNavigating &&
-              _steps.isNotEmpty &&
-              _currentStepIndex < _steps.length) {
-            _checkWaypointDistance(position);
-          }
-        });
+    _positionSub = Geolocator.getPositionStream(
+      locationSettings: const LocationSettings(
+        accuracy: LocationAccuracy.best,
+        distanceFilter: 5,
+      ),
+    ).listen((Position position) {
+      if (!mounted) return;
+      setState(() {
+        _currentPosition = position;
+      });
+      if (_pendingCenter == null) {
+        _moveCamera(LatLng(position.latitude, position.longitude));
+      }
+      if (_isNavigating &&
+          _steps.isNotEmpty &&
+          _currentStepIndex < _steps.length) {
+        _checkWaypointDistance(position);
+      }
+    });
 
     _currentPosition = await Geolocator.getCurrentPosition();
     setState(() {});
@@ -94,7 +97,9 @@ class _NavigationScreenState extends State<NavigationScreen> {
   Future<void> _startVoiceSearch() async {
     final lang = _settings.language;
     if (_currentPosition == null) {
-      _accessibilityManager.speak(lang == 'vi' ? "Đang tìm vị trí hiện tại, vui lòng đợi..." : "Locating your current position, please wait...");
+      _accessibilityManager.speak(lang == 'vi'
+          ? "Đang tìm vị trí hiện tại, vui lòng đợi..."
+          : "Locating your current position, please wait...");
       return;
     }
 
@@ -105,7 +110,8 @@ class _NavigationScreenState extends State<NavigationScreen> {
     final destination = await _navService.listenForDestination();
     if (destination != null) {
       setState(() {
-        _currentInstruction = AppLocalizations.t('nav_searching', lang).replaceAll('{dest}', destination);
+        _currentInstruction = AppLocalizations.t('nav_searching', lang)
+            .replaceAll('{dest}', destination);
       });
 
       final directions = await _navService.getDirections(
@@ -128,7 +134,10 @@ class _NavigationScreenState extends State<NavigationScreen> {
         });
 
         _accessibilityManager.speak(
-          (lang == 'vi' ? "Đã tìm thấy tuyến đường. Bắt đầu di chuyển: " : "Route found. Start moving: ") + _currentInstruction,
+          (lang == 'vi'
+                  ? "Đã tìm thấy tuyến đường. Bắt đầu di chuyển: "
+                  : "Route found. Start moving: ") +
+              _currentInstruction,
         );
       } else {
         setState(() {
@@ -191,7 +200,9 @@ class _NavigationScreenState extends State<NavigationScreen> {
         setState(() {
           _currentInstruction = nextStepText;
         });
-        _accessibilityManager.speak((_settings.language == 'vi' ? "Sắp tới, " : "Coming up, ") + nextStepText);
+        _accessibilityManager.speak(
+            (_settings.language == 'vi' ? "Sắp tới, " : "Coming up, ") +
+                nextStepText);
       } else {
         _finishNavigation();
       }
@@ -201,20 +212,25 @@ class _NavigationScreenState extends State<NavigationScreen> {
   void _finishNavigation() {
     setState(() {
       _isNavigating = false;
-      _currentInstruction = AppLocalizations.t('nav_arrived', _settings.language);
+      _currentInstruction =
+          AppLocalizations.t('nav_arrived', _settings.language);
       _steps.clear();
     });
-    _accessibilityManager.speak(_settings.language == 'vi' ? "Bạn đã đến nơi." : "You have arrived.");
+    _accessibilityManager.speak(
+        _settings.language == 'vi' ? "Bạn đã đến nơi." : "You have arrived.");
   }
 
   void _stopNavigationManually() {
     setState(() {
       _isNavigating = false;
-      _currentInstruction = AppLocalizations.t('nav_mic_instruction', _settings.language);
+      _currentInstruction =
+          AppLocalizations.t('nav_mic_instruction', _settings.language);
       _steps.clear();
       _destination = null;
     });
-    _accessibilityManager.speak(_settings.language == 'vi' ? "Đã dừng điều hướng." : "Navigation stopped.");
+    _accessibilityManager.speak(_settings.language == 'vi'
+        ? "Đã dừng điều hướng."
+        : "Navigation stopped.");
   }
 
   @override
@@ -310,8 +326,8 @@ class _NavigationScreenState extends State<NavigationScreen> {
 
   Widget _buildStatusRow(ColorScheme colorScheme) {
     final lang = _settings.language;
-    final statusText = _isNavigating 
-        ? AppLocalizations.t('nav_status_navigating', lang) 
+    final statusText = _isNavigating
+        ? AppLocalizations.t('nav_status_navigating', lang)
         : AppLocalizations.t('nav_status_not_navigating', lang);
     final statusColor = _isNavigating ? Colors.green : colorScheme.outline;
     return Row(
@@ -405,9 +421,8 @@ class _NavigationScreenState extends State<NavigationScreen> {
           backgroundColor: _isNavigating
               ? colorScheme.surfaceContainerHighest
               : colorScheme.primary,
-          foregroundColor: _isNavigating
-              ? colorScheme.onSurfaceVariant
-              : Colors.white,
+          foregroundColor:
+              _isNavigating ? colorScheme.onSurfaceVariant : Colors.white,
           padding: const EdgeInsets.symmetric(vertical: 16),
           shape: RoundedRectangleBorder(
             borderRadius: BorderRadius.circular(16),
@@ -416,8 +431,8 @@ class _NavigationScreenState extends State<NavigationScreen> {
         ),
         icon: const Icon(Icons.mic, size: 28),
         label: Text(
-          _isNavigating 
-              ? AppLocalizations.t('nav_status_navigating', lang) 
+          _isNavigating
+              ? AppLocalizations.t('nav_status_navigating', lang)
               : AppLocalizations.t('nav_speak_destination', lang),
           style: const TextStyle(fontSize: 18, fontWeight: FontWeight.w600),
         ),

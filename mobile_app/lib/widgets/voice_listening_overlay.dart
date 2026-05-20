@@ -50,7 +50,8 @@ class _VoiceListeningOverlayState extends State<VoiceListeningOverlay>
                       height: 100,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: AppTheme.accentCyan.withValues(alpha: opacity * 0.2),
+                        color: AppTheme.accentCyan
+                            .withValues(alpha: opacity * 0.2),
                       ),
                     ),
                   ),
@@ -62,7 +63,8 @@ class _VoiceListeningOverlayState extends State<VoiceListeningOverlay>
                       height: 100,
                       decoration: BoxDecoration(
                         shape: BoxShape.circle,
-                        color: AppTheme.accentCyan.withValues(alpha: opacity * 0.4),
+                        color: AppTheme.accentCyan
+                            .withValues(alpha: opacity * 0.4),
                       ),
                     ),
                   ),

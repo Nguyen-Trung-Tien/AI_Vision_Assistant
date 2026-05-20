@@ -28,7 +28,8 @@ apiClient.interceptors.request.use((config) => {
 apiClient.interceptors.response.use(
   (response) => response.data,
   (error) => {
-    const message = error.response?.data?.message || error.message || "Something went wrong";
+    const message =
+      error.response?.data?.message || error.message || "Something went wrong";
     const status = error.response?.status;
 
     // Handle 401 Unauthorized - clear session and potentially redirect
@@ -44,7 +45,7 @@ apiClient.interceptors.response.use(
 
     console.error(`[API Error] ${status || "Network"}: ${message}`);
     return Promise.reject(apiError);
-  }
+  },
 );
 
 export default apiClient;

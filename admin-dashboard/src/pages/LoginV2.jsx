@@ -2,7 +2,17 @@ import { useState, useEffect } from "react";
 import { useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { motion, AnimatePresence } from "framer-motion";
-import { Eye, EyeOff, Lock, Mail, ArrowRight, ShieldCheck, Sun, Moon, RefreshCw } from "lucide-react";
+import {
+  Eye,
+  EyeOff,
+  Lock,
+  Mail,
+  ArrowRight,
+  ShieldCheck,
+  Sun,
+  Moon,
+  RefreshCw,
+} from "lucide-react";
 import { useLogin } from "@/hooks/use-queries";
 import { useToast } from "../components/Toast";
 import { loginSchema } from "@/lib/form-schemas";
@@ -10,7 +20,7 @@ import { loginSchema } from "@/lib/form-schemas";
 export default function LoginV2({ onLoginSuccess }) {
   const toast = useToast();
   const [showPassword, setShowPassword] = useState(false);
-  
+
   // Theme state synchronized with document and localStorage
   const [isDarkMode, setIsDarkMode] = useState(() => {
     return (
@@ -57,11 +67,11 @@ export default function LoginV2({ onLoginSuccess }) {
       toast?.success?.("Chào mừng trở lại!");
       onLoginSuccess?.();
     } catch (err) {
-      toast?.error?.(err?.response?.data?.message || err?.message || "Đăng nhập thất bại");
+      toast?.error?.(
+        err?.response?.data?.message || err?.message || "Đăng nhập thất bại",
+      );
     }
   };
-
-
 
   return (
     <div className="min-h-screen bg-bg-primary flex items-center justify-center p-4 relative overflow-hidden selection:bg-indigo-500/30 transition-colors duration-500">
@@ -81,7 +91,10 @@ export default function LoginV2({ onLoginSuccess }) {
 
       {/* Dynamic Background Elements */}
       <div className="absolute top-[-10%] left-[-10%] w-[40%] h-[40%] rounded-full bg-indigo-600/10 blur-[120px] animate-pulse" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-cyan-600/10 blur-[120px] animate-pulse" style={{ animationDelay: "2s" }} />
+      <div
+        className="absolute bottom-[-10%] right-[-10%] w-[40%] h-[40%] rounded-full bg-cyan-600/10 blur-[120px] animate-pulse"
+        style={{ animationDelay: "2s" }}
+      />
 
       <motion.div
         initial={{ opacity: 0, y: 20 }}
@@ -90,15 +103,15 @@ export default function LoginV2({ onLoginSuccess }) {
       >
         {/* Logo Section */}
         <div className="flex flex-col items-center mb-6">
-          <motion.div 
+          <motion.div
             initial={{ scale: 0.8, opacity: 0 }}
             animate={{ scale: 1, opacity: 1 }}
             transition={{ type: "spring", stiffness: 200, damping: 15 }}
             className="w-16 h-16 mb-3 p-1 rounded-2xl bg-linear-to-br from-indigo-500/20 to-cyan-500/20 backdrop-blur-md border border-white/10 shadow-xl flex items-center justify-center group"
           >
-            <img 
-              src="/logo.png" 
-              alt="Vision Assistant Logo" 
+            <img
+              src="/logo.png"
+              alt="Vision Assistant Logo"
               className="w-11 h-11 object-contain group-hover:scale-110 transition-transform duration-500"
             />
           </motion.div>
@@ -171,7 +184,11 @@ export default function LoginV2({ onLoginSuccess }) {
                       onClick={() => setShowPassword(!showPassword)}
                       className="absolute inset-y-0 right-4 flex items-center text-text-secondary/40 hover:text-text-primary transition-colors"
                     >
-                      {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                      {showPassword ? (
+                        <EyeOff className="w-4 h-4" />
+                      ) : (
+                        <Eye className="w-4 h-4" />
+                      )}
                     </button>
                   </div>
                   {errors.password && (
@@ -211,7 +228,7 @@ export default function LoginV2({ onLoginSuccess }) {
         </div>
 
         {/* System Info */}
-        <motion.p 
+        <motion.p
           initial={{ opacity: 0 }}
           animate={{ opacity: 1 }}
           transition={{ delay: 0.5 }}

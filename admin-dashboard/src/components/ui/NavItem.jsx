@@ -1,4 +1,4 @@
-//  NavItem 
+//  NavItem
 function NavItem({ item, active, onClick }) {
   return (
     <button
@@ -22,7 +22,9 @@ function NavItem({ item, active, onClick }) {
       >
         {item.icon}
       </span>
-      <span className="relative z-10 flex-1 text-left tracking-tight">{item.label}</span>
+      <span className="relative z-10 flex-1 text-left tracking-tight">
+        {item.label}
+      </span>
     </button>
   );
 }

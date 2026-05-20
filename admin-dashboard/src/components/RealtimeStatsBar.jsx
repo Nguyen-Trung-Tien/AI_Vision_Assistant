@@ -50,10 +50,7 @@ export default function RealtimeStatsBar() {
     refetch: refetchByDay,
   } = useByDay(14);
 
-  const {
-    data: overview,
-    refetch: refetchOverview,
-  } = useOverview();
+  const { data: overview, refetch: refetchOverview } = useOverview();
 
   const isRefreshing = fetchingByDay;
 
@@ -102,8 +99,11 @@ export default function RealtimeStatsBar() {
             {lastUpdated && (
               <p className="text-[11px] text-text-secondary mt-1 font-bold flex items-center gap-2 italic opacity-60">
                 <Clock className="w-3 h-3" />
-                Cập nhật {lastUpdated.toLocaleTimeString("vi-VN")} · Tiếp theo trong{" "}
-                <span className="text-indigo-400 tabular-nums">{countdown}s</span>
+                Cập nhật {lastUpdated.toLocaleTimeString("vi-VN")} · Tiếp theo
+                trong{" "}
+                <span className="text-indigo-400 tabular-nums">
+                  {countdown}s
+                </span>
               </p>
             )}
           </div>
@@ -113,7 +113,9 @@ export default function RealtimeStatsBar() {
           disabled={isRefreshing}
           className="flex items-center justify-center gap-2 min-h-[40px] px-4 py-1.5 rounded-xl bg-text-primary/5 border border-border-primary text-text-secondary text-[11px] font-bold uppercase tracking-widest hover:bg-text-primary/10 hover:text-text-primary active:scale-95 transition-all disabled:opacity-30"
         >
-          <RefreshCw className={cn("w-4 h-4", isRefreshing && "animate-spin")} />
+          <RefreshCw
+            className={cn("w-4 h-4", isRefreshing && "animate-spin")}
+          />
           Làm mới
         </button>
       </div>
@@ -125,13 +127,15 @@ export default function RealtimeStatsBar() {
             {
               label: "Tổng nhận diện",
               value: overview.totalDetections?.toLocaleString() ?? "—",
-              bgGrad: "bg-gradient-to-br from-indigo-500 to-purple-600 shadow-indigo-500/20",
+              bgGrad:
+                "bg-gradient-to-br from-indigo-500 to-purple-600 shadow-indigo-500/20",
               icon: Activity,
             },
             {
               label: "Người dùng",
               value: overview.totalUsers?.toLocaleString() ?? "—",
-              bgGrad: "bg-gradient-to-br from-cyan-500 to-blue-600 shadow-blue-500/20",
+              bgGrad:
+                "bg-gradient-to-br from-cyan-500 to-blue-600 shadow-blue-500/20",
               icon: Users,
             },
             {
@@ -139,7 +143,8 @@ export default function RealtimeStatsBar() {
               value: overview.avgConfidence
                 ? `${Math.round(overview.avgConfidence * 100)}%`
                 : "—",
-              bgGrad: "bg-gradient-to-br from-emerald-500 to-teal-600 shadow-emerald-500/20",
+              bgGrad:
+                "bg-gradient-to-br from-emerald-500 to-teal-600 shadow-emerald-500/20",
               icon: Target,
             },
           ].map(({ label, value, bgGrad, icon: Icon }) => (
@@ -150,7 +155,9 @@ export default function RealtimeStatsBar() {
               <div className="absolute -top-2 -right-2 p-4 opacity-20 group-hover/card:opacity-40 group-hover/card:scale-110 transition-all duration-500">
                 <Icon className="w-16 h-16" />
               </div>
-              <p className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-white/80 mb-1 z-10 relative">{label}</p>
+              <p className="text-[11px] font-extrabold uppercase tracking-[0.2em] text-white/80 mb-1 z-10 relative">
+                {label}
+              </p>
               <p className="text-2xl font-black tracking-tighter text-white drop-shadow-sm z-10 relative">
                 {value}
               </p>
@@ -183,22 +190,43 @@ export default function RealtimeStatsBar() {
             />
             <XAxis
               dataKey="date"
-              tick={{ fill: "var(--text-secondary)", fontSize: 10, fontWeight: 600 }}
+              tick={{
+                fill: "var(--text-secondary)",
+                fontSize: 10,
+                fontWeight: 600,
+              }}
               axisLine={{ stroke: "var(--border-color)" }}
               tickLine={false}
               dy={10}
             />
             <YAxis
-              tick={{ fill: "var(--text-secondary)", fontSize: 10, fontWeight: 600 }}
+              tick={{
+                fill: "var(--text-secondary)",
+                fontSize: 10,
+                fontWeight: 600,
+              }}
               axisLine={false}
               tickLine={false}
             />
-            <Tooltip content={<CustomTooltip />} cursor={{ stroke: '#6C63FF', strokeWidth: 1, strokeDasharray: '4 4' }} />
+            <Tooltip
+              content={<CustomTooltip />}
+              cursor={{
+                stroke: "#6C63FF",
+                strokeWidth: 1,
+                strokeDasharray: "4 4",
+              }}
+            />
             <Legend
               verticalAlign="top"
               align="right"
               iconType="circle"
-              wrapperStyle={{ paddingBottom: 20, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '1px' }}
+              wrapperStyle={{
+                paddingBottom: 20,
+                fontSize: 11,
+                fontWeight: 700,
+                textTransform: "uppercase",
+                letterSpacing: "1px",
+              }}
             />
             <Area
               type="monotone"
@@ -206,7 +234,12 @@ export default function RealtimeStatsBar() {
               stroke="#6C63FF"
               strokeWidth={3}
               fill="url(#rtGrad)"
-              dot={{ r: 4, fill: "#6C63FF", stroke: "var(--bg-card)", strokeWidth: 2 }}
+              dot={{
+                r: 4,
+                fill: "#6C63FF",
+                stroke: "var(--bg-card)",
+                strokeWidth: 2,
+              }}
               activeDot={{
                 r: 6,
                 fill: "#00D4FF",

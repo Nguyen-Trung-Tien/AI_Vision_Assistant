@@ -60,8 +60,8 @@ class LightSensorService {
   Future<void> _evaluateBrightness(CameraController controller) async {
     try {
       final image = await controller.takePicture().timeout(
-        const Duration(seconds: 2),
-      );
+            const Duration(seconds: 2),
+          );
       final bytes = await image.readAsBytes();
 
       // Heuristic: smaller JPEG size often means darker/less-detailed frame.

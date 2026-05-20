@@ -1,16 +1,16 @@
 import { useState } from "react";
 import { useLogs } from "@/hooks/use-queries";
-import { 
-  History, 
-  Search, 
-  ChevronLeft, 
-  ChevronRight, 
+import {
+  History,
+  Search,
+  ChevronLeft,
+  ChevronRight,
   Loader2,
   Scan,
   Type,
   AlertTriangle,
   Target,
-  Clock
+  Clock,
 } from "lucide-react";
 
 const typeBadgeColors = {
@@ -156,7 +156,9 @@ export default function RecentLogsV2() {
                           <div className="w-16 h-1.5 bg-white/5 rounded-full overflow-hidden hidden sm:block">
                             <div
                               className="h-full bg-accent-cyan shadow-[0_0_8px_rgba(0,212,255,0.5)]"
-                              style={{ width: `${log.confidence_score * 100}%` }}
+                              style={{
+                                width: `${log.confidence_score * 100}%`,
+                              }}
                             />
                           </div>
                           <span className="text-xs font-bold text-accent-cyan tabular-nums">
@@ -205,7 +207,9 @@ export default function RecentLogsV2() {
               Trước
             </button>
             <div className="flex items-center gap-2">
-              <span className="text-sm font-bold text-text-primary">{page}</span>
+              <span className="text-sm font-bold text-text-primary">
+                {page}
+              </span>
               <span className="text-sm font-bold text-text-secondary opacity-30">
                 /
               </span>

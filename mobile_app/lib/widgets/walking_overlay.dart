@@ -79,7 +79,8 @@ class WalkingOverlay extends StatelessWidget {
             children: [
               // Status card
               Container(
-                padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                padding:
+                    const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
                 decoration: AppTheme.glassDecoration(
                   borderRadius: 12,
                   opacity: 0.65,
@@ -118,7 +119,8 @@ class WalkingOverlay extends StatelessWidget {
                 Wrap(
                   spacing: 8,
                   runSpacing: 8,
-                  children: detections.take(6).map((d) { // Limit to 6 to prevent overfilling screen
+                  children: detections.take(6).map((d) {
+                    // Limit to 6 to prevent overfilling screen
                     final label = d['label']?.toString() ?? 'Object';
                     final distance = (d['distance'] as num?)?.toDouble();
                     final color = _getDistanceColor(distance);

@@ -40,7 +40,9 @@ export class NotificationService {
     if (this.server) {
       this.server.to('admin').emit('admin_notification', saved);
     } else {
-      this.logger.warn('WebSocket server not initialized in NotificationService');
+      this.logger.warn(
+        'WebSocket server not initialized in NotificationService',
+      );
     }
 
     return saved;
