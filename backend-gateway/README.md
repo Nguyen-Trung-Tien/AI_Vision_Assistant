@@ -1,63 +1,63 @@
-# Backend Gateway (NestJS)
+<div align="center">
 
-API Gateway trung tâm đóng vai trò là "nhà điều phối" toàn bộ hệ thống AI Vision Assistant. Chịu trách nhiệm quản lý kết nối, xác thực, điều phối tác vụ AI và lưu trữ dữ liệu.
+# 🔗 Backend Gateway (NestJS)
 
----
+### Xương sống giao tiếp và điều phối trung tâm
 
-## 🗓️ Lịch sử cập nhật (Infrastructure)
+_API Gateway quản lý toàn bộ kết nối WebSocket, xác thực người dùng (JWT), điều phối tác vụ xử lý AI qua RabbitMQ và lưu trữ sự kiện hệ thống._
 
-| Ngày | Cập nhật | Chi tiết |
-| --- | --- | --- |
-| **04/04** | 🚨 Emergency System | Tích hợp dịch vụ SMS (Twilio/Firebase) để gửi tin nhắn khẩn cấp. |
-| **01/04** | 🛡️ Integrity Audit | Kiểm tra sức khỏe hệ thống, dọn dẹp code thừa và tối ưu hóa query DB. |
-| **27/02** | 🧹 Security Hardening | Loại bỏ secrets khỏi source code, thêm sanitize cho nội dung TTS. |
-| **25/02** | 👥 RBAC | Hoàn thiện hệ thống phân quyền Super Admin/Admin/User. |
-| **25/02** | 🔐 WS Guard | Bảo mật kết nối WebSocket bằng JWT Validation. |
-| **20/02** | 📨 RabbitMQ Bridge | Chuyển đổi từ request-response trực tiếp sang Message Queue để xử lý bất đồng bộ. |
+<br/>
 
----
+![NestJS](https://img.shields.io/badge/NestJS-11-E0234E?logo=nestjs&logoColor=white&style=for-the-badge)
+![PostgreSQL](https://img.shields.io/badge/PostgreSQL-16-4169E1?logo=postgresql&logoColor=white&style=for-the-badge)
+![RabbitMQ](https://img.shields.io/badge/RabbitMQ-AMQP-FF6600?logo=rabbitmq&logoColor=white&style=for-the-badge)
+![Socket.IO](https://img.shields.io/badge/Socket.IO-Real_Time-010101?logo=socket.io&logoColor=white&style=for-the-badge)
+![Docker](https://img.shields.io/badge/Docker-Container-2496ED?logo=docker&logoColor=white&style=for-the-badge)
 
-## ✅ Chức năng chính
-
-- **Xác thực & Bảo mật**: Quản lý tài khoản người dùng, JWT Authentication và WebSocket Guards.
-- **WebSocket Gateway**: Nhận frame ảnh từ Mobile và trả kết quả AI real-time với độ trễ cực thấp.
-- **Task Orchestration**: Điều phối các tác vụ AI thông qua RabbitMQ (Producer/Consumer).
-- **Quản lý SOS**: Tiếp nhận cảnh báo khẩn cấp, lưu vị trí GPS và thông báo tức thời cho Admin.
-- **Liên hệ khẩn cấp**: Hệ thống CRUD thông tin người thân để tự động gửi SMS khi có sự cố.
-- **Thống kê & Dashboard**: Cung cấp API cho Admin Dashboard về hiệu suất hệ thống và heatmap nguy hiểm.
-- **AI Feedback**: Thu thập phản hồi từ người dùng để cải thiện độ chính xác của mô hình AI.
+</div>
 
 ---
 
-## 🛠 Công nghệ sử dụng
+## ✅ Vai trò & Chức năng chính
 
-- **NestJS**: Framework Node.js mạnh mẽ, dễ mở rộng.
-- **PostgreSQL**: Cơ sở dữ liệu quan hệ lưu trữ logs, users và settings.
-- **RabbitMQ**: Message Queue trung gian giữa Backend và AI Worker.
-- **Socket.IO**: Giao thức truyền tải frame ảnh và kết quả AI real-time.
-- **TypeORM**: Quản lý truy vấn database một cách chuyên nghiệp.
+- 🔐 **Xác thực & Bảo mật (Auth)**: Quản lý đăng ký, đăng nhập bằng JWT, bảo mật toàn diện cho cả REST API và WebSocket (WS Guards).
+- ⚡ **WebSocket Real-time**: Kênh giao tiếp độ trễ cực thấp giữa Mobile App và AI Worker. Nhận luồng khung hình (frame) và trả về kết quả âm thanh/cảnh báo.
+- 📨 **Task Orchestration (RabbitMQ)**: Vai trò "Người điều phối" – đưa request từ Mobile vào Queue và lắng nghe kết quả từ AI Worker thông qua giao thức AMQP.
+- 🚨 **Hệ thống SOS & Liên lạc khẩn cấp**: Tiếp nhận cảnh báo nguy hiểm, lưu lại tọa độ GPS, cảnh báo lên Dashboard và kích hoạt SMS tự động cho người thân.
+- 📊 **Thu thập Thống kê**: Log lại tất cả truy vấn, cảnh báo, heatmap để cung cấp insight chuyên sâu cho Admin Dashboard.
 
 ---
 
-## ⚙️ Cài đặt & Chạy
+## 🛠 Tech Stack
 
-### 1. Hạ tầng cơ sở (Docker)
+- **NestJS**: Framework Node.js kiến trúc Enterprise, module hóa mạnh mẽ.
+- **PostgreSQL**: Cơ sở dữ liệu quan hệ mạnh mẽ, lưu trữ bền vững.
+- **TypeORM**: Object-Relational Mapper (ORM) giúp thao tác DB an toàn.
+- **RabbitMQ**: Message Queue broker, giải pháp hàng đầu cho xử lý tác vụ bất đồng bộ.
+- **Socket.IO**: Engine WebSocket phổ biến, hỗ trợ tự động kết nối lại (reconnect).
+
+---
+
+## ⚙️ Hướng dẫn cài đặt & Chạy
+
+### 1️⃣ Khởi động Hạ tầng Docker (Database & Queue)
+
+Dự án cung cấp sẵn file `docker-compose.yml` để dựng Postgres, Redis và RabbitMQ.
 
 ```bash
 cd backend-gateway
 docker compose up -d
 ```
-*Lệnh này sẽ khởi chạy RabbitMQ container trên cổng 5672.*
 
-### 2. Cấu hình Biến môi trường
+### 2️⃣ Cấu hình Biến môi trường
 
-Tạo file `.env` tại `backend-gateway/`:
+Tạo file `.env` tại thư mục gốc `backend-gateway/`:
 
 ```env
 PORT=3000
 NODE_ENV=development
 
-# Database
+# Database Configuration
 DB_HOST=127.0.0.1
 DB_PORT=5433
 DB_USER=postgres
@@ -68,39 +68,36 @@ DB_SYNC=true
 # RabbitMQ
 RABBITMQ_URL=amqp://guest:guest@127.0.0.1:5672
 
-# Auth
-JWT_SECRET=your_jwt_secret
+# JWT Authentication
+JWT_SECRET=your_jwt_secret_key_here
 ```
 
-### 3. Khởi chạy server
+### 3️⃣ Khởi chạy Gateway
 
 ```bash
 npm install
 npm run start:dev
 ```
+> 🚀 Server sẽ lắng nghe tại `http://localhost:3000`
 
 ---
 
-## 🔌 Giao thức kết nối chính
+## 🔌 Giao thức kết nối (WebSocket)
 
-### WebSocket Events (Socket.IO)
-- `frame_stream`: Gửi ảnh để xử lý AI (OCR, Caption, Money...).
-- `visual_qa`: Gửi câu hỏi về hình ảnh hiện tại.
-- `sos_alert`: Thông báo tình trạng khẩn cấp.
-- `join_user` / `join_admin`: Phân loại phòng kết nối để nhận thông báo phù hợp.
+Kênh kết nối WebSocket (`ws://localhost:3000`) cung cấp các Events chính:
 
-### REST API Endpoints
-- `/api/auth`: Đăng ký, đăng nhập.
-- `/api/sos`: Quản lý danh sách cảnh báo khẩn cấp.
-- `/api/emergency-contacts`: Quản lý danh bạ liên hệ khi có sự cố.
-- `/api/feedback`: Ghi nhận và xử lý phản hồi người dùng.
-- `/api/stats`: Thống kê dữ liệu cho dashboard.
+| Event Name | Hướng | Mô tả |
+| :--- | :--- | :--- |
+| `frame_stream` | Client ➡️ Server | Gửi một base64 frame ảnh cùng yêu cầu tác vụ (YOLO, OCR, ...). |
+| `visual_qa` | Client ➡️ Server | Gửi frame ảnh kèm giọng nói STT để hỏi đáp AI. |
+| `sos_alert` | Client ➡️ Server | Bắn tín hiệu cầu cứu khẩn cấp (kèm tọa độ GPS). |
+| `ai_result` | Server ➡️ Client | Trả về thông tin cảnh báo, text nhận diện hoặc audio TTS. |
+| `broadcast_tts` | Server ➡️ Client | Gửi thông báo hệ thống bằng giọng nói đến tất cả Users. |
 
 ---
 
-## 🛠 Troubleshooting
+## 🛠 Xử lý sự cố (Troubleshooting)
 
-- **Lỗi kết nối RabbitMQ**: Đảm bảo Docker container đã chạy và cổng 5672 không bị chặn.
-- **Lỗi Database**: Kiểm tra cổng PostgreSQL (mặc định trong code là 5433).
-- **WebSocket Disconnected**: Đảm bảo gửi token JWT hợp lệ trong handshake.
-
+- 🔴 **Lỗi kết nối RabbitMQ**: Hãy kiểm tra lệnh `docker ps` xem container RabbitMQ đã chạy trên cổng `5672` chưa.
+- 🔴 **Lỗi Database Connection Refused**: Đảm bảo cổng Postgres (mặc định trong code là `5433`) không bị xung đột.
+- 🔴 **WebSocket Disconnected / Unauthorized**: Mobile app chưa gửi token JWT trong `handshake` hoặc token đã hết hạn.

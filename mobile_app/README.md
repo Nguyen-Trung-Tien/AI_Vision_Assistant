@@ -1,98 +1,93 @@
-# Mobile App (Flutter)
+<div align="center">
 
-Ứng dụng trợ năng thông minh dành cho người khiếm thị và người bị suy giảm thị lực. Sử dụng sức mạnh của Flutter và AI để mang lại khả năng "nhìn" thông qua phản hồi bằng giọng nói và rung động.
+# 📱 Mobile App (Flutter)
 
----
+### Con mắt thông minh trên nền tảng di động
 
-## 🗓️ Lịch sử cập nhật (Mobile)
+_Giao diện tương tác trực tiếp với người khiếm thị. Sử dụng sức mạnh phần cứng di động (Camera, GPS, Haptic) kết hợp phản hồi giọng nói (TTS) để dẫn đường và nhận diện._
 
-| Ngày | Cập nhật | Chi tiết |
-| --- | --- | --- |
-| **10/05** | 📱 Layout Optimization | Tối ưu bố cục: HUD và các nút chức năng không chồng chéo, tối ưu cho thao tác một tay. |
-| **10/05** | ⚙️ Modern Settings | Giao diện Cài đặt mới dạng Card, hiện đại và dễ truy cập hơn. |
-| **10/05** | 🎨 Mode Animations | Animation riêng cho 7 chế độ (Money/Caption/Face/OCR/File/Layout) với màu sắc và hiệu ứng khác biệt. |
-| **10/05** | 🔊 Speaking Overlay | Hiệu ứng sóng âm waveform khi TTS đang đọc kết quả, giữ overlay cho đến khi đọc xong. |
-| **10/05** | 🎯 Mode Color System | Mỗi chế độ có màu riêng (Gold/Blue/Teal/Cyan/Orange/Green/Pink) trên carousel, icon và indicator. |
-| **17/04** | 🧠 Face Registration | Thêm phản hồi giọng nói & rung khi đăng ký khuôn mặt thành công. |
-| **17/04** | 📄 File Reader Fix | Sửa lỗi OCR Offline, trích xuất văn bản từ file PDF và .txt. |
-| **15/04** | 📺 Visual Feedback | Hiển thị Bounding Boxes + Object Chips trực tiếp trên camera preview. |
-| **15/04** | 🔊 Spatial Audio 3D | Cảnh báo vật cản trái/phải qua tai nghe stereo. |
-| **04/04** | 🚨 Emergency Network | Gửi cảnh báo SOS lên backend/dashboard; backend có thể gửi SMS đến liên hệ khẩn cấp. |
-| **04/04** | 🚶 Walking Mode | Hoàn thiện luồng stream 3-5 FPS liên tục. |
-| **27/02** | 🗺️ OSM Migration | Chuyển từ Google Maps sang OpenStreetMap & OSRM. |
-| **25/02** | 🎤 Voice Commands | Điều khiển ứng dụng bằng giọng nói (STT). |
+<br/>
+
+![Flutter](https://img.shields.io/badge/Flutter-3.x-02569B?logo=flutter&logoColor=white&style=for-the-badge)
+![Dart](https://img.shields.io/badge/Dart-3.x-0175C2?logo=dart&logoColor=white&style=for-the-badge)
+![Android](https://img.shields.io/badge/Android_Ready-3DDC84?logo=android&logoColor=white&style=for-the-badge)
+![TFLite](https://img.shields.io/badge/TFLite-Offline_AI-FF6F00?logo=tensorflow&logoColor=white&style=for-the-badge)
+
+</div>
 
 ---
 
-## 🌟 Tính năng nổi bật (v1.9.0)
+## 🌟 Tính năng trải nghiệm nổi bật
 
-- **Layout Optimization**: Tự động sắp xếp các thành phần UI để tránh chồng chéo (HUD, Banners, Buttons).
-- **Modern Settings Screen**: Thiết kế card-based hiện đại, phân loại cài đặt khoa học và trực quan.
-- **Thumb Zone Design**: Các nút tương tác chính được đặt ở vị trí thuận tiện nhất cho thao tác một ngón cái.
-- **Mode-Specific Animations**: Mỗi chế độ có animation và màu sắc riêng biệt (Gold/Blue/Teal/Cyan/Orange/Green/Pink).
-- **Speaking Overlay**: Hiệu ứng sóng âm waveform hiển thị trong suốt quá trình TTS đọc kết quả.
-- **Continuous Stream (Walking Mode)**: Chế độ đi bộ 3-5 FPS, phân tích môi trường liên tục mà không cần thao tác tay.
-- **Face Recognition**: Nhận diện người thân, bạn bè đã đăng ký và phát tên qua giọng nói.
-- **MiDaS Depth Estimation**: Ước lượng khoảng cách vật cản chính xác hơn bằng mô hình chiều sâu chuyên dụng.
-- **Smart OCR**: Sử dụng Gemini AI để đọc thực đơn, hóa đơn và biển báo phức tạp.
-- **Emergency Network**: Gửi cảnh báo SOS kèm vị trí lên backend; SMS cho liên hệ khẩn cấp do backend xử lý.
-- **Spatial Audio 3D**: Cảnh báo hướng vật cản (Trái/Phải/Giữa) qua âm thanh nổi (Stereo).
-- **Visual Feedback**: Hiển thị khung bao vật thể (Bounding Boxes) ngay trên màn hình preview.
+- 🎨 **Thiết kế thân thiện (Thumb Zone Design)**: Tối ưu UI cho việc thao tác một ngón cái. Giao diện HUD không chồng chéo, màn hình Settings dạng Card hiện đại.
+- 🚶 **Continuous Stream (Walking Mode)**: Tự động phân tích môi trường xung quanh với tốc độ 3-5 FPS, điều chỉnh thông minh theo dung lượng pin.
+- 🔊 **Speaking Overlay & Spatial Audio 3D**: Âm thanh không gian trái/phải báo hiệu hướng vật cản. Có hình ảnh sóng âm trực quan khi TTS phát giọng nói.
+- 🎯 **Mode Animations & Color System**: Mỗi chế độ (Mode) đều có màu sắc đại diện (Gold/Blue/Teal...) kèm animation riêng, mang lại trải nghiệm sống động.
+- 🚨 **Mạng lưới Khẩn cấp (SOS Network)**: Gửi tín hiệu cấp cứu kèm tọa độ GPS trực tiếp lên Admin Dashboard.
+- 📺 **Visual Feedback Real-time**: Khung bao (Bounding Boxes) vẽ mượt mà trực tiếp trên camera preview.
 
 ---
 
-## 🧭 Các chế độ hoạt động
+## 🧭 Bảng chế độ điều khiển (Carousel Modes)
 
-| Chế độ | Tên | Màu | Chức năng |
-| --- | --- | --- | --- |
-| **Mode 0** | Nhận diện tổng hợp | 🟡 Gold | Nhận diện vật thể và tiền VNĐ. |
-| **Mode 1** | Mô tả không gian | 🔵 Blue | Phân tích cảnh, vật cản và khoảng cách gần đúng. |
-| **Mode 2** | Nhận diện người | 🩵 Teal | Nhận diện người quen đã đăng ký. |
-| **Mode 3** | Chỉ hướng | 💜 Purple | Chỉ đường bằng giọng nói qua OSRM & OSM. |
-| **Mode 4** | Đọc văn bản (Online) | 🔹 Cyan | OCR ảnh qua máy chủ AI. |
-| **Mode 5** | Đọc tệp | 🟠 Orange | Đọc file PDF, TXT, DOC, DOCX và ảnh. |
-| **Mode 6** | Đọc chữ nhanh (Offline) | 🟢 Green | Đọc nhanh văn bản và mã vạch bằng ML Kit. |
-| **Mode 7** | Phân tích bố cục | 🩷 Pink | Phân tích bố cục trang/tài liệu. |
-| **Q&A** | Hỏi đáp AI | — | Trò chuyện với Gemini về hình ảnh. |
+| 🎛️ Chế độ | 🎨 Màu sắc | 🎯 Tính năng cốt lõi | Môi trường |
+| :--- | :--- | :--- | :--- |
+| **Mode 0: Nhận diện tổng hợp** | 🟡 Gold | Tìm kiếm chướng ngại vật đường phố, định vị và đọc mệnh giá tiền VNĐ. | Online / Offline |
+| **Mode 1: Mô tả không gian** | 🔵 Blue | Quét cấu trúc cảnh, thông báo vị trí các vật cản (trái, phải, giữa) và ước tính khoảng cách. | Online |
+| **Mode 2: Nhận diện người** | 🩵 Teal | Gọi tên chính xác người thân/bạn bè đã đăng ký trước. | Online |
+| **Mode 3: Chỉ hướng** | 💜 Purple | Tích hợp la bàn và dẫn đường qua hệ thống OpenStreetMap. | Online |
+| **Mode 4: Đọc văn bản (Online)**| 🔹 Cyan | Engine đọc OCR mạnh mẽ thông qua Server. | Online |
+| **Mode 5: Đọc tệp** | 🟠 Orange | Nghe đọc nội dung từ file PDF, DOCX, TXT. | Offline |
+| **Mode 6: Đọc siêu tốc (Offline)**| 🟢 Green | Nhận diện mã vạch và Text bằng ML Kit hoàn toàn không cần mạng. | Offline |
+| **Mode 7: Phân tích bố cục** | 🩷 Pink | Đọc sách và thực đơn phân tầng phức tạp bằng Gemini. | Online |
 
-`Walking Mode` là luồng stream liên tục 3-5 FPS được bật/tắt trong màn hình chính, không phải một mode độc lập trên carousel.
+> 💡 **Q&A Mode**: Được kích hoạt riêng qua phím nóng, cho phép hội thoại trực tiếp với AI về khung cảnh trước mặt.
 
 ---
 
-## ⚙️ Cài đặt & Chạy
+## ⚙️ Hướng dẫn cài đặt & Chạy ứng dụng
 
-### 1. Yêu cầu hệ thống
-- **Flutter SDK**: Phiên bản 3.10 trở lên.
-- **Quyền truy cập**: Camera, GPS, Microphone, Notification, Contacts, Bluetooth (cho Spatial Audio).
+### 1️⃣ Yêu cầu môi trường
+- **Flutter SDK**: Phiên bản `3.10` trở lên.
+- **Quyền (Permissions)**: Camera, Micro (STT), GPS (Vị trí), Bluetooth (Âm thanh nổi).
 
-### 2. Khởi chạy
+### 2️⃣ Cài đặt thư viện
 
 ```bash
 cd mobile_app
 flutter pub get
+```
 
-# Chạy trên Android Emulator (Backend mặc định là 10.0.2.2)
+### 3️⃣ Biên dịch và Chạy
+
+**Nếu chạy trên máy ảo Android (Emulator):**
+```bash
 flutter run --dart-define=BACKEND_URL=http://10.0.2.2:3000
+```
 
-# Chạy trên máy thật (Thay X bằng địa chỉ IP máy tính của bạn)
-flutter run --dart-define=BACKEND_URL=http://192.168.1.X:3000
+**Nếu chạy trên thiết bị thật (Physical Device):**
+Hãy chắc chắn điện thoại và máy tính nằm chung mạng Wi-Fi. (Ví dụ IP máy tính là `192.168.1.15`)
+```bash
+flutter run --dart-define=BACKEND_URL=http://192.168.1.15:3000
 ```
 
 ---
 
-## 📂 Cài đặt Offline Model (TFLite)
+## 📂 Triển khai AI Ngoại tuyến (TFLite)
 
-Để ứng dụng hoạt động khi không có Internet cho phần nhận diện TFLite, hãy đặt các file mô hình vào:
-- `mobile_app/assets/models/best_float32.tflite`
-- `mobile_app/assets/models/best_float16.tflite`
+Để tính năng nhận diện tiền/vật thể hoạt động mượt mà ở nơi mất sóng Internet, bạn cần đặt các file model đã train vào thư mục assets:
 
-Đảm bảo đã khai báo các file này trong `pubspec.yaml`.
+1. Đặt model tại: `mobile_app/assets/models/best_float32.tflite`
+2. Kiểm tra lại việc khai báo tài nguyên trong `pubspec.yaml`:
+   ```yaml
+   assets:
+     - assets/models/best_float32.tflite
+   ```
 
 ---
 
-## 🛠 Xử lý sự cố
+## 🛠 Xử lý sự cố (Troubleshooting)
 
-- **Lỗi kết nối Backend**: Kiểm tra `BACKEND_URL` trong lệnh chạy. Đảm bảo điện thoại và máy tính cùng mạng WiFi.
-- **Không nghe thấy giọng nói**: Kiểm tra âm lượng Media và cài đặt TTS trên điện thoại.
-- **SOS không hoạt động**: Đảm bảo đã cấp quyền vị trí, mạng và kết nối backend; luồng gửi SMS trực tiếp trên mobile hiện không phải luồng chính.
-- **Lag/Giật**: Kiểm tra dung lượng pin. Chế độ Walking Mode sẽ tự động giảm FPS khi pin yếu để tiết kiệm năng lượng.
+- 🔴 **Lỗi kết nối (Connection Refused)**: Do sai địa chỉ `BACKEND_URL`. Đảm bảo Gateway đang chạy trên máy chủ ở cổng `3000`.
+- 🔴 **Không nghe TTS**: Kiểm tra âm lượng Media của điện thoại và đảm bảo thiết bị đã cài đặt "Google Text-To-Speech" cho tiếng Việt.
+- 🔴 **App lag, khung hình giật**: Tính năng *Walking Mode* liên tục vắt kiệt sức mạnh máy. Hệ thống tự động giảm FPS khi pin yếu để cân bằng năng lượng.

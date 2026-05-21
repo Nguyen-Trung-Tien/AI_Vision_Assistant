@@ -1,73 +1,71 @@
-# AI Worker (Python Processing Engine)
+<div align="center">
 
-Đây là thành phần xử lý AI lõi của hệ thống, chịu trách nhiệm nhận diện vật thể, đọc văn bản, mô tả cảnh và hỏi đáp hình ảnh.
+# 🧠 AI Worker Engine
+
+### Trái tim AI của hệ thống Vision Assistant
+
+_Đảm nhận toàn bộ trọng trách xử lý hình ảnh phức tạp: nhận diện vật thể, ước lượng chiều sâu, phân tích chữ viết (OCR), và hỏi đáp hình ảnh (Q&A)._
+
+<br/>
+
+![Python](https://img.shields.io/badge/Python-3.10+-3776AB?logo=python&logoColor=white&style=for-the-badge)
+![FastAPI](https://img.shields.io/badge/FastAPI-0.104+-005571?logo=fastapi&style=for-the-badge)
+![YOLOv11](https://img.shields.io/badge/YOLOv11-Ultralytics-00FFFF?style=for-the-badge)
+![OpenCV](https://img.shields.io/badge/OpenCV-Image_Processing-5C3EE8?logo=opencv&logoColor=white&style=for-the-badge)
+![RabbitMQ](https://img.shields.io/badge/RabbitMQ-AMQP-FF6600?logo=rabbitmq&logoColor=white&style=for-the-badge)
+
+</div>
 
 ---
 
-## 🗓️ Lịch sử cập nhật (AI Engine)
+## 🤖 Các dịch vụ AI cốt lõi
 
-| Ngày      | Cập nhật            | Chi tiết                                                               |
-| --------- | ------------------- | ---------------------------------------------------------------------- |
-| **17/04** | 👤 InsightFace      | Tích hợp nhận diện khuôn mặt Buffalo_L cho người quen.                 |
-| **17/04** | 📏 MiDaS Depth      | Triển khai mô hình ước lượng chiều sâu đơn mục MiDaS Small.            |
-| **17/04** | 📄 Gemini Smart OCR | Chế độ đọc thông minh (menu, hóa đơn) qua Gemini AI.                   |
-| **04/04** | 🚶 Smart Throttle   | Tối ưu hóa hàng đợi Latest-only cho Continuous Stream.                 |
-| **28/03** | 🚦 Traffic Lights   | Mở rộng dataset YOLO lên 29 lớp (thêm đèn giao thông, ổ gà, nắp cống). |
-| **27/03** | 🎓 YOLO Pipeline    | Hoàn thiện quy trình training tự động: Roboflow → Colab → Deploy.      |
-| **26/02** | 🤖 Gemini Vision    | Tích hợp các tác vụ Gemini Vision phục vụ Smart OCR và luồng ảnh dùng AI. |
-| **25/02** | 🗣️ TTS Cache        | Sử dụng Redis để lưu trữ kết quả TTS, giảm latency phát giọng nói.     |
-
----
-
-## 🧠 Các dịch vụ AI tích hợp
-
-- **Object Detection (YOLO v11)**: Nhận diện xe cộ, người và vật cản bằng các trọng số YOLO nạp từ thư mục `models/`.
-- **Face Recognition (InsightFace)**: Nhận diện người quen sử dụng model Buffalo_L.
-- **Depth Estimation (MiDaS)**: Ước lượng khoảng cách từ camera đến vật thể bằng mô hình MiDaS Small.
-- **Smart OCR (Gemini Vision)**: Đọc thông minh thực đơn, hóa đơn và biển báo phức tạp.
-- **Scene Captioning**: Phân tích không gian và đưa ra mô tả bằng ngôn ngữ tự nhiên.
-- **Money Detector**: Nhận diện các mệnh giá tiền Việt Nam kèm xác minh màu sắc (HSV).
-- **Gemini Vision Services**: Smart OCR, phân tích bố cục và các tác vụ ảnh dùng Gemini trong worker.
+- 🎯 **Object Detection (YOLO v11)**: Nhận diện theo thời gian thực 29 lớp đối tượng (xe cộ, người, ổ gà, cầu thang, nắp cống, v.v.).
+- 💵 **Money Detector**: Nhận diện 9 mệnh giá tiền Việt Nam kết hợp thuật toán kiểm tra màu sắc (HSV) và OCR.
+- 👤 **Face Recognition (InsightFace)**: Nhận diện khuôn mặt người quen với độ chính xác cao bằng mô hình `Buffalo_L`.
+- 📏 **Depth Estimation (MiDaS)**: Ước lượng khoảng cách từ camera đến vật thể bằng mô hình chiều sâu đơn mục MiDaS Small.
+- 📄 **Smart OCR (Gemini Vision)**: AI đọc hiểu thực đơn, hóa đơn, biển báo phức tạp vượt trội hơn OCR truyền thống.
+- 🗣️ **Scene Captioning**: Nhận thức không gian, vị trí (trái/giữa/phải) và tạo mô tả bằng ngôn ngữ tự nhiên.
 
 ---
 
 ## 🛠 Công nghệ & Thư viện
 
-- **FastAPI**: Cung cấp health check và API endpoint bổ trợ.
-- **Ultralytics**: Chạy mô hình YOLO v11.
-- **InsightFace**: Thư viện nhận diện khuôn mặt chuyên sâu.
-- **Pika**: Kết nối và tiêu thụ task từ RabbitMQ.
-- **Redis**: Cache audio TTS để giảm độ trễ phản hồi.
-- **Google GenAI**: Tích hợp mô hình Gemini-3-flash-preview.
+- **FastAPI / Uvicorn**: Cung cấp API endpoints cho health check và cấu hình động.
+- **Ultralytics**: Chạy suy luận (inference) cho mô hình YOLO v11.
+- **InsightFace & MiDaS**: Thư viện xử lý khuôn mặt và chiều sâu bằng Deep Learning.
+- **Pika**: Tiêu thụ (consume) task từ RabbitMQ Queue và trả kết quả bất đồng bộ.
+- **Redis**: Bộ đệm (Cache) âm thanh Text-To-Speech (TTS) giúp giảm triệt để độ trễ.
+- **Google GenAI**: Tích hợp các luồng tác vụ phức tạp với `Gemini-3-flash-preview`.
 
 ---
 
-## ⚙️ Cài đặt & Chạy
+## ⚙️ Hướng dẫn cài đặt & Chạy
 
-### 1. Yêu cầu hệ thống
+### 1️⃣ Yêu cầu hệ thống
+- **Python**: `3.10 - 3.12` (Khuyến nghị `3.11`).
+- **RabbitMQ**: Đang chạy qua Docker trên cổng `5672` (nằm trong `backend-gateway`).
+- **Redis**: Đang chạy trên cổng `6379`.
+- **Tesseract OCR**: (Tùy chọn) Cần cài ở mức hệ điều hành để dùng bộ đọc OCR truyền thống.
 
-- **Python**: 3.10 - 3.12 (Khuyến nghị 3.11).
-- **RabbitMQ**: Phải đang chạy (thường qua Docker trong `backend-gateway`).
-- **Redis**: Phải đang chạy trên cổng 6379.
-- **Tesseract OCR**: Cần cài đặt trên hệ điều hành để dùng OCR cơ bản.
-
-### 2. Thiết lập môi trường
+### 2️⃣ Thiết lập môi trường Python
 
 ```bash
 cd ai-worker
 
 # Tạo và kích hoạt Virtual Environment
 python -m venv .venv
-# Windows:
+
+# Trên Windows:
 .\.venv\Scripts\activate
-# Linux/macOS:
+# Trên Linux/macOS:
 source .venv/bin/activate
 
 # Cài đặt thư viện
 pip install -r requirements.txt
 ```
 
-### 3. Cấu hình Biến môi trường
+### 3️⃣ Cấu hình Biến môi trường
 
 Tạo file `.env` tại `ai-worker/`:
 
@@ -77,34 +75,34 @@ REDIS_URL=redis://localhost:6379
 GEMINI_API_KEY=your_gemini_api_key_here
 ```
 
-### 4. Khởi chạy
+### 4️⃣ Khởi chạy Worker
 
-Có 2 cách chạy:
+**Cách 1: Chỉ chạy Worker đa luồng (Consumer - Dành cho Production)**
+```bash
+python rabbitmq_consumer.py
+```
 
-- **Cách 1: Chỉ chạy Worker (Consumer)**
-
-  ```bash
-  python rabbitmq_consumer.py
-  ```
-
-- **Cách 2: Chạy Web Server + Worker (Khuyến nghị)**
-  ```bash
-  python main.py
-  ```
+**Cách 2: Chạy Web Server + Worker (Có endpoint phục vụ TTS audio URL)**
+```bash
+python main.py
+```
 
 ---
 
-## 📁 Cấu trúc thư mục AI
+## 📁 Cấu trúc thư mục lõi
 
-- `models/`: Chứa các file trọng số `.pt` (YOLO) và mô hình face/depth.
-- `services/`: Logic xử lý của từng dịch vụ AI riêng biệt.
-- `scripts/`: Các công cụ hỗ trợ training và chuẩn bị dataset.
-- `dataset/`: (Tùy chọn) Nơi lưu trữ dữ liệu để training thêm.
+- `models/`: Chứa các trọng số `.pt` (YOLO) và mô hình TFLite/ONNX.
+- `services/`: Chứa các module xử lý cho YOLO, InsightFace, MiDaS, OCR...
+- `scripts/`: Chứa script Python chuẩn bị dataset, resize, merge hình ảnh.
+- `dataset/`: Nơi lưu trữ tập ảnh raw dùng cho quá trình huấn luyện mô hình.
 
 ---
 
-## 🚨 Lưu ý quan trọng
+## 🚨 Khuyến cáo hiệu năng
 
-- **GPU**: Nếu có NVIDIA GPU, hãy cài đặt `torch` phiên bản CUDA để tăng tốc độ xử lý gấp 5-10 lần.
-- **Gemini API**: Cần có API Key từ Google AI Studio để sử dụng các tính năng Gemini như Smart OCR và phân tích bố cục.
-- **Face Registration**: Ảnh khuôn mặt đăng ký nên được chụp rõ nét, chính diện.
+> [!TIP]
+> **Tăng tốc với GPU**: Nếu bạn có card đồ họa NVIDIA, hãy gỡ cài đặt `torch` CPU hiện tại và cài phiên bản hỗ trợ **CUDA** để tăng tốc suy luận lên gấp 5-10 lần.
+> Cài đặt mẫu: `pip install torch torchvision torchaudio --index-url https://download.pytorch.org/whl/cu118`
+
+> [!WARNING]
+> **Gemini API Limit**: Các luồng nhận diện thông minh phụ thuộc vào rate limit của Gemini API. Hãy đảm bảo API Key của bạn còn quota.
