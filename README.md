@@ -594,19 +594,15 @@ Dashboard quản trị cung cấp các trang:
 ## 👨‍💻 Tác giả & Liên hệ
 
 <div align="center">
-  <h3><strong>Nguyễn Trung Tiến</strong></h3>
-  <p>
-    <a href="mailto:2251120447@ut.edu.vn">
-      <img src="https://img.shields.io/badge/Email-2251120447@ut.edu.vn-D14836?style=for-the-badge&logo=gmail&logoColor=white" alt="Email UTH" />
-    </a>
-    <a href="mailto:trungtiennguyen910@gmail.com">
-      <img src="https://img.shields.io/badge/Email-trungtiennguyen910@gmail.com-D14836?style=for-the-badge&logo=gmail&logoColor=white" alt="Email Gmail" />
-    </a>
-    <a href="https://github.com/Nguyen-Trung-Tien">
-      <img src="https://img.shields.io/badge/GitHub-Nguyen--Trung--Tien-181717?style=for-the-badge&logo=github&logoColor=white" alt="GitHub Nguyen-Trung-Tien" />
-    </a>
-  </p>
-  <p><em>Đồ án tốt nghiệp — Đại học Giao thông Vận tải TP. Hồ Chí Minh (UTH)</em></p>
+
+### **Nguyễn Trung Tiến**
+
+[![Email UTH](https://img.shields.io/badge/Email-2251120447@ut.edu.vn-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:2251120447@ut.edu.vn)
+[![Email Gmail](https://img.shields.io/badge/Email-trungtiennguyen910@gmail.com-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:trungtiennguyen910@gmail.com)
+[![GitHub](https://img.shields.io/badge/GitHub-Nguyen--Trung--Tien-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Nguyen-Trung-Tien)
+
+_Đồ án tốt nghiệp — Đại học Giao thông Vận tải TP. Hồ Chí Minh (UTH)_
+
 </div>
 
 ---
