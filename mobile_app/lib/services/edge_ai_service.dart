@@ -8,7 +8,6 @@ import 'package:mobile_app/services/settings_service.dart';
 import 'package:mobile_app/services/websocket_service.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
 
-/// Callback khi trạng thái xử lý thay đổi (loading/done).
 typedef ProcessingStateCallback = void Function(bool isProcessing);
 typedef DangerAlertCallback = void Function(String message, String level);
 typedef AIResultCallback = void Function(Map<String, dynamic> result);
@@ -28,10 +27,7 @@ class EdgeAIService {
     const Duration(seconds: 10),
   );
 
-  /// Callback cho UI biết trạng thái loading
   ProcessingStateCallback? onProcessingStateChanged;
-
-  /// Callback khi có cảnh báo nguy hiểm
   DangerAlertCallback? onDangerAlertDetected;
   AIResultCallback? onAIResultReceived;
 
@@ -41,6 +37,12 @@ class EdgeAIService {
   Position? _cachedPosition;
   DateTime? _lastLocationFetchTime;
 
+  // Cancelable timeout — prevents "hết thời gian" firing after result arrives
+  Timer? _resultTimeoutTimer;
+
+  // Result timeout — 25s to accommodate slow Gemini/LAYOUT tasks
+  static const Duration _resultTimeout = Duration(seconds: 25);
+
   EdgeAIService(this._wsService, this._captureFrame) {
     _wsService.onDangerAlert = (data) {
       final distance = ((data['distance'] as num?) ?? 2.0).toDouble();
@@ -48,12 +50,16 @@ class EdgeAIService {
       final level = data['level']?.toString() ?? 'HIGH';
 
       _accessibilityManager.triggerDangerVibration(distance);
-      _accessibilityManager.speak(message);
-
+      // Danger alerts always interrupt — fire-and-forget
+      _accessibilityManager.speak(message, interrupt: true);
       onDangerAlertDetected?.call(message, level);
     };
 
     _wsService.onAIResult = (data) {
+      // Cancel timeout immediately — result arrived in time
+      _resultTimeoutTimer?.cancel();
+      _resultTimeoutTimer = null;
+
       onAIResultReceived?.call(data);
 
       final text = data['text']?.toString() ?? '';
@@ -64,8 +70,8 @@ class EdgeAIService {
           data['task_type']?.toString() ??
           'detection';
 
-      // Kết thúc trạng thái loading
-      _setProcessing(false);
+      // Only notify if state actually changes — avoids redundant setState
+      _setProcessingIfChanged(false);
 
       if ((taskType == 'FACE_RECOGNITION' || taskType == 'FACE') &&
           text.isEmpty) {
@@ -76,7 +82,7 @@ class EdgeAIService {
         return;
       }
 
-      // Haptic feedback for every detection
+      // Haptic — fire-and-forget, non-blocking
       _accessibilityManager.triggerSuccessVibration();
 
       // Voice feedback logic
@@ -84,13 +90,16 @@ class EdgeAIService {
       final timeSinceLastSpeakMs =
           now.difference(_lastSpokenTime).inMilliseconds;
 
+      // Skip AI text when continuous mode already has danger alerts speaking
       final shouldSkipSpeechForContinuousDanger =
           taskType == 'CONTINUOUS' && dangerAlerts.isNotEmpty;
 
       if (!shouldSkipSpeechForContinuousDanger &&
           text.isNotEmpty &&
-          text != _lastSpokenText) {
-        if (isStable || timeSinceLastSpeakMs >= 1500) {
+          !_isSimilarToLast(text)) {
+        // Continuous mode: require 2s gap to avoid TTS spam; other modes: 1s
+        final minGapMs = taskType == 'CONTINUOUS' ? 2000 : 1000;
+        if (isStable || timeSinceLastSpeakMs >= minGapMs) {
           _accessibilityManager.speak(text);
           _lastSpokenText = text;
           _lastSpokenTime = now;
@@ -113,31 +122,54 @@ class EdgeAIService {
     _wsService.onStreamAck = (data) {
       final status = data['status']?.toString();
       if (status == 'throttled') {
-        _setProcessing(false);
+        _setProcessingIfChanged(false);
         final lang = SettingsService().language;
         _accessibilityManager.speak(AppLocalizations.t('ai_throttled', lang));
       }
     };
   }
 
-  void _setProcessing(bool value) {
+  /// Only triggers callback when state actually changes — avoids redundant setState.
+  void _setProcessingIfChanged(bool value) {
+    if (_isProcessing == value) return;
     _isProcessing = value;
+    // Cancel pending timeout when processing is cleared externally
+    if (!value) {
+      _resultTimeoutTimer?.cancel();
+      _resultTimeoutTimer = null;
+    }
     onProcessingStateChanged?.call(value);
   }
 
-  void start() {
-    _isRunning = true;
+  /// Simple similarity check: skip if new text shares >75% chars with last spoken.
+  /// Prevents re-reading near-identical consecutive results.
+  bool _isSimilarToLast(String text) {
+    final last = _lastSpokenText;
+    if (last == null || last.isEmpty) return false;
+    if (text == last) return true;
+
+    // Quick length gate — very different lengths can't be similar
+    final ratio = text.length / last.length;
+    if (ratio < 0.5 || ratio > 2.0) return false;
+
+    // Count matching chars in shorter string (lightweight similarity)
+    final shorter = text.length <= last.length ? text : last;
+    final longer = text.length > last.length ? text : last;
+    var matches = 0;
+    for (var i = 0; i < shorter.length; i++) {
+      if (longer.contains(shorter[i])) matches++;
+    }
+    return matches / shorter.length > 0.75;
   }
 
-  void stop() {
-    _isRunning = false;
-  }
+  void start() => _isRunning = true;
+  void stop() => _isRunning = false;
 
   void requestMoneyDetection() {
     final lang = SettingsService().language;
     _accessibilityManager.triggerSuccessVibration();
     _accessibilityManager.speak(AppLocalizations.t('ai_detecting', lang));
-    _setProcessing(true);
+    _setProcessingIfChanged(true);
     _sendFrameFromCamera(taskType: 'OCR');
   }
 
@@ -145,16 +177,16 @@ class EdgeAIService {
     final lang = SettingsService().language;
     _accessibilityManager.triggerSuccessVibration();
     _accessibilityManager.speak(AppLocalizations.t('ai_describing', lang));
-    _setProcessing(true);
+    _setProcessingIfChanged(true);
     _sendFrameFromCamera(taskType: 'CAPTION');
   }
 
-  /// Mode 1: Online OCR — gửi frame lên server để đọc văn bản
+  /// Mode 1: Online OCR — gửi frame lên server để đọc văn bản.
   void requestOnlineOCR() {
     final lang = SettingsService().language;
     _accessibilityManager.triggerSuccessVibration();
     _accessibilityManager.speak(AppLocalizations.t('ai_online_reading', lang));
-    _setProcessing(true);
+    _setProcessingIfChanged(true);
     _sendFrameFromCamera(taskType: 'TEXT_OCR');
   }
 
@@ -162,7 +194,7 @@ class EdgeAIService {
     final lang = SettingsService().language;
     _accessibilityManager.triggerSuccessVibration();
     _accessibilityManager.speak(AppLocalizations.t('ai_online_reading', lang));
-    _setProcessing(true);
+    _setProcessingIfChanged(true);
     _sendFrameFromCamera(taskType: 'SMART_OCR', subMode: subMode);
   }
 
@@ -172,7 +204,7 @@ class EdgeAIService {
     _accessibilityManager.speak(
       lang == 'vi' ? 'Đang nhận diện khuôn mặt...' : 'Recognizing faces...',
     );
-    _setProcessing(true);
+    _setProcessingIfChanged(true);
     _sendFrameFromCamera(taskType: 'FACE_RECOGNITION');
   }
 
@@ -182,21 +214,25 @@ class EdgeAIService {
     _accessibilityManager.speak(
       lang == 'vi' ? 'Đang phân tích bố cục...' : 'Analyzing layout...',
     );
-    _setProcessing(true);
+    _setProcessingIfChanged(true);
     _sendFrameFromCamera(taskType: 'LAYOUT_ANALYSIS');
   }
 
-  Future<void> _sendFrameFromCamera({String? taskType, String? subMode}) async {
+  Future<void> _sendFrameFromCamera({
+    String? taskType,
+    String? subMode,
+  }) async {
     if (!_isRunning) {
-      _setProcessing(false);
+      _setProcessingIfChanged(false);
       return;
     }
 
     final settings = SettingsService();
     if (!_wsService.isConnected) {
-      _setProcessing(false);
+      _setProcessingIfChanged(false);
       _accessibilityManager.speak(
         AppLocalizations.t('main_offline', settings.language),
+        interrupt: true,
       );
       _accessibilityManager.triggerErrorVibration();
       return;
@@ -204,7 +240,7 @@ class EdgeAIService {
 
     final bytes = await _captureFrame();
     if (bytes == null || bytes.isEmpty) {
-      _setProcessing(false);
+      _setProcessingIfChanged(false);
       _accessibilityManager.speak(
         AppLocalizations.t('main_no_capture', settings.language),
       );
@@ -219,7 +255,6 @@ class EdgeAIService {
       position = await _getCurrentLocation();
     } catch (e) {
       debugPrint('[EdgeAI] Location fetch failed: $e');
-      position = null;
     }
 
     _wsService.sendFrame(
@@ -232,10 +267,11 @@ class EdgeAIService {
       subMode: subMode,
     );
 
-    // Timeout: auto-reset processing state after 30 seconds
-    Future.delayed(const Duration(seconds: 30), () {
+    // Cancelable timeout — cancels if result arrives first
+    _resultTimeoutTimer?.cancel();
+    _resultTimeoutTimer = Timer(_resultTimeout, () {
       if (_isProcessing) {
-        _setProcessing(false);
+        _setProcessingIfChanged(false);
         _accessibilityManager.speak(
           AppLocalizations.t('ai_timeout', settings.language),
         );

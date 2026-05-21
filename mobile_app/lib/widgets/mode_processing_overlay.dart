@@ -93,11 +93,20 @@ class _ModeProcessingOverlayState extends State<ModeProcessingOverlay>
             animation: Listenable.merge([_p, _s, _wave]),
             builder: (context, _) => Stack(
               children: [
-                Positioned.fill(child: CustomPaint(painter: _getModePainter())),
+                // RepaintBoundary isolates custom painting from the main render tree
+                Positioned.fill(
+                  child: RepaintBoundary(
+                    child: CustomPaint(painter: _getModePainter()),
+                  ),
+                ),
                 if (widget.isSpeaking)
                   Positioned.fill(
+                    child: RepaintBoundary(
                       child: CustomPaint(
-                          painter: _SpeakingWavePainter(_wave.value, _color))),
+                        painter: _SpeakingWavePainter(_wave.value, _color),
+                      ),
+                    ),
+                  ),
                 Center(child: _card()),
               ],
             ),
@@ -215,25 +224,26 @@ class _SpeakingWavePainter extends CustomPainter {
             ..style = PaintingStyle.stroke
             ..strokeWidth = 2);
     }
-    // Sound wave lines
-    for (int i = 0; i < 8; i++) {
-      final y = size.height * (0.2 + i * 0.08);
+    // Sound wave lines — reduced to 4 (from 8) for CPU efficiency
+    for (int i = 0; i < 4; i++) {
+      final y = size.height * (0.25 + i * 0.17);
       final amp = 20.0 * sin(t * pi * 2 + i * 0.7);
       final path = Path()..moveTo(0, y);
-      for (double x = 0; x <= size.width; x += 4) {
+      for (double x = 0; x <= size.width; x += 6) {
         path.lineTo(x, y + amp * sin(x / size.width * pi * 4 + t * pi * 6));
       }
       canvas.drawPath(
           path,
           Paint()
-            ..color = color.withValues(alpha: 0.06)
+            ..color = color.withValues(alpha: 0.07)
             ..style = PaintingStyle.stroke
-            ..strokeWidth = 1);
+            ..strokeWidth = 1.2);
     }
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter o) => true;
+  bool shouldRepaint(covariant _SpeakingWavePainter old) =>
+      old.t != t || old.color != color;
 }
 
 // ── Money: Golden coin ripples ──────────────────────────────────────────
@@ -272,7 +282,7 @@ class _MoneyPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter o) => true;
+  bool shouldRepaint(covariant _MoneyPainter old) => old.t != t || old.t2 != t2;
 }
 
 // ── Caption: Camera viewfinder + scan wave ──────────────────────────────
@@ -307,7 +317,8 @@ class _CaptionPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter o) => true;
+  bool shouldRepaint(covariant _CaptionPainter old) =>
+      old.t != t || old.t2 != t2;
 }
 
 // ── Face: Oval + scan dots ──────────────────────────────────────────────
@@ -350,7 +361,7 @@ class _FacePainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter o) => true;
+  bool shouldRepaint(covariant _FacePainter old) => old.t != t || old.t2 != t2;
 }
 
 // ── Online OCR: Laser + text lines ──────────────────────────────────────
@@ -400,7 +411,8 @@ class _OnlineOCRPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter o) => true;
+  bool shouldRepaint(covariant _OnlineOCRPainter old) =>
+      old.t != t || old.t2 != t2;
 }
 
 // ── Offline OCR: Dot matrix + beam ──────────────────────────────────────
@@ -413,10 +425,12 @@ class _OfflineOCRPainter extends CustomPainter {
     final gp = Paint()
       ..color = AppTheme.accentGreen.withValues(alpha: 0.06)
       ..strokeWidth = 0.5;
-    for (double x = 0; x < size.width; x += 40)
+    for (double x = 0; x < size.width; x += 40) {
       canvas.drawLine(Offset(x, 0), Offset(x, size.height), gp);
-    for (double y = 0; y < size.height; y += 40)
+    }
+    for (double y = 0; y < size.height; y += 40) {
       canvas.drawLine(Offset(0, y), Offset(size.width, y), gp);
+    }
     final beamX = size.width * t;
     canvas.drawRect(
         Rect.fromLTWH(beamX - 1.5, 0, 3, size.height),
@@ -428,7 +442,7 @@ class _OfflineOCRPainter extends CustomPainter {
           ]).createShader(Rect.fromLTWH(beamX - 20, 0, 40, size.height)));
     final rng = Random(7);
     final dp = Paint()..style = PaintingStyle.fill;
-    for (int r = 0; r < 18; r++)
+    for (int r = 0; r < 18; r++) {
       for (int c = 0; c < 10; c++) {
         final dx = size.width * (0.1 + c * 0.085),
             dy = size.height * (0.12 + r * 0.045);
@@ -437,11 +451,13 @@ class _OfflineOCRPainter extends CustomPainter {
             alpha: 0.1 + 0.25 * ((beamX - dx) / size.width).clamp(0.0, 1.0));
         canvas.drawCircle(Offset(dx, dy), 2, dp);
       }
+    }
     _corners(canvas, size, AppTheme.accentGreen.withValues(alpha: 0.4));
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter o) => true;
+  bool shouldRepaint(covariant _OfflineOCRPainter old) =>
+      old.t != t || old.t2 != t2;
 }
 
 // ── File Read: Page + text cascade ──────────────────────────────────────
@@ -517,7 +533,8 @@ class _FileReadPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter o) => true;
+  bool shouldRepaint(covariant _FileReadPainter old) =>
+      old.t != t || old.t2 != t2 || old.isSpeaking != isSpeaking;
 }
 
 // ── Layout Analysis ─────────────────────────────────────────────────────
@@ -555,9 +572,10 @@ class _LayoutPainter extends CustomPainter {
       bp.color =
           c.withValues(alpha: (0.2 + 0.15 * sin(t2 * pi + i * 0.8)) * sp);
       canvas.drawRRect(rr, bp);
-      if (sp > 0.5)
+      if (sp > 0.5) {
         canvas.drawCircle(Offset(sections[i].left + 8, sections[i].top + 8), 3,
             Paint()..color = c.withValues(alpha: 0.6 * sp));
+      }
     }
     canvas.drawRect(
         Rect.fromLTWH(0, size.height * t, size.width, 1.5),
@@ -571,13 +589,13 @@ class _LayoutPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter o) => true;
+  bool shouldRepaint(covariant _LayoutPainter old) =>
+      old.t != t || old.t2 != t2;
 }
 
 class _GenericPainter extends CustomPainter {
   final double t;
-  final bool isSpeaking;
-  _GenericPainter(this.t, {this.isSpeaking = false});
+  _GenericPainter(this.t);
   @override
   void paint(Canvas canvas, Size size) {
     final c = Offset(size.width / 2, size.height / 2);
@@ -593,7 +611,7 @@ class _GenericPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter o) => true;
+  bool shouldRepaint(covariant _GenericPainter old) => old.t != t;
 }
 
 void _corners(Canvas canvas, Size size, Color color) {
@@ -603,8 +621,8 @@ void _corners(Canvas canvas, Size size, Color color) {
     ..style = PaintingStyle.stroke
     ..strokeCap = StrokeCap.round;
   const l = 28.0, m = 24.0;
-  canvas.drawLine(Offset(m, m), Offset(m + l, m), p);
-  canvas.drawLine(Offset(m, m), Offset(m, m + l), p);
+  canvas.drawLine(const Offset(m, m), const Offset(m + l, m), p);
+  canvas.drawLine(const Offset(m, m), const Offset(m, m + l), p);
   canvas.drawLine(Offset(size.width - m, m), Offset(size.width - m - l, m), p);
   canvas.drawLine(Offset(size.width - m, m), Offset(size.width - m, m + l), p);
   canvas.drawLine(

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile_app/theme/app_theme.dart';
 
 /// Danger/obstacle alert banner displayed at the top of the screen.
+/// Uses AnimatedSlide + AnimatedOpacity for smooth entrance/exit transitions.
 class DangerBanner extends StatelessWidget {
   const DangerBanner({
     super.key,
@@ -22,9 +23,8 @@ class DangerBanner extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    if (!isVisible) return const SizedBox.shrink();
-
     final isDanger = dangerMessage != null;
+    // displayMsg is non-null: walkingNearestObstacle is always String
     final displayMsg = dangerMessage ?? walkingNearestObstacle;
 
     Color bannerColor = AppTheme.accentRed;
@@ -34,6 +34,23 @@ class DangerBanner extends StatelessWidget {
       bannerColor = _getDistanceColor(dist);
     }
 
+    // Animated entrance: slide from top + fade in
+    return AnimatedSlide(
+      offset: isVisible ? Offset.zero : const Offset(0, -0.3),
+      duration: const Duration(milliseconds: 280),
+      curve: Curves.easeOutCubic,
+      child: AnimatedOpacity(
+        opacity: isVisible ? 1.0 : 0.0,
+        duration: const Duration(milliseconds: 220),
+        curve: Curves.easeOut,
+        child: isVisible
+            ? _buildContent(isDanger, displayMsg, bannerColor)
+            : const SizedBox.shrink(),
+      ),
+    );
+  }
+
+  Widget _buildContent(bool isDanger, String displayMsg, Color bannerColor) {
     return Container(
       padding: const EdgeInsets.symmetric(vertical: 16, horizontal: 20),
       decoration: BoxDecoration(
@@ -50,15 +67,18 @@ class DangerBanner extends StatelessWidget {
       ),
       child: Row(
         children: [
-          Icon(
-            isDanger ? Icons.warning_amber_rounded : Icons.info_outline_rounded,
-            color: Colors.white,
-            size: 32,
-          ),
+          // Pulse icon for HIGH danger
+          isDanger
+              ? const _PulseIcon(color: Colors.white)
+              : const Icon(
+                  Icons.info_outline_rounded,
+                  color: Colors.white,
+                  size: 32,
+                ),
           const SizedBox(width: 12),
           Expanded(
             child: Text(
-              displayMsg!.toUpperCase(),
+              displayMsg.toUpperCase(),
               style: const TextStyle(
                 color: Colors.white,
                 fontSize: 18,
@@ -76,5 +96,44 @@ class DangerBanner extends StatelessWidget {
     if (distance < 2.0) return AppTheme.accentRed;
     if (distance < 5.0) return AppTheme.accentOrange;
     return AppTheme.accentGreen;
+  }
+}
+
+/// Pulsing warning icon for danger alerts — draws attention immediately.
+class _PulseIcon extends StatefulWidget {
+  final Color color;
+  const _PulseIcon({required this.color});
+  @override
+  State<_PulseIcon> createState() => _PulseIconState();
+}
+
+class _PulseIconState extends State<_PulseIcon>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _ctrl = AnimationController(
+    vsync: this,
+    duration: const Duration(milliseconds: 600),
+  )..repeat(reverse: true);
+
+  late final Animation<double> _scale = Tween<double>(
+    begin: 0.85,
+    end: 1.15,
+  ).animate(CurvedAnimation(parent: _ctrl, curve: Curves.easeInOut));
+
+  @override
+  void dispose() {
+    _ctrl.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return ScaleTransition(
+      scale: _scale,
+      child: Icon(
+        Icons.warning_amber_rounded,
+        color: widget.color,
+        size: 32,
+      ),
+    );
   }
 }

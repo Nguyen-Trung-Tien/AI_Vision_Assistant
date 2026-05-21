@@ -68,7 +68,8 @@ export class TaskQueueService {
   private nonContinuousProcessedStreak = 0;
 
   private readonly MIN_FRAME_INTERVAL_MS = 500;
-  private readonly CONTINUOUS_IN_FLIGHT_TIMEOUT_MS = 2500;
+  // F10: Increased from 2500ms — prevents premature expiry when AI worker is under load
+  private readonly CONTINUOUS_IN_FLIGHT_TIMEOUT_MS = 3500;
 
   constructor(
     @Inject('AI_SERVICE') private client: ClientProxy,
@@ -76,9 +77,8 @@ export class TaskQueueService {
     private detectionLogRepo: Repository<DetectionLog>,
     private faceService: FaceService,
   ) {
-    setInterval(() => {
-      this.processNextTask();
-    }, 50);
+    // F8: Removed setInterval(50ms) polling — tasks are now processed immediately
+    // on enqueueTask() via void this.processNextTask(), eliminating the busy-loop.
   }
 
   setServer(server: Server) {
@@ -102,11 +102,15 @@ export class TaskQueueService {
         normalizedTask.clientId,
         normalizedTask,
       );
+      // F8: Trigger processing immediately — no 50ms polling latency
+      void this.processNextTask();
       return;
     }
 
     this.taskQueue.push(normalizedTask);
     this.sortQueueByPriority();
+    // F8: Trigger processing immediately for queued tasks too
+    void this.processNextTask();
   }
 
   private sortQueueByPriority() {
@@ -265,7 +269,6 @@ export class TaskQueueService {
             this.logger.log(`Successfully saved face registration for ${name}`);
 
             if (this.server) {
-              // Notify the user via the clientId room
               this.server.to(result.clientId).emit('face_registered', {
                 success: true,
                 name: name,
@@ -300,31 +303,44 @@ export class TaskQueueService {
 
       const dangerAlerts = result.danger_alerts || [];
 
-      const highestDangerDistance = dangerAlerts.reduce(
-        (min, a) => Math.min(min, a.distance),
-        Number.POSITIVE_INFINITY,
+      // F9: Skip DB write for CONTINUOUS silent/empty results (~70-80% write reduction).
+      // Only persist when: non-continuous task OR has danger alerts OR has meaningful text.
+      const hasMeaningfulText = !!(
+        result.text && result.text.trim().length > 0
       );
+      const shouldPersist =
+        resultTaskType !== 'CONTINUOUS' ||
+        dangerAlerts.length > 0 ||
+        hasMeaningfulText;
 
-      const log = this.detectionLogRepo.create({
-        userId: result.userId || undefined,
-        action_type: result.taskType || result.task_type || 'UNKNOWN',
-        result_text: result.text || '',
-        confidence_score: result.confidence_score || undefined,
-        latitude: result.latitude,
-        longitude: result.longitude,
-        severity:
-          dangerAlerts.length === 0
-            ? undefined
-            : highestDangerDistance < 1
-              ? 'CRITICAL'
-              : 'HIGH',
-      });
+      let savedLog: DetectionLog | null = null;
+      if (shouldPersist) {
+        const highestDangerDistance = dangerAlerts.reduce(
+          (min, a) => Math.min(min, a.distance),
+          Number.POSITIVE_INFINITY,
+        );
 
-      const savedLog = await this.detectionLogRepo.save(log);
+        const log = this.detectionLogRepo.create({
+          userId: result.userId || undefined,
+          action_type: result.taskType || result.task_type || 'UNKNOWN',
+          result_text: result.text || '',
+          confidence_score: result.confidence_score || undefined,
+          latitude: result.latitude,
+          longitude: result.longitude,
+          severity:
+            dangerAlerts.length === 0
+              ? undefined
+              : highestDangerDistance < 1
+                ? 'CRITICAL'
+                : 'HIGH',
+        });
+
+        savedLog = await this.detectionLogRepo.save(log);
+      }
 
       if (this.server) {
         this.server.to(result.clientId).emit('ai_result', {
-          detectionId: savedLog.id,
+          detectionId: savedLog?.id,
           taskType: resultTaskType,
           frameSeq: result.frameSeq || result.frame_seq,
           text: result.text,

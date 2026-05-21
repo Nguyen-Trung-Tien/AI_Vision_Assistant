@@ -96,7 +96,14 @@ class ObjectModelManager:
             print("[ObjectModel] Model missing, skipping detection.")
             return []
 
-        results = model.predict(source=image, verbose=False, conf=0.15)
+        results = model.predict(
+            source=image,
+            verbose=False,
+            conf=0.15,
+            imgsz=480,       # F7: Match resize resolution — avoids internal re-resize
+            device="cpu",    # F7: Explicit device — avoids auto-detection overhead
+            agnostic_nms=True,  # Better NMS across classes
+        )
         detections: list[dict[str, Any]] = []
 
         if not results:

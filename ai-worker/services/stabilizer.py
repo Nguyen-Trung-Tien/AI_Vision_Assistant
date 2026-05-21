@@ -17,11 +17,22 @@ class Stabilizer:
     _max_history: int = 5
     _ttl_seconds: float = 300.0  # 5 phút
     _lock = threading.RLock()  # Protect shared dicts from concurrent access
+    # F6: Only clean up stale clients once per 60s instead of every request
+    _last_cleanup: float = 0.0
+    _CLEANUP_INTERVAL: float = 60.0
 
     @classmethod
     def _cleanup_stale_clients(cls) -> None:
-        """Xóa lịch sử của những client không hoạt động quá TTL."""
+        """Xóa lịch sử của những client không hoạt động quá TTL.
+
+        F6: Throttled — runs at most once per _CLEANUP_INTERVAL seconds.
+        """
         now = time.monotonic()
+        # Fast check outside lock to avoid unnecessary locking on every call
+        if now - cls._last_cleanup < cls._CLEANUP_INTERVAL:
+            return
+        cls._last_cleanup = now
+
         with cls._lock:
             stale_keys = [key for key, last_seen in cls._client_last_seen.items() if now - last_seen > cls._ttl_seconds]
             for key in stale_keys:

@@ -3,7 +3,9 @@ Mô tả cảnh đường phố: vị trí vật thể, khoảng cách, lối đ
 """
 
 import cv2
+import threading
 import time
+from collections import OrderedDict
 from .constants import OBJECT_REAL_HEIGHTS
 from .depth_estimator import DepthEstimator
 from .image_utils import decode_base64_image, is_blurry
@@ -11,8 +13,20 @@ from .model_manager import ModelManager
 from .stabilizer import Stabilizer
 from .translations import t, translate_label
 
-_depth_cache = {}  # {client_id: {"timestamp": float, "depth_map": np.ndarray}}
+
+# F5: LRU-bounded depth cache — prevents unbounded memory growth for many clients
+_DEPTH_CACHE_MAX = 200
+_depth_cache: OrderedDict = OrderedDict()  # {client_id: {"timestamp": float, "depth_map": np.ndarray}}
 DEPTH_CACHE_TTL = 0.5  # Re-use depth map for 500ms to maintain optimal framerate
+
+
+def _depth_cache_set(client_id: str, value: dict) -> None:
+    """LRU insert into _depth_cache with max-size eviction."""
+    if client_id in _depth_cache:
+        _depth_cache.move_to_end(client_id)
+    _depth_cache[client_id] = value
+    while len(_depth_cache) > _DEPTH_CACHE_MAX:
+        _depth_cache.popitem(last=False)
 
 
 def get_spatial_position(box: list[int], img_width: int, lang: str = "vi") -> str:
@@ -108,9 +122,13 @@ def process_captioning(image_base64: str, client_id: str = "default", lang: str 
         }
 
     img_h, img_w, _ = image.shape
-    # Occasional debug frame save
+    # F4: Async debug frame save — don't block the AI pipeline
     if int(time.time()) % 10 == 0:
-        cv2.imwrite(f"debug_frames/scene_{client_id}.jpg", image)
+        _img_copy = image.copy()
+        _path = f"debug_frames/scene_{client_id}.jpg"
+        threading.Thread(
+            target=cv2.imwrite, args=(_path, _img_copy), daemon=True
+        ).start()
     print(f"[AI Worker Caption] Scene frame: {img_w}x{img_h}", flush=True)
 
     try:
@@ -142,7 +160,8 @@ def process_captioning(image_base64: str, client_id: str = "default", lang: str 
             try:
                 depth_map = depth_estimator.estimate_depth(image)
                 if depth_map is not None:
-                    _depth_cache[client_id] = {"timestamp": now, "depth_map": depth_map}
+                    # F5: Use LRU-bounded insert
+                    _depth_cache_set(client_id, {"timestamp": now, "depth_map": depth_map})
             except Exception as e:
                 print(f"[AI Worker Caption] Depth model execution error: {e}", flush=True)
 

@@ -348,7 +348,6 @@ class MainController {
       MaterialPageRoute(builder: (_) => const NavigationScreen()),
     ).then((_) {
       navigationService.stopNavigation();
-      goToMode(0);
       onReturn?.call();
     });
   }

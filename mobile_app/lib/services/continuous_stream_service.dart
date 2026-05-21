@@ -38,6 +38,14 @@ class ContinuousStreamService {
   DateTime _lastMotionTime = DateTime.now();
   DateTime _awaitingSince = DateTime.fromMillisecondsSinceEpoch(0);
 
+  // Cached temp directory — fetched once on start, reused every frame
+  Directory? _tempDir;
+
+  // Battery cached value + last fetch time (update every 5s, not every 1s)
+  int _cachedBatteryLevel = 100;
+  DateTime _lastBatteryCheck = DateTime.fromMillisecondsSinceEpoch(0);
+  static const Duration _batteryCheckInterval = Duration(seconds: 5);
+
   final MlKitService _mlKitService = MlKitService();
   DateTime _lastFaceRecognitionTime = DateTime.fromMillisecondsSinceEpoch(0);
   bool _faceDetectionInFlight = false;
@@ -73,7 +81,7 @@ class ContinuousStreamService {
     _adaptToBackendLatency(latencyMs);
   }
 
-  void start({bool isFrontCamera = false, String? subMode}) {
+  Future<void> start({bool isFrontCamera = false, String? subMode}) async {
     if (_isStreaming) return;
     _isStreaming = true;
     _awaitingResult = false;
@@ -87,6 +95,10 @@ class ContinuousStreamService {
     _isFrontCamera = isFrontCamera;
     _subMode = subMode;
     _setCurrentFps(1);
+
+    // Pre-fetch temp directory once for the entire session
+    _tempDir ??= await getTemporaryDirectory();
+
     _startTimer();
   }
 
@@ -201,8 +213,9 @@ class ContinuousStreamService {
 
     _faceDetectionInFlight = true;
     try {
-      final tempDir = await getTemporaryDirectory();
-      final tempFile = File('${tempDir.path}/face_recog_frame.jpg');
+      // Reuse cached tempDir — avoids repeated I/O on every recognition
+      final dir = _tempDir ?? await getTemporaryDirectory();
+      final tempFile = File('${dir.path}/face_recog_frame.jpg');
       await tempFile.writeAsBytes(bytes);
 
       final faces = await _mlKitService.detectFaces(tempFile.path);
@@ -215,7 +228,7 @@ class ContinuousStreamService {
           base64Encode(bytes),
           taskType: 'FACE_RECOGNITION',
           lang: settings.language,
-          mode: 'normal', // Higher priority, not continuous
+          mode: 'normal',
           priority: 8,
           isFrontCamera: _isFrontCamera,
         );
@@ -232,7 +245,19 @@ class ContinuousStreamService {
     if (now.difference(_lastPositionTime).inSeconds < 1) return;
 
     final posData = await _getCurrentLocationFast();
-    final batteryLevel = await _battery.batteryLevel;
+
+    // Battery: check at most every 5s to reduce async overhead
+    final shouldRefreshBattery =
+        now.difference(_lastBatteryCheck) >= _batteryCheckInterval;
+    if (shouldRefreshBattery) {
+      try {
+        _cachedBatteryLevel = await _battery.batteryLevel;
+        _lastBatteryCheck = now;
+      } catch (_) {
+        // Keep last cached value on error
+      }
+    }
+
     final settings = SettingsService();
     var nextFps = settings.fpsLimit.clamp(1, 5);
 
@@ -245,7 +270,7 @@ class ContinuousStreamService {
       nextFps = 1;
     }
 
-    if (settings.autoFpsBatterySaving && batteryLevel < 20) {
+    if (settings.autoFpsBatterySaving && _cachedBatteryLevel < 20) {
       nextFps = nextFps > 2 ? 2 : nextFps;
       if (!_hasLowBatteryAnnouncement) {
         onLowBatteryFpsActivated?.call();
@@ -290,7 +315,6 @@ class ContinuousStreamService {
   Future<PosData?> _getCurrentLocationFast() async {
     try {
       final now = DateTime.now();
-      // Cache position for 30 seconds to drastically improve stream rate and latency
       if (_lastPosition != null &&
           now.difference(_lastPositionTime).inSeconds < 30) {
         return PosData(
@@ -383,10 +407,12 @@ bool _isSimilar(Uint8List a, Uint8List b) {
   if (a.length != b.length) return false;
 
   var diffCount = 0;
-  for (var i = 0; i < a.length; i += 100) {
+  // Sample ~50 evenly-spaced points for a lighter comparison
+  final step = (a.length / 50).ceil().clamp(1, a.length);
+  for (var i = 0; i < a.length; i += step) {
     if ((a[i] - b[i]).abs() > 10) {
       diffCount++;
-      if (diffCount > 10) return false;
+      if (diffCount > 8) return false;
     }
   }
 

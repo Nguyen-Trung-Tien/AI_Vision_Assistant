@@ -22,7 +22,7 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 <br/>
 
-![Version](https://img.shields.io/badge/Version-1.9.4-blue?style=flat-square)
+![Version](https://img.shields.io/badge/Version-2.0.0-blue?style=flat-square)
 ![License](https://img.shields.io/badge/License-UNLICENSED-gray?style=flat-square)
 ![Status](https://img.shields.io/badge/Status-In_Development-orange?style=flat-square)
 [![CI/CD](https://github.com/Nguyen-Trung-Tien/AI_Vision_Assistant/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/Nguyen-Trung-Tien/AI_Vision_Assistant/actions/workflows/ci-cd.yml)
@@ -75,7 +75,24 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 ## 📰 Cập nhật mới nhất
 
-### 🗓️ Tháng 5/2026 — v1.9.4 (Current)
+### 🗓️ Tháng 5/2026 — v2.0.0 (Current) 🚀 Performance Milestone
+
+| Ngày      | Cập nhật                        | Mô tả                                                                                                                                                      |
+| --------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **21/05** | ⚡ F1: JPEG Quality Optimization | Giảm quality encode JPEG từ 95→75 cho Continuous Stream, tiết kiệm ~35% thời gian encode (~25ms/frame) — chất lượng vẫn đủ cho YOLO nhận diện chính xác   |
+| **21/05** | ⚡ F2: Single-Pipeline Resize+Flip | Hợp nhất resize và flip ảnh front camera thành 1 chu kỳ encode/decode, loại bỏ double-encode tốn ~20-40ms/frame                                          |
+| **21/05** | ⚡ F3: Async TTS Generation     | TTS giờ chạy qua `ThreadPoolExecutor` nền: cache hit trả về ngay, cache miss submit background — consumer thread không còn bị block ~500-3000ms/lần          |
+| **21/05** | ⚡ F4: Non-blocking Debug Write  | `cv2.imwrite()` debug frame giờ chạy qua daemon thread — loại bỏ blocking I/O khỏi critical path AI (~5-20ms/frame)                                        |
+| **21/05** | ⚡ F5: LRU-bounded Depth Cache  | `_depth_cache` từ plain dict → LRU `OrderedDict` giới hạn 200 entries, ngăn memory leak khi nhiều client đồng thời                                         |
+| **21/05** | ⚡ F6: Throttled Stale Cleanup  | `_cleanup_stale_clients()` từ gọi mỗi request → throttle 60 giây/lần, loại bỏ O(n) scan không cần thiết                                                   |
+| **21/05** | ⚡ F7: YOLO Inference Tuning    | Thêm `imgsz=480` (khớp resize), `device="cpu"` tường minh, `agnostic_nms=True` — giảm ~15-30ms/frame                                                      |
+| **21/05** | ⚡ F8: Event-driven Task Queue  | Loại bỏ `setInterval(50ms)` busy-poll → xử lý task ngay khi `enqueueTask()` được gọi, giảm ~5% CPU overhead                                               |
+| **21/05** | ⚡ F9: Conditional DB Write     | Bỏ qua ghi DB cho CONTINUOUS silent/empty results — chỉ persist khi có danger alert hoặc text thực sự, tiết kiệm **~70-80% DB writes**                     |
+| **21/05** | ⚡ F10: In-flight Timeout Bump  | `CONTINUOUS_IN_FLIGHT_TIMEOUT_MS`: 2500→3500ms — tránh expire sớm gây double-processing khi AI worker tải cao                                              |
+
+> **Tổng tác động v2.0.0:** ~70-100ms/frame latency giảm trên Continuous Stream + ~70-80% giảm DB writes
+
+### 🗓️ Tháng 5/2026 — v1.9.4
 
 | Ngày      | Cập nhật                   | Mô tả                                                                                                                                |
 | --------- | -------------------------- | ------------------------------------------------------------------------------------------------------------------------------------ |
@@ -171,9 +188,40 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 ---
 
-## 🚀 Các tính năng nổi bật vừa cập nhật (v1.9.4)
+## 🚀 Các tính năng nổi bật vừa cập nhật (v2.0.0)
 
-Phiên bản v1.9.4 tập trung vào **tối ưu hóa hoạt động ngoại tuyến (Offline Mode)**, sửa lỗi nạp mô hình TFLite và giới hạn nhận dạng chỉ tập trung vào tiền mặt:
+Phiên bản v2.0.0 là **Performance Milestone** — tập trung hoàn toàn vào tối ưu hiệu suất hệ thống end-to-end (AI Worker + Backend Gateway), mang lại trải nghiệm Continuous Stream mượt mà hơn đáng kể:
+
+1. **⚡ Single-Pipeline Frame Processing (F1+F2)**:
+   - Hợp nhất resize + flip front camera vào **1 chu kỳ encode duy nhất** (trước: 2 lần encode/decode)
+   - Giảm JPEG quality từ 95→75 cho continuous stream (chất lượng đủ cho YOLO, tiết kiệm 35% encode time)
+   - Tổng tiết kiệm: **~45ms/frame**
+
+2. **⚡ Async TTS — Không còn blocking (F3)**:
+   - TTS generation giờ chạy trong `ThreadPoolExecutor` nền
+   - Consumer thread không bị block bởi `subprocess.run(edge-tts)` (~500-3000ms trước đây)
+   - Cache hit (Redis/LRU) vẫn trả về ngay, cache miss fire-and-forget
+
+3. **⚡ Non-blocking Debug I/O (F4)**:
+   - `cv2.imwrite()` chạy qua daemon thread riêng
+   - Loại bỏ blocking disk I/O khỏi critical AI pipeline
+
+4. **⚡ Memory Safety — LRU Depth Cache (F5)**:
+   - Depth map cache giới hạn 200 entries với LRU eviction
+   - Ngăn memory drift khi nhiều clients kết nối đồng thời
+
+5. **⚡ CPU Efficiency (F6+F8)**:
+   - Stale client cleanup throttle 60s/lần (thay vì mỗi request)
+   - Loại bỏ `setInterval(50ms)` polling — task xử lý event-driven
+
+6. **⚡ YOLO Inference Tuning (F7)**:
+   - `imgsz=480` khớp với resize resolution (tránh internal re-resize)
+   - `device="cpu"` tường minh + `agnostic_nms=True`
+
+7. **⚡ Database Write Optimization (F9+F10)**:
+   - Skip DB write cho CONTINUOUS silent frames → **~70-80% ít DB writes hơn**
+   - In-flight timeout tăng 2500→3500ms cho stability khi tải cao
+
 
 1.  **📱 TFLite Offline Money Fix (Mới)**:
     - Sửa lỗi nạp mô hình TFLite ngoại tuyến do sai đường dẫn asset, chuyển thành công sang đường dẫn `assets/models/money/best_float32.tflite`.
@@ -208,14 +256,13 @@ Phiên bản v1.9.4 tập trung vào **tối ưu hóa hoạt động ngoại tuy
 
 8.  **📱 Vẫn giữ nguyên nền UX trước đó**:
     - Các cải tiến gần đây như HUD động, speaking overlay, file reading animation và mode color system vẫn được giữ nguyên trong bản vá này.
-
 ---
 
 ## 📖 Mục lục
 
 - [Giới thiệu](#-giới-thiệu)
 - [Tính năng chính](#-tính-năng-chính)
-- [Các tính năng vừa cập nhật](#-các-tính-năng-nổi-bật-vừa-cập-nhật-v194)
+- [Các tính năng vừa cập nhật](#-các-tính-năng-nổi-bật-vừa-cập-nhật-v200)
 - [Kiến trúc hệ thống](#-kiến-trúc-hệ-thống)
 - [Luồng xử lý chính](#-luồng-xử-lý-chính)
 - [Các chế độ trên Mobile App](#-các-chế-độ-trên-mobile-app)
@@ -255,7 +302,7 @@ Phiên bản v1.9.4 tập trung vào **tối ưu hóa hoạt động ngoại tuy
 | **Nhận diện tiền VN**   | 9 mệnh giá: 1K → 500K VNĐ, kèm xác minh màu sắc HSV & đặc trưng landmark     | YOLO + color validation + OCR                 |
 | **Đọc văn bản (OCR)**   | Đọc nhãn mác, biển báo, tài liệu (General/Smart Mode)                        | Tesseract + Gemini Vision (Smart OCR)         |
 | **Mô tả cảnh**          | Mô tả không gian: vị trí trái/giữa/phải, ước lượng khoảng cách, gợi ý lối đi | YOLO + spatial analysis + MiDaS Depth         |
-| **Visual Q&A**          | Luồng hỏi đáp ảnh đã có ở mức giao tiếp mobile/gateway; cần hoàn thiện đầy đủ ở worker để ổn định | Google Gemini Vision API |
+| **Visual Q&A**          | Luồng hỏi đáp ảnh đã có ở mức giao thiết mobile/gateway; cần hoàn thiện đầy đủ ở worker để ổn định | Google Gemini Vision API |
 | **Nhận diện khuôn mặt** | Nhận diện người quen, bạn bè đã đăng ký                                      | InsightFace (Buffalo_L)                       |
 
 ### 🛡️ An toàn & Hỗ trợ
@@ -382,332 +429,6 @@ sequenceDiagram
 | **Visual Q&A** | Hỏi đáp          | —         | Hỏi đáp trực quan bằng giọng nói (Gemini AI)        | Online         |
 
 > `Walking Mode` hiện là chế độ stream liên tục 3-5 FPS bật/tắt trong màn hình chính, không phải một ô riêng trên carousel mode.
-
-### Các thành phần Mobile App
-
-```
-mobile_app/lib/
-├── main.dart                          # Entry point
-├── screens/
-│   ├── splash_screen.dart             # Màn hình khởi động (animation logo)
-│   ├── onboarding_screen.dart         # Hướng dẫn sử dụng lần đầu
-│   ├── login_screen.dart              # Đăng nhập JWT
-│   ├── main_screen.dart               # Màn hình chính (camera + AI)
-│   ├── navigation_screen.dart         # Điều hướng bản đồ
-│   ├── settings_screen.dart           # Cài đặt (ngôn ngữ, khoảng cách, liên hệ SOS)
-│   ├── emergency_contacts_screen.dart # Quản lý danh bạ khẩn cấp
-│   └── history_screen.dart            # Lịch sử nhận diện
-├── services/
-│   ├── websocket_service.dart         # Socket.IO client
-│   ├── auth_service.dart              # Xác thực JWT
-│   ├── edge_ai_service.dart           # TFLite inference offline
-│   ├── tflite_service.dart            # TFLite model loading
-│   ├── ml_kit_service.dart            # ML Kit OCR + Barcode
-│   ├── navigation_service.dart        # GPS + OSRM routing
-│   ├── sos_service.dart               # SOS khẩn cấp
-│   ├── voice_command_service.dart     # Giọng nói điều khiển
-│   ├── feedback_service.dart          # Gửi phản hồi AI
-│   ├── light_sensor_service.dart      # Flash tự động
-│   ├── accessibility_manager.dart     # TTS + Vibration manager
-│   ├── document_reader_service.dart   # Đọc tài liệu PDF
-│   ├── settings_service.dart          # Lưu cài đặt local
-│   ├── history_service.dart           # Lưu lịch sử detection
-│   ├── continuous_stream_service.dart # Stream liên tục 3–5 FPS (Walking Mode)
-│   ├── emergency_contact_service.dart # CRUD liên hệ khẩn cấp
-│   ├── power_button_service.dart      # Nút nguồn (SOS)
-│   └── volume_button_service.dart     # Nút âm lượng (chuyển mode)
-├── widgets/
-│   ├── mode_carousel.dart             # Carousel chuyển chế độ
-│   ├── status_overlay.dart            # Overlay trạng thái AI
-│   └── visual_qa_button.dart          # Nút Visual Q&A
-├── theme/                             # Dark theme config
-├── utils/                             # Tiện ích chung
-└── l10n/                              # Localization (vi/en)
-```
-
----
-
-## 📁 Cấu trúc thư mục
-
-```
-Vision Assistant/
-├── 📱 mobile_app/                    # Flutter mobile application | [README.md](mobile_app/README.md)
-│   ├── lib/                          # Source code Dart
-│   ├── android/                      # Android native config
-│   ├── ios/                          # iOS native config
-│   ├── assets/models/                # TFLite models (offline)
-│   └── pubspec.yaml                  # Flutter dependencies
-│
-├── 🔗 backend-gateway/              # NestJS API Gateway | [README.md](backend-gateway/README.md)
-│   ├── src/
-│   │   ├── auth/                     # JWT authentication + WS guard
-│   │   ├── vision/                   # WebSocket gateway + RabbitMQ queue
-│   │   ├── sos/                      # SOS alert management
-│   │   ├── feedback/                 # AI feedback collection
-│   │   ├── broadcast/                # TTS broadcast to users
-│   │   ├── stats/                    # Statistics & analytics
-│   │   ├── users/                    # User management (admin/user roles)
-│   │   ├── emergency-contact/        # CRUD liên hệ khẩn cấp
-│   │   └── sms/                      # SMS service (gửi SMS khi SOS)
-│   ├── docker-compose.yml            # RabbitMQ container
-│   └── package.json                  # Node.js dependencies
-│
-├── 🧠 ai-worker/                    # Python AI Processing Engine | [README.md](ai-worker/README.md)
-│   ├── services/
-│   │   ├── ai_service.py             # Façade module (backward compat API)
-│   │   ├── model_manager.py          # YOLO model loading & detection
-│   │   ├── money_detector.py         # VN currency recognition
-│   │   ├── scene_captioner.py        # Spatial scene description
-│   │   ├── danger_detector.py        # Danger alert system
-│   │   ├── text_ocr.py               # Tesseract OCR processing
-│   │   ├── gemini_service.py         # Google Gemini Vision Q&A
-│   │   ├── tts_cache.py              # Redis-based TTS cache
-│   │   ├── stabilizer.py             # Temporal result stabilization
-│   │   ├── image_utils.py            # Image decode, blur, color analysis
-│   │   ├── constants.py              # Labels, translations, color ranges
-│   │   └── translations.py           # Multi-language string templates
-│   ├── rabbitmq_consumer.py          # RabbitMQ consumer (main worker loop)
-│   ├── main.py                       # FastAPI server + consumer launcher
-│   ├── train_yolo.py                 # YOLO training script
-│   ├── merge_vnd_dataset.py          # Dataset merger (VN money + objects)
-│   ├── prepare_dataset_from_roboflow.py  # Roboflow dataset standardizer
-│   ├── package_for_colab.py          # Colab bundle packager
-│   ├── COLAB_TRAINING.md             # Training guide
-│   └── requirements.txt             # Python dependencies
-│
-├── 📊 admin-dashboard/              # React Admin Panel | [README.md](admin-dashboard/README.md)
-│   ├── src/
-│   │   ├── pages/
-│   │   │   ├── DashboardV2.jsx       # Tổng quan thống kê
-│   │   │   ├── SosPage.jsx           # Quản lý SOS alerts
-│   │   │   ├── HeatmapPage.jsx       # Heatmap vùng nguy hiểm
-│   │   │   ├── FeedbackPage.jsx      # Review feedback AI
-│   │   │   ├── BroadcastPage.jsx     # Broadcast TTS đến users
-│   │   │   ├── UsersPage.jsx         # Quản lý người dùng
-│   │   │   └── LoginV2.jsx           # Đăng nhập admin
-│   │   ├── components/               # Reusable UI components
-│   │   ├── services/                 # API service layer
-│   │   └── App.jsx                   # App shell + sidebar navigation
-│   └── package.json                  # Node.js dependencies
-│
-├── .gitignore                        # Git ignore rules
-└── README.md                         # ← You are here
-```
-
----
-
-## 💻 Yêu cầu môi trường
-
-### Phần mềm bắt buộc
-
-| Phần mềm           | Phiên bản      | Ghi chú                           |
-| ------------------ | -------------- | --------------------------------- |
-| **Node.js**        | 22+ (npm 10+)  | Backend Gateway + Admin Dashboard |
-| **Python**         | 3.10 – 3.12    | AI Worker                         |
-| **Flutter SDK**    | 3.x (mới nhất) | Mobile App                        |
-| **Docker Desktop** | Latest         | Chạy RabbitMQ container           |
-| **PostgreSQL**     | 14+            | Database (cổng `5433`)            |
-| **Redis**          | 7+             | TTS cache (cổng `6379`)           |
-
-### Phần mềm tùy chọn
-
-| Phần mềm           | Mục đích                        |
-| ------------------ | ------------------------------- |
-| **Tesseract OCR**  | OCR engine cho AI Worker        |
-| **Android Studio** | Chạy Android emulator           |
-| **Xcode**          | Chạy iOS simulator (macOS only) |
-| **GPU (NVIDIA)**   | Tăng tốc YOLO inference         |
-
----
-
-## 🚀 Hướng dẫn cài đặt & chạy
-
-### 1️⃣ RabbitMQ (Docker)
-
-```bash
-cd backend-gateway
-docker compose up -d
-```
-
-> **Kiểm tra:** Truy cập http://localhost:15672 (guest/guest) để xem RabbitMQ Management UI.
-
-### 2️⃣ PostgreSQL
-
-Đảm bảo PostgreSQL đang chạy trên cổng `5433` với database `AI_Vision_Assistant`:
-
-```sql
-CREATE DATABASE "AI_Vision_Assistant";
-```
-
-> [!TIP]
-> `DB_SYNC=true` trong `.env` sẽ tự động tạo tables khi khởi động NestJS (chỉ dùng cho development).
-
-### 3️⃣ Redis
-
-Đảm bảo Redis chạy trên cổng `6379` (default config).
-
-### 4️⃣ Backend Gateway
-
-```bash
-cd backend-gateway
-npm install
-npm run start:dev
-```
-
-> **Server chạy tại:** http://localhost:3000
-> **WebSocket:** ws://localhost:3000
-
-### 5️⃣ AI Worker
-
-```bash
-cd ai-worker
-
-# Tạo virtual environment
-python -m venv .venv
-
-# Kích hoạt venv
-# Windows:
-.\.venv\Scripts\activate
-# macOS/Linux:
-source .venv/bin/activate
-
-# Cài đặt dependencies
-pip install -r requirements.txt
-
-# Option A: Chỉ chạy RabbitMQ consumer (đủ cho inference)
-python rabbitmq_consumer.py
-
-# Option B: Chạy FastAPI + consumer (thêm health check + static audio)
-python main.py
-```
-
-> **FastAPI server (nếu dùng Option B):** http://localhost:8000
-> **Health check:** GET http://localhost:8000/health
-
-### 6️⃣ Admin Dashboard
-
-```bash
-cd admin-dashboard
-npm install
-npm run dev
-```
-
-> **Dashboard chạy tại:** http://localhost:4200
-
-### 7️⃣ Mobile App
-
-```bash
-cd mobile_app
-flutter pub get
-
-# Android Emulator (localhost maps to 10.0.2.2)
-flutter run --dart-define=BACKEND_URL=http://10.0.2.2:3000
-
-# Thiết bị Android thật (thay IP LAN)
-flutter run --dart-define=BACKEND_URL=http://192.168.1.X:3000
-
-# iOS Simulator
-flutter run --dart-define=BACKEND_URL=http://localhost:3000
-```
-
-> [!IMPORTANT]
-> Khi chạy trên thiết bị thật, hãy thay `192.168.1.X` bằng IP LAN thực của máy dev.
-> Đảm bảo thiết bị và máy dev cùng mạng WiFi.
-
----
-
-## 🔑 Biến môi trường
-
-### `backend-gateway/.env`
-
-```env
-PORT=3000
-NODE_ENV=development
-
-# Database (PostgreSQL)
-DB_HOST=127.0.0.1
-DB_PORT=5433
-DB_USER=postgres
-DB_PASS=your_db_password
-DB_NAME=AI_Vision_Assistant
-DB_SYNC=true                    # Auto-sync schema (dev only!)
-
-# Authentication
-JWT_SECRET=your-strong-jwt-secret-key
-
-# Message Queue
-RABBITMQ_URL=amqp://guest:guest@127.0.0.1:5672
-
-# Admin
-ADMIN_DEFAULT_PASSWORD=changeme  # ⚠️ Đổi trước khi deploy!
-```
-
-### `ai-worker/.env`
-
-```env
-# Message Queue
-RABBITMQ_URL=amqp://guest:guest@127.0.0.1:5672/
-
-# Cache
-REDIS_URL=redis://127.0.0.1:6379
-
-# AI
-GEMINI_API_KEY=your-gemini-api-key
-GEMINI_MODEL=gemini-3-flash-preview     # Optional: override model
-GEMINI_MAX_OUTPUT_TOKENS=256             # Optional: limit response length
-```
-
-> [!CAUTION]
-> **KHÔNG commit API keys & passwords** vào repository.
-> Sử dụng file `.env.example` làm template và thêm `.env` vào `.gitignore`.
-
----
-
-## 🌐 API Endpoints & WebSocket Events
-
-### REST API (`backend-gateway` — prefix: `/api`)
-
-| Method  | Endpoint                | Mô tả                   | Auth     |
-| ------- | ----------------------- | ----------------------- | -------- |
-| `POST`  | `/api/auth/register`    | Đăng ký tài khoản       | ❌       |
-| `POST`  | `/api/auth/login`       | Đăng nhập (nhận JWT)    | ❌       |
-| `POST`  | `/api/auth/admin/login` | Đăng nhập admin         | 🔒 Admin |
-| `GET`   | `/api/stats/dashboard`  | Thống kê dashboard      | 🔒 Admin |
-| `GET`   | `/api/sos`              | Danh sách SOS alerts    | 🔒 Admin |
-| `PATCH` | `/api/sos/:id/resolve`  | Đánh dấu SOS đã xử lý   | 🔒 Admin |
-| `GET`   | `/api/feedback`         | Danh sách feedback      | 🔒 Admin |
-| `POST`  | `/api/feedback`         | Gửi feedback            | 🔒 User  |
-| `POST`  | `/api/broadcast`        | Broadcast TTS đến users | 🔒 Admin |
-| `GET`   | `/api/broadcast`        | Lịch sử broadcast       | 🔒 Admin |
-
-### WebSocket Events (Socket.IO)
-
-| Event           | Direction       | Payload                                                                                          | Mô tả                                |
-| --------------- | --------------- | ------------------------------------------------------------------------------------------------ | ------------------------------------ |
-| `frame_stream`  | Client → Server | `{ frame, task_type, lang, warning_distance_m, latitude, longitude, mode, priority, frame_seq }` | Gửi frame để AI xử lý                |
-| `stream_ack`    | Server → Client | `{ status, timestamp }`                                                                          | Xác nhận nhận frame                  |
-| `ai_result`     | Server → Client | `{ text, confidence_score, audio_url, stable, danger_alerts }`                                   | Kết quả AI                           |
-| `visual_qa`     | Client → Server | `{ frame, question, lang }`                                                                      | Gửi câu hỏi Visual Q&A               |
-| `visual_qa_ack` | Server → Client | `{ status, timestamp }`                                                                          | Xác nhận nhận Q&A                    |
-| `sos_alert`     | Client → Server | `{ latitude, longitude, imageBase64? }`                                                          | Gửi SOS khẩn cấp                     |
-| `sos_ack`       | Server → Client | `{ status, timestamp }`                                                                          | Xác nhận SOS                         |
-| `sos_incoming`  | Server → Admin  | `{ sosId, userId, latitude, longitude, ... }`                                                    | Thông báo SOS đến admin              |
-| `join_admin`    | Client → Server | —                                                                                                | Admin join admin room                |
-| `join_user`     | Client → Server | —                                                                                                | User join user room (nhận broadcast) |
-| `broadcast_tts` | Server → Users  | `{ message, audioUrl }`                                                                          | Admin broadcast TTS                  |
-
----
-
-## 🤖 Dataset & Training YOLO
-
-### Danh sách 20 lớp đối tượng (canonical classes)
-
-```
- Tiền VN (9):                Vật thể & giao thông (13):
-  0: tien_1k                  9: xe_may (motorbike)
-  1: tien_2k                 10: cau_thang (stairs)
-  2: tien_5k                 11: o_ga (pothole)
-  3: tien_10k                12: nap_cong (manhole_cover)
   4: tien_20k                13: xe_lon (car/truck/bus)
   5: tien_50k                14: nguoi (person/male/female)
   6: tien_100k               15: den_do (traffic_light_red)

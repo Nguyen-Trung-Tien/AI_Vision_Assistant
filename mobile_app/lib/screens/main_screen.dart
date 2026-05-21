@@ -485,8 +485,7 @@ class _MainScreenState extends State<MainScreen>
   Widget build(BuildContext context) {
     final lang = _ctrl.settings.language;
     final modes = _ctrl.getModes(lang);
-    final topPadding = MediaQuery.of(context).padding.top;
-    
+
     final bool isDangerVisible = _ctrl.dangerMessage != null ||
               (_ctrl.isWalkingModeEnabled &&
                   _ctrl.walkingNearestObstacle != '-');
@@ -560,35 +559,39 @@ class _MainScreenState extends State<MainScreen>
             flashText: AppLocalizations.t('main_flash', lang),
           ),
 
-          // Danger banner
-          if (_ctrl.dangerMessage != null ||
-              (_ctrl.isWalkingModeEnabled &&
-                  _ctrl.walkingNearestObstacle != '-'))
-            Positioned(
-              top: MediaQuery.of(context).padding.top + 72,
-              left: 16,
-              right: 16,
-              child: DangerBanner(
-                dangerMessage: _ctrl.dangerMessage,
-                walkingNearestObstacle: _ctrl.walkingNearestObstacle,
-                isWalkingModeEnabled: _ctrl.isWalkingModeEnabled,
-                currentDetections: _ctrl.currentDetections,
-              ),
+          // Danger banner — always rendered; AnimatedSlide inside handles show/hide
+          Positioned(
+            top: MediaQuery.of(context).padding.top + 72,
+            left: 16,
+            right: 16,
+            child: DangerBanner(
+              dangerMessage: _ctrl.dangerMessage,
+              walkingNearestObstacle: _ctrl.walkingNearestObstacle,
+              isWalkingModeEnabled: _ctrl.isWalkingModeEnabled,
+              currentDetections: _ctrl.currentDetections,
             ),
+          ),
 
-          // Processing overlay
-          if (_ctrl.activeProcessingMode != null || _ctrl.isProcessing || _ctrl.isScanningMLKit)
-            Positioned.fill(
-              child: ModeProcessingOverlay(
-                mode: _ctrl.activeProcessingMode,
-                isSpeaking: _ctrl.accessibilityManager.isSpeaking,
-                statusText: _ctrl.accessibilityManager.isSpeaking
-                    ? (lang == 'vi' ? 'Đang đọc kết quả...' : 'Reading result...')
-                    : _ctrl.isScanningMLKit
-                        ? AppLocalizations.t('main_scanning', lang)
-                        : AppLocalizations.t('main_processing', lang),
-              ),
-            ),
+          // Processing overlay — AnimatedSwitcher for smooth fade entrance/exit
+          AnimatedSwitcher(
+            duration: const Duration(milliseconds: 200),
+            child: (_ctrl.activeProcessingMode != null ||
+                    _ctrl.isProcessing ||
+                    _ctrl.isScanningMLKit)
+                ? ModeProcessingOverlay(
+                    key: const ValueKey('processing_overlay'),
+                    mode: _ctrl.activeProcessingMode,
+                    isSpeaking: _ctrl.accessibilityManager.isSpeaking,
+                    statusText: _ctrl.accessibilityManager.isSpeaking
+                        ? (lang == 'vi'
+                            ? 'Đang đọc kết quả...'
+                            : 'Reading result...')
+                        : _ctrl.isScanningMLKit
+                            ? AppLocalizations.t('main_scanning', lang)
+                            : AppLocalizations.t('main_processing', lang),
+                  )
+                : const SizedBox.shrink(key: ValueKey('no_overlay')),
+          ),
 
           // Feedback prompt
           if (_ctrl.pendingFeedbackDetectionId != null)

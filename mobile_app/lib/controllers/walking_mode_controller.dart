@@ -47,7 +47,7 @@ class WalkingModeController {
         }
         return;
       }
-      ctrl.continuousStreamService.start(
+      await ctrl.continuousStreamService.start(
         isFrontCamera: ctrl.isFrontCamera,
         subMode: ctrl.currentModeIndex == 2 ? 'recognition' : null,
       );
