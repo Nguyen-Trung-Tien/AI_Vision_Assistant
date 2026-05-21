@@ -429,17 +429,6 @@ sequenceDiagram
 | **Visual Q&A** | Hỏi đáp          | —         | Hỏi đáp trực quan bằng giọng nói (Gemini AI)        | Online         |
 
 > `Walking Mode` hiện là chế độ stream liên tục 3-5 FPS bật/tắt trong màn hình chính, không phải một ô riêng trên carousel mode.
-  4: tien_20k                13: xe_lon (car/truck/bus)
-  5: tien_50k                14: nguoi (person/male/female)
-  6: tien_100k               15: den_do (traffic_light_red)
-  7: tien_200k               16: bang_hieu (sign)
-  8: tien_500k               17: den_xanh (traffic_light_green)
-                             18: vach_qua_duong (crosswalk)
-                             19: thung_rac (trash_can)
-                             20: xe_dap (bicycle)
-                             21: rao_chan (barrier)
-
-```
 
 > [!NOTE]
 > Xem hướng dẫn chi tiết tại [`ai-worker/COLAB_TRAINING.md`](ai-worker/COLAB_TRAINING.md).
