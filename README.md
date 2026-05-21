@@ -612,5 +612,3 @@ Dashboard quản trị cung cấp các trang:
 ---
 
 **⭐ Nếu dự án hữu ích, hãy cho một star trên GitHub! ⭐**
-
-</div>
