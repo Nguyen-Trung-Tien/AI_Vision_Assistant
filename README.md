@@ -474,7 +474,7 @@ Dashboard quản trị cung cấp các trang:
 
 ## 📌 Roadmap
 
-### Đã hoàn thành (v1.9.4)
+### Đã hoàn thành (v2.0.0)
 
 - [x] TFLite Offline Money Fix: Sửa lỗi nạp mô hình offline, giới hạn nhận diện 9 mệnh giá tiền Việt Nam khi không có Internet, tự động định tuyến thông minh.
 - [x] Recognition Overlay cho chế độ nhận diện tổng hợp: card thông tin + bounding box trên camera preview
@@ -597,7 +597,7 @@ Dashboard quản trị cung cấp các trang:
 
 ### **Nguyễn Trung Tiến**
 
-[![Email](https://img.shields.io/badge/Email-2251120447%40ut.edu.vn-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:2251120447@ut.edu.vn) [![Email](https://img.shields.io/badge/Email-trungtiennguyen910%40gmail.com-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:trungtiennguyen910@gmail.com) [![GitHub](https://img.shields.io/badge/GitHub-Nguyen--Trung--Tien-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Nguyen-Trung-Tien)
+[![Email](https://img.shields.io/badge/Email-2251120447@ut.edu.vn-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:2251120447@ut.edu.vn) [![Email](https://img.shields.io/badge/Email-trungtiennguyen910@gmail.com-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:trungtiennguyen910@gmail.com) [![GitHub](https://img.shields.io/badge/GitHub-Nguyen--Trung--Tien-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Nguyen-Trung-Tien)
 
 _Đồ án tốt nghiệp — Đại học Giao thông Vận tải TP. Hồ Chí Minh (UTH)_
 
