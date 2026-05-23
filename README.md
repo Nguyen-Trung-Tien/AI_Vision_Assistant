@@ -79,7 +79,11 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 | Ngày      | Cập nhật                             | Mô tả                                                                                                                                                            |
 | --------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **23/05** | 👤 Trang thông tin cá nhân (Profile) | Thêm chức năng xem và cập nhật thông tin cá nhân (Họ tên, Số điện thoại) trong phần Cài đặt của ứng dụng di động, tích hợp phản hồi giọng nói (accessibility). |
+| **23/05** | 👤 Trang cá nhân (Profile) | Thêm trang thông tin cá nhân cho Admin Dashboard và Mobile App. Hỗ trợ xem, cập nhật thông tin (Họ tên, Số điện thoại) tích hợp phản hồi giọng nói (accessibility). |
+| **23/05** | 🔍 Thanh tìm kiếm định hướng | Nâng cấp chức năng thanh tìm kiếm ở chế độ định hướng (chỉ hướng), giúp người dùng tìm kiếm địa điểm dễ dàng và chính xác hơn. |
+| **23/05** | 📖 Đọc tệp từ bộ nhớ | Nâng cấp chức năng đọc tệp từ bộ nhớ thiết bị, cải thiện tốc độ và hỗ trợ xử lý mượt mà hơn. |
+| **23/05** | 🔐 Tối ưu đăng nhập JWT | Tối ưu hóa chức năng đăng nhập sử dụng JWT, tăng cường bảo mật và cải thiện hiệu suất xác thực luồng đăng nhập. |
+| **23/05** | 🚶 Tối ưu chế độ đi bộ | Tối ưu chức năng đi bộ (Walking Mode), cải thiện độ ổn định, tối ưu hóa mức tiêu thụ tài nguyên và nhận diện cảnh báo mượt mà hơn. |
 
 ### 🗓️ Tháng 5/2026 — v2.0.0 🚀 Performance Milestone
 
