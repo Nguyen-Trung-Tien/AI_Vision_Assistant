@@ -144,6 +144,21 @@ class SettingsService {
   Future<void> clearAuthSession() async {
     await _prefs?.remove('auth_token');
     await _prefs?.remove('auth_email');
+    await _prefs?.remove('user_name');
+    await _prefs?.remove('user_phone');
+  }
+
+  // --- User Profile (Local) ---
+  String get userName => _prefs?.getString('user_name') ?? '';
+
+  Future<void> setUserName(String value) async {
+    await _prefs?.setString('user_name', value);
+  }
+
+  String get userPhone => _prefs?.getString('user_phone') ?? '';
+
+  Future<void> setUserPhone(String value) async {
+    await _prefs?.setString('user_phone', value);
   }
 
   // --- Spatial Audio ---

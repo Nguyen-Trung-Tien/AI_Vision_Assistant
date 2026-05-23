@@ -1,6 +1,7 @@
 import {
   Injectable,
   ConflictException,
+  UnauthorizedException,
   Logger,
   OnModuleInit,
 } from '@nestjs/common';
@@ -100,6 +101,8 @@ export class AuthService implements OnModuleInit {
     id: string;
     email: string;
     role: string;
+    full_name?: string;
+    phone?: string;
     accessibility_prefs?: Record<string, unknown>;
   }) {
     const payload = { email: user.email, sub: user.id, role: user.role };
@@ -109,6 +112,8 @@ export class AuthService implements OnModuleInit {
         id: user.id,
         email: user.email,
         role: user.role,
+        full_name: user.full_name,
+        phone: user.phone,
         accessibility_prefs: user.accessibility_prefs || {},
       },
     };
@@ -137,5 +142,42 @@ export class AuthService implements OnModuleInit {
     });
 
     return this.login(newUser);
+  }
+
+  async refreshToken(oldToken: string) {
+    try {
+      const payload = this.jwtService.verify<{
+        sub?: string;
+        email?: string;
+        role?: string;
+      }>(oldToken, {
+        ignoreExpiration: true,
+      });
+
+      if (!payload || !payload.sub) {
+        throw new UnauthorizedException('Invalid token');
+      }
+
+      const user = await this.usersService.findById(payload.sub);
+      if (!user) throw new UnauthorizedException('User not found');
+      if (user.is_active === false) {
+        throw new UnauthorizedException('Account locked');
+      }
+
+      return this.login({
+        id: user.id,
+        email: user.email,
+        role: user.role,
+        full_name: user.full_name,
+        phone: user.phone,
+        accessibility_prefs: user.accessibility_prefs as Record<
+          string,
+          unknown
+        >,
+      });
+    } catch (e) {
+      this.logger.error('Token refresh failed', e);
+      throw new UnauthorizedException('Token refresh failed');
+    }
   }
 }

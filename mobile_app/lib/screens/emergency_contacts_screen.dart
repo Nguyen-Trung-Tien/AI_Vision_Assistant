@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:flutter_contacts/flutter_contacts.dart';
+import '../l10n/app_localizations.dart';
 import '../models/emergency_contact.dart';
 import '../services/accessibility_manager.dart';
 import '../services/emergency_contact_service.dart';
@@ -25,12 +26,14 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
   List<EmergencyContact> _contacts = [];
   bool _isLoading = true;
 
+  String get _lang => _settings.language;
+
   @override
   void initState() {
     super.initState();
     _contactService = EmergencyContactService();
     _loadContacts();
-    _accessibility.speak('Màn hình danh bạ khẩn cấp');
+    _accessibility.speak(AppLocalizations.t('emergency_screen_spoken', _lang));
   }
 
   @override
@@ -92,11 +95,14 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
       backgroundColor: AppTheme.bgPrimary,
       appBar: AppBar(
         backgroundColor: AppTheme.bgCard,
-        title: Text('Liên hệ khẩn cấp', style: AppTheme.titleLarge),
+        title: Text(
+          AppLocalizations.t('emergency_screen_title', _lang),
+          style: AppTheme.titleLarge,
+        ),
         leading: IconButton(
           icon: const Icon(Icons.arrow_back_rounded, color: Colors.white),
           onPressed: () {
-            _accessibility.speak('Quay lại');
+            _accessibility.speak(AppLocalizations.t('back', _lang));
             Navigator.pop(context);
           },
         ),
@@ -109,11 +115,11 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
               padding: const EdgeInsets.all(20),
               children: [
                 if (_contacts.isEmpty)
-                  const Padding(
-                    padding: EdgeInsets.symmetric(vertical: 20),
+                  Padding(
+                    padding: const EdgeInsets.symmetric(vertical: 20),
                     child: Text(
-                      'Chưa có người liên hệ nào.',
-                      style: TextStyle(color: Colors.white54, fontSize: 16),
+                      AppLocalizations.t('emergency_no_contacts', _lang),
+                      style: const TextStyle(color: Colors.white54, fontSize: 16),
                       textAlign: TextAlign.center,
                     ),
                   )
@@ -123,9 +129,9 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
                 ElevatedButton.icon(
                   onPressed: _pickContact,
                   icon: const Icon(Icons.contacts, color: Colors.white),
-                  label: const Text(
-                    'Thêm từ danh bạ',
-                    style: TextStyle(color: Colors.white, fontSize: 16),
+                  label: Text(
+                    AppLocalizations.t('emergency_add_from_contacts', _lang),
+                    style: const TextStyle(color: Colors.white, fontSize: 16),
                   ),
                   style: ElevatedButton.styleFrom(
                     backgroundColor: AppTheme.accentPurple,
@@ -139,7 +145,9 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
                 OutlinedButton.icon(
                   onPressed: _showManualAddDialog,
                   icon: const Icon(Icons.dialpad_rounded),
-                  label: const Text('Nhập số thủ công'),
+                  label: Text(
+                    AppLocalizations.t('emergency_add_manual', _lang),
+                  ),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppTheme.accentCyan,
                     side: BorderSide(
@@ -187,7 +195,7 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
                   color: AppTheme.accentRed,
                 ),
                 onPressed: () => _deleteContact(contact),
-                tooltip: 'Xóa liên hệ',
+                tooltip: AppLocalizations.t('emergency_delete_tooltip', _lang),
               ),
             ],
           ),
@@ -200,10 +208,10 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
           Row(
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
-              const Expanded(
+              Expanded(
                 child: Text(
-                  'Gửi SMS khi có SOS',
-                  style: TextStyle(color: Colors.white),
+                  AppLocalizations.t('emergency_sms_on_sos', _lang),
+                  style: const TextStyle(color: Colors.white),
                 ),
               ),
               Switch(
@@ -236,9 +244,9 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
       builder: (context) {
         return AlertDialog(
           backgroundColor: AppTheme.bgCard,
-          title: const Text(
-            'Thêm liên hệ thủ công',
-            style: TextStyle(color: Colors.white),
+          title: Text(
+            AppLocalizations.t('emergency_dialog_title', _lang),
+            style: const TextStyle(color: Colors.white),
           ),
           content: Column(
             mainAxisSize: MainAxisSize.min,
@@ -246,9 +254,9 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
               TextField(
                 controller: _manualNameController,
                 style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  labelText: 'Tên',
-                  labelStyle: TextStyle(color: Colors.white70),
+                decoration: InputDecoration(
+                  labelText: AppLocalizations.t('emergency_field_name', _lang),
+                  labelStyle: const TextStyle(color: Colors.white70),
                 ),
               ),
               const SizedBox(height: 12),
@@ -256,9 +264,9 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
                 controller: _manualPhoneController,
                 keyboardType: TextInputType.phone,
                 style: const TextStyle(color: Colors.white),
-                decoration: const InputDecoration(
-                  labelText: 'Số điện thoại',
-                  labelStyle: TextStyle(color: Colors.white70),
+                decoration: InputDecoration(
+                  labelText: AppLocalizations.t('emergency_field_phone', _lang),
+                  labelStyle: const TextStyle(color: Colors.white70),
                 ),
               ),
             ],
@@ -266,7 +274,7 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
           actions: [
             TextButton(
               onPressed: () => Navigator.pop(context),
-              child: const Text('Hủy'),
+              child: Text(AppLocalizations.t('emergency_btn_cancel', _lang)),
             ),
             ElevatedButton(
               onPressed: () async {
@@ -274,13 +282,15 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
                 final rawPhone = _manualPhoneController.text.trim();
                 final phone = rawPhone.replaceAll(RegExp(r'[^0-9+]'), '');
                 if (phone.isEmpty) {
-                  _accessibility.speak('Số điện thoại không hợp lệ');
+                  _accessibility.speak(
+                    AppLocalizations.t('emergency_invalid_phone', _lang),
+                  );
                   return;
                 }
                 Navigator.pop(context);
                 await _addManualContact(name: name, phone: phone);
               },
-              child: const Text('Thêm'),
+              child: Text(AppLocalizations.t('emergency_btn_add', _lang)),
             ),
           ],
         );
@@ -303,7 +313,9 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
     final added = await _contactService.addContact(newContact);
 
     if (added != null) {
-      _accessibility.speak('Lưu số điện thoại thành công');
+      _accessibility.speak(
+        AppLocalizations.t('emergency_saved_success', _lang),
+      );
       _upsertLocalContact(added);
 
       final currentNumbers = _settings.emergencyNumbers;
@@ -316,7 +328,7 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
       return;
     }
 
-    _accessibility.speak('Lỗi khi thêm liên hệ. Vui lòng thử lại.');
+    _accessibility.speak(AppLocalizations.t('emergency_add_error', _lang));
     if (mounted) {
       setState(() => _isLoading = false);
     }
@@ -340,7 +352,9 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
         );
 
         if (added != null) {
-          _accessibility.speak('Lưu số điện thoại thành công');
+          _accessibility.speak(
+            AppLocalizations.t('emergency_saved_success', _lang),
+          );
           _upsertLocalContact(added);
 
           final currentNumbers = _settings.emergencyNumbers;
@@ -353,13 +367,17 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
           return;
         }
 
-        _accessibility.speak('Lỗi khi thêm liên hệ. Vui lòng thử lại.');
+        _accessibility.speak(
+          AppLocalizations.t('emergency_add_error', _lang),
+        );
         if (mounted) {
           setState(() => _isLoading = false);
         }
       }
     } else {
-      _accessibility.speak('Cần cấp quyền danh bạ');
+      _accessibility.speak(
+        AppLocalizations.t('emergency_contact_permission', _lang),
+      );
     }
   }
 
@@ -369,12 +387,16 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
 
     final success = await _contactService.deleteContact(contact.id!);
     if (success) {
-      _accessibility.speak('Đã xóa ${contact.name}');
+      _accessibility.speak(
+        '${AppLocalizations.t('emergency_deleted', _lang)} ${contact.name}',
+      );
       final currentNumbers = _settings.emergencyNumbers;
       currentNumbers.remove(contact.phone);
       await _settings.setEmergencyNumbers(currentNumbers);
     } else {
-      _accessibility.speak('Lỗi khi xóa liên hệ');
+      _accessibility.speak(
+        AppLocalizations.t('emergency_delete_error', _lang),
+      );
     }
 
     await _loadContacts();
@@ -383,7 +405,9 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
   Future<void> _updateContact(EmergencyContact contact) async {
     setState(() => _isLoading = true);
     await _contactService.updateContact(contact);
-    _accessibility.speak('Lưu số điện thoại thành công');
+    _accessibility.speak(
+      AppLocalizations.t('emergency_updated_success', _lang),
+    );
     await _loadContacts();
   }
 }

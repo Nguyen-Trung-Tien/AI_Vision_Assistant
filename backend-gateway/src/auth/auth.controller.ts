@@ -6,8 +6,9 @@ import {
   HttpStatus,
   UnauthorizedException,
   Res,
+  Req,
 } from '@nestjs/common';
-import type { Response } from 'express';
+import type { Response, Request } from 'express';
 import { AuthService } from './auth.service';
 import { LoginDto, RegisterDto } from './dto/auth.dto';
 import { Role } from '../common/enums/role.enum';
@@ -57,6 +58,8 @@ export class AuthController {
         id: string;
         email: string;
         role: string;
+        full_name?: string;
+        phone?: string;
         accessibility_prefs: Record<string, unknown>;
       },
     );
@@ -90,6 +93,8 @@ export class AuthController {
         id: string;
         email: string;
         role: string;
+        full_name?: string;
+        phone?: string;
         accessibility_prefs: Record<string, unknown>;
       },
     );
@@ -109,5 +114,31 @@ export class AuthController {
   @Post('register')
   async register(@Body() registerDto: RegisterDto) {
     return this.authService.register(registerDto);
+  }
+
+  @SkipMaintenance()
+  @HttpCode(HttpStatus.OK)
+  @Post('refresh')
+  async refresh(
+    @Req() req: Request,
+    @Res({ passthrough: true }) res: Response,
+  ) {
+    let token = (req.cookies as Record<string, string> | undefined)?.[
+      'access_token'
+    ];
+    if (!token) {
+      const authHeader = req.headers.authorization;
+      if (authHeader && authHeader.startsWith('Bearer ')) {
+        token = authHeader.substring(7);
+      }
+    }
+
+    if (!token) {
+      throw new UnauthorizedException('No token provided');
+    }
+
+    const result = await this.authService.refreshToken(token);
+    res.cookie('access_token', result.access_token, COOKIE_OPTIONS);
+    return { user: result.user, access_token: result.access_token };
   }
 }

@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile_app/l10n/app_localizations.dart';
 import 'package:mobile_app/screens/emergency_contacts_screen.dart';
 import 'package:mobile_app/screens/login_screen.dart';
+import 'package:mobile_app/screens/profile_screen.dart';
 import 'package:mobile_app/services/accessibility_manager.dart';
 import 'package:mobile_app/services/settings_service.dart';
 import 'package:mobile_app/theme/app_theme.dart';
@@ -124,6 +125,39 @@ class _SettingsScreenState extends State<SettingsScreen> {
             padding: const EdgeInsets.fromLTRB(16, 8, 16, 32),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
+                // --- ACCOUNT ---
+                _buildCategoryHeader(
+                    _language == 'vi' ? 'Tài khoản' : 'Account'),
+                _buildSettingCard(
+                  children: [
+                    _buildActionTile(
+                      icon: Icons.person_rounded,
+                      iconColor: AppTheme.accentPurple,
+                      title:
+                          _language == 'vi' ? 'Thông tin cá nhân' : 'Profile',
+                      subtitle: _settings.authEmail.isNotEmpty
+                          ? _settings.authEmail
+                          : null,
+                      onTap: () {
+                        _accessibility.speak(_language == 'vi'
+                            ? 'Mở thông tin cá nhân'
+                            : 'Open profile');
+                        Navigator.push(
+                          context,
+                          MaterialPageRoute(
+                            builder: (_) => const ProfileScreen(),
+                          ),
+                        ).then((_) {
+                          // Refresh to show updated info if any
+                          setState(() {});
+                        });
+                      },
+                    ),
+                  ],
+                ),
+
+                const SizedBox(height: 24),
+
                 // --- QUICK ACTIONS ---
                 _buildCategoryHeader(
                     AppLocalizations.t('settings_emergency', _language)),
@@ -135,7 +169,8 @@ class _SettingsScreenState extends State<SettingsScreen> {
                       title: AppLocalizations.t(
                           'settings_emergency_add_contact', _language),
                       onTap: () {
-                        _accessibility.speak('Mở quản lý liên hệ khẩn cấp');
+                        _accessibility.speak(AppLocalizations.t(
+                            'emergency_open_manage', _language));
                         Navigator.push(
                           context,
                           MaterialPageRoute(
@@ -382,7 +417,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 20),
                 Center(
                   child: Text(
-                    'Vision Assistant v2.0.0',
+                    'Vision Assistant v2.1.1',
                     style: AppTheme.bodySmall
                         .copyWith(color: AppTheme.whiteAlpha(0.3)),
                   ),

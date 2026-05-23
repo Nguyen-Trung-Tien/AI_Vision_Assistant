@@ -2,7 +2,9 @@ import {
   Controller,
   Get,
   Patch,
+  Post,
   Param,
+  Body,
   Delete,
   UseGuards,
 } from '@nestjs/common';
@@ -31,9 +33,21 @@ export class NotificationController {
     return { success: true };
   }
 
-  @Delete()
+  @Delete('all')
   async clear() {
     await this.notificationService.clear();
+    return { success: true };
+  }
+
+  @Delete(':id')
+  async deleteOne(@Param('id') id: string) {
+    await this.notificationService.deleteOne(id);
+    return { success: true };
+  }
+
+  @Post('bulk-delete')
+  async deleteBulk(@Body() body: { ids: string[] }) {
+    await this.notificationService.deleteBulk(body.ids);
     return { success: true };
   }
 }

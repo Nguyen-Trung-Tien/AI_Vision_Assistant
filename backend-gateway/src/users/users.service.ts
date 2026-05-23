@@ -8,6 +8,7 @@ import { Repository } from 'typeorm';
 import { User } from './entities/user.entity';
 import * as bcrypt from 'bcrypt';
 import { Role } from '../common/enums/role.enum';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 @Injectable()
 export class UsersService {
@@ -18,6 +19,10 @@ export class UsersService {
 
   async findOneByEmail(email: string): Promise<User | null> {
     return this.usersRepository.findOne({ where: { email } });
+  }
+
+  async findById(id: string): Promise<User | null> {
+    return this.usersRepository.findOne({ where: { id } });
   }
 
   async create(userCode: Partial<User>): Promise<User> {
@@ -113,6 +118,14 @@ export class UsersService {
     if (data.role) user.role = data.role;
     if (data.password)
       user.password_hash = await bcrypt.hash(data.password, 10);
+    return this.usersRepository.save(user);
+  }
+
+  async updateProfile(id: string, data: UpdateProfileDto): Promise<User> {
+    const user = await this.usersRepository.findOne({ where: { id } });
+    if (!user) throw new NotFoundException('User not found');
+    if (data.full_name !== undefined) user.full_name = data.full_name;
+    if (data.phone !== undefined) user.phone = data.phone;
     return this.usersRepository.save(user);
   }
 }

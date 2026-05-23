@@ -8,14 +8,23 @@ import {
   Filter,
 } from "lucide-react";
 import PageHeader from "../components/ui/PageHeader";
+import ConfirmDialog from "../components/ConfirmDialog";
+import { useToast } from "../components/Toast";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { useNotificationContext } from "../providers/NotificationProvider";
 
 export default function NotificationsPage() {
-  const { notifications, handleMarkAllRead } = useNotificationContext();
+  const { notifications, handleMarkAllRead, handleDelete, handleBulkDelete, handleDeleteAll } = useNotificationContext();
+  const toast = useToast();
   const [filter, setFilter] = useState("all"); // all, SOS, INFO
   const [search, setSearch] = useState("");
+  const [selectedIds, setSelectedIds] = useState([]);
+  const [deleteDialog, setDeleteDialog] = useState({
+    isOpen: false,
+    type: null,
+    id: null,
+  });
 
   const filtered = notifications.filter((n) => {
     const matchesFilter = filter === "all" || n.type === filter;
@@ -25,6 +34,45 @@ export default function NotificationsPage() {
     return matchesFilter && matchesSearch;
   });
 
+  const isAllSelected = filtered.length > 0 && selectedIds.length === filtered.length;
+  const toggleSelectAll = () => {
+    if (isAllSelected) {
+      setSelectedIds([]);
+    } else {
+      setSelectedIds(filtered.map((n) => n.id));
+    }
+  };
+
+  const toggleSelect = (id) => {
+    setSelectedIds((prev) =>
+      prev.includes(id) ? prev.filter((i) => i !== id) : [...prev, id]
+    );
+  };
+
+  const confirmDelete = (type, id = null) => {
+    setDeleteDialog({ isOpen: true, type, id });
+  };
+
+  const executeDelete = async () => {
+    try {
+      if (deleteDialog.type === "single") {
+        await handleDelete(deleteDialog.id);
+        toast.success("Đã xóa thông báo");
+      } else if (deleteDialog.type === "bulk") {
+        await handleBulkDelete(selectedIds);
+        toast.success(`Đã xóa ${selectedIds.length} thông báo`);
+        setSelectedIds([]);
+      } else if (deleteDialog.type === "all") {
+        await handleDeleteAll();
+        toast.success("Đã xóa tất cả thông báo");
+        setSelectedIds([]);
+      }
+    } catch (error) {
+      toast.error("Xóa thông báo thất bại");
+    }
+    setDeleteDialog({ isOpen: false, type: null, id: null });
+  };
+
   return (
     <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-700">
       <PageHeader
@@ -32,13 +80,22 @@ export default function NotificationsPage() {
         highlight="HỆ THỐNG"
         description="Theo dõi toàn bộ thông báo và cảnh báo từ hệ thống"
       >
-        <button
-          onClick={handleMarkAllRead}
-          className="flex items-center gap-2 h-9 px-4 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-500 text-[10px] font-black uppercase tracking-widest hover:bg-indigo-500 hover:text-white transition-all group"
-        >
-          <CheckCircle2 className="w-3.5 h-3.5" />
-          Đánh dấu tất cả đã đọc
-        </button>
+          {isAllSelected && (
+            <button
+              onClick={() => confirmDelete("all")}
+              className="flex items-center gap-2 h-9 px-4 rounded-xl bg-red-500/10 border border-red-500/20 text-red-500 text-[10px] font-black uppercase tracking-widest hover:bg-red-500 hover:text-white transition-all group"
+            >
+              <Trash2 className="w-3.5 h-3.5" />
+              Xóa tất cả
+            </button>
+          )}
+          <button
+            onClick={handleMarkAllRead}
+            className="flex items-center gap-2 h-9 px-4 rounded-xl bg-indigo-500/10 border border-indigo-500/20 text-indigo-500 text-[10px] font-black uppercase tracking-widest hover:bg-indigo-500 hover:text-white transition-all group"
+          >
+            <CheckCircle2 className="w-3.5 h-3.5" />
+            Đánh dấu tất cả đã đọc
+          </button>
       </PageHeader>
 
       <div className="flex flex-col lg:flex-row gap-6">
@@ -122,6 +179,32 @@ export default function NotificationsPage() {
 
         {/* List */}
         <div className="flex-1 space-y-3">
+          {filtered.length > 0 && (
+            <div className="flex items-center justify-between bg-bg-card border border-border-primary rounded-2xl p-4 mb-4">
+              <label className="flex items-center gap-3 cursor-pointer group">
+                <input
+                  type="checkbox"
+                  checked={isAllSelected}
+                  onChange={toggleSelectAll}
+                  className="w-4 h-4 rounded text-indigo-500 focus:ring-indigo-500 bg-bg-primary border-border-primary cursor-pointer"
+                />
+                <span className="text-sm font-bold text-text-secondary group-hover:text-text-primary transition-colors">
+                  Chọn tất cả
+                </span>
+              </label>
+
+              {selectedIds.length > 0 && (
+                <button
+                  onClick={() => confirmDelete("bulk")}
+                  className="flex items-center gap-2 h-8 px-3 rounded-lg bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-bold hover:bg-red-500 hover:text-white transition-all"
+                >
+                  <Trash2 className="w-3 h-3" />
+                  Xóa {selectedIds.length} đã chọn
+                </button>
+              )}
+            </div>
+          )}
+
           {filtered.length === 0 ? (
             <div className="bg-bg-card border border-border-primary border-dashed rounded-[2rem] p-20 text-center space-y-4">
               <div className="w-16 h-16 rounded-3xl bg-bg-primary flex items-center justify-center mx-auto border border-border-primary">
@@ -145,8 +228,17 @@ export default function NotificationsPage() {
                   !n.isRead
                     ? "border-indigo-500/30 bg-indigo-500/[0.02]"
                     : "border-border-primary",
+                  selectedIds.includes(n.id) && "ring-1 ring-indigo-500"
                 )}
               >
+                <div className="flex items-center">
+                  <input
+                    type="checkbox"
+                    checked={selectedIds.includes(n.id)}
+                    onChange={() => toggleSelect(n.id)}
+                    className="w-4 h-4 rounded text-indigo-500 focus:ring-indigo-500 bg-bg-primary border-border-primary cursor-pointer"
+                  />
+                </div>
                 <div
                   className={cn(
                     "w-12 h-12 rounded-2xl flex items-center justify-center shrink-0 shadow-lg",
@@ -194,7 +286,10 @@ export default function NotificationsPage() {
                   {!n.isRead && (
                     <div className="w-2 h-2 rounded-full bg-indigo-500 animate-pulse" />
                   )}
-                  <button className="p-2 rounded-lg text-text-secondary hover:text-red-500 hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100">
+                  <button 
+                    onClick={() => confirmDelete("single", n.id)}
+                    className="p-2 rounded-lg text-text-secondary hover:text-red-500 hover:bg-red-500/10 transition-all opacity-0 group-hover:opacity-100"
+                  >
                     <Trash2 className="w-4 h-4" />
                   </button>
                 </div>
@@ -203,6 +298,22 @@ export default function NotificationsPage() {
           )}
         </div>
       </div>
+
+      <ConfirmDialog
+        open={deleteDialog.isOpen}
+        title={
+          deleteDialog.type === "all"
+            ? "Xóa TẤT CẢ thông báo?"
+            : deleteDialog.type === "bulk"
+              ? `Xóa ${selectedIds.length} thông báo đã chọn?`
+              : "Xóa thông báo này?"
+        }
+        message="Hành động này không thể hoàn tác. Bạn có chắc chắn muốn tiếp tục?"
+        confirmLabel="Xóa"
+        confirmClass="bg-red-500 hover:bg-red-600"
+        onConfirm={executeDelete}
+        onCancel={() => setDeleteDialog({ isOpen: false, type: null, id: null })}
+      />
     </div>
   );
 }

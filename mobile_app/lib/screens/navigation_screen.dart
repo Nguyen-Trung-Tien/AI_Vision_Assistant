@@ -32,6 +32,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
   LatLng? _destination;
   LatLng? _pendingCenter;
   bool _mapReady = false;
+  final TextEditingController _addressController = TextEditingController();
 
   @override
   void initState() {
@@ -97,9 +98,9 @@ class _NavigationScreenState extends State<NavigationScreen> {
   Future<void> _startVoiceSearch() async {
     final lang = _settings.language;
     if (_currentPosition == null) {
-      _accessibilityManager.speak(lang == 'vi'
-          ? "Đang tìm vị trí hiện tại, vui lòng đợi..."
-          : "Locating your current position, please wait...");
+      _accessibilityManager.speak(
+        AppLocalizations.t('nav_locating', lang),
+      );
       return;
     }
 
@@ -109,41 +110,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
 
     final destination = await _navService.listenForDestination();
     if (destination != null) {
-      setState(() {
-        _currentInstruction = AppLocalizations.t('nav_searching', lang)
-            .replaceAll('{dest}', destination);
-      });
-
-      final directions = await _navService.getDirections(
-        destination,
-        _currentPosition!.latitude,
-        _currentPosition!.longitude,
-      );
-      if (directions != null && directions['routes'].isNotEmpty) {
-        final route = directions['routes'][0];
-        final leg = route['legs'][0];
-
-        setState(() {
-          _steps = leg['steps'];
-          _currentStepIndex = 0;
-          _isNavigating = true;
-          _currentInstruction = _navService.stripHtmlTags(
-            _steps[0]['html_instructions'],
-          );
-          _updateMap(route);
-        });
-
-        _accessibilityManager.speak(
-          (lang == 'vi'
-                  ? "Đã tìm thấy tuyến đường. Bắt đầu di chuyển: "
-                  : "Route found. Start moving: ") +
-              _currentInstruction,
-        );
-      } else {
-        setState(() {
-          _currentInstruction = AppLocalizations.t('nav_route_not_found', lang);
-        });
-      }
+      await _searchByText(destination);
     } else {
       setState(() {
         _currentInstruction = AppLocalizations.t('nav_mic_instruction', lang);
@@ -233,8 +200,52 @@ class _NavigationScreenState extends State<NavigationScreen> {
         : "Navigation stopped.");
   }
 
+  Future<void> _searchByText(String destination) async {
+    final lang = _settings.language;
+    if (_currentPosition == null) {
+      _accessibilityManager.speak(
+        AppLocalizations.t('nav_locating', lang),
+      );
+      return;
+    }
+
+    setState(() {
+      _currentInstruction = AppLocalizations.t('nav_searching', lang)
+          .replaceAll('{dest}', destination);
+    });
+
+    final directions = await _navService.getDirections(
+      destination,
+      _currentPosition!.latitude,
+      _currentPosition!.longitude,
+    );
+    if (directions != null && directions['routes'].isNotEmpty) {
+      final route = directions['routes'][0];
+      final leg = route['legs'][0];
+
+      setState(() {
+        _steps = leg['steps'];
+        _currentStepIndex = 0;
+        _isNavigating = true;
+        _currentInstruction = _navService.stripHtmlTags(
+          _steps[0]['html_instructions'],
+        );
+        _updateMap(route);
+      });
+
+      _accessibilityManager.speak(
+        AppLocalizations.t('nav_route_found', lang) + _currentInstruction,
+      );
+    } else {
+      setState(() {
+        _currentInstruction = AppLocalizations.t('nav_route_not_found', lang);
+      });
+    }
+  }
+
   @override
   void dispose() {
+    _addressController.dispose();
     _positionSub?.cancel();
     super.dispose();
   }
@@ -315,7 +326,9 @@ class _NavigationScreenState extends State<NavigationScreen> {
                   ),
                 ),
               ),
-              const SizedBox(height: 16),
+              const SizedBox(height: 12),
+              _buildAddressInput(colorScheme),
+              const SizedBox(height: 12),
               _buildMicButton(colorScheme),
             ],
           ),
@@ -408,6 +421,91 @@ class _NavigationScreenState extends State<NavigationScreen> {
           ),
         ),
       ),
+    );
+  }
+
+  Widget _buildAddressInput(ColorScheme colorScheme) {
+    final lang = _settings.language;
+    return Row(
+      children: [
+        Expanded(
+          child: TextField(
+            controller: _addressController,
+            enabled: !_isNavigating,
+            style: const TextStyle(fontSize: 18),
+            decoration: InputDecoration(
+              hintText: AppLocalizations.t('nav_address_hint', lang),
+              hintStyle: const TextStyle(fontSize: 16),
+              prefixIcon: const Icon(Icons.location_on, size: 24),
+              suffixIcon: IconButton(
+                icon: const Icon(Icons.clear, size: 24),
+                onPressed: () {
+                  _addressController.clear();
+                  _accessibilityManager.speak(
+                    lang == 'vi' ? 'Đã xóa' : 'Cleared',
+                  );
+                },
+                tooltip: lang == 'vi' ? 'Xóa nội dung' : 'Clear text',
+              ),
+              border: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+              focusedBorder: OutlineInputBorder(
+                borderRadius: BorderRadius.circular(16),
+                borderSide: BorderSide(
+                  color: colorScheme.primary,
+                  width: 2,
+                ),
+              ),
+              contentPadding: const EdgeInsets.symmetric(
+                horizontal: 16,
+                vertical: 14,
+              ),
+            ),
+            textInputAction: TextInputAction.search,
+            onSubmitted: (value) {
+              if (value.trim().isNotEmpty) {
+                _searchByText(value.trim());
+              } else {
+                _accessibilityManager.speak(
+                  AppLocalizations.t('nav_address_empty', lang),
+                );
+              }
+            },
+          ),
+        ),
+        const SizedBox(width: 10),
+        SizedBox(
+          height: 52,
+          width: 52,
+          child: ElevatedButton(
+            onPressed: _isNavigating
+                ? null
+                : () {
+                    final text = _addressController.text.trim();
+                    if (text.isNotEmpty) {
+                      _searchByText(text);
+                    } else {
+                      _accessibilityManager.speak(
+                        AppLocalizations.t('nav_address_empty', lang),
+                      );
+                    }
+                  },
+            style: ElevatedButton.styleFrom(
+              backgroundColor: colorScheme.primary,
+              foregroundColor: colorScheme.onPrimary,
+              padding: EdgeInsets.zero,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(16),
+              ),
+            ),
+            child: Tooltip(
+              message: AppLocalizations.t('nav_search_route', lang),
+              child: const Icon(Icons.search, size: 28),
+            ),
+          ),
+        ),
+      ],
     );
   }
 

@@ -30,10 +30,11 @@ const PAGE_TITLES = {
   notifications: "Thông Báo Hệ Thống",
   system: "Trạng Thái Hệ Thống",
   settings: "Cài Đặt Hệ Thống",
+  profile: "Hồ Sơ Cá Nhân",
 };
 
 export default function Header({ sidebarOpen, setSidebarOpen }) {
-  const { email } = useAuth();
+  const { email, role } = useAuth();
   const { notifications, unreadCount, handleMarkAllRead } =
     useNotificationContext();
   const { isDarkMode, setIsDarkMode } = useTheme();
@@ -215,10 +216,13 @@ export default function Header({ sidebarOpen, setSidebarOpen }) {
               {email?.split("@")[0]}
             </p>
             <p className="text-[10px] text-indigo-400 font-bold uppercase tracking-widest">
-              Administrator
+              {role || "Administrator"}
             </p>
           </div>
-          <div className="w-9 h-9 rounded-2xl bg-text-primary/5 border border-border-primary flex items-center justify-center shadow-inner group cursor-pointer hover:border-indigo-500 transition-all">
+          <div 
+            onClick={() => navigate("/profile")}
+            className="w-9 h-9 rounded-2xl bg-text-primary/5 border border-border-primary flex items-center justify-center shadow-inner group cursor-pointer hover:border-indigo-500 transition-all"
+          >
             <User className="w-4 h-4 text-text-secondary group-hover:text-indigo-400" />
           </div>
         </div>

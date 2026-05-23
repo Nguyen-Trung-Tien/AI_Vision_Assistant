@@ -15,6 +15,7 @@ const ActivityLogPage = lazy(() => import("./pages/ActivityLogPage"));
 const NotificationsPage = lazy(() => import("./pages/NotificationsPage"));
 const SystemPage = lazy(() => import("./pages/SystemPage"));
 const SettingsPage = lazy(() => import("./pages/SettingsPage"));
+const ProfilePage = lazy(() => import("./pages/ProfilePage"));
 
 function PageSuspense({ children }) {
   return (
@@ -129,6 +130,14 @@ export const router = createBrowserRouter([
         element: (
           <PageSuspense>
             <SettingsPage />
+          </PageSuspense>
+        ),
+      },
+      {
+        path: "profile",
+        element: (
+          <PageSuspense>
+            <ProfilePage />
           </PageSuspense>
         ),
       },

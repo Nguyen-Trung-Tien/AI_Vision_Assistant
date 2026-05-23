@@ -22,7 +22,7 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 <br/>
 
-![Version](https://img.shields.io/badge/Version-2.0.0-blue?style=flat-square)
+![Version](https://img.shields.io/badge/Version-2.1.1-blue?style=flat-square)
 ![License](https://img.shields.io/badge/License-UNLICENSED-gray?style=flat-square)
 ![Status](https://img.shields.io/badge/Status-In_Development-orange?style=flat-square)
 [![CI/CD](https://github.com/Nguyen-Trung-Tien/AI_Vision_Assistant/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/Nguyen-Trung-Tien/AI_Vision_Assistant/actions/workflows/ci-cd.yml)
@@ -75,7 +75,13 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 ## 📰 Cập nhật mới nhất
 
-### 🗓️ Tháng 5/2026 — v2.0.0 (Current) 🚀 Performance Milestone
+### 🗓️ Tháng 5/2026 — v2.1.1 (Current)
+
+| Ngày      | Cập nhật                             | Mô tả                                                                                                                                                            |
+| --------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **23/05** | 👤 Trang thông tin cá nhân (Profile) | Thêm chức năng xem và cập nhật thông tin cá nhân (Họ tên, Số điện thoại) trong phần Cài đặt của ứng dụng di động, tích hợp phản hồi giọng nói (accessibility). |
+
+### 🗓️ Tháng 5/2026 — v2.0.0 🚀 Performance Milestone
 
 | Ngày      | Cập nhật                        | Mô tả                                                                                                                                                      |
 | --------- | ------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |

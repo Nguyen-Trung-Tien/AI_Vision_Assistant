@@ -71,4 +71,14 @@ export class NotificationService {
   async clear() {
     await this.notificationRepo.clear();
   }
+
+  async deleteOne(id: string) {
+    await this.notificationRepo.delete(id);
+  }
+
+  async deleteBulk(ids: string[]) {
+    if (ids && ids.length > 0) {
+      await this.notificationRepo.delete(ids);
+    }
+  }
 }

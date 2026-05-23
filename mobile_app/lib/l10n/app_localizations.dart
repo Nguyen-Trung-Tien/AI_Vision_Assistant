@@ -444,6 +444,32 @@ class AppLocalizations {
     'nav_arrived_msg': {'vi': 'Bạn đã đến nơi.', 'en': 'You have arrived.'},
     'nav_stopped_msg': {'vi': 'Đã dừng điều hướng.', 'en': 'Navigation stopped.'},
     'nav_stop_tooltip': {'vi': 'Dừng', 'en': 'Stop'},
+    'nav_type_address': {
+      'vi': 'Nhập địa chỉ bằng bàn phím',
+      'en': 'Type address',
+    },
+    'nav_type_address_hint_spoken': {
+      'vi':
+          'Nhập địa chỉ bạn muốn đến, sau đó bấm nút tìm đường.',
+      'en':
+          'Type the address you want to go to, then press the search button.',
+    },
+    'nav_enter_address_title': {
+      'vi': 'Nhập địa chỉ đến',
+      'en': 'Enter destination',
+    },
+    'nav_address_hint': {
+      'vi': 'Ví dụ: Bưu điện thành phố...',
+      'en': 'e.g. City Post Office...',
+    },
+    'nav_address_empty': {
+      'vi': 'Vui lòng nhập địa chỉ trước.',
+      'en': 'Please enter an address first.',
+    },
+    'nav_search_route': {
+      'vi': 'Tìm đường',
+      'en': 'Find route',
+    },
     // --- Spatial Audio ---
     'settings_spatial_audio': {
       'vi': '🔊 Âm thanh 3D',
@@ -468,6 +494,88 @@ class AppLocalizations {
     'settings_headphones_only_desc': {
       'vi': 'Đảm bảo sự riêng tư và chính xác.',
       'en': 'Ensures privacy and direction accuracy.',
+    },
+
+    // --- Emergency Contacts Screen ---
+    'emergency_screen_title': {
+      'vi': 'Liên hệ khẩn cấp',
+      'en': 'Emergency Contacts',
+    },
+    'emergency_screen_spoken': {
+      'vi': 'Màn hình danh bạ khẩn cấp',
+      'en': 'Emergency contacts screen',
+    },
+    'emergency_no_contacts': {
+      'vi': 'Chưa có người liên hệ nào.',
+      'en': 'No emergency contacts yet.',
+    },
+    'emergency_add_from_contacts': {
+      'vi': 'Thêm từ danh bạ',
+      'en': 'Add from Contacts',
+    },
+    'emergency_add_manual': {
+      'vi': 'Nhập số thủ công',
+      'en': 'Enter number manually',
+    },
+    'emergency_sms_on_sos': {
+      'vi': 'Gửi SMS khi có SOS',
+      'en': 'Send SMS on SOS',
+    },
+    'emergency_delete_tooltip': {
+      'vi': 'Xóa liên hệ',
+      'en': 'Delete contact',
+    },
+    'emergency_dialog_title': {
+      'vi': 'Thêm liên hệ thủ công',
+      'en': 'Add contact manually',
+    },
+    'emergency_field_name': {
+      'vi': 'Tên',
+      'en': 'Name',
+    },
+    'emergency_field_phone': {
+      'vi': 'Số điện thoại',
+      'en': 'Phone number',
+    },
+    'emergency_btn_cancel': {
+      'vi': 'Hủy',
+      'en': 'Cancel',
+    },
+    'emergency_btn_add': {
+      'vi': 'Thêm',
+      'en': 'Add',
+    },
+    'emergency_invalid_phone': {
+      'vi': 'Số điện thoại không hợp lệ',
+      'en': 'Invalid phone number',
+    },
+    'emergency_saved_success': {
+      'vi': 'Lưu số điện thoại thành công',
+      'en': 'Phone number saved successfully',
+    },
+    'emergency_add_error': {
+      'vi': 'Lỗi khi thêm liên hệ. Vui lòng thử lại.',
+      'en': 'Failed to add contact. Please try again.',
+    },
+    'emergency_deleted': {
+      'vi': 'Đã xóa',
+      'en': 'Deleted',
+    },
+    'emergency_delete_error': {
+      'vi': 'Lỗi khi xóa liên hệ',
+      'en': 'Failed to delete contact',
+    },
+    'emergency_updated_success': {
+      'vi': 'Lưu số điện thoại thành công',
+      'en': 'Contact updated successfully',
+    },
+    'emergency_contact_permission': {
+      'vi': 'Cần cấp quyền danh bạ',
+      'en': 'Contact permission required',
+    },
+    'emergency_open_manage': {
+      'vi': 'Mở quản lý liên hệ khẩn cấp',
+      'en': 'Open emergency contacts manager',
     },
   };
 

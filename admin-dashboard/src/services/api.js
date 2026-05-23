@@ -6,6 +6,8 @@ import {
   getStoredRole as getStoredRoleLocal,
   getStoredToken as getStoredTokenLocal,
   isAuthenticated as isAuthenticatedLocal,
+  getStoredName as getStoredNameLocal,
+  getStoredPhone as getStoredPhoneLocal,
 } from "@/lib/auth-storage";
 
 export function getApiUrl() {
@@ -45,8 +47,16 @@ export function getStoredRole() {
   return getStoredRoleLocal();
 }
 
-export function setSession(email, token, role) {
-  setSessionLocal(email, token, role);
+export function getStoredName() {
+  return getStoredNameLocal();
+}
+
+export function getStoredPhone() {
+  return getStoredPhoneLocal();
+}
+
+export function setSession(email, role, full_name, phone) {
+  setSessionLocal(email, role, full_name, phone);
 }
 
 export async function loginAdmin(email, password) {
@@ -57,8 +67,9 @@ export async function loginAdmin(email, password) {
 
   setSession(
     payload?.user?.email || email,
-    payload.access_token,
     payload?.user?.role,
+    payload?.user?.full_name,
+    payload?.user?.phone
   );
   return payload;
 }
@@ -67,8 +78,9 @@ export async function registerAdmin(email, password) {
   const payload = await apiClient.post("/auth/register", { email, password });
   setSession(
     payload?.user?.email || email,
-    payload.access_token,
     payload?.user?.role,
+    payload?.user?.full_name,
+    payload?.user?.phone
   );
   return payload;
 }
@@ -296,6 +308,18 @@ export async function markNotificationsReadAll() {
     .catch(() => ({ success: false }));
 }
 
+export async function deleteNotification(id) {
+  return apiClient.delete(`/notification/${id}`);
+}
+
+export async function deleteNotificationBulk(ids) {
+  return apiClient.post("/notification/bulk-delete", { ids });
+}
+
+export async function deleteAllNotifications() {
+  return apiClient.delete("/notification/all");
+}
+
 /**
  * Audit Logs
  */
@@ -323,6 +347,10 @@ export async function fetchSystemHealth() {
 
 export async function fetchSystemMetrics() {
   return apiClient.get("/system/metrics").catch(() => null);
+}
+
+export async function updateMyProfile(data) {
+  return apiClient.patch("/users/profile/me", data);
 }
 
 export async function fetchSystemSettings() {

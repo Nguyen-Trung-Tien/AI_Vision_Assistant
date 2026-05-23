@@ -10,6 +10,9 @@ import {
   getStoredEmail,
   getStoredRole,
   isAuthenticated as checkAuth,
+  getStoredName,
+  getStoredPhone,
+  setSession
 } from "../services/api";
 import { connectSocket, disconnectSocket } from "../services/socket";
 
@@ -19,11 +22,15 @@ export function AuthProvider({ children }) {
   const [isLoggedIn, setIsLoggedIn] = useState(() => checkAuth());
   const [email, setEmail] = useState(() => getStoredEmail());
   const [role, setRole] = useState(() => getStoredRole());
+  const [name, setName] = useState(() => getStoredName());
+  const [phone, setPhone] = useState(() => getStoredPhone());
 
   const login = useCallback(() => {
     setIsLoggedIn(true);
     setEmail(getStoredEmail());
     setRole(getStoredRole());
+    setName(getStoredName());
+    setPhone(getStoredPhone());
     connectSocket();
   }, []);
 
@@ -33,7 +40,15 @@ export function AuthProvider({ children }) {
     setIsLoggedIn(false);
     setEmail("");
     setRole("USER");
+    setName("");
+    setPhone("");
   }, []);
+
+  const updateProfileContext = useCallback((newName, newPhone) => {
+    setName(newName);
+    setPhone(newPhone);
+    setSession(email, role, newName, newPhone);
+  }, [email, role]);
 
   useEffect(() => {
     if (isLoggedIn) {
@@ -42,7 +57,7 @@ export function AuthProvider({ children }) {
   }, [isLoggedIn]);
 
   return (
-    <AuthContext.Provider value={{ isLoggedIn, email, role, login, logout }}>
+    <AuthContext.Provider value={{ isLoggedIn, email, role, name, phone, login, logout, updateProfileContext }}>
       {children}
     </AuthContext.Provider>
   );

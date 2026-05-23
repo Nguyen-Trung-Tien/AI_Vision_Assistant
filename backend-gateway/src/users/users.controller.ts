@@ -16,6 +16,7 @@ import { UsersService } from './users.service';
 import { JwtAuthGuard } from '../auth/guards/jwt-auth.guard';
 import { AuditService } from '../audit/audit.service';
 import { Role } from '../common/enums/role.enum';
+import { UpdateProfileDto } from './dto/update-profile.dto';
 
 // Safe helper to extract the requester's ID from JWT payload
 function getRequesterId(req: Request): string | undefined {
@@ -78,6 +79,28 @@ export class UsersController {
       targetType: 'user',
       targetId: result.id,
       details: { email: body.email, role: body.role },
+      ipAddress: req.ip,
+    });
+
+    return result;
+  }
+
+  @Patch('profile/me')
+  async updateMyProfile(
+    @Req() req: Request,
+    @Body() body: UpdateProfileDto,
+  ) {
+    const id = getRequesterId(req);
+    if (!id) throw new ForbiddenException('User ID not found');
+
+    const result = await this.usersService.updateProfile(id, body);
+
+    await this.auditService.log({
+      adminId: id,
+      action: 'UPDATE_PROFILE',
+      targetType: 'user',
+      targetId: id,
+      details: body,
       ipAddress: req.ip,
     });
 

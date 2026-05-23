@@ -32,6 +32,33 @@ export function NotificationProvider({ children }) {
     setNotifications((prev) => prev.map((n) => ({ ...n, isRead: true })));
   }, []);
 
+  const handleDelete = useCallback(async (id) => {
+    try {
+      await import("../services/api").then((m) => m.deleteNotification(id));
+      setNotifications((prev) => prev.filter((n) => n.id !== id));
+    } catch (error) {
+      throw error;
+    }
+  }, []);
+
+  const handleBulkDelete = useCallback(async (ids) => {
+    try {
+      await import("../services/api").then((m) => m.deleteNotificationBulk(ids));
+      setNotifications((prev) => prev.filter((n) => !ids.includes(n.id)));
+    } catch (error) {
+      throw error;
+    }
+  }, []);
+
+  const handleDeleteAll = useCallback(async () => {
+    try {
+      await import("../services/api").then((m) => m.deleteAllNotifications());
+      setNotifications([]);
+    } catch (error) {
+      throw error;
+    }
+  }, []);
+
   const unreadCount = notifications.filter((n) => !n.isRead).length;
 
   useEffect(() => {
@@ -76,6 +103,9 @@ export function NotificationProvider({ children }) {
         unreadCount,
         handleMarkAllRead,
         fetchNotifications,
+        handleDelete,
+        handleBulkDelete,
+        handleDeleteAll,
       }}
     >
       {children}
