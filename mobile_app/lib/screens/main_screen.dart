@@ -96,8 +96,7 @@ class _MainScreenState extends State<MainScreen>
     if (rawDetections.isNotEmpty) return rawDetections;
 
     final rawBoxes = (result['boxes'] as List<dynamic>? ?? []);
-    final fallbackLabel =
-        result['recognition_title']?.toString() ??
+    final fallbackLabel = result['recognition_title']?.toString() ??
         result['text']?.toString() ??
         'Object';
     final fallbackCategory = taskType == 'OCR' ? 'money' : 'object';
@@ -117,9 +116,7 @@ class _MainScreenState extends State<MainScreen>
 
   void _updateRecognitionOverlayFromResult(Map<String, dynamic> result) {
     final taskType =
-        result['taskType']?.toString() ??
-        result['task_type']?.toString() ??
-        '';
+        result['taskType']?.toString() ?? result['task_type']?.toString() ?? '';
     final isGeneralMode = _ctrl.currentModeIndex == 0;
     final isSupportedTask = taskType == 'CONTINUOUS' || taskType == 'OCR';
 
@@ -145,18 +142,16 @@ class _MainScreenState extends State<MainScreen>
     }
 
     final rawTitle = result['recognition_title']?.toString();
-    final title =
-        rawTitle != null && rawTitle.trim().isNotEmpty
+    final title = rawTitle != null && rawTitle.trim().isNotEmpty
         ? rawTitle.trim()
         : primary['display_name']?.toString() ??
-              primary['label']?.toString() ??
-              result['text']?.toString();
+            primary['label']?.toString() ??
+            result['text']?.toString();
 
     final rawText = result['text']?.toString();
     final text = rawText?.trim();
-    final subtitle = (text != null && text.isNotEmpty && text != title)
-        ? text
-        : null;
+    final subtitle =
+        (text != null && text.isNotEmpty && text != title) ? text : null;
 
     _ctrl.currentRecognitionDetections = detections;
     _ctrl.primaryRecognitionDetection = primary;
@@ -258,16 +253,9 @@ class _MainScreenState extends State<MainScreen>
         }
         return;
       }
-      final taskType =
-          result['taskType']?.toString() ??
+      final taskType = result['taskType']?.toString() ??
           result['task_type']?.toString() ??
           '';
-      if (taskType != 'CONTINUOUS') {
-        final text = result['text']?.toString() ?? '';
-        if (text.isNotEmpty) {
-          _ctrl.accessibilityManager.speak(_ctrl.sanitizeForTts(text));
-        }
-      }
       _updateRecognitionOverlayFromResult(result);
       _refresh();
       _ctrl.continuousStreamService.onFrameResultReceived(
@@ -365,6 +353,16 @@ class _MainScreenState extends State<MainScreen>
 
   Future<void> _handleDoubleTap() async {
     if (_ctrl.isScanningMLKit || _ctrl.isProcessing) return;
+
+    // Nếu đang hiển thị kết quả phân tích (OCR, Menu, Sách...), double tap để thoát (xoá kết quả)
+    if (_ctrl.currentRecognitionDetections.isNotEmpty ||
+        _ctrl.recognitionTitle != null) {
+      _clearRecognitionOverlay();
+      _ctrl.accessibilityManager.stopSpeak();
+      setState(() {});
+      return;
+    }
+
     if (_ctrl.isWalkingModeEnabled) {
       await _walkingCtrl.setWalkingMode(false, announce: false);
     }
@@ -397,7 +395,7 @@ class _MainScreenState extends State<MainScreen>
         setState(() {});
         _ctrl.aiService.requestOnlineOCR();
       case 5:
-        unawaited(_ctrl.pickAndReadFile());
+        if (mounted) unawaited(_ctrl.pickAndReadFile(context));
       case 6:
         _ctrl.activeProcessingMode = 'offline_ocr';
         setState(() {});
@@ -464,7 +462,7 @@ class _MainScreenState extends State<MainScreen>
     final frameBytes = await _ctrl.captureCurrentFrame();
     if (frameBytes != null) {
       _ctrl.accessibilityManager.speak('Đang phân tích hình ảnh...');
-      
+
       final finalQuestion = question.isNotEmpty
           ? question
           : (_ctrl.settings.language == 'vi'
@@ -487,14 +485,12 @@ class _MainScreenState extends State<MainScreen>
     final modes = _ctrl.getModes(lang);
 
     final bool isDangerVisible = _ctrl.dangerMessage != null ||
-              (_ctrl.isWalkingModeEnabled &&
-                  _ctrl.walkingNearestObstacle != '-');
-    
+        (_ctrl.isWalkingModeEnabled && _ctrl.walkingNearestObstacle != '-');
+
     // Calculate top offset for walking HUD to avoid danger banner
     final double walkingHudTopOffset = isDangerVisible ? 165 : 85;
     final double recognitionTopOffset = isDangerVisible ? 165 : 85;
-    final bool showRecognitionOverlay =
-        _ctrl.currentModeIndex == 0 &&
+    final bool showRecognitionOverlay = _ctrl.currentModeIndex == 0 &&
         (_ctrl.currentRecognitionDetections.isNotEmpty ||
             (_ctrl.recognitionTitle?.isNotEmpty ?? false));
 
@@ -604,16 +600,15 @@ class _MainScreenState extends State<MainScreen>
                   horizontal: 16,
                   vertical: 14,
                 ),
-                decoration:
-                    AppTheme.glassDecoration(
-                      borderRadius: 18,
-                      opacity: 0.8,
-                    ).copyWith(
-                      border: Border.all(
-                        color: AppTheme.accentPurple.withValues(alpha: 0.4),
-                        width: 1.2,
-                      ),
-                    ),
+                decoration: AppTheme.glassDecoration(
+                  borderRadius: 18,
+                  opacity: 0.8,
+                ).copyWith(
+                  border: Border.all(
+                    color: AppTheme.accentPurple.withValues(alpha: 0.4),
+                    width: 1.2,
+                  ),
+                ),
                 child: Row(
                   children: [
                     _FeedbackChip(
@@ -630,7 +625,9 @@ class _MainScreenState extends State<MainScreen>
                     const SizedBox(width: 12),
                     Expanded(
                       child: Text(
-                        lang == 'vi' ? 'Kết quả AI có đúng không?' : 'Is the AI result correct?',
+                        lang == 'vi'
+                            ? 'Kết quả AI có đúng không?'
+                            : 'Is the AI result correct?',
                         textAlign: TextAlign.right,
                         style: AppTheme.bodyMedium.copyWith(
                           color: Colors.white,
@@ -702,11 +699,11 @@ class _MainScreenState extends State<MainScreen>
                       Text(
                         lang == 'vi'
                             ? (_ctrl.isWalkingModeEnabled
-                                  ? 'TẮT ĐI BỘ'
-                                  : 'BẬT ĐI BỘ')
+                                ? 'TẮT ĐI BỘ'
+                                : 'BẬT ĐI BỘ')
                             : (_ctrl.isWalkingModeEnabled
-                                  ? 'STOP WALK'
-                                  : 'START WALK'),
+                                ? 'STOP WALK'
+                                : 'START WALK'),
                         style: const TextStyle(
                           color: Colors.white,
                           fontWeight: FontWeight.w700,
@@ -763,7 +760,8 @@ class _MainScreenState extends State<MainScreen>
                 Material(
                   color: Colors.transparent,
                   child: InkWell(
-                    onTap: () => _ctrl.openSettings(context, onReturn: _refresh),
+                    onTap: () =>
+                        _ctrl.openSettings(context, onReturn: _refresh),
                     borderRadius: BorderRadius.circular(28),
                     child: Container(
                       padding: const EdgeInsets.all(14),
@@ -840,7 +838,11 @@ class _MainScreenState extends State<MainScreen>
                       color: dotColor,
                       borderRadius: BorderRadius.circular(4),
                       boxShadow: isActive
-                          ? [BoxShadow(color: dotColor.withValues(alpha: 0.5), blurRadius: 8)]
+                          ? [
+                              BoxShadow(
+                                  color: dotColor.withValues(alpha: 0.5),
+                                  blurRadius: 8)
+                            ]
                           : null,
                     ),
                   );
@@ -850,8 +852,7 @@ class _MainScreenState extends State<MainScreen>
           ),
 
           // Voice Listening Overlay
-          if (_voiceCtrl.isListening)
-            const VoiceListeningOverlay(),
+          if (_voiceCtrl.isListening) const VoiceListeningOverlay(),
 
           // SOS status overlay
           if (_sosCtrl.isOverlayVisible)

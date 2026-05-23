@@ -6,6 +6,7 @@ import 'package:flutter/material.dart';
 import 'package:mobile_app/screens/history_screen.dart';
 import 'package:mobile_app/screens/settings_screen.dart';
 import 'package:mobile_app/screens/navigation_screen.dart';
+import 'package:mobile_app/screens/document_reader_screen.dart';
 import 'package:mobile_app/services/accessibility_manager.dart';
 import 'package:mobile_app/services/edge_ai_service.dart';
 import 'package:mobile_app/services/feedback_service.dart';
@@ -393,24 +394,24 @@ class MainController {
   }
 
   // ── File reading ──────────────────────────────────────────────────────
-  Future<void> pickAndReadFile() async {
+  Future<void> pickAndReadFile(BuildContext context) async {
     final lang = settings.language;
-    // Don't set isProcessing = true yet to avoid early animation
-    await accessibilityManager.speak(
-      AppLocalizations.t('main_reading_file', lang),
-    );
 
     try {
-      final text = await documentReaderService.pickAndExtractText(
+      final pages = await documentReaderService.pickAndExtractPages(
         onFilePicked: () {
-          // File selected, now show animation
+          // File selected, now show animation and speak
           isProcessing = true;
           activeProcessingMode = 'file_read';
           onStateChanged?.call();
+          
+          accessibilityManager.speak(
+            AppLocalizations.t('main_reading_file', lang),
+          );
         },
       );
 
-      if (text == null) {
+      if (pages == null || pages.isEmpty) {
         // Canceled or no file picked
         isProcessing = false;
         activeProcessingMode = null;
@@ -418,7 +419,7 @@ class MainController {
         return;
       }
 
-      if (text.isEmpty) {
+      if (pages.every((p) => p.isEmpty)) {
         await accessibilityManager.speak(
           AppLocalizations.t('main_file_empty', lang),
         );
@@ -428,10 +429,22 @@ class MainController {
         return;
       }
 
-      // Keep animation while TTS is reading (onSpeakingChanged handles cleanup)
       isProcessing = false;
+      activeProcessingMode = null;
       onStateChanged?.call();
-      await accessibilityManager.speak(sanitizeForTts(text));
+      
+      if (!context.mounted) return;
+
+      Navigator.push(
+        context,
+        MaterialPageRoute(
+          builder: (_) => DocumentReaderScreen(
+            pages: pages,
+            accessibilityManager: accessibilityManager,
+            language: lang,
+          ),
+        ),
+      );
     } catch (e) {
       debugPrint('Lỗi đọc file: $e');
       if (e.toString().contains('Unsupported format')) {

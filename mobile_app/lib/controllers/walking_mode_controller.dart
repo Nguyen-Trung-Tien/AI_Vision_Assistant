@@ -17,6 +17,7 @@ class WalkingModeController {
   final MainController ctrl;
   final AnimationController pulseController;
   final VoidCallback onStateChanged;
+  DateTime _lastDangerAudioTime = DateTime.fromMillisecondsSinceEpoch(0);
 
   SettingsService get _settings => ctrl.settings;
 
@@ -123,17 +124,21 @@ class WalkingModeController {
     }
     safeDirection = _deriveSafeDirection(position, dangerAlerts);
 
-    // Trigger Spatial Audio for the nearest obstacle
+    // Trigger Spatial Audio for the nearest obstacle (Debounced to 1.5s to prevent spam)
     if (dangerAlerts.isNotEmpty) {
-      final nearest = dangerAlerts.first;
-      final parsedDist = distanceVal ?? 2.0;
-      final centerXRatio = nearest['center_x_ratio'];
-      ctrl.spatialAudioService.playDirectionalAlert(
-        position: position,
-        level: alertLevelFromDistance(parsedDist, label: label),
-        distance: parsedDist,
-        centerXRatio: centerXRatio is num ? centerXRatio.toDouble() : null,
-      );
+      final now = DateTime.now();
+      if (now.difference(_lastDangerAudioTime).inMilliseconds > 1500) {
+        _lastDangerAudioTime = now;
+        final nearest = dangerAlerts.first;
+        final parsedDist = distanceVal ?? 2.0;
+        final centerXRatio = nearest['center_x_ratio'];
+        ctrl.spatialAudioService.playDirectionalAlert(
+          position: position,
+          level: alertLevelFromDistance(parsedDist, label: label),
+          distance: parsedDist,
+          centerXRatio: centerXRatio is num ? centerXRatio.toDouble() : null,
+        );
+      }
     } else {
       final text = (result['text']?.toString() ?? '').toLowerCase();
       if (text.contains('trái') || text.contains('left')) {

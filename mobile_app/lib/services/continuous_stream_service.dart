@@ -86,7 +86,7 @@ class ContinuousStreamService {
     _isStreaming = true;
     _awaitingResult = false;
     _latestCameraImage = null;
-    _frameSeq = 0;
+    _frameSeq = DateTime.now().millisecondsSinceEpoch;
     _inFlightFrameSeq = null;
     _inFlightSentAt = null;
     _lastMotionTime = DateTime.now();

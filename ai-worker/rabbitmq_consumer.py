@@ -132,7 +132,9 @@ def _build_compact_continuous_text(ai_result: dict, danger_alerts: list, lang: s
             text = f"{label} {position}, {dist} meters."
         else:
             text = f"{label} {position.lower()}, {dist} mét."
-        signature = f"danger:{label}:{position}:{round(float(dist), 1)}"
+        # Bucket distance to 0.5m for danger alerts to avoid spam
+        dist_bucket = round(float(dist) * 2) / 2.0
+        signature = f"danger:{label}:{position}:{dist_bucket}"
         return text, signature
 
     detections = ai_result.get("raw_detections", []) or []
@@ -159,8 +161,10 @@ def _build_compact_continuous_text(ai_result: dict, danger_alerts: list, lang: s
         else:
             pos_text = t("position_front", lang).lower()
 
+        # Bucket distance to 1.0m for normal objects to avoid spam
+        dist_bucket = round(float(dist))
         concise_items.append(f"{label} {pos_text}, {dist}m")
-        signature_parts.append(f"{label_raw}:{pos_raw}:{round(float(dist), 1)}")
+        signature_parts.append(f"{label_raw}:{pos_raw}:{dist_bucket}")
 
     if concise_items:
         return ". ".join(concise_items) + ".", "obj:" + "|".join(signature_parts)
@@ -389,22 +393,23 @@ def on_message(channel, method, properties, body):
                 last_signature = continuous_tts_cache.get(client_id, "")
 
                 # Priority behavior: danger > new objects > general scene
-                if danger_alerts:
-                    # Always prioritize danger; use sync TTS for critical alerts
-                    tts_text = compact_text
-                    final_text = compact_text
-                    if tts_text:
-                        audio_url = TTSCacheService.get_audio_url(tts_text, lang=lang)
-                elif compact_signature == last_signature:
+                if compact_signature == last_signature:
                     # Skip repeated scene
                     tts_text = ""
                     stable = True
                 else:
                     _lru_set(continuous_tts_cache, client_id, compact_signature)
-                    tts_text = final_text
-                    # F3: Async TTS for non-danger continuous frames
-                    if tts_text:
-                        audio_url = _get_audio_url_async(tts_text, lang)
+                    tts_text = compact_text if danger_alerts else final_text
+                    final_text = compact_text if danger_alerts else final_text
+                    
+                    if danger_alerts:
+                        # Sync TTS for critical alerts
+                        if tts_text:
+                            audio_url = TTSCacheService.get_audio_url(tts_text, lang=lang)
+                    else:
+                        # Async TTS for non-danger continuous frames
+                        if tts_text:
+                            audio_url = _get_audio_url_async(tts_text, lang)
             else:
                 # Non-continuous tasks: use synchronous TTS (user-initiated, latency OK)
                 if tts_text:

@@ -27,6 +27,9 @@ class EdgeAIService {
     const Duration(seconds: 10),
   );
 
+  DateTime _lastDangerSpeechTime = DateTime.fromMillisecondsSinceEpoch(0);
+  String _lastDangerSpeechMessage = '';
+
   ProcessingStateCallback? onProcessingStateChanged;
   DangerAlertCallback? onDangerAlertDetected;
   AIResultCallback? onAIResultReceived;
@@ -50,8 +53,16 @@ class EdgeAIService {
       final level = data['level']?.toString() ?? 'HIGH';
 
       _accessibilityManager.triggerDangerVibration(distance);
-      // Danger alerts always interrupt — fire-and-forget
-      _accessibilityManager.speak(message, interrupt: true);
+
+      final now = DateTime.now();
+      if (message != _lastDangerSpeechMessage ||
+          now.difference(_lastDangerSpeechTime).inMilliseconds > 2000) {
+        _lastDangerSpeechTime = now;
+        _lastDangerSpeechMessage = message;
+        // Danger alerts always interrupt — fire-and-forget
+        _accessibilityManager.speak(message, interrupt: true);
+      }
+
       onDangerAlertDetected?.call(message, level);
     };
 
