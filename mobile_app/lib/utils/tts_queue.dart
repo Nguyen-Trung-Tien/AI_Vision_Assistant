@@ -26,6 +26,7 @@ class TtsQueue {
   static const Duration _maxWait = Duration(seconds: 3);
 
   void Function(bool)? onSpeakingChanged;
+  void Function(int start, int end, String word)? onProgress;
 
   /// Speak with HIGH priority — interrupts current speech immediately.
   Future<void> speakHigh(String text) async {

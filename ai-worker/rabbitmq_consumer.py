@@ -250,8 +250,19 @@ def on_message(channel, method, properties, body):
                 known_faces.append({"name": k["name"], "embedding": np.array(k["embedding"], dtype=np.float32)})
 
             image_bytes = base64.b64decode(frame_data.split(",")[1] if "," in frame_data else frame_data)
-            names = FaceRecognitionService.recognize_face(image_bytes, known_faces)
+            faces_info, frame_width, frame_height = FaceRecognitionService.recognize_face_detailed(image_bytes, known_faces)
+            names = [f["name"] for f in faces_info]
             print(f"[Face] Recognition result: {names}")
+
+            raw_detections = [
+                {
+                    "label": f["name"],
+                    "display_name": f["name"],
+                    "box": f["bbox"],
+                    "confidence": f["score"]
+                }
+                for f in faces_info
+            ]
 
             if names:
                 identified = [n for n in names if n != "unknown"]
@@ -271,6 +282,9 @@ def on_message(channel, method, properties, body):
                 "confidence_score": 1.0,
                 "stable": True,
                 "danger_alerts": [],
+                "raw_detections": raw_detections,
+                "frame_width": frame_width,
+                "frame_height": frame_height,
             }
         elif task_type == "GET_FACE_ENCODING":
             # Used for registration

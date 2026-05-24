@@ -45,27 +45,50 @@ class FaceRecognitionService:
         return np.dot(feat1, feat2) / (np.linalg.norm(feat1) * np.linalg.norm(feat2))
 
     @classmethod
+    def recognize_face_detailed(cls, image_bytes: bytes, known_faces: list, threshold=0.4):
+        """
+        known_faces: list of {'name': str, 'embedding': np.array}
+        Returns: list of detected face dicts and image size
+        """
+        nparr = np.frombuffer(image_bytes, np.uint8)
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        if img is None:
+            return [], 0, 0
+            
+        height, width = img.shape[:2]
+        
+        app = cls._get_app()
+        faces = app.get(img)
+        
+        results = []
+        for face in faces:
+            best_match = "unknown"
+            max_sim = -1
+            
+            for known in known_faces:
+                sim = cls.cosine_similarity(face.normed_embedding, known["embedding"])
+                if sim > max_sim:
+                    max_sim = sim
+                    best_match = known["name"]
+                    
+            if max_sim >= threshold:
+                name = best_match
+            else:
+                name = "unknown"
+                
+            results.append({
+                "name": name,
+                "bbox": face.bbox.astype(int).tolist(),
+                "score": float(face.det_score)
+            })
+            
+        return results, width, height
+
+    @classmethod
     def recognize_face(cls, image_bytes: bytes, known_faces: list, threshold=0.4):
         """
         known_faces: list of {'name': str, 'embedding': np.array}
         Returns: list of detected names
         """
-        detected_faces = cls.get_face_embeddings(image_bytes)
-        recognized_names = []
-
-        for det in detected_faces:
-            best_match = None
-            max_sim = -1
-
-            for known in known_faces:
-                sim = cls.cosine_similarity(det["embedding"], known["embedding"])
-                if sim > max_sim:
-                    max_sim = sim
-                    best_match = known["name"]
-
-            if max_sim >= threshold:
-                recognized_names.append(best_match)
-            else:
-                recognized_names.append("unknown")
-
-        return recognized_names
+        faces_info, _, _ = cls.recognize_face_detailed(image_bytes, known_faces, threshold)
+        return [f["name"] for f in faces_info]

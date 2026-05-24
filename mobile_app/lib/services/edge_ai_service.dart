@@ -107,7 +107,7 @@ class EdgeAIService {
 
       if (!shouldSkipSpeechForContinuousDanger &&
           text.isNotEmpty &&
-          !_isSimilarToLast(text)) {
+          (taskType != 'CONTINUOUS' || !_isSimilarToLast(text))) {
         // Continuous mode: require 2s gap to avoid TTS spam; other modes: 1s
         final minGapMs = taskType == 'CONTINUOUS' ? 2000 : 1000;
         if (isStable || timeSinceLastSpeakMs >= minGapMs) {

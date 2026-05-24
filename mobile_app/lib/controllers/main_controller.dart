@@ -59,6 +59,11 @@ class MainController {
   /// null = generic, 'online_ocr', 'offline_ocr', 'file_read', 'layout_analysis'
   String? activeProcessingMode;
 
+  // ── TTS Progress ────────────────────────────────────────────────────────
+  int? ttsStartOffset;
+  int? ttsEndOffset;
+  String? ttsCurrentWord;
+
   // ── Mode State ────────────────────────────────────────────────────────
   final PageController pageController = PageController();
   int currentModeIndex = 0;
@@ -477,7 +482,14 @@ class MainController {
       final file = await cameraController!.takePicture().timeout(
             captureTimeout,
           );
-      await mlKitService.processImageFile(file.path);
+      final resultText = await mlKitService.processImageFile(file.path);
+      if (resultText != null && resultText.isNotEmpty) {
+        recognitionTitle = resultText;
+        recognitionSubtitle = null;
+        currentRecognitionDetections = [];
+      } else {
+        recognitionTitle = null;
+      }
     } on TimeoutException catch (_) {
       debugPrint('[Camera] MLKit capture timeout');
       accessibilityManager.speak(AppLocalizations.t('main_no_capture', lang));

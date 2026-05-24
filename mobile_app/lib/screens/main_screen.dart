@@ -118,17 +118,44 @@ class _MainScreenState extends State<MainScreen>
     final taskType =
         result['taskType']?.toString() ?? result['task_type']?.toString() ?? '';
     final isGeneralMode = _ctrl.currentModeIndex == 0;
-    final isSupportedTask = taskType == 'CONTINUOUS' || taskType == 'OCR';
+    final isFaceMode = _ctrl.currentModeIndex == 2;
+    final isOnlineOcrMode = _ctrl.currentModeIndex == 4;
+    final isLayoutMode = _ctrl.currentModeIndex == 7;
+    final isSupportedTask = taskType == 'CONTINUOUS' ||
+        taskType == 'OCR' ||
+        taskType == 'FACE_RECOGNITION' ||
+        taskType == 'TEXT_OCR' ||
+        taskType == 'LAYOUT_ANALYSIS' ||
+        taskType == 'CAPTIONING';
 
-    if (!isGeneralMode || !isSupportedTask) {
-      if (taskType == 'OCR' && !isGeneralMode) {
-        _clearRecognitionOverlay();
-      }
+    if (!isSupportedTask) {
+      return;
+    }
+
+    if (!isGeneralMode && (taskType == 'OCR' || taskType == 'CONTINUOUS')) {
+      _clearRecognitionOverlay();
+      return;
+    }
+
+    if (!isFaceMode && taskType == 'FACE_RECOGNITION') {
+      _clearRecognitionOverlay();
+      return;
+    }
+
+    if (!isOnlineOcrMode && taskType == 'TEXT_OCR') {
+      _clearRecognitionOverlay();
+      return;
+    }
+
+    if (!isLayoutMode && taskType == 'LAYOUT_ANALYSIS') {
+      _clearRecognitionOverlay();
       return;
     }
 
     final detections = _extractRecognitionDetections(result, taskType);
-    if (detections.isEmpty) {
+    final rawText = result['text']?.toString()?.trim();
+
+    if (detections.isEmpty && (rawText == null || rawText.isEmpty)) {
       _clearRecognitionOverlay();
       return;
     }
@@ -138,20 +165,19 @@ class _MainScreenState extends State<MainScreen>
     if (rawPrimary is Map) {
       primary = Map<String, dynamic>.from(rawPrimary);
     } else {
-      primary = detections.first;
+      primary = detections.isNotEmpty ? detections.first : null;
     }
 
     final rawTitle = result['recognition_title']?.toString();
     final title = rawTitle != null && rawTitle.trim().isNotEmpty
         ? rawTitle.trim()
-        : primary['display_name']?.toString() ??
-            primary['label']?.toString() ??
-            result['text']?.toString();
+        : primary?['display_name']?.toString() ??
+            primary?['label']?.toString() ??
+            rawText;
 
-    final rawText = result['text']?.toString();
-    final text = rawText?.trim();
-    final subtitle =
-        (text != null && text.isNotEmpty && text != title) ? text : null;
+    final subtitle = (rawText != null && rawText.isNotEmpty && rawText != title)
+        ? rawText
+        : null;
 
     _ctrl.currentRecognitionDetections = detections;
     _ctrl.primaryRecognitionDetection = primary;
@@ -166,9 +192,22 @@ class _MainScreenState extends State<MainScreen>
     _ctrl.accessibilityManager.onSpeakingChanged = (speaking) {
       if (!mounted) return;
       setState(() {
+        if (!speaking) {
+          _ctrl.ttsStartOffset = null;
+          _ctrl.ttsEndOffset = null;
+          _ctrl.ttsCurrentWord = null;
+        }
         if (!speaking && !_ctrl.isProcessing && !_ctrl.isScanningMLKit) {
           _ctrl.activeProcessingMode = null;
         }
+      });
+    };
+    _ctrl.accessibilityManager.onProgress = (start, end, word) {
+      if (!mounted) return;
+      setState(() {
+        _ctrl.ttsStartOffset = start;
+        _ctrl.ttsEndOffset = end;
+        _ctrl.ttsCurrentWord = word;
       });
     };
 
@@ -223,10 +262,18 @@ class _MainScreenState extends State<MainScreen>
       if (mounted) {
         setState(() {
           _ctrl.isProcessing = isProcessing;
-          if (!isProcessing && !_ctrl.accessibilityManager.isSpeaking) {
-            _ctrl.activeProcessingMode = null;
-          }
         });
+        if (!isProcessing) {
+          Future.delayed(const Duration(milliseconds: 100), () {
+            if (mounted &&
+                !_ctrl.isProcessing &&
+                !_ctrl.accessibilityManager.isSpeaking) {
+              setState(() {
+                _ctrl.activeProcessingMode = null;
+              });
+            }
+          });
+        }
       }
     };
     _ctrl.aiService.onDangerAlertDetected = (message, level) {
@@ -352,7 +399,20 @@ class _MainScreenState extends State<MainScreen>
   }
 
   Future<void> _handleDoubleTap() async {
-    if (_ctrl.isScanningMLKit || _ctrl.isProcessing) return;
+    final lang = _ctrl.settings.language;
+
+    if (_ctrl.accessibilityManager.isSpeaking) {
+      await _ctrl.accessibilityManager.stopSpeak();
+      if (mounted) {
+        setState(() {
+          _ctrl.activeProcessingMode = null;
+          _clearRecognitionOverlay();
+        });
+      }
+      return;
+    }
+
+    if (_ctrl.isProcessing || _ctrl.isScanningMLKit) return;
 
     // Nếu đang hiển thị kết quả phân tích (OCR, Menu, Sách...), double tap để thoát (xoá kết quả)
     if (_ctrl.currentRecognitionDetections.isNotEmpty ||
@@ -400,7 +460,13 @@ class _MainScreenState extends State<MainScreen>
         _ctrl.activeProcessingMode = 'offline_ocr';
         setState(() {});
         await _ctrl.scanWithMLKit();
-        if (mounted) setState(() => _ctrl.activeProcessingMode = null);
+        if (mounted) {
+          Future.delayed(const Duration(milliseconds: 100), () {
+            if (mounted && !_ctrl.accessibilityManager.isSpeaking) {
+              setState(() => _ctrl.activeProcessingMode = null);
+            }
+          });
+        }
       case 7:
         _ctrl.activeProcessingMode = 'layout_analysis';
         setState(() {});
@@ -487,10 +553,14 @@ class _MainScreenState extends State<MainScreen>
     final bool isDangerVisible = _ctrl.dangerMessage != null ||
         (_ctrl.isWalkingModeEnabled && _ctrl.walkingNearestObstacle != '-');
 
-    // Calculate top offset for walking HUD to avoid danger banner
     final double walkingHudTopOffset = isDangerVisible ? 165 : 85;
     final double recognitionTopOffset = isDangerVisible ? 165 : 85;
-    final bool showRecognitionOverlay = _ctrl.currentModeIndex == 0 &&
+    final bool showRecognitionOverlay = (_ctrl.currentModeIndex == 0 ||
+            _ctrl.currentModeIndex == 1 ||
+            _ctrl.currentModeIndex == 2 ||
+            _ctrl.currentModeIndex == 4 ||
+            _ctrl.currentModeIndex == 6 ||
+            _ctrl.currentModeIndex == 7) &&
         (_ctrl.currentRecognitionDetections.isNotEmpty ||
             (_ctrl.recognitionTitle?.isNotEmpty ?? false));
 
@@ -515,17 +585,6 @@ class _MainScreenState extends State<MainScreen>
             topOffset: walkingHudTopOffset,
             frameWidth: _ctrl.lastFrameWidth,
             frameHeight: _ctrl.lastFrameHeight,
-          ),
-
-          RecognitionOverlay(
-            isEnabled: showRecognitionOverlay,
-            detections: _ctrl.currentRecognitionDetections,
-            primaryDetection: _ctrl.primaryRecognitionDetection,
-            title: _ctrl.recognitionTitle,
-            subtitle: _ctrl.recognitionSubtitle,
-            frameWidth: _ctrl.recognitionFrameWidth,
-            frameHeight: _ctrl.recognitionFrameHeight,
-            topOffset: recognitionTopOffset,
           ),
 
           // Mode carousel
@@ -574,19 +633,35 @@ class _MainScreenState extends State<MainScreen>
             child: (_ctrl.activeProcessingMode != null ||
                     _ctrl.isProcessing ||
                     _ctrl.isScanningMLKit)
-                ? ModeProcessingOverlay(
-                    key: const ValueKey('processing_overlay'),
-                    mode: _ctrl.activeProcessingMode,
-                    isSpeaking: _ctrl.accessibilityManager.isSpeaking,
-                    statusText: _ctrl.accessibilityManager.isSpeaking
-                        ? (lang == 'vi'
-                            ? 'Đang đọc kết quả...'
-                            : 'Reading result...')
-                        : _ctrl.isScanningMLKit
-                            ? AppLocalizations.t('main_scanning', lang)
-                            : AppLocalizations.t('main_processing', lang),
+                ? GestureDetector(
+                    onDoubleTap: () => unawaited(_handleDoubleTap()),
+                    child: ModeProcessingOverlay(
+                      key: const ValueKey('processing_overlay'),
+                      mode: _ctrl.activeProcessingMode,
+                      isSpeaking: _ctrl.accessibilityManager.isSpeaking,
+                      statusText: _ctrl.accessibilityManager.isSpeaking
+                          ? (lang == 'vi'
+                              ? 'Đang đọc kết quả...'
+                              : 'Reading result...')
+                          : _ctrl.isScanningMLKit
+                              ? AppLocalizations.t('main_scanning', lang)
+                              : AppLocalizations.t('main_processing', lang),
+                    ),
                   )
                 : const SizedBox.shrink(key: ValueKey('no_overlay')),
+          ),
+
+          RecognitionOverlay(
+            isEnabled: showRecognitionOverlay,
+            detections: _ctrl.currentRecognitionDetections,
+            primaryDetection: _ctrl.primaryRecognitionDetection,
+            title: _ctrl.recognitionTitle,
+            subtitle: _ctrl.recognitionSubtitle,
+            frameWidth: _ctrl.recognitionFrameWidth,
+            frameHeight: _ctrl.recognitionFrameHeight,
+            topOffset: recognitionTopOffset,
+            ttsStartOffset: _ctrl.ttsStartOffset,
+            ttsEndOffset: _ctrl.ttsEndOffset,
           ),
 
           // Feedback prompt

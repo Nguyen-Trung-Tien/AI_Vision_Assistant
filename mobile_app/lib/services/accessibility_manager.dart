@@ -18,12 +18,16 @@ class AccessibilityManager {
 
   bool isSpeaking = false;
   void Function(bool)? onSpeakingChanged;
+  void Function(int start, int end, String word)? onProgress;
 
   AccessibilityManager._internal() {
     _queue = TtsQueue(_flutterTts);
     _queue.onSpeakingChanged = (speaking) {
       isSpeaking = speaking;
       onSpeakingChanged?.call(speaking);
+    };
+    _queue.onProgress = (start, end, word) {
+      onProgress?.call(start, end, word);
     };
     _ttsInitFuture = _initTTS();
     _cacheVibrator();
@@ -41,6 +45,9 @@ class AccessibilityManager {
       _flutterTts.setStartHandler(() {
         isSpeaking = true;
         onSpeakingChanged?.call(true);
+      });
+      _flutterTts.setProgressHandler((text, start, end, word) {
+        _queue.onProgress?.call(start, end, word);
       });
       _flutterTts.setCompletionHandler(() => _queue.markDone());
       _flutterTts.setCancelHandler(() => _queue.markDone());

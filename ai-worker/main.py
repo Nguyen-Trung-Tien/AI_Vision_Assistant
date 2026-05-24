@@ -10,7 +10,7 @@ from services.tts_cache import TTSCacheService
 
 load_dotenv()
 
-app = FastAPI(title="AI Vision Assistant - AI Worker", version="2.1.1")
+app = FastAPI(title="AI Vision Assistant - AI Worker", version="2.1.2")
 
 # Mount TTS audio directory for static file serving
 # Client/Gateway can request GET /audio/<filename>.mp3

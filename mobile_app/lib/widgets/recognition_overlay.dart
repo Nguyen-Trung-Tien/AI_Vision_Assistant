@@ -14,6 +14,8 @@ class RecognitionOverlay extends StatelessWidget {
     required this.frameWidth,
     required this.frameHeight,
     required this.topOffset,
+    this.ttsStartOffset,
+    this.ttsEndOffset,
   });
 
   final bool isEnabled;
@@ -24,6 +26,8 @@ class RecognitionOverlay extends StatelessWidget {
   final int? frameWidth;
   final int? frameHeight;
   final double topOffset;
+  final int? ttsStartOffset;
+  final int? ttsEndOffset;
 
   @override
   Widget build(BuildContext context) {
@@ -87,17 +91,10 @@ class RecognitionOverlay extends StatelessWidget {
                     ),
                     const SizedBox(width: 8),
                     Expanded(
-                      child: Text(
+                      child: _buildHighlightedText(
                         title?.trim().isNotEmpty == true
                             ? title!.trim()
                             : _labelForDetection(primary),
-                        maxLines: 2,
-                        overflow: TextOverflow.ellipsis,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 16,
-                          fontWeight: FontWeight.w700,
-                        ),
                       ),
                     ),
                   ],
@@ -151,6 +148,56 @@ class RecognitionOverlay extends StatelessWidget {
           ),
         ),
       ],
+    );
+  }
+
+  Widget _buildHighlightedText(String text) {
+    const baseStyle = TextStyle(
+      color: Colors.white,
+      fontSize: 16,
+      fontWeight: FontWeight.w700,
+    );
+
+    if (ttsStartOffset == null ||
+        ttsEndOffset == null ||
+        ttsEndOffset! <= ttsStartOffset! ||
+        ttsStartOffset! < 0 ||
+        ttsEndOffset! > text.length) {
+      return Text(
+        text,
+        maxLines: 12,
+        overflow: TextOverflow.ellipsis,
+        style: baseStyle,
+      );
+    }
+
+    final start = ttsStartOffset!;
+    final end = math.min(ttsEndOffset!, text.length);
+
+    final preText = text.substring(0, start);
+    final highlightText = text.substring(start, end);
+    final postText = text.substring(end);
+
+    return RichText(
+      maxLines: 12,
+      overflow: TextOverflow.ellipsis,
+      text: TextSpan(
+        style: baseStyle,
+        children: [
+          TextSpan(text: preText),
+          TextSpan(
+            text: highlightText,
+            style: baseStyle.copyWith(
+              color: AppTheme.accentCyan,
+              backgroundColor: AppTheme.accentCyan.withValues(alpha: 0.2),
+            ),
+          ),
+          TextSpan(
+            text: postText,
+            style: baseStyle,
+          ),
+        ],
+      ),
     );
   }
 

@@ -32,8 +32,8 @@ class MlKitService {
     _faceDetector.close();
   }
 
-  Future<void> processImageFile(String imagePath) async {
-    if (_isProcessing) return;
+  Future<String?> processImageFile(String imagePath) async {
+    if (_isProcessing) return null;
     _isProcessing = true;
 
     try {
@@ -48,21 +48,22 @@ class MlKitService {
 
           final productName = await _lookupProduct(barcodeValue);
           if (productName != null) {
-            _accessibilityManager.speak('Sản phẩm: $productName');
+            final text = 'Sản phẩm: $productName';
+            _accessibilityManager.speak(text);
             _historyService.addEntry(
               'barcode',
-              'Sản phẩm: $productName ($barcodeValue)',
+              '$text ($barcodeValue)',
             );
+            return text;
           } else {
-            _accessibilityManager.speak(
-              'Không tra cứu được tên sản phẩm. Mã vạch: $barcodeValue',
-            );
+            final text = 'Không tra cứu được tên sản phẩm. Mã vạch: $barcodeValue';
+            _accessibilityManager.speak(text);
             _historyService.addEntry(
               'barcode',
               'Không tra cứu được tên sản phẩm ($barcodeValue)',
             );
+            return text;
           }
-          return;
         }
       }
 
@@ -72,15 +73,19 @@ class MlKitService {
         _accessibilityManager.triggerSuccessVibration();
         _accessibilityManager.speak(recognizedText.text);
         _historyService.addEntry('text', recognizedText.text);
+        return recognizedText.text;
       } else {
         _accessibilityManager.speak('Không tìm thấy văn bản.');
+        return null;
       }
     } catch (e) {
       debugPrint('Error processing ML Kit image: $e');
       _accessibilityManager.triggerErrorVibration();
+      return null;
     } finally {
-      await Future.delayed(const Duration(seconds: 2));
-      _isProcessing = false;
+      Future.delayed(const Duration(seconds: 2), () {
+        _isProcessing = false;
+      });
     }
   }
 

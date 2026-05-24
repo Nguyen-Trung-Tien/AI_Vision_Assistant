@@ -1,11 +1,18 @@
 import os
 import logging
+import re
 from typing import Optional
 
 from google import genai
 from google.genai import types
 
 logger = logging.getLogger(__name__)
+
+def clean_markdown(text: str) -> str:
+    if not text: return ""
+    # Remove common markdown characters
+    text = re.sub(r'[*_#`]', '', text)
+    return text.strip()
 
 
 class GeminiService:
@@ -29,7 +36,7 @@ class GeminiService:
         try:
             # Prepare image for Gemini (using raw bytes and mime_type)
             base_prompt = question if question else "Hãy mô tả bức ảnh này."
-            prompt = "Trả lời ngắn gọn 1-2 câu, không dùng markdown hay danh sách. " + base_prompt
+            prompt = "Trả lời thật ngắn gọn, súc tích (1-2 câu), đi thẳng vào trọng tâm. TUYỆT ĐỐI KHÔNG dùng định dạng markdown (*, **, #) hay danh sách. " + base_prompt
             logger.info(f"Asking Gemini: {prompt}")
 
             max_tokens = os.getenv("GEMINI_MAX_OUTPUT_TOKENS")
@@ -53,7 +60,7 @@ class GeminiService:
             )
 
             if response.text:
-                return response.text
+                return clean_markdown(response.text)
             return "Không thể nhận diện hình ảnh này, vui lòng thử lại."
 
         except Exception as e:
@@ -69,17 +76,16 @@ class GeminiService:
             if lang == "vi":
                 prompt = (
                     "Bạn là một trợ lý hỗ trợ người khiếm thị. Hãy phân tích bố cục của bức ảnh này "
-                    "(có thể là menu nhà hàng hoặc trang sách). Hãy mô tả chi tiết các phần: Tiêu đề, "
-                    "các mục lớn, danh sách các món ăn kèm giá tiền (nếu là menu) hoặc các đoạn văn bản "
-                    "(nếu là sách). Sử dụng ngôn ngữ tự nhiên để người dùng dễ nghe qua công cụ đọc màn hình. "
-                    "Ví dụ: 'Menu có 3 phần chính: Khai vị, Món chính và Đồ uống. Phần khai vị gồm có súp cua "
-                    "giá 50 ngàn...'"
+                    "(có thể là menu nhà hàng hoặc trang sách). Hãy mô tả thật ngắn gọn, súc tích và đi thẳng vào trọng tâm. "
+                    "TUYỆT ĐỐI KHÔNG dùng markdown (*, **, #), không dùng danh sách gạch đầu dòng. "
+                    "Sử dụng ngôn ngữ tự nhiên để người dùng dễ nghe. "
+                    "Ví dụ: 'Menu có 3 phần chính: Khai vị, Món chính và Đồ uống. Khai vị có súp cua giá 50 ngàn...'"
                 )
             else:
                 prompt = (
                     "You are an assistant for the visually impaired. Analyze the layout of this image "
-                    "(menu or book page). Describe sections: Title, headers, lists of items with prices "
-                    "(if menu) or paragraphs (if book). Use natural language suitable for text-to-speech. "
+                    "(menu or book page). Be very concise and direct. DO NOT use any markdown formatting (*, **, #) or bullet lists. "
+                    "Use natural language suitable for text-to-speech. "
                     "Example: 'The menu has 3 main sections: Appetizers, Main Courses, and Drinks. "
                     "Appetizers include crab soup for 5 dollars...'"
                 )
@@ -98,7 +104,7 @@ class GeminiService:
             )
 
             if response.text:
-                return response.text
+                return clean_markdown(response.text)
             return "Không thể phân tích bố cục bức ảnh này."
 
         except Exception as e:

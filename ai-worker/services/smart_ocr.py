@@ -54,9 +54,9 @@ def process(image_base64: str, sub_mode: str = "general", lang: str = "vi") -> d
 
     # Đảm bảo ngôn ngữ
     if lang == "en":
-        prompt += " Please answer in English only."
+        prompt += " Please answer in English only. Be concise and DO NOT use any markdown formatting."
     else:
-        prompt += " Chỉ trả lời bằng Tiếng Việt."
+        prompt += " Chỉ trả lời bằng Tiếng Việt. Trả lời thật ngắn gọn, súc tích, TUYỆT ĐỐI KHÔNG dùng markdown."
 
     # Lấy image bytes raw từ base64 padding
     try:
@@ -74,4 +74,5 @@ def process(image_base64: str, sub_mode: str = "general", lang: str = "vi") -> d
     if not result_text or "có lỗi" in result_text.lower():
         return {"text": "Không thể phân tích nội dung lúc này.", "confidence_score": 0.0, "stable": False}
 
-    return {"text": result_text.strip(), "confidence_score": 1.0, "stable": True, "danger_alerts": []}
+    from .gemini_service import clean_markdown
+    return {"text": clean_markdown(result_text), "confidence_score": 1.0, "stable": True, "danger_alerts": []}
