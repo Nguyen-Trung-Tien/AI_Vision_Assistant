@@ -5,7 +5,7 @@ import Sidebar from "./Sidebar";
 import Header from "./Header";
 import LoginV2 from "../../pages/LoginV2";
 import { useAuth } from "../../providers/AuthProvider";
-import { ToastProvider, useToast } from "../Toast";
+import { useToast } from "../Toast";
 import SessionExpiredModal from "./SessionExpiredModal";
 
 function AuthenticatedContent() {
@@ -78,9 +78,5 @@ function AuthenticatedContent() {
 }
 
 export default function AuthenticatedLayout() {
-  return (
-    <ToastProvider>
-      <AuthenticatedContent />
-    </ToastProvider>
-  );
+  return <AuthenticatedContent />;
 }

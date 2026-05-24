@@ -1,3 +1,4 @@
+import { createPortal } from "react-dom";
 import Loading from "./ui/Loading";
 
 export default function ConfirmDialog({
@@ -13,8 +14,8 @@ export default function ConfirmDialog({
 }) {
   if (!open) return null;
 
-  return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
+  return createPortal(
+    <div className="fixed inset-0 z-[200] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4">
       <div
         className="bg-bg-card border border-border-primary rounded-2xl p-6 w-full max-w-sm shadow-2xl"
         style={{ animation: "fadeIn .15s ease" }}
@@ -61,6 +62,7 @@ export default function ConfirmDialog({
           </button>
         </div>
       </div>
-    </div>
+    </div>,
+    document.body
   );
 }

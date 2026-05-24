@@ -13,10 +13,6 @@ export const socket = io(SOCKET_URL, {
 });
 
 export const connectSocket = () => {
-  const token = getStoredToken();
-  if (!token) return;
-
-  socket.auth = { token };
   if (!socket.connected) {
     socket.connect();
   }
@@ -25,6 +21,8 @@ export const connectSocket = () => {
 socket.on("connect", () => {
   socket.emit("join_admin");
 });
+
+
 
 socket.on("connect_error", (err) => {
   if (err.message?.includes("jwt expired") || err.message?.includes("401")) {

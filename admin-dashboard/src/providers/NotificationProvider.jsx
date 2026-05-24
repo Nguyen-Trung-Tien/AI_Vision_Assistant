@@ -12,11 +12,13 @@ import {
 } from "../services/api";
 import { useAuth } from "./AuthProvider";
 
+
 const NotificationContext = createContext(null);
 
 export function NotificationProvider({ children }) {
   const { isLoggedIn } = useAuth();
   const [notifications, setNotifications] = useState([]);
+  const [incomingSos, setIncomingSos] = useState(null);
 
   const fetchNotifications = useCallback(async () => {
     try {
@@ -85,13 +87,20 @@ export function NotificationProvider({ children }) {
         isRead: false,
       };
       setNotifications((prev) => [notif, ...prev]);
+      setIncomingSos((prevSos) => {
+        if (prevSos) return prevSos; // Do not overwrite existing popup
+        return sosData;
+      });
+      try {
+        new Audio("/sos-alarm.mp3").play();
+      } catch {}
     };
 
-    socket.on("new_notification", onNewNotification);
+    socket.on("admin_notification", onNewNotification); // Fix event name here too
     socket.on("sos_incoming", onSosIncoming);
 
     return () => {
-      socket.off("new_notification", onNewNotification);
+      socket.off("admin_notification", onNewNotification);
       socket.off("sos_incoming", onSosIncoming);
     };
   }, [isLoggedIn, fetchNotifications]);
@@ -106,6 +115,8 @@ export function NotificationProvider({ children }) {
         handleDelete,
         handleBulkDelete,
         handleDeleteAll,
+        incomingSos,
+        setIncomingSos,
       }}
     >
       {children}
