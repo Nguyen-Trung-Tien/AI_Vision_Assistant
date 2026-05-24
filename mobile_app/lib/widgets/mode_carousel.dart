@@ -7,6 +7,8 @@ class ModeCarousel extends StatelessWidget {
   final Function(int) onPageChanged;
   final List<String> modes;
   final List<IconData> modeIcons;
+  final VoidCallback? onDoubleTap;
+  final VoidCallback? onLongPress;
 
   const ModeCarousel({
     super.key,
@@ -14,6 +16,8 @@ class ModeCarousel extends StatelessWidget {
     required this.onPageChanged,
     required this.modes,
     required this.modeIcons,
+    this.onDoubleTap,
+    this.onLongPress,
   });
 
   static const List<Color> modeColors = [
@@ -37,10 +41,14 @@ class ModeCarousel extends StatelessWidget {
         final color =
             index < modeColors.length ? modeColors[index] : AppTheme.accentCyan;
 
-        return Container(
-          color: Colors.transparent,
-          alignment: Alignment.center,
+        return GestureDetector(
+          onDoubleTap: onDoubleTap,
+          onLongPress: onLongPress,
+          behavior: HitTestBehavior.opaque,
           child: Container(
+            color: Colors.transparent,
+            alignment: Alignment.center,
+            child: Container(
             margin: const EdgeInsets.symmetric(horizontal: 28),
             padding: const EdgeInsets.symmetric(horizontal: 28, vertical: 24),
             decoration: BoxDecoration(
@@ -108,6 +116,7 @@ class ModeCarousel extends StatelessWidget {
               ],
             ),
           ),
+        ),
         );
       },
     );

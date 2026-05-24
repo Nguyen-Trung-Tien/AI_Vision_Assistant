@@ -382,10 +382,13 @@ class _MainScreenState extends State<MainScreen>
 
   void _onPageChanged(int index) {
     final lang = _ctrl.settings.language;
-    setState(() => _ctrl.currentModeIndex = index);
-    if (index != 0) {
+    setState(() {
+      _ctrl.currentModeIndex = index;
+      _ctrl.activeProcessingMode = null;
       _clearRecognitionOverlay();
-    }
+    });
+    
+    _ctrl.accessibilityManager.stopSpeak();
     _ctrl.accessibilityManager.triggerSuccessVibration();
     _ctrl.accessibilityManager.speak(
       AppLocalizations.t(_ctrl.modeSpokenKey(index), lang),
@@ -589,15 +592,13 @@ class _MainScreenState extends State<MainScreen>
 
           // Mode carousel
           Positioned.fill(
-            child: GestureDetector(
+            child: ModeCarousel(
+              pageController: _ctrl.pageController,
+              onPageChanged: _onPageChanged,
+              modes: modes,
+              modeIcons: _ctrl.modeIcons,
               onDoubleTap: () => unawaited(_handleDoubleTap()),
               onLongPress: _voiceCtrl.startListening,
-              child: ModeCarousel(
-                pageController: _ctrl.pageController,
-                onPageChanged: _onPageChanged,
-                modes: modes,
-                modeIcons: _ctrl.modeIcons,
-              ),
             ),
           ),
 
@@ -635,33 +636,38 @@ class _MainScreenState extends State<MainScreen>
                     _ctrl.isScanningMLKit)
                 ? GestureDetector(
                     onDoubleTap: () => unawaited(_handleDoubleTap()),
-                    child: ModeProcessingOverlay(
-                      key: const ValueKey('processing_overlay'),
-                      mode: _ctrl.activeProcessingMode,
-                      isSpeaking: _ctrl.accessibilityManager.isSpeaking,
-                      statusText: _ctrl.accessibilityManager.isSpeaking
-                          ? (lang == 'vi'
-                              ? 'Đang đọc kết quả...'
-                              : 'Reading result...')
-                          : _ctrl.isScanningMLKit
-                              ? AppLocalizations.t('main_scanning', lang)
-                              : AppLocalizations.t('main_processing', lang),
+                    behavior: HitTestBehavior.translucent,
+                    child: IgnorePointer(
+                      child: ModeProcessingOverlay(
+                        key: const ValueKey('processing_overlay'),
+                        mode: _ctrl.activeProcessingMode,
+                        isSpeaking: _ctrl.accessibilityManager.isSpeaking,
+                        statusText: _ctrl.accessibilityManager.isSpeaking
+                            ? (lang == 'vi'
+                                ? 'Đang đọc kết quả...'
+                                : 'Reading result...')
+                            : _ctrl.isScanningMLKit
+                                ? AppLocalizations.t('main_scanning', lang)
+                                : AppLocalizations.t('main_processing', lang),
+                      ),
                     ),
                   )
                 : const SizedBox.shrink(key: ValueKey('no_overlay')),
           ),
 
-          RecognitionOverlay(
-            isEnabled: showRecognitionOverlay,
-            detections: _ctrl.currentRecognitionDetections,
-            primaryDetection: _ctrl.primaryRecognitionDetection,
-            title: _ctrl.recognitionTitle,
-            subtitle: _ctrl.recognitionSubtitle,
-            frameWidth: _ctrl.recognitionFrameWidth,
-            frameHeight: _ctrl.recognitionFrameHeight,
-            topOffset: recognitionTopOffset,
-            ttsStartOffset: _ctrl.ttsStartOffset,
-            ttsEndOffset: _ctrl.ttsEndOffset,
+          IgnorePointer(
+            child: RecognitionOverlay(
+              isEnabled: showRecognitionOverlay,
+              detections: _ctrl.currentRecognitionDetections,
+              primaryDetection: _ctrl.primaryRecognitionDetection,
+              title: _ctrl.recognitionTitle,
+              subtitle: _ctrl.recognitionSubtitle,
+              frameWidth: _ctrl.recognitionFrameWidth,
+              frameHeight: _ctrl.recognitionFrameHeight,
+              topOffset: recognitionTopOffset,
+              ttsStartOffset: _ctrl.ttsStartOffset,
+              ttsEndOffset: _ctrl.ttsEndOffset,
+            ),
           ),
 
           // Feedback prompt
