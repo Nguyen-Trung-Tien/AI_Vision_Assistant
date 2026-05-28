@@ -12,7 +12,7 @@ class DocumentReaderService {
 
   Future<List<String>?> pickAndExtractPages({void Function()? onFilePicked}) async {
     try {
-      FilePickerResult? result = await FilePicker.platform.pickFiles(
+      FilePickerResult? result = await FilePicker.pickFiles(
         type: FileType.custom,
         allowedExtensions: ['pdf', 'doc', 'docx', 'txt', 'jpg', 'jpeg', 'png'],
       );

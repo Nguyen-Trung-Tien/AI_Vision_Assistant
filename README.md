@@ -22,7 +22,7 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 <br/>
 
-![Version](https://img.shields.io/badge/Version-2.1.2-blue?style=flat-square)
+![Version](https://img.shields.io/badge/Version-2.2.0-blue?style=flat-square)
 ![License](https://img.shields.io/badge/License-UNLICENSED-gray?style=flat-square)
 ![Status](https://img.shields.io/badge/Status-In_Development-orange?style=flat-square)
 [![CI/CD](https://github.com/Nguyen-Trung-Tien/AI_Vision_Assistant/actions/workflows/ci-cd.yml/badge.svg)](https://github.com/Nguyen-Trung-Tien/AI_Vision_Assistant/actions/workflows/ci-cd.yml)
@@ -75,7 +75,16 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 ## 📰 Cập nhật mới nhất
 
-### 🗓️ Tháng 5/2026 — v2.1.2 (Current)
+### 🗓️ Tháng 5/2026 — v2.2.0 (Current)
+
+| Ngày      | Cập nhật                          | Mô tả                                                                                                                                                                          |
+| --------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| **28/05** | 🎙️ Backend Visual QA Handler       | Sửa lỗi thiếu handler trong `rabbitmq_consumer.py`. Định tuyến chính xác yêu cầu hỏi đáp trực quan đến `GeminiService().ask_gemini_vision(image_bytes, question)` qua Gemini Vision API. |
+| **28/05** | ✨ Visual QA Button (Mobile)      | Viết lại toàn bộ nút hỏi đáp AI với 3 trạng thái động (`idle`, `recording`, `processing`), tích hợp ripple wave, soundwave giả lập tần số, và vòng sweep border xoay vòng đẹp mắt. |
+| **28/05** | 🔮 Glassmorphism Overlay (Mobile) | Thêm widget `VisualQAResultOverlay` làm mờ hậu cảnh bằng glassmorphism, hiển thị câu hỏi và câu trả lời AI trượt từ dưới lên, tự động đóng sau 15 giây hoặc khi người dùng chạm. |
+| **28/05** | 🌐 Hỗ trợ đa ngôn ngữ Visual QA   | Hỗ trợ đầy đủ tiếng Việt và tiếng Anh cho thông báo trạng thái của Visual QA trên màn hình chính (`main_screen.dart`), tự động đồng bộ theo locale hệ thống. |
+
+### 🗓️ Tháng 5/2026 — v2.1.2
 
 | Ngày      | Cập nhật                          | Mô tả                                                                                                                                                                          |
 | --------- | --------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -196,7 +205,28 @@ _Sử dụng AI để nhận diện vật thể, tiền Việt Nam, cảnh báo 
 
 ---
 
-## 🚀 Các tính năng nổi bật vừa cập nhật (v2.0.0)
+## 🚀 Các tính năng nổi bật vừa cập nhật (v2.2.0)
+
+Phiên bản **v2.2.0** là **Visual QA & Interaction Milestone** — tập trung vào hoàn thiện toàn diện tính năng Hỏi đáp AI trực quan bằng giọng nói và hình ảnh (Visual QA), cùng các hiệu ứng tương tác cao cấp trên ứng dụng di động:
+
+1. **🎙️ Backend Visual QA Handler hoàn chỉnh**:
+   - Khắc phục triệt để lỗi thiếu handler tác vụ `visual_qa` trong `rabbitmq_consumer.py`.
+   - Các yêu cầu hỏi đáp trực quan được định tuyến chính xác đến `GeminiService().ask_gemini_vision(image_bytes, question)` để xử lý bằng Google Gemini Vision API.
+
+2. **✨ Interactive Visual QA Button (Mobile)**:
+   - Viết lại toàn bộ nút hỏi đáp AI với 3 trạng thái động: `idle` (chờ), `recording` (đang ghi âm) và `processing` (đang xử lý).
+   - Tích hợp 5 Animation Controllers độc lập cho hiệu ứng Ripple đa vòng lan tỏa cực đẹp, Sweep Gradient xoay vòng viền nút, Soundwave 5 cột nhấp nháy theo tần số giọng nói giả lập và Spinner xoay tròn khi đang chờ kết quả.
+
+3. **🔮 Visual QA Glassmorphism Overlay (Mobile)**:
+   - Thiết kế widget `VisualQAResultOverlay` dạng trượt lên (slide-up) kết hợp làm mờ hậu cảnh (glassmorphic backdrop filter).
+   - Hiển thị trực quan câu hỏi của người dùng và câu trả lời chi tiết của trợ lý AI ngay trên màn hình. Tự động đóng sau 15 giây hoặc khi người dùng chạm để tắt.
+
+4. **🌐 i18n & Trải nghiệm đa ngôn ngữ**:
+   - Hỗ trợ đầy đủ tiếng Việt và tiếng Anh cho các thông báo trạng thái của Visual QA trên màn hình chính (`main_screen.dart`), tự động đồng bộ theo locale hệ thống được thiết lập.
+
+---
+
+## 🚀 Các cải tiến hiệu năng ở phiên bản trước (v2.0.0)
 
 Phiên bản v2.0.0 là **Performance Milestone** — tập trung hoàn toàn vào tối ưu hiệu suất hệ thống end-to-end (AI Worker + Backend Gateway), mang lại trải nghiệm Continuous Stream mượt mà hơn đáng kể:
 
@@ -418,7 +448,7 @@ sequenceDiagram
 | `TEXT_OCR`         | Nhấn đúp ở mode 4                   | Tesseract OCR                                    | Văn bản trích xuất từ ảnh camera                                 | ✅ Server               |
 | `SMART_OCR`        | Lệnh giọng nói theo ngữ cảnh        | Gemini Vision                                    | Đọc hiểu menu, biển báo, hóa đơn theo ngữ cảnh                   | ✅ Server               |
 | `LAYOUT_ANALYSIS`  | Nhấn đúp ở mode 7                   | Gemini Vision                                    | Phân tích bố cục tài liệu/trang                                  | ✅ Server               |
-| `visual_qa`        | Nút Q&A                             | Luồng socket đã có, cần hoàn thiện worker riêng  | Tác vụ hỏi đáp trực quan đang ở trạng thái tích hợp/chưa ổn định | ⚠️ Khác nhau theo build |
+| `visual_qa`        | Nút Q&A                             | Gemini Service (Ask Gemini Vision)               | Hỏi đáp trực quan bằng giọng nói tiếng Việt qua ảnh camera       | ✅ Server               |
 
 ---
 

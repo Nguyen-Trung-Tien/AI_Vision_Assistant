@@ -5,7 +5,7 @@ services:
     image: rabbitmq:3-management
     container_name: vision_rabbitmq
     ports:
-      - '5672:5672'
+      - '56720:5672'
       - '15672:15672'
     environment:
       RABBITMQ_DEFAULT_USER: guest

@@ -321,6 +321,20 @@ def on_message(channel, method, properties, body):
                 "stable": True,
                 "danger_alerts": [],
             }
+        elif task_type == "visual_qa":
+            question = data.get("question", "")
+            print(f"[*] Processing Visual QA for client: {client_id} | Q: {question[:80]}")
+            image_bytes = base64.b64decode(
+                frame_data.split(",")[1] if "," in frame_data else frame_data
+            )
+            gemini = GeminiService()
+            answer = gemini.ask_gemini_vision(image_bytes, question)
+            ai_result = {
+                "text": answer or "",
+                "confidence_score": 1.0,
+                "stable": True,
+                "danger_alerts": [],
+            }
         else:
             print(f"[!] Unknown task type: {task_type}")
             channel.basic_ack(delivery_tag=method.delivery_tag)

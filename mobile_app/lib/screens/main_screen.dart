@@ -21,6 +21,7 @@ import 'package:mobile_app/widgets/danger_banner.dart';
 import 'package:mobile_app/widgets/status_overlay.dart';
 import 'package:mobile_app/widgets/mode_carousel.dart';
 import 'package:mobile_app/widgets/visual_qa_button.dart';
+import 'package:mobile_app/widgets/visual_qa_result_overlay.dart';
 import 'package:mobile_app/widgets/voice_listening_overlay.dart';
 import 'package:mobile_app/widgets/mode_processing_overlay.dart';
 
@@ -41,6 +42,12 @@ class _MainScreenState extends State<MainScreen>
   late final SosController _sosCtrl;
   late final AnimationController _pulseController;
   bool _isOpeningFaceRegister = false;
+
+  // Visual QA state
+  final GlobalKey<VisualQAButtonState> _vqaButtonKey = GlobalKey<VisualQAButtonState>();
+  String? _vqaQuestion;
+  String? _vqaAnswer;
+  String _lastVqaQuestionText = '';
 
   @override
   void initState() {
@@ -298,6 +305,14 @@ class _MainScreenState extends State<MainScreen>
         if (text.isNotEmpty) {
           _ctrl.accessibilityManager.speak(_ctrl.sanitizeForTts(text));
         }
+        // Show result overlay + reset button
+        if (mounted) {
+          setState(() {
+            _vqaQuestion = _lastVqaQuestionText;
+            _vqaAnswer = text.isNotEmpty ? text : (_ctrl.settings.language == 'vi' ? 'Không có kết quả.' : 'No result.');
+          });
+          _vqaButtonKey.currentState?.setIdle();
+        }
         return;
       }
       final taskType = result['taskType']?.toString() ??
@@ -520,6 +535,11 @@ class _MainScreenState extends State<MainScreen>
   }
 
   Future<void> _startVisualQA(BuildContext context) async {
+    // Dismiss any previous result
+    setState(() {
+      _vqaQuestion = null;
+      _vqaAnswer = null;
+    });
     _ctrl.accessibilityManager.speak(
       _ctrl.settings.language == 'vi' ? 'Đang nghe...' : 'Listening...',
     );
@@ -530,7 +550,11 @@ class _MainScreenState extends State<MainScreen>
     final question = await _voiceCtrl.stopListeningAndGetText();
     final frameBytes = await _ctrl.captureCurrentFrame();
     if (frameBytes != null) {
-      _ctrl.accessibilityManager.speak('Đang phân tích hình ảnh...');
+      _ctrl.accessibilityManager.speak(
+        _ctrl.settings.language == 'vi'
+            ? 'Đang phân tích hình ảnh...'
+            : 'Analyzing image...',
+      );
 
       final finalQuestion = question.isNotEmpty
           ? question
@@ -538,13 +562,20 @@ class _MainScreenState extends State<MainScreen>
               ? 'Hãy mô tả chi tiết bức ảnh này.'
               : 'Please describe this image in detail.');
 
+      _lastVqaQuestionText = finalQuestion;
+
       _ctrl.wsService.sendVisualQA(
         frame: frameBytes,
         lang: _ctrl.settings.language,
         question: finalQuestion,
       );
     } else {
-      _ctrl.accessibilityManager.speak('Không thể chụp ảnh.');
+      _ctrl.accessibilityManager.speak(
+        _ctrl.settings.language == 'vi'
+            ? 'Không thể chụp ảnh.'
+            : 'Cannot capture image.',
+      );
+      _vqaButtonKey.currentState?.setIdle();
     }
   }
 
@@ -886,14 +917,27 @@ class _MainScreenState extends State<MainScreen>
 
           // Visual QA button
           Positioned(
-            bottom: 130,
-            left: MediaQuery.of(context).size.width / 2 - 38,
+            bottom: 110,
+            left: MediaQuery.of(context).size.width / 2 - 60,
             child: VisualQAButton(
+              key: _vqaButtonKey,
               language: lang,
               onStartRecording: _startVisualQA,
               onStopRecording: _stopVisualQA,
             ),
           ),
+
+          // Visual QA result overlay
+          if (_vqaAnswer != null)
+            VisualQAResultOverlay(
+              question: _vqaQuestion ?? '',
+              answer: _vqaAnswer!,
+              language: lang,
+              onDismiss: () => setState(() {
+                _vqaQuestion = null;
+                _vqaAnswer = null;
+              }),
+            ),
 
           // Page indicator dots
           Positioned(

@@ -335,16 +335,18 @@ class _EmergencyContactsScreenState extends State<EmergencyContactsScreen> {
   }
 
   Future<void> _pickContact() async {
-    if (await FlutterContacts.requestPermission(readonly: true)) {
-      final contact = await FlutterContacts.openExternalPick();
+    final status = await FlutterContacts.permissions.request(PermissionType.read);
+    if (status == PermissionStatus.granted) {
+      final contact = await FlutterContacts.native.showPicker();
       if (contact != null && contact.phones.isNotEmpty) {
         final num = contact.phones.first.number.replaceAll(
           RegExp(r'[^0-9+]'),
           '',
         );
-        final name = contact.displayName.trim().isEmpty
+        final displayName = contact.displayName ?? '';
+        final name = displayName.trim().isEmpty
             ? num
-            : contact.displayName.trim();
+            : displayName.trim();
 
         setState(() => _isLoading = true);
         final added = await _contactService.addContact(

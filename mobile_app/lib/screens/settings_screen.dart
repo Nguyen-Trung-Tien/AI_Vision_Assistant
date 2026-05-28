@@ -417,7 +417,7 @@ class _SettingsScreenState extends State<SettingsScreen> {
                 const SizedBox(height: 20),
                 Center(
                   child: Text(
-                    'Vision Assistant v2.1.2',
+                    'Vision Assistant v2.2.0',
                     style: AppTheme.bodySmall
                         .copyWith(color: AppTheme.whiteAlpha(0.3)),
                   ),
