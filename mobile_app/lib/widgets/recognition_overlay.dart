@@ -57,93 +57,101 @@ class RecognitionOverlay extends StatelessWidget {
           top: topPadding + topOffset,
           left: 16,
           right: 16,
-          child: Container(
-            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
-            decoration: AppTheme.glassDecoration(
-              borderRadius: 18,
-              opacity: 0.78,
-            ).copyWith(
-              border: Border.all(
-                color: accent.withValues(alpha: 0.45),
-                width: 1.4,
-              ),
+          child: ConstrainedBox(
+            constraints: BoxConstraints(
+              maxHeight: MediaQuery.of(context).size.height * 0.55,
             ),
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              mainAxisSize: MainAxisSize.min,
-              children: [
-                Row(
+            child: SingleChildScrollView(
+              physics: const BouncingScrollPhysics(),
+              child: Container(
+                padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 12),
+                decoration: AppTheme.glassDecoration(
+                  borderRadius: 18,
+                  opacity: 0.78,
+                ).copyWith(
+                  border: Border.all(
+                    color: accent.withValues(alpha: 0.45),
+                    width: 1.4,
+                  ),
+                ),
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  mainAxisSize: MainAxisSize.min,
                   children: [
-                    Container(
-                      width: 10,
-                      height: 10,
-                      decoration: BoxDecoration(
-                        color: accent,
-                        shape: BoxShape.circle,
-                        boxShadow: [
-                          BoxShadow(
-                            color: accent.withValues(alpha: 0.5),
-                            blurRadius: 10,
-                            spreadRadius: 1,
+                    Row(
+                      children: [
+                        Container(
+                          width: 10,
+                          height: 10,
+                          decoration: BoxDecoration(
+                            color: accent,
+                            shape: BoxShape.circle,
+                            boxShadow: [
+                              BoxShadow(
+                                color: accent.withValues(alpha: 0.5),
+                                blurRadius: 10,
+                                spreadRadius: 1,
+                              ),
+                            ],
                           ),
-                        ],
-                      ),
+                        ),
+                        const SizedBox(width: 8),
+                        Expanded(
+                          child: _buildHighlightedText(
+                            title?.trim().isNotEmpty == true
+                                ? title!.trim()
+                                : _labelForDetection(primary),
+                          ),
+                        ),
+                      ],
                     ),
-                    const SizedBox(width: 8),
-                    Expanded(
-                      child: _buildHighlightedText(
-                        title?.trim().isNotEmpty == true
-                            ? title!.trim()
-                            : _labelForDetection(primary),
+                    if (subtitle != null && subtitle!.trim().isNotEmpty) ...[
+                      const SizedBox(height: 6),
+                      Text(
+                        subtitle!.trim(),
+                        maxLines: 2,
+                        overflow: TextOverflow.ellipsis,
+                        style: TextStyle(
+                          color: Colors.white.withValues(alpha: 0.92),
+                          fontSize: 12,
+                          height: 1.3,
+                        ),
                       ),
-                    ),
+                    ],
+                    if (detections.isNotEmpty) ...[
+                      const SizedBox(height: 10),
+                      Wrap(
+                        spacing: 8,
+                        runSpacing: 8,
+                        children: detections.take(4).map((d) {
+                          final chipColor = _colorForDetection(d);
+                          return Container(
+                            padding: const EdgeInsets.symmetric(
+                              horizontal: 10,
+                              vertical: 5,
+                            ),
+                            decoration: BoxDecoration(
+                              color: chipColor.withValues(alpha: 0.18),
+                              borderRadius: BorderRadius.circular(999),
+                              border: Border.all(
+                                color: chipColor.withValues(alpha: 0.45),
+                              ),
+                            ),
+                            child: Text(
+                              _labelForDetection(d),
+                              style: const TextStyle(
+                                color: Colors.white,
+                                fontSize: 11,
+                                fontWeight: FontWeight.w600,
+                              ),
+                            ),
+                          );
+                        }).toList(),
+                      ),
+                    ],
                   ],
                 ),
-                if (subtitle != null && subtitle!.trim().isNotEmpty) ...[
-                  const SizedBox(height: 6),
-                  Text(
-                    subtitle!.trim(),
-                    maxLines: 2,
-                    overflow: TextOverflow.ellipsis,
-                    style: TextStyle(
-                      color: Colors.white.withValues(alpha: 0.92),
-                      fontSize: 12,
-                      height: 1.3,
-                    ),
-                  ),
-                ],
-                if (detections.isNotEmpty) ...[
-                  const SizedBox(height: 10),
-                  Wrap(
-                    spacing: 8,
-                    runSpacing: 8,
-                    children: detections.take(4).map((d) {
-                      final chipColor = _colorForDetection(d);
-                      return Container(
-                        padding: const EdgeInsets.symmetric(
-                          horizontal: 10,
-                          vertical: 5,
-                        ),
-                        decoration: BoxDecoration(
-                          color: chipColor.withValues(alpha: 0.18),
-                          borderRadius: BorderRadius.circular(999),
-                          border: Border.all(
-                            color: chipColor.withValues(alpha: 0.45),
-                          ),
-                        ),
-                        child: Text(
-                          _labelForDetection(d),
-                          style: const TextStyle(
-                            color: Colors.white,
-                            fontSize: 11,
-                            fontWeight: FontWeight.w600,
-                          ),
-                        ),
-                      );
-                    }).toList(),
-                  ),
-                ],
-              ],
+              ),
             ),
           ),
         ),
@@ -165,7 +173,7 @@ class RecognitionOverlay extends StatelessWidget {
         ttsEndOffset! > text.length) {
       return Text(
         text,
-        maxLines: 12,
+        maxLines: 20,
         overflow: TextOverflow.ellipsis,
         style: baseStyle,
       );
@@ -179,7 +187,7 @@ class RecognitionOverlay extends StatelessWidget {
     final postText = text.substring(end);
 
     return RichText(
-      maxLines: 12,
+      maxLines: 20,
       overflow: TextOverflow.ellipsis,
       text: TextSpan(
         style: baseStyle,
