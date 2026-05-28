@@ -85,9 +85,18 @@ class NavigationService {
     double lng,
   ) async {
     try {
+      // Fix #1: Scope Nominatim search near user's location
+      final viewboxLeft = lng - 0.5;
+      final viewboxRight = lng + 0.5;
+      final viewboxTop = lat + 0.5;
+      final viewboxBottom = lat - 0.5;
       final searchUrl = Uri.parse(
         'https://nominatim.openstreetmap.org/search'
-        '?format=jsonv2&limit=1&q=${Uri.encodeComponent(destinationQuery)}',
+        '?format=jsonv2&limit=5'
+        '&q=${Uri.encodeComponent(destinationQuery)}'
+        '&viewbox=$viewboxLeft,$viewboxTop,$viewboxRight,$viewboxBottom'
+        '&bounded=0'
+        '&countrycodes=vn',
       );
 
       final searchResponse = await http.get(
@@ -102,11 +111,29 @@ class NavigationService {
         return null;
       }
 
-      final candidate = searchData.first as Map<String, dynamic>;
-      final targetLat = double.tryParse(candidate['lat']?.toString() ?? '');
-      final targetLng = double.tryParse(candidate['lon']?.toString() ?? '');
+      // Pick the candidate closest to the user's current position
+      Map<String, dynamic>? bestCandidate;
+      double bestDistance = double.infinity;
+      for (final c in searchData) {
+        final cLat = double.tryParse(c['lat']?.toString() ?? '');
+        final cLng = double.tryParse(c['lon']?.toString() ?? '');
+        if (cLat == null || cLng == null) continue;
+        final d = Geolocator.distanceBetween(lat, lng, cLat, cLng);
+        if (d < bestDistance) {
+          bestDistance = d;
+          bestCandidate = c as Map<String, dynamic>;
+        }
+      }
+
+      if (bestCandidate == null) {
+        _accessibilityManager.speak("Không tìm thấy địa điểm này.");
+        return null;
+      }
+
+      final targetLat = double.tryParse(bestCandidate['lat']?.toString() ?? '');
+      final targetLng = double.tryParse(bestCandidate['lon']?.toString() ?? '');
       final targetName =
-          candidate['display_name']?.toString() ?? destinationQuery;
+          bestCandidate['display_name']?.toString() ?? destinationQuery;
 
       if (targetLat == null || targetLng == null) {
         _accessibilityManager.speak("Không tìm thấy địa điểm này.");
@@ -141,17 +168,31 @@ class NavigationService {
       final stepsRaw = leg['steps'] as List<dynamic>? ?? [];
       final steps = <Map<String, dynamic>>[];
 
-      for (final raw in stepsRaw) {
-        final step = raw as Map<String, dynamic>;
+      // Fix #2: Use the NEXT step's maneuver location as this step's end point
+      for (int i = 0; i < stepsRaw.length; i++) {
+        final step = stepsRaw[i] as Map<String, dynamic>;
         final maneuver = step['maneuver'] as Map<String, dynamic>? ?? {};
-        final location = maneuver['location'] as List<dynamic>? ?? [];
-        if (location.length < 2) continue;
-        final endLng = (location[0] as num).toDouble();
-        final endLat = (location[1] as num).toDouble();
+        final distance = (step['distance'] as num?)?.toDouble() ?? 0;
+
+        // End location = maneuver location of the NEXT step (where this step ends)
+        // For the last step, use its own maneuver location (arrival point)
+        List<dynamic> endLocation;
+        if (i + 1 < stepsRaw.length) {
+          final nextStep = stepsRaw[i + 1] as Map<String, dynamic>;
+          final nextManeuver =
+              nextStep['maneuver'] as Map<String, dynamic>? ?? {};
+          endLocation = nextManeuver['location'] as List<dynamic>? ?? [];
+        } else {
+          endLocation = maneuver['location'] as List<dynamic>? ?? [];
+        }
+        if (endLocation.length < 2) continue;
+        final endLng = (endLocation[0] as num).toDouble();
+        final endLat = (endLocation[1] as num).toDouble();
         final instruction = _formatOsrmInstruction(step);
         steps.add({
           'end_location': {'lat': endLat, 'lng': endLng},
           'html_instructions': instruction,
+          'distance_meters': distance,
         });
       }
 
@@ -159,6 +200,7 @@ class NavigationService {
         steps.add({
           'end_location': {'lat': targetLat, 'lng': targetLng},
           'html_instructions': 'Đi tới điểm đến',
+          'distance_meters': 0.0,
         });
       }
 
@@ -406,5 +448,47 @@ class NavigationService {
     _positionSub?.cancel();
     _compassSub = null;
     _positionSub = null;
+  }
+
+  /// Fix #3: Calculate relative direction from compass heading to target waypoint.
+  /// Returns a key: 'straight', 'slight_left', 'slight_right', 'left', 'right', 'behind'
+  String getRelativeDirection({
+    required double compassHeading,
+    required double currentLat,
+    required double currentLng,
+    required double targetLat,
+    required double targetLng,
+  }) {
+    final targetBearing = Geolocator.bearingBetween(
+      currentLat,
+      currentLng,
+      targetLat,
+      targetLng,
+    );
+    final normalizedTarget = (targetBearing + 360) % 360;
+    final normalizedHeading = (compassHeading + 360) % 360;
+    double diff = normalizedTarget - normalizedHeading;
+    if (diff > 180) diff -= 360;
+    if (diff < -180) diff += 360;
+
+    if (diff.abs() < 20) return 'straight';
+    if (diff > 0 && diff < 60) return 'slight_right';
+    if (diff >= 60 && diff < 150) return 'right';
+    if (diff < 0 && diff > -60) return 'slight_left';
+    if (diff <= -60 && diff > -150) return 'left';
+    return 'behind';
+  }
+
+  /// Translate relative direction key to human-readable text.
+  String relativeDirectionText(String dirKey, String lang) {
+    final Map<String, Map<String, String>> labels = {
+      'straight': {'vi': 'Đi thẳng phía trước', 'en': 'Go straight ahead'},
+      'slight_left': {'vi': 'Chếch trái', 'en': 'Slightly left'},
+      'slight_right': {'vi': 'Chếch phải', 'en': 'Slightly right'},
+      'left': {'vi': 'Rẽ trái', 'en': 'Turn left'},
+      'right': {'vi': 'Rẽ phải', 'en': 'Turn right'},
+      'behind': {'vi': 'Quay lại phía sau', 'en': 'Turn around'},
+    };
+    return labels[dirKey]?[lang] ?? labels[dirKey]?['vi'] ?? dirKey;
   }
 }

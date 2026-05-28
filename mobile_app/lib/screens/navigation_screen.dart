@@ -1,5 +1,6 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
+import 'package:flutter_compass/flutter_compass.dart';
 import 'package:flutter_map/flutter_map.dart';
 import 'package:geolocator/geolocator.dart';
 import 'package:latlong2/latlong.dart';
@@ -24,6 +25,18 @@ class _NavigationScreenState extends State<NavigationScreen> {
   String _currentInstruction = "";
   List<dynamic> _steps = [];
   int _currentStepIndex = 0;
+
+  // Fix #4: Look-ahead & overshoot detection state
+  bool _hasAnnouncedApproaching = false;
+  double? _lastDistanceToWaypoint;
+
+  // Fix #5: Distance announcement debounce
+  DateTime _lastDistanceAnnounce = DateTime(2000);
+
+  // Fix #3: Compass subscription for relative direction during navigation
+  StreamSubscription<CompassEvent>? _compassSub;
+  double? _lastCompassHeading;
+  DateTime _lastRelativeDirTime = DateTime(2000);
 
   Position? _currentPosition;
   StreamSubscription<Position>? _positionSub;
@@ -147,8 +160,8 @@ class _NavigationScreenState extends State<NavigationScreen> {
     }
 
     final step = _steps[_currentStepIndex];
-    final endLat = step['end_location']['lat'];
-    final endLng = step['end_location']['lng'];
+    final endLat = step['end_location']['lat'] as double;
+    final endLng = step['end_location']['lng'] as double;
 
     final distanceToWaypoint = Geolocator.distanceBetween(
       position.latitude,
@@ -157,8 +170,63 @@ class _NavigationScreenState extends State<NavigationScreen> {
       endLng,
     );
 
-    // If within 15 meters of the turn, speak the NEXT step
-    if (distanceToWaypoint < 15.0) {
+    final lang = _settings.language;
+
+    // Fix #5: Periodic distance announcement when far from turn (every 15s)
+    if (distanceToWaypoint >= 50.0) {
+      final now = DateTime.now();
+      if (now.difference(_lastDistanceAnnounce).inSeconds >= 15) {
+        _lastDistanceAnnounce = now;
+        final distText = distanceToWaypoint >= 1000
+            ? '${(distanceToWaypoint / 1000).toStringAsFixed(1)}km'
+            : '${distanceToWaypoint.round()}m';
+        _accessibilityManager.speak(
+          lang == 'vi'
+              ? 'Còn $distText đến điểm rẽ tiếp theo'
+              : '$distText to next turn',
+        );
+      }
+    }
+
+    // Fix #3: Compass-based relative direction during navigation
+    if (_lastCompassHeading != null && distanceToWaypoint >= 20.0) {
+      final now = DateTime.now();
+      if (now.difference(_lastRelativeDirTime).inSeconds >= 8) {
+        _lastRelativeDirTime = now;
+        final relDir = _navService.getRelativeDirection(
+          compassHeading: _lastCompassHeading!,
+          currentLat: position.latitude,
+          currentLng: position.longitude,
+          targetLat: endLat,
+          targetLng: endLng,
+        );
+        final dirText = _navService.relativeDirectionText(relDir, lang);
+        _accessibilityManager.speak(dirText);
+      }
+    }
+
+    // Fix #4: Look-ahead — announce approaching at 50m
+    if (distanceToWaypoint < 50.0 &&
+        distanceToWaypoint >= 20.0 &&
+        !_hasAnnouncedApproaching) {
+      _hasAnnouncedApproaching = true;
+      if (_currentStepIndex + 1 < _steps.length) {
+        final nextStepText = _navService.stripHtmlTags(
+          _steps[_currentStepIndex + 1]['html_instructions'],
+        );
+        final distText = distanceToWaypoint.round().toString();
+        _accessibilityManager.speak(
+          lang == 'vi'
+              ? 'Còn ${distText}m, $nextStepText'
+              : 'In ${distText}m, $nextStepText',
+        );
+      }
+    }
+
+    // Arrived at waypoint: 20m threshold (GPS accuracy friendly)
+    if (distanceToWaypoint < 20.0) {
+      _hasAnnouncedApproaching = false;
+      _lastDistanceToWaypoint = null;
       _currentStepIndex++;
       if (_currentStepIndex < _steps.length) {
         final nextStepText = _navService.stripHtmlTags(
@@ -168,12 +236,36 @@ class _NavigationScreenState extends State<NavigationScreen> {
           _currentInstruction = nextStepText;
         });
         _accessibilityManager.speak(
-            (_settings.language == 'vi' ? "Sắp tới, " : "Coming up, ") +
-                nextStepText);
+            (lang == 'vi' ? "Sắp tới, " : "Coming up, ") + nextStepText);
       } else {
         _finishNavigation();
       }
+      return;
     }
+
+    // Fix #4: Overshoot detection — if distance is increasing after being close
+    if (_lastDistanceToWaypoint != null &&
+        distanceToWaypoint > _lastDistanceToWaypoint! + 5.0 &&
+        _lastDistanceToWaypoint! < 30.0) {
+      _hasAnnouncedApproaching = false;
+      _lastDistanceToWaypoint = null;
+      _currentStepIndex++;
+      if (_currentStepIndex < _steps.length) {
+        final nextStepText = _navService.stripHtmlTags(
+          _steps[_currentStepIndex]['html_instructions'],
+        );
+        setState(() {
+          _currentInstruction = nextStepText;
+        });
+        _accessibilityManager.speak(
+            (lang == 'vi' ? "Sắp tới, " : "Coming up, ") + nextStepText);
+      } else {
+        _finishNavigation();
+      }
+      return;
+    }
+
+    _lastDistanceToWaypoint = distanceToWaypoint;
   }
 
   void _finishNavigation() {
@@ -188,12 +280,16 @@ class _NavigationScreenState extends State<NavigationScreen> {
   }
 
   void _stopNavigationManually() {
+    _compassSub?.cancel();
+    _compassSub = null;
     setState(() {
       _isNavigating = false;
       _currentInstruction =
           AppLocalizations.t('nav_mic_instruction', _settings.language);
       _steps.clear();
       _destination = null;
+      _hasAnnouncedApproaching = false;
+      _lastDistanceToWaypoint = null;
     });
     _accessibilityManager.speak(_settings.language == 'vi'
         ? "Đã dừng điều hướng."
@@ -227,10 +323,20 @@ class _NavigationScreenState extends State<NavigationScreen> {
         _steps = leg['steps'];
         _currentStepIndex = 0;
         _isNavigating = true;
+        _hasAnnouncedApproaching = false;
+        _lastDistanceToWaypoint = null;
         _currentInstruction = _navService.stripHtmlTags(
           _steps[0]['html_instructions'],
         );
         _updateMap(route);
+      });
+
+      // Start compass listener for relative direction guidance
+      _compassSub?.cancel();
+      _compassSub = FlutterCompass.events?.listen((CompassEvent event) {
+        if (event.heading != null) {
+          _lastCompassHeading = event.heading;
+        }
       });
 
       _accessibilityManager.speak(
@@ -247,6 +353,7 @@ class _NavigationScreenState extends State<NavigationScreen> {
   void dispose() {
     _addressController.dispose();
     _positionSub?.cancel();
+    _compassSub?.cancel();
     super.dispose();
   }
 
