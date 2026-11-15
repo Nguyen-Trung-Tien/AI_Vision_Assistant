@@ -623,7 +623,7 @@ Dashboard quản trị cung cấp các trang:
 <div align="center">
 
 ### **Nguyễn Trung Tiến**
-
+[![Report](https://drive.google.com/file/d/1N1CHG7SOFHVGJa1T6a68nxWmJz-FcITX/view?usp=sharing)
 [![Email UTH](https://img.shields.io/badge/Email-2251120447@ut.edu.vn-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:2251120447@ut.edu.vn)
 [![Email Gmail](https://img.shields.io/badge/Email-trungtiennguyen910@gmail.com-D14836?style=for-the-badge&logo=gmail&logoColor=white)](mailto:trungtiennguyen910@gmail.com)
 [![GitHub](https://img.shields.io/badge/GitHub-Nguyen--Trung--Tien-181717?style=for-the-badge&logo=github&logoColor=white)](https://github.com/Nguyen-Trung-Tien)
